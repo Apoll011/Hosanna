@@ -463,7 +463,7 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
                   }`}
                 >
                   <Settings className="w-4 h-4 text-slate-500" />
-                  <span>Definições (Servidor & Sinc)</span>
+                  <span>Definições (Servidor & Sync)</span>
                 </button>
 
                 <div className="h-px bg-m3-border/30 dark:border-m3-dark-border/30 my-4" />

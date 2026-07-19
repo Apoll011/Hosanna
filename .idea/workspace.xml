@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b44d130-14bf-4a6a-a48c-717c790f5136" name="Changes" comment="new README.md">
+    <list default="true" id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SongBrowser.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SongBrowser.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,98 +22,90 @@
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
       <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0000108419020506" />
-      <entry key="S5" value="1.0301982598714896" />
-      <entry key="S10" value="1.4304786334555952" />
-      <entry key="S30" value="4.425103005532483" />
-      <entry key="S60" value="8.980664565350729" />
-      <entry key="M2" value="14.938602321328696" />
-      <entry key="M5" value="22.67222229263497" />
-      <entry key="M10" value="29.43636969512496" />
-      <entry key="M15" value="35.16540704620909" />
-      <entry key="M30" value="57.39182438853769" />
-      <entry key="H1" value="103.76819982980302" />
-      <entry key="H2" value="157.7843372762439" />
-      <entry key="H4" value="200.12463506439707" />
-      <entry key="D1" value="247.04739739652436" />
-      <entry key="W1" value="256.3998622625021" />
+      <entry key="MS500" value="1.0000000000000087" />
+      <entry key="S2" value="1.0003891395367768" />
+      <entry key="S5" value="1.063319827316641" />
+      <entry key="S10" value="1.3765691782737213" />
+      <entry key="S30" value="2.4425268225862995" />
+      <entry key="S60" value="3.3675840211639665" />
+      <entry key="M2" value="4.789136523431711" />
+      <entry key="M5" value="7.62361632310268" />
+      <entry key="M10" value="9.894371171666936" />
+      <entry key="M15" value="10.990380136528536" />
+      <entry key="M30" value="12.335554160003843" />
+      <entry key="H1" value="13.122711282761871" />
+      <entry key="H2" value="13.549365812970196" />
+      <entry key="H4" value="13.77158957020292" />
+      <entry key="D1" value="13.961493559271185" />
+      <entry key="W1" value="13.994488241027362" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
       <entry key="MS500" value="0.0" />
       <entry key="S2" value="0.0" />
       <entry key="S5" value="0.0" />
-      <entry key="S10" value="5.0134285242373115E-185" />
-      <entry key="S30" value="3.687326624238397E-62" />
-      <entry key="S60" value="1.9202412985300486E-31" />
-      <entry key="M2" value="4.3823165794801794E-16" />
-      <entry key="M5" value="7.424009537709569E-7" />
-      <entry key="M10" value="0.0011041967214120785" />
-      <entry key="M15" value="0.014733465263496422" />
-      <entry key="M30" value="0.2257844881769897" />
-      <entry key="H1" value="0.9343009311854322" />
-      <entry key="H2" value="1.9254673741959272" />
-      <entry key="H4" value="2.772552370340887" />
-      <entry key="D1" value="3.762472057594056" />
-      <entry key="W1" value="3.965158219570858" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.0021822014415473043" />
-      <entry key="MS500" value="0.2936154928034133" />
-      <entry key="S2" value="0.7361240297286356" />
-      <entry key="S5" value="0.9145777505571829" />
-      <entry key="S10" value="1.3689882141764282" />
-      <entry key="S30" value="4.398923866642523" />
-      <entry key="S60" value="8.963305712067584" />
-      <entry key="M2" value="14.927323316431304" />
-      <entry key="M5" value="22.666287619324606" />
-      <entry key="M10" value="29.43367388624819" />
-      <entry key="M15" value="35.17716054386309" />
-      <entry key="M30" value="57.615344785355646" />
-      <entry key="H1" value="104.70048767578903" />
-      <entry key="H2" value="159.70823419562666" />
-      <entry key="H4" value="202.89616857340118" />
-      <entry key="D1" value="250.8096548779885" />
-      <entry key="W1" value="260.3649885290281" />
+      <entry key="MS100" value="1.4941043890580784E-10" />
+      <entry key="MS500" value="0.010836179446339076" />
+      <entry key="S2" value="0.3228119662305801" />
+      <entry key="S5" value="0.6836296821717228" />
+      <entry key="S10" value="1.127083050435712" />
+      <entry key="S30" value="2.3124268989825696" />
+      <entry key="S60" value="3.288861415851878" />
+      <entry key="M2" value="4.743398696962299" />
+      <entry key="M5" value="7.600909873948267" />
+      <entry key="M10" value="9.881238830065257" />
+      <entry key="M15" value="10.981053437470244" />
+      <entry key="M30" value="12.3305411749986" />
+      <entry key="H1" value="13.120102894921327" />
+      <entry key="H2" value="13.548034072141906" />
+      <entry key="H4" value="13.770916535550029" />
+      <entry key="D1" value="13.96138036733416" />
+      <entry key="W1" value="13.994472045458151" />
     </decayedShown>
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 4,
-  &quot;fromUser&quot;: false
-}</component>
-  <component name="ProjectId" id="3GjRKxl6JG5gWuDLiwgCmzzoqzr" />
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 4
+}]]></component>
+  <component name="ProjectId" id="3Gjw8LsR8VNW5Xw12lNI04ahuhy" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "master",
     "javascript.preferred.runtime.type.id": "node",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/apoll011/coding/Hosanna",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "to.speed.mode.migration.done": "true",
     "ts.external.directory.path": "/home/apoll011/coding/Hosanna/node_modules/typescript/lib"
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/public" />
-      <recent name="$PROJECT_DIR$/src/assets" />
-    </key>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -120,53 +115,16 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="1b44d130-14bf-4a6a-a48c-717c790f5136" name="Changes" comment="" />
-      <created>1784482931830</created>
+      <changelist id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="" />
+      <created>1784498135837</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1784482931830</updated>
-      <workItem from="1784482932783" duration="1796000" />
-      <workItem from="1784484914922" duration="309000" />
-      <workItem from="1784485232797" duration="7823000" />
-      <workItem from="1784494147762" duration="1038000" />
-      <workItem from="1784495369829" duration="775000" />
+      <updated>1784498135837</updated>
+      <workItem from="1784498145720" duration="1444000" />
     </task>
-    <task id="LOCAL-00001" summary="commit">
-      <option name="closed" value="true" />
-      <created>1784483240249</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1784483240250</updated>
-    </task>
-    <task id="LOCAL-00002" summary="new README.md">
-      <option name="closed" value="true" />
-      <created>1784483349004</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1784483349004</updated>
-    </task>
-    <task id="LOCAL-00003" summary="new README.md">
-      <option name="closed" value="true" />
-      <created>1784484550283</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1784484550283</updated>
-    </task>
-    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <ignored-roots>
-      <path value="$PROJECT_DIR$" />
-    </ignored-roots>
-    <MESSAGE value="commit" />
-    <MESSAGE value="new README.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="new README.md" />
   </component>
 </project>
