@@ -97,120 +97,14 @@ interface AppState {
   replaceSongInService: (serviceId: string, index: number, newSongId: string) => void;
   updateSongNotesInService: (serviceId: string, index: number, notes: string) => void;
 
-  // Reset demo files
-  resetToDemo: () => void;
+  // Reset app state
+  resetApp: () => void;
 }
 
 // Initial demo files to represent "Songs" folder
-const DEMO_VIRTUAL_FILES: VirtualFile[] = [
-  {
-    path: "Adoração/Digno_és_Tu.chopro",
-    content: `{title: Digno és Tu}
-{artist: Aline Barros}
-{key: G}
-{tempo: 72}
-{song_number: 101}
-{capo: 0}
+const DEMO_VIRTUAL_FILES: VirtualFile[] = [];
 
-{start_of_chorus: Refrão}
-Digno és [G]Tu, digno és [D]Tu
-Digno és [C]Tu, Senhor de [G]receber [D]
-A [G]glória, a [D]honra
-E o po[C]der, para [G]sempre. [D]
-{end_of_chorus}
-
-[G]Graças te damos, Se[D]nhor e Deus nosso
-Por [C]Tua bondade e [G]amor sem fi[D]m
-[G]Criaste todas as [D]coisas no mundo
-Por [C]Tua vontade exis[G]tem a[D]qui.
-
-{comment: Repetir o Refrão com júbilo}
-`,
-    updatedAt: Date.now()
-  },
-  {
-    path: "Geral/Grande_é_o_Senhor.chopro",
-    content: `{title: Grande é o Senhor}
-{artist: Adoração & Adoradores}
-{key: C}
-{tempo: 80}
-{song_number: 45}
-
-[C]Grande é o Se[F]nhor e mui digno de lou[C]vor [F]
-Na ci[C]dade do nosso Deus, no seu [Am]monte santo
-A[Dm]gria de toda a [G]terra.
-
-[C]Grande é o Se[F]nhor em quem nós temos a vi[C]tória [F]
-Que nos [C]ajuda contra o ini[Am]migo
-Por isso nos pros[Dm]tramos diante d[G]Ele.
-
-{start_of_chorus: Refrão}
-Queremos o Teu [C]nome exal[Em]tar
-E [F]agradecer-Te por [G]tudo o que tens feito em [C]nós [Em]
-Con[F]fiamos no Teu in[G]finito amor
-Pois só [F]Tu és Deus e[G]terno
-Sobre [F]toda a [G]terra e [C]céus.
-{end_of_chorus}
-`,
-    updatedAt: Date.now() - 10000
-  },
-  {
-    path: "Natal/Noite_de_Paz.chopro",
-    content: `{title: Noite de Paz}
-{artist: Tradicional}
-{key: C}
-{song_number: 12}
-{composer: Franz Gruber}
-
-[C]Noite de paz! Noite de amor!
-[G]Tudo dorme em [C]redor.
-[F]Entre os astros que [C]espalham a luz,
-[F]Bela e pura, as[C]sinala Jesus,
-[G]Brilha a estrela da [C]paz,
-Brilha a [G]estrela da [C]paz.
-
-[C]Noite de paz! Noite de amor!
-[G]Nasce o Salvador!
-[F]Lá na lapa, de[C]itado em capim,
-[F]Cantam os anjos o [C]hino sem fim:
-[G]Glória a Deus nos [C]céus,
-Glória a [G]Deus nos [C]céus.
-`,
-    updatedAt: Date.now() - 20000
-  },
-  {
-    path: "Jovens/Ao_Único.chopro",
-    content: `{title: Ao Único}
-{artist: Benedito Carlos}
-{key: F}
-{tempo: 75}
-{song_number: 302}
-
-[F]Ao único que é [C/E]digno de re[Dm]ceber [Dm/C]
-A [Bb]honra e a glória, a [F/A]força e o po[Gm]der [C]
-Ao [F]Rei eterno, i[C/E]mortal, invis[Dm]ível, mas re[Dm/C]al
-A [Bb]Ele minis[C]tramos o lou[F]vor. [F7]
-
-{start_of_chorus: Refrão}
-Coro[Bb]amos a [C]Ti, ó [F]Rei Je[Dm]sus
-Coro[Bb]amos a [C]Ti, ó [F]Rei Je[Dm]sus
-Adora[Bb]mos o Teu [C]nome, nos ren[Am]demos ao Teu [Dm]pé
-Con[Gm]sagramos todo o [C]nosso ser a [F]Ti.
-{end_of_chorus}
-`,
-    updatedAt: Date.now() - 30000
-  }
-];
-
-const INITIAL_SERVICES: Service[] = [
-  {
-    id: "service-1",
-    name: "Culto de Domingo de Manhã",
-    date: "2026-07-19",
-    songIds: ["Adoração/Digno_és_Tu.chopro", "Geral/Grande_é_o_Senhor.chopro"],
-    notes: "Preparar pregação antes do cântico de transição. Aline Barros guia o refrão repetidamente."
-  }
-];
+const INITIAL_SERVICES: Service[] = [];
 
 // Helper to load persisted state or fallback
 const getStorageItem = <T>(key: string, defaultValue: T): T => {
@@ -785,11 +679,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     setStorageItem('cp_services', updatedServices);
   },
 
-  resetToDemo: () => {
+  resetApp: () => {
     set({
-      virtualFiles: DEMO_VIRTUAL_FILES,
+      virtualFiles: [],
       songs: [],
-      services: INITIAL_SERVICES,
+      services: [],
       activeSongId: null,
       activeServiceId: null,
       isEditing: false,
