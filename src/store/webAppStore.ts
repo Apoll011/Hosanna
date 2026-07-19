@@ -88,9 +88,7 @@ interface AppState {
   syncLibrary: () => Promise<SyncReport>;
 
   // Services Actions
-  createService: (name: string, date: string) => void;
   updateService: (id: string, name: string, date: string, notes?: string) => void;
-  deleteService: (id: string) => void;
   addSongToService: (serviceId: string, songId: string) => void;
   removeSongFromService: (serviceId: string, index: number) => void;
   reorderSongsInService: (serviceId: string, fromIndex: number, toIndex: number) => void;
@@ -534,21 +532,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Services Actions
-  createService: (name, date) => {
-    const id = `service-${Date.now()}`;
-    const newService: Service = {
-      id,
-      name,
-      date,
-      songIds: [],
-      notes: ''
-    };
-
-    const updatedServices = [newService, ...get().services];
-    set({ services: updatedServices, activeServiceId: id });
-    setStorageItem('cp_services', updatedServices);
-  },
-
   updateService: (id, name, date, notes) => {
     const updatedServices = get().services.map(svc => {
       if (svc.id === id) {
@@ -559,16 +542,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
-  },
-
-  deleteService: (id) => {
-    const updatedServices = get().services.filter(svc => svc.id !== id);
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-
-    if (get().activeServiceId === id) {
-      set({ activeServiceId: null });
-    }
+    get().syncLibrary().catch(() => {});
   },
 
   addSongToService: (serviceId, songId) => {
@@ -582,6 +556,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
+    get().syncLibrary().catch(() => {});
   },
 
   removeSongFromService: (serviceId, index) => {
@@ -610,6 +585,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
+    get().syncLibrary().catch(() => {});
   },
 
   reorderSongsInService: (serviceId, fromIndex, toIndex) => {
@@ -645,6 +621,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
+    get().syncLibrary().catch(() => {});
   },
 
   replaceSongInService: (serviceId, index, newSongId) => {
@@ -659,6 +636,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
+    get().syncLibrary().catch(() => {});
   },
 
   updateSongNotesInService: (serviceId, index, notes) => {
@@ -677,6 +655,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
+    get().syncLibrary().catch(() => {});
   },
 
   resetApp: () => {

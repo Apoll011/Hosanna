@@ -4,11 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="">
+    <list default="true" id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="Test">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SongBrowser.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SongBrowser.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/services.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/songs/59th Street Bridge Song (Feelin' Groovy) (1).pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/songs/A Picture Of You.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/songs/All God's Creatures Have A Place In The Choir - time 24.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ServiceManager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ServiceManager.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/store/webAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/webAppStore.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -19,25 +22,37 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Apoll011&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Apoll011/Hosanna.git&quot;,
+    &quot;accountId&quot;: &quot;e1f01405-22b3-4c3f-8a21-213cfd8f4fdb&quot;
+  }
+}</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
       <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000000000000087" />
-      <entry key="S2" value="1.0003891395367768" />
-      <entry key="S5" value="1.063319827316641" />
-      <entry key="S10" value="1.3765691782737213" />
-      <entry key="S30" value="2.4425268225862995" />
-      <entry key="S60" value="3.3675840211639665" />
-      <entry key="M2" value="4.789136523431711" />
-      <entry key="M5" value="7.62361632310268" />
-      <entry key="M10" value="9.894371171666936" />
-      <entry key="M15" value="10.990380136528536" />
-      <entry key="M30" value="12.335554160003843" />
-      <entry key="H1" value="13.122711282761871" />
-      <entry key="H2" value="13.549365812970196" />
-      <entry key="H4" value="13.77158957020292" />
-      <entry key="D1" value="13.961493559271185" />
-      <entry key="W1" value="13.994488241027362" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0000007820555405" />
+      <entry key="S60" value="1.001905537798621" />
+      <entry key="M2" value="1.1139217850899463" />
+      <entry key="M5" value="2.7088378576006633" />
+      <entry key="M10" value="5.6844446409258" />
+      <entry key="M15" value="7.676148515537468" />
+      <entry key="M30" value="10.61424758893842" />
+      <entry key="H1" value="12.585156173616522" />
+      <entry key="H2" value="13.730871296685821" />
+      <entry key="H4" value="14.34915115845397" />
+      <entry key="D1" value="14.889186523336427" />
+      <entry key="W1" value="14.984111197442056" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -59,53 +74,54 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4941043890580784E-10" />
-      <entry key="MS500" value="0.010836179446339076" />
-      <entry key="S2" value="0.3228119662305801" />
-      <entry key="S5" value="0.6836296821717228" />
-      <entry key="S10" value="1.127083050435712" />
-      <entry key="S30" value="2.3124268989825696" />
-      <entry key="S60" value="3.288861415851878" />
-      <entry key="M2" value="4.743398696962299" />
-      <entry key="M5" value="7.600909873948267" />
-      <entry key="M10" value="9.881238830065257" />
-      <entry key="M15" value="10.981053437470244" />
-      <entry key="M30" value="12.3305411749986" />
-      <entry key="H1" value="13.120102894921327" />
-      <entry key="H2" value="13.548034072141906" />
-      <entry key="H4" value="13.770916535550029" />
-      <entry key="D1" value="13.96138036733416" />
-      <entry key="W1" value="13.994472045458151" />
+      <entry key="MS100" value="0.9460576467255959" />
+      <entry key="MS500" value="0.9889709163809315" />
+      <entry key="S2" value="0.9972312513520695" />
+      <entry key="S5" value="0.9988915792636801" />
+      <entry key="S10" value="0.9994456359721023" />
+      <entry key="S30" value="0.9998159182333299" />
+      <entry key="S60" value="1.0017685774837695" />
+      <entry key="M2" value="1.1127875858879883" />
+      <entry key="M5" value="2.703729710584221" />
+      <entry key="M10" value="5.6782179521192315" />
+      <entry key="M15" value="7.670476815176793" />
+      <entry key="M30" value="10.610337421637317" />
+      <entry key="H1" value="12.582851863699592" />
+      <entry key="H2" value="13.729619233929299" />
+      <entry key="H4" value="14.348498383808204" />
+      <entry key="D1" value="14.889073853443888" />
+      <entry key="W1" value="14.984095004713398" />
     </decayedShown>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 4
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="3Gjw8LsR8VNW5Xw12lNI04ahuhy" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
-    "javascript.preferred.runtime.type.id": "node",
-    "junie.onboarding.icon.badge.shown": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "/home/apoll011/coding/Hosanna/node_modules/typescript/lib"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/apoll011/coding/Hosanna-server&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/apoll011/coding/Hosanna/node_modules/typescript/lib&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -120,11 +136,26 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784498135837</updated>
-      <workItem from="1784498145720" duration="1444000" />
+      <workItem from="1784498145720" duration="1543000" />
+      <workItem from="1784500836346" duration="188000" />
+      <workItem from="1784501081336" duration="581000" />
     </task>
+    <task id="LOCAL-00001" summary="Test">
+      <option name="closed" value="true" />
+      <created>1784499612266</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784499612266</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Test" />
   </component>
 </project>

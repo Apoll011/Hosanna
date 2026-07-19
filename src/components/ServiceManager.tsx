@@ -57,9 +57,7 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const activeServiceId = useAppStore(state => state.activeServiceId);
   const setActiveServiceId = useAppStore(state => state.setActiveServiceId);
 
-  const createService = useAppStore(state => state.createService);
   const updateService = useAppStore(state => state.updateService);
-  const deleteService = useAppStore(state => state.deleteService);
   const removeSongFromService = useAppStore(state => state.removeSongFromService);
   const reorderSongsInService = useAppStore(state => state.reorderSongsInService);
   const addSongToService = useAppStore(state => state.addSongToService);
@@ -69,11 +67,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
 
   // Active song index within the service alignment for the Special Song Viewer
   const [activeServiceSongIndex, setActiveServiceSongIndex] = useState<number | null>(null);
-
-  // Creators Modal
-  const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newDate, setNewDate] = useState('');
 
   // Song Adder Modal / Replacer Modal
   const [isAddingSong, setIsAddingSong] = useState(false);
@@ -136,15 +129,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
     return services.find(s => s.id === activeServiceId) || null;
   }, [services, activeServiceId]);
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName.trim() || !newDate) return;
-    createService(newName.trim(), newDate);
-    setIsCreating(false);
-    setNewName('');
-    setNewDate('');
-  };
-
   const handleUpdateNotes = (notes: string) => {
     if (!activeService) return;
     updateService(activeService.id, activeService.name, activeService.date, notes);
@@ -153,15 +137,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const handleUpdateDetails = (name: string, date: string) => {
     if (!activeService) return;
     updateService(activeService.id, name, date, activeService.notes);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Tem a certeza de que deseja eliminar este culto?')) {
-      if (activeServiceId === id) {
-        setActiveServiceId(null);
-      }
-      deleteService(id);
-    }
   };
 
   const handleMoveSong = (index: number, direction: 'up' | 'down') => {
@@ -1188,14 +1163,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
           >
             <Printer className="w-4 h-4" />
           </button>
-
-          <button
-            onClick={() => handleDelete(activeService.id)}
-            className="p-2 rounded-full hover:bg-red-50 hover:text-red-600 text-red-500 transition-colors shrink-0"
-            title="Eliminar Culto"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
         </div>
 
         {/* Setlist & notes scrollable viewport */}
@@ -1650,15 +1617,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
           </span>
           <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary mt-0.5">Gerencie os planos e notas dos cultos de música.</p>
         </div>
-        <button
-          onClick={() => setIsCreating(true)}
-          id="btn_create_service_open"
-          className="px-4 py-2 text-xs font-black bg-m3-primary text-white hover:opacity-90 rounded-full transition-all flex items-center gap-1 shadow-xs"
-          title="Novo Planeamento"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Criar</span>
-        </button>
       </div>
 
       {/* Main Grid/Scroll List of planned services */}
@@ -1667,7 +1625,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
           <div className="flex flex-col items-center justify-center text-center p-8 py-16">
             <CalendarRange className="w-12 h-12 text-m3-secondary dark:text-m3-dark-secondary mb-2 opacity-50" />
             <h3 className="text-sm font-bold text-m3-text dark:text-m3-dark-text">Nenhum culto planeado</h3>
-            <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary mt-1">Crie um novo planeamento clicando no botão de Criar acima!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1703,57 +1660,6 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
           </div>
         )}
       </div>
-
-      {/* MODAL: Create service planning */}
-      {isCreating && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <form onSubmit={handleCreate} className="bg-m3-card dark:bg-m3-dark-card w-full max-w-sm rounded-3xl p-6 border border-m3-border dark:border-m3-dark-border space-y-4 shadow-xl animate-scale-up">
-            <h4 className="text-sm font-black text-m3-text dark:text-m3-dark-text">
-              Novo Planeamento de Culto
-            </h4>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary font-bold uppercase tracking-wider">Nome do Culto</label>
-                <input
-                  type="text"
-                  required
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Ex: Culto de Jovens"
-                  className="w-full px-3 py-2 text-xs bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl focus:outline-none focus:ring-1 focus:ring-m3-primary/30 text-m3-text"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary font-bold uppercase tracking-wider">Data</label>
-                <input
-                  type="date"
-                  required
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl focus:outline-none focus:ring-1 focus:ring-m3-primary/30 text-m3-text font-mono font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsCreating(false)}
-                className="px-4 py-2 text-xs font-bold text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover rounded-full transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 text-xs font-black bg-m3-primary text-white rounded-full hover:opacity-90 transition-all shadow-xs"
-              >
-                Criar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
     </div>
   );
