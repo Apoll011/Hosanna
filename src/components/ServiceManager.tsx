@@ -1497,9 +1497,9 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
                       className="mt-0.5 accent-m3-primary"
                     />
                     <div>
-                      <span className="font-bold text-m3-text dark:text-m3-dark-text block">Alinhamento do Culto (Resumo)</span>
+                      <span className="font-bold text-m3-text dark:text-m3-dark-text block">Planejamento do Culto (Resumo)</span>
                       <span className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary block mt-0.5">
-                        Gera um documento compacto de 1 página ideal para consulta rápida de alinhamento, tons originais/transpostos, andamentos BPM e notas específicas de arranjo da banda.
+                        Gera um documento compacto de 1 página ideal para consulta rápida de planejamento, tons originais/transpostos, andamentos BPM e notas específicas de arranjo da banda.
                       </span>
                     </div>
                   </div>
@@ -1521,9 +1521,9 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
                       className="mt-0.5 accent-m3-primary"
                     />
                     <div>
-                      <span className="font-bold text-m3-text dark:text-m3-dark-text block">Cancioneiro Completo (Com Cifras)</span>
+                      <span className="font-bold text-m3-text dark:text-m3-dark-text block">Planejamento Completo (Com Cifras)</span>
                       <span className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary block mt-0.5">
-                        Gera a folha de alinhamento na primeira página e anexa a folha de letras com cifras detalhadas para cada cântico nas páginas seguintes, com tons transpostos e notas individuais.
+                        Gera a folha de Planejamento na primeira página e anexa a folha de letras com cifras detalhadas para cada cântico nas páginas seguintes, com tons transpostos e notas individuais.
                       </span>
                     </div>
                   </div>

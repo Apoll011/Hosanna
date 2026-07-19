@@ -142,66 +142,67 @@ export default function App() {
           {activeTab === 'settings' && <SettingsView />}
         </div>
 
-        {/* Floating iOS-style Navigation Pill Bar */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] max-w-sm h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
-          <button
-            onClick={() => {
-              setActiveTab('songs');
-              setActiveSongId(null);
-              setIsEditing(false);
-            }}
-            id="nav_btn_songs"
-            className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-              activeTab === 'songs'
-                ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
-                : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
-            }`}
-          >
-            <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'songs' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
-              <Music className="w-4.5 h-4.5" />
-            </div>
-            <span className="text-[10px] font-black tracking-wide">Cânticos</span>
-          </button>
+        {!activeSongId && !isEditing && (
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] max-w-sm h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
+                <button
+                    onClick={() => {
+                      setActiveTab('songs');
+                      setActiveSongId(null);
+                      setIsEditing(false);
+                    }}
+                    id="nav_btn_songs"
+                    className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
+                        activeTab === 'songs'
+                            ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
+                            : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
+                    }`}
+                >
+                  <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'songs' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
+                    <Music className="w-4.5 h-4.5" />
+                  </div>
+                  <span className="text-[10px] font-black tracking-wide">Cânticos</span>
+                </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('services');
-              setActiveSongId(null);
-              setIsEditing(false);
-            }}
-            id="nav_btn_services"
-            className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-              activeTab === 'services'
-                ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
-                : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
-            }`}
-          >
-            <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'services' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
-              <CalendarRange className="w-4.5 h-4.5" />
-            </div>
-            <span className="text-[10px] font-black tracking-wide">Cultos</span>
-          </button>
+                <button
+                    onClick={() => {
+                      setActiveTab('services');
+                      setActiveSongId(null);
+                      setIsEditing(false);
+                    }}
+                    id="nav_btn_services"
+                    className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
+                        activeTab === 'services'
+                            ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
+                            : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
+                    }`}
+                >
+                  <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'services' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
+                    <CalendarRange className="w-4.5 h-4.5" />
+                  </div>
+                  <span className="text-[10px] font-black tracking-wide">Cultos</span>
+                </button>
 
-          <button
-            onClick={() => {
-              syncLibrary().catch(() => {});
-            }}
-            disabled={syncStatus === 'syncing'}
-            id="nav_btn_sync"
-            className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-              syncStatus === 'syncing'
-                ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
-                : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
-            }`}
-          >
-            <div className={`px-5 py-0.5 rounded-full transition-all ${syncStatus === 'syncing' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20 animate-pulse' : ''}`}>
-              <RefreshCw className={`w-4.5 h-4.5 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
-            </div>
-            <span className="text-[10px] font-black tracking-wide">
-              {syncStatus === 'syncing' ? 'A Sinc...' : syncStatus === 'error' ? 'Erro' : 'Sinc'}
-            </span>
-          </button>
-        </div>
+                <button
+                    onClick={() => {
+                      syncLibrary().catch(() => {});
+                    }}
+                    disabled={syncStatus === 'syncing'}
+                    id="nav_btn_sync"
+                    className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
+                        syncStatus === 'syncing'
+                            ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
+                            : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
+                    }`}
+                >
+                  <div className={`px-5 py-0.5 rounded-full transition-all ${syncStatus === 'syncing' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20 animate-pulse' : ''}`}>
+                    <RefreshCw className={`w-4.5 h-4.5 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                  </div>
+                  <span className="text-[10px] font-black tracking-wide">
+                {syncStatus === 'syncing' ? 'A Sync...' : syncStatus === 'error' ? 'Erro' : 'Sync'}
+              </span>
+                </button>
+              </div>
+        )}
 
       </div>
     </div>

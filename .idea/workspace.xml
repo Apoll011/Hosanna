@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b44d130-14bf-4a6a-a48c-717c790f5136" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+    <list default="true" id="1b44d130-14bf-4a6a-a48c-717c790f5136" name="Changes" comment="new README.md">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ServiceManager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ServiceManager.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +16,65 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="3.457986895552381E-83" />
+      <entry key="S2" value="3.488915579486088E-21" />
+      <entry key="S5" value="9.770745505946739E-9" />
+      <entry key="S10" value="1.4086796832668596E-4" />
+      <entry key="S30" value="0.10066941302530394" />
+      <entry key="S60" value="0.6390911073333564" />
+      <entry key="M2" value="2.120648768074677" />
+      <entry key="M5" value="5.721528424103474" />
+      <entry key="M10" value="8.485953036445913" />
+      <entry key="M15" value="9.747894979114173" />
+      <entry key="M30" value="11.23743542959679" />
+      <entry key="H1" value="12.081397669404373" />
+      <entry key="H2" value="12.530935436822631" />
+      <entry key="H4" value="12.762970382313542" />
+      <entry key="D1" value="12.960143305303083" />
+      <entry key="W1" value="12.994297507236784" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0000000000000453" />
+      <entry key="S30" value="1.0000494158988251" />
+      <entry key="S60" value="1.0097234238683666" />
+      <entry key="M2" value="1.1386501084921576" />
+      <entry key="M5" value="1.686718390206073" />
+      <entry key="M10" value="2.1716633637110476" />
+      <entry key="M15" value="2.400197628176266" />
+      <entry key="M30" value="2.6733946837185334" />
+      <entry key="H1" value="2.829411352238954" />
+      <entry key="H2" value="2.912801825358268" />
+      <entry key="H4" value="2.9559142478544347" />
+      <entry key="D1" value="2.992583854309788" />
+      <entry key="W1" value="2.9989388603312683" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.4447796908200595E-16" />
+      <entry key="MS500" value="6.791415877490176E-4" />
+      <entry key="S2" value="0.16143216878779187" />
+      <entry key="S5" value="0.4821653973333659" />
+      <entry key="S10" value="0.6945108523098994" />
+      <entry key="S30" value="0.9838001200727429" />
+      <entry key="S60" value="1.5830765453697124" />
+      <entry key="M2" value="3.220176083093422" />
+      <entry key="M5" value="7.387911240496766" />
+      <entry key="M10" value="10.645774911220117" />
+      <entry key="M15" value="12.139695320319083" />
+      <entry key="M30" value="13.906335749223313" />
+      <entry key="H1" value="14.90847820967785" />
+      <entry key="H2" value="15.442549595238615" />
+      <entry key="H4" value="15.718285052590483" />
+      <entry key="D1" value="15.952626416569615" />
+      <entry key="W1" value="15.993221955576184" />
+    </decayedShown>
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 4,
@@ -36,10 +96,15 @@
     "git-widget-placeholder": "master",
     "javascript.preferred.runtime.type.id": "node",
     "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/apoll011/coding/Hosanna",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "/home/apoll011/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/jsLanguageServicesImpl/external"
+    "ts.external.directory.path": "/home/apoll011/coding/Hosanna/node_modules/typescript/lib"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -56,8 +121,25 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784482931830</updated>
-      <workItem from="1784482932783" duration="207000" />
+      <workItem from="1784482932783" duration="1483000" />
     </task>
+    <task id="LOCAL-00001" summary="commit">
+      <option name="closed" value="true" />
+      <created>1784483240249</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784483240250</updated>
+    </task>
+    <task id="LOCAL-00002" summary="new README.md">
+      <option name="closed" value="true" />
+      <created>1784483349004</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1784483349004</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -67,5 +149,8 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
+    <MESSAGE value="commit" />
+    <MESSAGE value="new README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="new README.md" />
   </component>
 </project>
