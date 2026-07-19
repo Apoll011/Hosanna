@@ -1,0 +1,6 @@
+{
+  "name": "Hosanna",
+  "description": "Uma aplicação moderna de pautas e cânticos para músicos de igreja com suporte ChordPro, transposição e gestão de cultos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

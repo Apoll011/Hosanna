@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@variant dark (html.dark &);
+
+@theme {
+  /* Sleek Interface M3 Theme Colors - Cyan/Blue */
+  --color-m3-primary: #0284c7;
+  --color-m3-primary-light: #e0f2fe;
+  --color-m3-primary-dark: #075985;
+  --color-m3-text: #1D1B20;
+  --color-m3-secondary: #49454F;
+  --color-m3-bg: #f8fafc;
+  --color-m3-sidebar: #f1f5f9;
+  --color-m3-border: #cbd5e1;
+  --color-m3-hover: #e2e8f0;
+  --color-m3-toolbar: #f1f5f9;
+  --color-m3-card: #FFFFFF;
+  --color-m3-input: #79747E;
+
+  /* Sleek Interface Dark M3 Theme Colors - Cyan/Blue */
+  --color-m3-dark-primary: #38bdf8;
+  --color-m3-dark-primary-light: #0c4a6e;
+  --color-m3-dark-primary-dark: #082f49;
+  --color-m3-dark-text: #E6E1E5;
+  --color-m3-dark-secondary: #CAC4D0;
+  --color-m3-dark-bg: #0f172a;
+  --color-m3-dark-sidebar: #1e293b;
+  --color-m3-dark-border: #334155;
+  --color-m3-dark-hover: #0f172a;
+  --color-m3-dark-toolbar: #1e293b;
+  --color-m3-dark-card: #1C1B1F;
+  --color-m3-dark-input: #938F99;
+}
+
+/* Base custom font integration if needed and styling overrides */
+@layer base {
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    overscroll-behavior: none;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    @apply antialiased font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
+/* Utility to hide scrollbars for clean native Android preview look */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
