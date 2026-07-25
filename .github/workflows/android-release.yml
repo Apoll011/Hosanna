@@ -44,7 +44,7 @@ jobs:
       - name: Build signed Release
         working-directory: android
         env:
-          KEYSTORE_FILE: ${{ github.workspace }}/hosanna.keystore 
+          KEYSTORE_FILE: ./hosanna.keystore 
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
