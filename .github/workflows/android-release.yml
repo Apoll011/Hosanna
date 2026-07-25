@@ -13,9 +13,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      KEYSTORE_PATH: hosanna.keystore
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,39 +43,29 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > $KEYSTORE_PATH
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > release.keystore
 
-      - name: Build Release
+      - name: Build signed Release
         working-directory: android
-        run: ./gradlew assembleRelease bundleRelease
-
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_apk
-        with:
-          releaseDirectory: android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Sign AAB
-        working-directory: android
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          jarsigner \
-            -keystore ../$KEYSTORE_PATH \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            app/build/outputs/bundle/release/app-release.aab \
-            "${{ secrets.KEY_ALIAS }}"
+          ./gradlew clean assembleRelease bundleRelease
+
+      - name: Verify artifacts
+        run: |
+          ls -lh android/app/build/outputs/apk/release/
+          ls -lh android/app/build/outputs/bundle/release/
 
       - name: Create GitHub Release
-        id: release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            ${{ steps.sign_apk.outputs.signedReleaseFile }}
+            android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
