@@ -23,7 +23,7 @@ android {
     }
     signingConfigs {
         release {
-            if (keystoreFile != null) {
+            if (envKeystoreFile != null) {
                 storeFile file(envKeystoreFile)
                 storePassword envKeystorePassword
                 keyAlias envKeyAlias
