@@ -40,15 +40,11 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
-
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > release.keystore
-
+        
       - name: Build signed Release
         working-directory: android
         env:
-          KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
+          KEYSTORE_FILE: ${{ github.workspace }}/hosanna.keystore 
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
