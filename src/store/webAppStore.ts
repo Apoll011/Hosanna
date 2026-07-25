@@ -384,6 +384,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     const serverUrl = get().serverUrl;
     const serverToken = get().serverToken;
 
+    alert(serverUrl);
+    alert(serverToken);
+
     // If a server URL is defined, perform a remote sync
     if (serverUrl && serverUrl.trim() !== '') {
       try {
@@ -407,22 +410,30 @@ export const useAppStore = create<AppState>((set, get) => ({
           notes: s.notes,
           songNotes: s.songNotes
         }));
-
-        const response = await fetch(`${serverUrl.replace(/\/$/, '')}/api/sync`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            files: localFilesPayload,
-            services: localServicesPayload,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Servidor respondeu com status ${response.status}`);
+        alert("hhh");
+        let response;
+        try {
+          response = await fetch(`${serverUrl.replace(/\/$/, '')}/api/sync`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              files: localFilesPayload,
+              services: localServicesPayload,
+            }),
+          });
+        } catch (e) {
+          alert(e)
         }
 
-        const data = await response.json();
 
+        alert(response.ok)
+        if (!response.ok) {
+          alert(`Servidor respondeu com status ${response.status}`);
+        }
+
+
+        const data = await response.json();
+        alert(data);
         // Server can send back:
         // {
         //   files: VirtualFile[],    // Full list of synchronized virtual files
