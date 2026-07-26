@@ -19,6 +19,7 @@ interface SongBrowserProps {
 
 export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserProps) {
   const songs = useAppStore(state => state.songs);
+  const folders = useAppStore(state => state.folders);
   const favoriteSongIds = useAppStore(state => state.favoriteSongIds);
   const recentlyPlayedSongIds = useAppStore(state => state.recentlyPlayedSongIds);
   const toggleFavoriteSong = useAppStore(state => state.toggleFavoriteSong);
@@ -37,9 +38,10 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
 
   // Dynamically extract unique folders from songs list
   const uniqueFolders = useMemo(() => {
-    const list = songs.map(s => s.folder).filter(f => f !== '');
-    return Array.from(new Set(list));
-  }, [songs]);
+    const folderNames = folders.map(folder => folder.name).filter(Boolean);
+    const songFolderNames = songs.map(song => song.folder).filter(Boolean);
+    return Array.from(new Set([...folderNames, ...songFolderNames]));
+  }, [songs, folders]);
 
   // Comprehensive searching and sorting engine
   const filteredAndSortedSongs = useMemo(() => {

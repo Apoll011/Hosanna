@@ -5,6 +5,8 @@
 
 export interface Song {
   id: string; // File path inside the folder, e.g., "Worship/Digno_es_Tu.chopro"
+  remoteId?: string;
+  remoteUpdatedAt?: string; // Server's updatedAt (ISO string), used for optimistic concurrency
   title: string;
   subtitle?: string;
   artist?: string;
@@ -16,10 +18,21 @@ export interface Song {
   capo?: string;
   songNumber?: string;
   comments?: string;
+  folderId?: string | null;
   folder: string; // e.g. "Worship" or "" (root)
   fileName: string; // e.g. "Digno_es_Tu.chopro"
   content: string; // Raw ChordPro content
   updatedAt: number; // Timestamp of last edit
+  tags?: string[];
+}
+
+export interface LibraryFolder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  songCount?: number;
 }
 
 export interface Service {
@@ -29,6 +42,7 @@ export interface Service {
   songIds: string[]; // Ordered list of song IDs
   notes?: string;
   songNotes?: Record<string, string>; // Map of index to custom notes
+  updatedAt?: string; // Server's updatedAt (ISO string), used for optimistic concurrency
 }
 
 export interface VirtualFile {

@@ -3,15 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Settings, Folder, Palette, HelpCircle, HardDrive, Shield, RefreshCcw, BookOpen, Layers } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Palette, HardDrive, RefreshCcw, KeyRound, Link2, QrCode } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { extractMusicianToken, isMusicianAccessUrl } from '../lib/apiClient';
 
 export default function SettingsView() {
   const serverUrl = useAppStore(state => state.serverUrl);
   const setServerUrl = useAppStore(state => state.setServerUrl);
   const serverToken = useAppStore(state => state.serverToken);
   const setServerToken = useAppStore(state => state.setServerToken);
+  const [tokenInput, setTokenInput] = useState(serverToken);
+
+  useEffect(() => {
+    setTokenInput(serverToken);
+  }, [serverToken]);
+
+  const tokenPreview = useMemo(() => {
+    const token = extractMusicianToken(tokenInput);
+    if (!token) return 'Nenhum token configurado';
+    return token.length > 12 ? `${token.slice(0, 8)}…${token.slice(-4)}` : token;
+  }, [tokenInput]);
   
   const theme = useAppStore(state => state.theme);
   const setTheme = useAppStore(state => state.setTheme);
@@ -37,7 +49,7 @@ export default function SettingsView() {
       <div className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 space-y-4">
         <span className="text-[10px] font-black text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider flex items-center gap-1.5">
           <HardDrive className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-          Sincronização com o Servidor (API)
+          Acesso de Músico
         </span>
 
         <div className="space-y-3 text-xs">
@@ -46,28 +58,60 @@ export default function SettingsView() {
             <input
               type="text"
               value={serverUrl}
-              onChange={(e) => setServerUrl(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setServerUrl(e.target.value)}
               className="w-full px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
               placeholder="Ex: https://api.cifras.exemplo.com"
             />
           </div>
 
           <div>
-            <label className="text-m3-secondary dark:text-m3-dark-secondary font-bold block mb-1">Token de Segurança (Bearer Token)</label>
-            <input
-              type="password"
-              value={serverToken}
-              onChange={(e) => setServerToken(e.target.value)}
-              className="w-full px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
-              placeholder="Introduza o token para autenticação..."
-            />
+            <label className="text-m3-secondary dark:text-m3-dark-secondary font-bold block mb-1">Token do músico ou link do QR</label>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={tokenInput}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTokenInput(e.target.value)}
+                className="w-full px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
+                placeholder="Cole o mus_... ou o URL do acesso"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setServerToken(extractMusicianToken(tokenInput))}
+                  className="px-4 py-2 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-full shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Guardar token
+                </button>
+                <button
+                  onClick={() => {
+                    setTokenInput('');
+                    setServerToken('');
+                  }}
+                  className="px-4 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-secondary dark:text-m3-dark-secondary text-xs font-black rounded-full border border-m3-border/30 dark:border-m3-dark-border/30 transition-all active:scale-95"
+                >
+                  Limpar
+                </button>
+              </div>
+              <div className="flex items-start gap-2 text-[10px] text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-xl border border-m3-border/30 dark:border-m3-dark-border/30 p-3">
+                {isMusicianAccessUrl(tokenInput) ? (
+                  <Link2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-m3-primary dark:text-m3-dark-primary" />
+                ) : (
+                  <QrCode className="w-3.5 h-3.5 mt-0.5 shrink-0 text-m3-primary dark:text-m3-dark-primary" />
+                )}
+                <span>
+                  Cole o token bruto ou o URL gerado pelo QR. O app extrai automaticamente o valor do parâmetro <span className="font-mono font-bold">token</span> quando houver.
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="pt-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 space-y-3">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <span className="font-bold text-m3-text dark:text-m3-dark-text block">Sincronização da Base de Dados</span>
-                <span className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary block">Faz o intercâmbio de cifras e listas de cultos com o servidor.</span>
+                <span className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary block">Usa o token do músico para ler os dados permitidos pelo servidor.</span>
               </div>
               <button
                 onClick={() => {
@@ -85,6 +129,10 @@ export default function SettingsView() {
               <div>
                 <span className="font-bold text-m3-text dark:text-m3-dark-text">Última sincronização:</span>{' '}
                 <span className="font-mono">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('pt-PT') : 'Nunca'}</span>
+              </div>
+              <div>
+                <span className="font-bold text-m3-text dark:text-m3-dark-text">Token ativo:</span>{' '}
+                <span className="font-mono break-all">{tokenPreview}</span>
               </div>
               <div>
                 <span className="font-bold text-m3-text dark:text-m3-dark-text">Total indexado:</span>{' '}

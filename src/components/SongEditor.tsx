@@ -16,6 +16,7 @@ interface SongEditorProps {
 export default function SongEditor({ songId, onClose }: SongEditorProps) {
   const songs = useAppStore(state => state.songs);
   const virtualFiles = useAppStore(state => state.virtualFiles);
+  const folders = useAppStore(state => state.folders);
   const createVirtualFile = useAppStore(state => state.createVirtualFile);
   const updateVirtualFile = useAppStore(state => state.updateVirtualFile);
 
@@ -34,7 +35,7 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
   const [copyright, setCopyright] = useState('');
   
   // Implicit Category Folder selector
-  const [folder, setFolder] = useState('Geral');
+  const [folder, setFolder] = useState('');
   const [fileName, setFileName] = useState('');
 
   // Song lyrics body (parsed from raw file without metadata lines)
@@ -58,7 +59,7 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
       setYoutube(parsed.metadata.youtube || '');
       setComposer(parsed.metadata.composer || '');
       setCopyright(parsed.metadata.copyright || '');
-      setFolder(existingSong.folder || 'Geral');
+      setFolder(existingSong.folderId || existingSong.folder || '');
       
       const parts = existingSong.id.split('/');
       setFileName(parts.pop() || '');
@@ -91,7 +92,7 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
       setSongNumber('');
       setComposer('');
       setCopyright('');
-      setFolder('Adoração');
+      setFolder((currentFolder) => currentFolder || folders[0]?.id || '');
       setFileName('');
       setBodyText(`{start_of_chorus: Refrão}
 Digno és [G]Tu, Senhor de [D]receber
@@ -101,7 +102,7 @@ A [C]glória e o lou[G]vor
 [G]Graças te damos [D]pelo Teu amor
 [C]Exaltamos o Teu [G]Santo Nome`);
     }
-  }, [songId, existingSong, existingFile]);
+  }, [songId, existingSong, existingFile, folders]);
 
   // Insert helper text at textarea cursor position
   const insertTextAtCursor = (textToInsert: string) => {
@@ -333,8 +334,9 @@ A [C]glória e o lou[G]vor
                   onChange={(e) => setFolder(e.target.value)}
                   className="w-full px-2 py-1.5 text-xs bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 font-bold"
                 >
-                  {['Adoração', 'Geral', 'Jovens', 'Natal', 'Páscoa', ''].map(f => (
-                    <option key={f} value={f}>{f === '' ? 'Raiz (Sem pasta)' : f}</option>
+                  <option value="">Raiz (Sem pasta)</option>
+                  {folders.map(folderItem => (
+                    <option key={folderItem.id} value={folderItem.id}>{folderItem.name}</option>
                   ))}
                 </select>
               </div>
