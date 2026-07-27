@@ -34,6 +34,8 @@ jobs:
         run: npm ci
 
       - name: Build Web App
+        env:
+          API_URL: ${{ secrets.API_URL }}
         run: npm run build
 
       - name: Generate Capacitor Assets
