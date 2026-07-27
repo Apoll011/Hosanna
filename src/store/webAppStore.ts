@@ -210,7 +210,7 @@ const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => 
 // `previousLocalId` is passed when a song's path may have changed as a side effect.
 const commitSongLocally = (set: SetFn, get: GetFn, apiSong: ApiSong, previousLocalId?: string) => {
   const folders = get().folders;
-  const localSong = toLocalSong(apiSong);
+  const localSong = toLocalSong(apiSong, folders);
   const songs = get().songs;
   const virtualFiles = get().virtualFiles;
 
@@ -422,8 +422,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         path: fullPath,
       });
       commitSongLocally(set, get, created);
+      return;
     }
 
+    // No server configured — operate purely locally.
     const newFile: VirtualFile = { path: fullPath, content, updatedAt: Date.now() };
     const updatedFiles = [newFile, ...files];
     set({ virtualFiles: updatedFiles });
@@ -448,8 +450,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         tags: existing.tags,
       });
       commitSongLocally(set, get, updated, path);
+      return;
     }
 
+    // No server configured — operate purely locally.
     const updatedFiles = get().virtualFiles.map(file => {
       if (file.path === path) {
         return { ...file, content, updatedAt: Date.now() };
@@ -471,6 +475,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
 
+    // Only remove locally once the server deletion (if any) has succeeded.
     const updatedFiles = get().virtualFiles.filter(file => file.path !== path);
     const updatedSongs = get().songs.filter(s => s.id !== path);
     const songRemoteIds = { ...get().songRemoteIds };
@@ -487,6 +492,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  // SYNC SYSTEM — pull-only. The server is the single source of truth: this never
+  // pushes local edits (those go out immediately via createVirtualFile/updateVirtualFile/
+  // deleteVirtualFile and the service actions below). Sync just fetches the current
+  // server state and overwrites local state to match it. All requests run in parallel
+  // (including every song page) so a full sync is a couple of round-trips, not a
+  // sequential per-song loop.
   syncLibrary: async () => {
     set({ syncStatus: 'syncing', syncReport: null });
 
@@ -627,6 +638,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       } catch (e) {
         console.error('Failed to add song to service', e);
       }
+      return;
     }
 
     const updatedServices = services.map(svc =>
@@ -656,6 +668,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       } catch (e) {
         console.error('Failed to remove song from service', e);
       }
+      return;
     }
 
     const updatedServices = services.map(svc => {
