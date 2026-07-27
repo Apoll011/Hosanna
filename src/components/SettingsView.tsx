@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { extractMusicianToken, extractMusicianURL, isMusicianAccessUrl } from '../lib/apiClient';
-// Nova importação compatível com React 19
 import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function SettingsView() {
