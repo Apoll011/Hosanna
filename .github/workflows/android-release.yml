@@ -49,6 +49,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          API_URL: ${{ secrets.API_URL }}
         run: |
           ./gradlew clean assembleRelease bundleRelease
 
