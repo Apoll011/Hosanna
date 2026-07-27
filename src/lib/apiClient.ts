@@ -99,6 +99,18 @@ export const extractMusicianToken = (value: string): string => {
   return trimmed;
 };
 
+export const extractMusicianURL = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return url.origin
+  } catch {
+    return null
+  }
+};
+
 export const isMusicianAccessUrl = (value: string): boolean => {
   const trimmed = value.trim();
   if (!trimmed) return false;

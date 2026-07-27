@@ -13,14 +13,10 @@ import SongEditor from './components/SongEditor';
 import ServiceManager from './components/ServiceManager';
 import SettingsView from './components/SettingsView';
 
-// Pull-to-refresh tuning
 const PULL_THRESHOLD = 68; // px of (resisted) drag needed to trigger a refresh
 const PULL_MAX = 96; // px the indicator/content is allowed to travel
 const PULL_RESISTANCE = 0.5; // finger-to-content movement ratio, like native pull-to-refresh
 
-// Walks up from the touched element to find the nearest scrollable ancestor within
-// the content boundary, so the pull gesture only engages when that ancestor is
-// already scrolled to the top (otherwise a normal scroll gesture would be hijacked).
 const findScrollableAncestor = (start: HTMLElement | null, boundary: HTMLElement): HTMLElement => {
   let node: HTMLElement | null = start;
   while (node && node !== boundary.parentElement) {
@@ -55,14 +51,12 @@ export default function App() {
   const touchStartY = useRef<number | null>(null);
   const scrollAncestorRef = useRef<HTMLElement | null>(null);
 
-  // Automatic synchronization on startup if index is empty
   useEffect(() => {
     if (songsLength === 0) {
       syncLibrary().catch(() => {});
     }
   }, [songsLength, syncLibrary]);
 
-  // Real-time Theme manager (Claro, Escuro, Sistema)
   useEffect(() => {
     const root = document.documentElement;
     const applyTheme = (currentTheme: 'light' | 'dark') => {

@@ -253,7 +253,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   recentlyPlayedSongIds: getStorageItem('cp_recently_played', []),
   activeListContext: { type: 'all' },
   theme: getStorageItem('cp_theme', 'light'),
-  serverUrl: getStorageItem('cp_server_url', ''),
+  serverUrl: getStorageItem('cp_server_url', import.meta.env.API_URL),
   serverToken: getStorageItem('cp_server_token', ''),
   fontSize: getStorageItem('cp_font_size', 16),
   showChords: getStorageItem('cp_show_chords', true),
