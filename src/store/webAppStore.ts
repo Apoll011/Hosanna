@@ -146,12 +146,12 @@ type GetFn = () => AppState;
 // Converts a server-authoritative ApiSong into the local Song shape used by the UI.
 // The server's `content` is parsed for the extra ChordPro metadata fields (key, tempo,
 // capo, etc.) that the API itself does not track as first-class columns.
-const toLocalSong = (apiSong: ApiSong): Song => {
+const toLocalSong = (apiSong: ApiSong, folders: LibraryFolder[]): Song => {
   const parsed = parseChordPro(apiSong.content);
   const parts = apiSong.path.split('/');
   const fileName = parts.pop() || '';
-  const folder = parts.length > 0 ? parts.join('/') : '';
-  const parsedTimestamp = Date.parse(apiSong.updatedAt);
+  const folder = folders.find(folderItem => folderItem.id === apiSong.folderId).name;
+  const parsedTimestamp = Date.parse(apiSong.updatedAtid);
 
   return {
     id: apiSong.path,
@@ -176,6 +176,11 @@ const toLocalSong = (apiSong: ApiSong): Song => {
     tags: apiSong.tags,
   };
 };
+
+const toLSong =
+  (folders: LibraryFolder[]) =>
+  (apiSong: ApiSong): Song =>
+    toLocalSong(apiSong, folders);
 
 // Converts a server-authoritative ApiService into the local Service shape, resolving
 // each remote song id back to the local song id (file path) used throughout the UI.
@@ -204,6 +209,7 @@ const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => 
 // Writes a server-confirmed song into local state (songs cache + virtualFiles mirror).
 // `previousLocalId` is passed when a song's path may have changed as a side effect.
 const commitSongLocally = (set: SetFn, get: GetFn, apiSong: ApiSong, previousLocalId?: string) => {
+  const folders = get().folders;
   const localSong = toLocalSong(apiSong);
   const songs = get().songs;
   const virtualFiles = get().virtualFiles;
@@ -523,7 +529,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         remainingPages.forEach(page => apiSongs.push(...page.songs));
       }
 
-      const finalSongs = apiSongs.map(toLocalSong);
+      const finalSongs = apiSongs.map(toLSong(folders));
       const virtualFiles: VirtualFile[] = finalSongs.map(s => ({
         path: s.id,
         content: s.content,

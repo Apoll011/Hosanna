@@ -312,12 +312,6 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
           })
         )}
       </div>
-
-      {/* Simple List Stats Footer */}
-      <div className="px-4 py-2 bg-m3-toolbar dark:bg-m3-toolbar border-t border-m3-border dark:border-m3-dark-border text-[10px] text-m3-secondary dark:text-m3-dark-secondary flex justify-between shrink-0 font-sans font-medium">
-        <span>Biblioteca Sincronizada</span>
-        <span>Mostrados: {filteredAndSortedSongs.length} / {songs.length}</span>
-      </div>
       </>
       )}
 
@@ -347,7 +341,7 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
                   <img src="/logo.png" className="w-10 h-10 rounded-xl border border-m3-border/20 shadow-xs object-cover" alt="Hosanna" referrerPolicy="no-referrer" />
                   <div>
                     <h2 className="text-base font-black text-m3-primary dark:text-m3-dark-primary tracking-tight leading-none">Hosanna</h2>
-                    <p className="text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-medium mt-1">Menu de Navegação</p>
+                    <p className="text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-medium mt-1">Menu</p>
                   </div>
                 </div>
                 <button
@@ -499,11 +493,6 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
                     );
                   })
                 )}
-              </div>
-
-              {/* Drawer Footer */}
-              <div className="p-4 border-t border-m3-border/30 dark:border-m3-dark-border/30 text-center text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-sans font-semibold">
-                Hosanna Repertório
               </div>
             </motion.div>
           </>
