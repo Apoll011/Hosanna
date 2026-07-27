@@ -11,6 +11,57 @@ import {
 import { useAppStore } from '../store/appStore';
 import { extractMusicianToken, extractMusicianURL, isMusicianAccessUrl } from '../lib/apiClient';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { Camera } from '@capacitor/camera';
+import { Camera as CameraIcon } from 'lucide-react';
+
+const CameraPermissionButton = () => {
+  const [permissionStatus, setPermissionStatus] = useState('');
+  const [isRequesting, setIsRequesting] = useState(false);
+
+  const handleRequestPermission = async () => {
+    setIsRequesting(true);
+    try {
+      // Call the Capacitor API
+      const status = await Camera.requestPermissions();
+      
+      // Update state based on user choice ('granted', 'denied', or 'prompt')
+      setPermissionStatus(status.camera);
+
+      if (status.camera === 'granted') {
+        console.log('Permission granted! You can now use the camera.');
+      } else {
+        console.log('Permission denied.');
+      }
+    } catch (error) {
+      console.error('Error requesting permission:', error);
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <button 
+        onClick={handleRequestPermission}
+        disabled={isRequesting || permissionStatus === 'granted'}
+        className="px-5 py-2.5 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-full shadow-xs disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
+      >
+        <CameraIcon className={`w-3.5 h-3.5 ${isRequesting ? 'animate-pulse' : ''}`} />
+        {permissionStatus === 'granted' ? 'Permission Granted' : 'Request Camera Permission'}
+      </button>
+      
+      {/* Conditionally render the status with dynamic colors once a status exists */}
+      {permissionStatus && (
+        <p className={`text-xs font-medium px-2 ${
+          permissionStatus === 'granted' ? 'text-green-600' : 'text-red-500'
+        }`}>
+          Current Status: <span className="capitalize">{permissionStatus}</span>
+        </p>
+      )}
+    </div>
+  );
+};
+
 
 export default function SettingsView() {
   const serverUrl = useAppStore(state => state.serverUrl);
@@ -189,6 +240,7 @@ export default function SettingsView() {
                 <span>
                   Aponte a câmara para o QR Code. O URL e o Token serão extraídos e guardados automaticamente. Pode ser necessário conceder permissões de câmara no seu navegador.
                 </span>
+                <CameraPermissionButton/>
               </div>
             </div>
           )}
