@@ -150,7 +150,7 @@ const toLocalSong = (apiSong: ApiSong, folders: LibraryFolder[]): Song => {
   const parsed = parseChordPro(apiSong.content);
   const parts = apiSong.path.split('/');
   const fileName = parts.pop() || '';
-  const folder = folders.find(folderItem => folderItem.id === apiSong.folderId).name;
+  const folder = apiSong.folderId ? folders.find(folderItem => folderItem.id === apiSong.folderId).name : "";
   const parsedTimestamp = Date.parse(apiSong.updatedAtid);
 
   return {
