@@ -479,8 +479,37 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
             <button onClick={() => setShowControls(false)} className="text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary hover:underline">Fechar</button>
           </div>
 
-          {/* Transposition */}
+          {/* Show/Hide Chords Segmented Control */}
           <div className="space-y-2">
+            <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">Exibição:</span>
+            <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
+              <button
+                onClick={() => setShowChords(false)}
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  !showChords 
+                    ? 'bg-m3-primary text-white shadow-xs' 
+                    : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text'
+                }`}
+              >
+                <EyeOff className="w-3 h-3" />
+                Apenas Letra
+              </button>
+              <button
+                onClick={() => setShowChords(true)}
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  showChords 
+                    ? 'bg-m3-primary text-white shadow-xs' 
+                    : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Com Cifras
+              </button>
+            </div>
+          </div>
+       
+          {showChords && (   
+          <div className="space-y-1.5 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">Transposição:</span>
               <span className="text-[11px] font-bold px-2 py-0.5 bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text rounded font-mono">
@@ -516,38 +545,10 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
               </button>
             </div>
           </div>
-
-          {/* Show/Hide Chords Segmented Control */}
-          <div className="space-y-1.5 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-            <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">Exibição:</span>
-            <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
-              <button
-                onClick={() => setShowChords(false)}
-                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                  !showChords 
-                    ? 'bg-m3-primary text-white shadow-xs' 
-                    : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text'
-                }`}
-              >
-                <EyeOff className="w-3 h-3" />
-                Apenas Letra
-              </button>
-              <button
-                onClick={() => setShowChords(true)}
-                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                  showChords 
-                    ? 'bg-m3-primary text-white shadow-xs' 
-                    : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Com Cifras
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* Show/Hide Diagrams & Instrument select (Only visible when chords are enabled) */}
-          {showChords && (
+          {showChords && (   
             <div className="space-y-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3 animate-in fade-in duration-200">
               {/* Show/Hide Diagrams */}
               <div className="space-y-1.5">
@@ -767,19 +768,18 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
 
             if (section.type === 'comment') {
               return (
-                <div key={secIdx} data-section-index={secIdx} className="italic text-xs text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar px-4 py-2 rounded-xl border-l-2 border-m3-border dark:border-m3-dark-border my-2 select-none">
-                  {section.lines.map(l => l.text).join(', ')}
+                <div
+                  key={secIdx}
+                  data-section-index={secIdx}
+                  className="my-2 select-none pl-3 text-[11px] italic text-m3-secondary/70 dark:text-m3-dark-secondary/70"
+                >
+                  {section.lines.map(l => l.text).join(", ")}
                 </div>
               );
             }
 
-            // Normal Verse with a dynamic left margin line indicator
-            const verseLabel = section.label || `Verso ${secIdx + 1}`;
             return (
               <div key={secIdx} data-section-index={secIdx} className="relative pl-6 sm:pl-8 border-l border-m3-border/30 dark:border-m3-dark-border/30 py-1.5">
-                <div className="absolute -left-1 top-4 text-[9px] font-bold text-m3-primary dark:text-m3-dark-primary -rotate-90 origin-left tracking-wider uppercase select-none whitespace-nowrap opacity-80">
-                  {verseLabel}
-                </div>
                 <div className="space-y-4">
                   {section.lines.map((line, lineIdx) => (
                     <LineRenderer 
@@ -798,6 +798,7 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
 
         {/* Footer info & copyrights */}
         <div className="border-t border-neutral-100 dark:border-zinc-900 pt-6 mt-12 text-center text-[10px] text-neutral-400 dark:text-neutral-500 select-none space-y-1">
+          {ast.metadata.artist && <p>Artista: {ast.metadata.artist}</p>}
           {ast.metadata.composer && <p>Compositor: {ast.metadata.composer}</p>}
           {ast.metadata.copyright && <p>© Copyright: {ast.metadata.copyright}</p>}
           {ast.metadata.album && <p>Álbum: {ast.metadata.album}</p>}
@@ -823,16 +824,55 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
 
         {/* YouTube Floating Play Button */}
         {ast.metadata.youtube && (
-          <button
-            onClick={() => {
-              setShowYoutubePlayer(prev => !prev);
-              if (!showYoutubePlayer) setIsPlayingYoutube(true);
-            }}
-            className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
-            title="Ouvir Áudio no YouTube"
-          >
-            <Youtube className="w-5 h-5" />
-          </button>
+          <>
+            <button
+              onClick={() => {
+                setShowYoutubePlayer(prev => !prev);
+                if (showYoutubePlayer) {
+                  youtubePlayer?.pauseVideo();
+                  setIsPlayingYoutube(false);
+                }
+                else {                
+                  youtubePlayer?.seekTo(0);
+                  youtubePlayer?.playVideo();
+                  setIsPlayingYoutube(true);
+                }
+              }}
+              className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
+              title="Ouvir Áudio no YouTube"
+            >
+              <Youtube className="w-5 h-5" />
+            </button>
+            <div className="hidden">
+              <YouTube 
+                videoId={ast.metadata.youtube.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1] || ast.metadata.youtube}
+                opts={{
+                  height: '0',
+                  width: '0',
+                  playerVars: {
+                    autoplay: 1,
+                    controls: 0,
+                    disablekb: 1,
+                  },
+                }}
+                onReady={(e) => {
+                  setYoutubePlayer(e.target)
+                  e.target.pauseVideo()
+                  setIsPlayingYoutube(false)
+                }}
+                onPlay={() => setIsPlayingYoutube(true)}
+                onPause={() => setIsPlayingYoutube(false)}
+                onEnd={(e) => {
+                  if (isYoutubeRepeat) {
+                    e.target.seekTo(0);
+                    e.target.playVideo();
+                  } else {
+                    setIsPlayingYoutube(false);
+                  }
+                }}
+              />
+            </div>
+          </>
         )}
 
         <div className="flex items-center gap-2">
@@ -941,33 +981,6 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
             >
               <X className="w-4 h-4" />
             </button>
-          </div>
-
-          {/* Invisible actual player */}
-          <div className="hidden">
-            <YouTube 
-              videoId={ast.metadata.youtube.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1] || ast.metadata.youtube}
-              opts={{
-                height: '0',
-                width: '0',
-                playerVars: {
-                  autoplay: 1,
-                  controls: 0,
-                  disablekb: 1,
-                },
-              }}
-              onReady={(e) => setYoutubePlayer(e.target)}
-              onPlay={() => setIsPlayingYoutube(true)}
-              onPause={() => setIsPlayingYoutube(false)}
-              onEnd={(e) => {
-                if (isYoutubeRepeat) {
-                  e.target.seekTo(0);
-                  e.target.playVideo();
-                } else {
-                  setIsPlayingYoutube(false);
-                }
-              }}
-            />
           </div>
         </div>
       )}
