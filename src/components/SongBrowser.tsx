@@ -1,7 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 import React, { useMemo, useState } from 'react';
 import { Search, Folder, FileText, Music, SlidersHorizontal, Plus, Menu, Heart, Clock, X, Check, CircleDot, Timer, ArrowLeft, Settings } from 'lucide-react';

@@ -1,7 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 import React, { useState, useMemo } from 'react';
 import { Eye, EyeOff, BookOpen, Music, ChevronDown, ChevronUp } from 'lucide-react';

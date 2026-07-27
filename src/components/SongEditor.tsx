@@ -1,7 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, X, Type, Music, Tag, Clock, Hash, AlertTriangle, Info, ListCollapse } from 'lucide-react';

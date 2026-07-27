@@ -1,7 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 export interface Song {
   id: string; // File path inside the folder, e.g., "Worship/Digno_es_Tu.chopro"

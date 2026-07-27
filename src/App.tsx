@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Music, CalendarRange, Settings, RefreshCw, Bookmark, AlertTriangle } from 'lucide-react';
 import { useAppStore } from './store/appStore';
@@ -13,9 +8,9 @@ import SongEditor from './components/SongEditor';
 import ServiceManager from './components/ServiceManager';
 import SettingsView from './components/SettingsView';
 
-const PULL_THRESHOLD = 68; // px of (resisted) drag needed to trigger a refresh
-const PULL_MAX = 96; // px the indicator/content is allowed to travel
-const PULL_RESISTANCE = 0.5; // finger-to-content movement ratio, like native pull-to-refresh
+const PULL_THRESHOLD = 68;
+const PULL_MAX = 96;
+const PULL_RESISTANCE = 0.5;
 
 const findScrollableAncestor = (start: HTMLElement | null, boundary: HTMLElement): HTMLElement => {
   let node: HTMLElement | null = start;
@@ -41,7 +36,6 @@ export default function App() {
   const isEditing = useAppStore(state => state.isEditing);
   const setIsEditing = useAppStore(state => state.setIsEditing);
 
-  // Active view tab state: 'songs' | 'services' | 'settings'
   const [activeTab, setActiveTab] = useState<'songs' | 'services' | 'settings'>('songs');
 
   // Pull-to-refresh gesture state
@@ -82,9 +76,6 @@ export default function App() {
     }
   }, [theme]);
 
-  // Pull-to-refresh: native `onTouchMove` listeners in React are passive by default,
-  // which silently blocks `preventDefault()`. Attaching the listener manually with
-  // `{ passive: false }` is required to get a smooth, non-scrolling drag gesture.
   useEffect(() => {
     const boundary = contentRef.current;
     if (!boundary) return;
@@ -176,8 +167,6 @@ export default function App() {
     }
   };
 
-  // Pull-to-refresh indicator: follows the finger while dragging, sticks near the
-  // top and spins while a sync is actually in flight, and fades out otherwise.
   const indicatorActive = isPulling || syncStatus === 'syncing';
   const indicatorOffset = isPulling ? pullDistance : syncStatus === 'syncing' ? 44 : 0;
   const indicatorProgress = Math.min(1, pullDistance / PULL_THRESHOLD);

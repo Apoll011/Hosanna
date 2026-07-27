@@ -1,7 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 import { create } from 'zustand';
 import { Song, Service, VirtualFile, SyncReport, ThemeType, LibraryFolder } from '../types';
