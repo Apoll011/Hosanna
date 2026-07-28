@@ -46,21 +46,12 @@ export interface SongsListResponse {
   totalPages: number;
 }
 
-export interface ApiServiceSong {
-  songId: string;
-  notes?: string;
-  position: number;
-}
-
 export interface ApiService {
   id: string;
   name: string;
   date: string;
   notes?: string;
   elements?: any[];
-  songIds: string[];
-  songs: ApiServiceSong[];
-  songNotes?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -253,9 +244,7 @@ export async function createService(
     name: string;
     date: string;
     notes?: string;
-    songIds?: string[];
-    songNotes?: Record<string, string>;
-    songs?: Array<{ songId: string; notes?: string }>;
+    notes?: string;
   }
 ): Promise<ApiService> {
   return apiRequest<ApiService>(baseUrl, '/api/services', {
@@ -274,9 +263,7 @@ export async function updateServiceApi(
     name?: string;
     date?: string;
     notes?: string;
-    songIds?: string[];
-    songNotes?: Record<string, string>;
-    songs?: Array<{ songId: string; notes?: string }>;
+    notes?: string;
   }
 ): Promise<ApiService> {
   return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}`, {
@@ -290,86 +277,5 @@ export async function deleteService(baseUrl: string, token: string | undefined, 
   await apiRequest<void>(baseUrl, `/api/services/${serviceId}`, {
     token,
     method: 'DELETE',
-  });
-}
-
-export async function addSongToServiceApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  body: { updatedAt: string; songId: string; notes?: string; position?: number }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/songs`, {
-    token,
-    method: 'POST',
-    body,
-  });
-}
-
-export async function removeSongFromServiceApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  songId: string,
-  body: { updatedAt: string }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/songs/${songId}`, {
-    token,
-    method: 'DELETE',
-    body,
-  });
-}
-
-export async function reorderServiceSongsApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  body: { updatedAt: string; orderedSongIds: string[] }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/songs/reorder`, {
-    token,
-    method: 'PUT',
-    body,
-  });
-}
-
-export async function moveServiceSongApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  songId: string,
-  body: { updatedAt: string; targetIndex: number }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/songs/${songId}/move`, {
-    token,
-    method: 'PUT',
-    body,
-  });
-}
-
-export async function updateServiceNotesApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  body: { updatedAt: string; notes: string }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/notes`, {
-    token,
-    method: 'PUT',
-    body,
-  });
-}
-
-export async function updateServiceSongNotesApi(
-  baseUrl: string,
-  token: string | undefined,
-  serviceId: string,
-  songId: string,
-  body: { updatedAt: string; notes: string }
-): Promise<ApiService> {
-  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/songs/${songId}/notes`, {
-    token,
-    method: 'PUT',
-    body,
   });
 }

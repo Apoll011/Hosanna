@@ -13,11 +13,7 @@ import {
   getServices,
   updateSong,
   updateServiceApi,
-  addSongToServiceApi,
-  removeSongFromServiceApi,
-  reorderServiceSongsApi,
-  updateServiceNotesApi,
-  updateServiceSongNotesApi,
+  updateServiceElementsApi
 } from '../lib/apiClient';
 
 interface AppState {
@@ -105,11 +101,6 @@ interface AppState {
   // Services Actions
   updateService: (id: string, name: string, date: string, notes?: string) => void;
   updateServiceElements: (serviceId: string, elements: ServiceElement[]) => void;
-  addSongToService: (serviceId: string, songId: string) => void;
-  removeSongFromService: (serviceId: string, index: number) => void;
-  reorderSongsInService: (serviceId: string, fromIndex: number, toIndex: number) => void;
-  replaceSongInService: (serviceId: string, index: number, newSongId: string) => void;
-  updateSongNotesInService: (serviceId: string, index: number, notes: string) => void;
 
   // Reset app state
   resetApp: () => void;
@@ -183,24 +174,12 @@ const toLSong =
 // Converts a server-authoritative ApiService into the local Service shape, resolving
 // each remote song id back to the local song id (file path) used throughout the UI.
 const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => {
-  const remoteToLocalId = new Map(
-    localSongs.filter(s => s.remoteId).map(s => [s.remoteId as string, s.id])
-  );
-  const orderedSongs = [...apiService.songs].sort((a, b) => a.position - b.position);
-  const songIds = orderedSongs.map(s => remoteToLocalId.get(s.songId) || s.songId);
-  const songNotes: Record<string, string> = {};
-  orderedSongs.forEach(s => {
-    if (s.notes) songNotes[s.position.toString()] = s.notes;
-  });
-
   return {
     id: apiService.id,
     name: apiService.name,
     date: apiService.date,
     notes: apiService.notes,
     elements: apiService.elements || [],
-    songIds,
-    songNotes,
     updatedAt: apiService.updatedAt,
   };
 };
@@ -343,7 +322,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (context.type === 'service') {
       const service = state.services.find(s => s.id === context.serviceId);
       if (!service) return [];
-      return service.songIds;
+      return (service.elements || []).filter(e => e.type === 'song' && e.songId).map(e => e.songId!);
     }
 
     let list = [...state.songs];
@@ -590,21 +569,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     if (serverUrl.trim() !== '') {
       try {
-        // The dedicated /notes endpoint is available to musician tokens too, so use
-        // it whenever only the notes are changing; a name/date change requires the
-        // admin-only full update endpoint.
-        const onlyNotesChanged = name === current.name && date === current.date;
-        const updated = onlyNotesChanged
-          ? await updateServiceNotesApi(serverUrl, serverToken, id, {
-              updatedAt: current.updatedAt || '',
-              notes: notes || '',
-            })
-          : await updateServiceApi(serverUrl, serverToken, id, {
-              updatedAt: current.updatedAt || '',
-              name,
-              date,
-              notes,
-            });
+        const updated = await updateServiceApi(serverUrl, serverToken, id, {
+          updatedAt: current.updatedAt || '',
+          name,
+          date,
+          notes,
+        });
         commitServiceLocally(set, get, updated);
       } catch (e) {
         console.error('Failed to update service', e);
@@ -640,232 +610,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     setStorageItem('cp_services', updatedServices);
   },
 
-  addSongToService: async (serviceId, songId) => {
-    const { serverUrl, serverToken, services, songs } = get();
-    const current = services.find(svc => svc.id === serviceId);
-    if (!current) return;
 
-    if (serverUrl.trim() !== '') {
-      const song = songs.find(s => s.id === songId);
-      if (!song?.remoteId) {
-        console.error('Cannot add song to service: song is not yet synced with the server.');
-        return;
-      }
-      try {
-        const updated = await addSongToServiceApi(serverUrl, serverToken, serviceId, {
-          updatedAt: current.updatedAt || '',
-          songId: song.remoteId,
-        });
-        commitServiceLocally(set, get, updated);
-      } catch (e) {
-        console.error('Failed to add song to service', e);
-      }
-      return;
-    }
-
-    const updatedServices = services.map(svc =>
-      svc.id === serviceId ? { ...svc, songIds: [...svc.songIds, songId] } : svc
-    );
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-  },
-
-  removeSongFromService: async (serviceId, index) => {
-    const { serverUrl, serverToken, services, songs } = get();
-    const current = services.find(svc => svc.id === serviceId);
-    if (!current) return;
-
-    if (serverUrl.trim() !== '') {
-      const localSongId = current.songIds[index];
-      const song = songs.find(s => s.id === localSongId);
-      if (!song?.remoteId) {
-        console.error('Cannot remove song from service: song is not yet synced with the server.');
-        return;
-      }
-      try {
-        const updated = await removeSongFromServiceApi(serverUrl, serverToken, serviceId, song.remoteId, {
-          updatedAt: current.updatedAt || '',
-        });
-        commitServiceLocally(set, get, updated);
-      } catch (e) {
-        console.error('Failed to remove song from service', e);
-      }
-      return;
-    }
-
-    const updatedServices = services.map(svc => {
-      if (svc.id === serviceId) {
-        const updatedSongs = [...svc.songIds];
-        updatedSongs.splice(index, 1);
-
-        // Shift song notes
-        const songNotes: Record<string, string> = {};
-        if (svc.songNotes) {
-          Object.entries(svc.songNotes).forEach(([key, note]) => {
-            const idx = parseInt(key, 10);
-            if (idx < index) {
-              songNotes[idx.toString()] = note;
-            } else if (idx > index) {
-              songNotes[(idx - 1).toString()] = note;
-            }
-          });
-        }
-
-        return { ...svc, songIds: updatedSongs, songNotes };
-      }
-      return svc;
-    });
-
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-  },
-
-  reorderSongsInService: async (serviceId, fromIndex, toIndex) => {
-    const { serverUrl, serverToken, services, songs } = get();
-    const current = services.find(svc => svc.id === serviceId);
-    if (!current) return;
-
-    if (serverUrl.trim() !== '') {
-      const songIds = [...current.songIds];
-      const [removed] = songIds.splice(fromIndex, 1);
-      songIds.splice(toIndex, 0, removed);
-
-      const remoteIds = songIds.map(id => songs.find(s => s.id === id)?.remoteId);
-      if (remoteIds.some(id => !id)) {
-        console.error('Cannot reorder: some songs are not yet synced with the server.');
-        return;
-      }
-
-      try {
-        const updated = await reorderServiceSongsApi(serverUrl, serverToken, serviceId, {
-          updatedAt: current.updatedAt || '',
-          orderedSongIds: remoteIds as string[],
-        });
-        commitServiceLocally(set, get, updated);
-      } catch (e) {
-        console.error('Failed to reorder service songs', e);
-      }
-      return;
-    }
-
-    const updatedServices = services.map(svc => {
-      if (svc.id === serviceId) {
-        const songIds = [...svc.songIds];
-        const [removed] = songIds.splice(fromIndex, 1);
-        songIds.splice(toIndex, 0, removed);
-
-        // Update song notes mapping
-        const songNotes: Record<string, string> = {};
-        if (svc.songNotes) {
-          Object.entries(svc.songNotes).forEach(([key, note]) => {
-            const idx = parseInt(key, 10);
-            let newIdx = idx;
-
-            if (idx === fromIndex) {
-              newIdx = toIndex;
-            } else if (idx > fromIndex && idx <= toIndex) {
-              newIdx = idx - 1;
-            } else if (idx < fromIndex && idx >= toIndex) {
-              newIdx = idx + 1;
-            }
-
-            songNotes[newIdx.toString()] = note;
-          });
-        }
-
-        return { ...svc, songIds, songNotes };
-      }
-      return svc;
-    });
-
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-  },
-
-  replaceSongInService: async (serviceId, index, newSongId) => {
-    const { serverUrl, serverToken, services, songs } = get();
-    const current = services.find(svc => svc.id === serviceId);
-    if (!current) return;
-
-    if (serverUrl.trim() !== '') {
-      const oldLocalId = current.songIds[index];
-      const oldSong = songs.find(s => s.id === oldLocalId);
-      const newSong = songs.find(s => s.id === newSongId);
-      if (!oldSong?.remoteId || !newSong?.remoteId) {
-        console.error('Cannot replace song: not yet synced with the server.');
-        return;
-      }
-      try {
-        // There is no dedicated "replace" endpoint; a swap is a remove followed by
-        // an add back at the same position, chained on each response's updatedAt.
-        const afterRemove = await removeSongFromServiceApi(serverUrl, serverToken, serviceId, oldSong.remoteId, {
-          updatedAt: current.updatedAt || '',
-        });
-        const afterAdd = await addSongToServiceApi(serverUrl, serverToken, serviceId, {
-          updatedAt: afterRemove.updatedAt,
-          songId: newSong.remoteId,
-          position: index,
-        });
-        commitServiceLocally(set, get, afterAdd);
-      } catch (e) {
-        console.error('Failed to replace song in service', e);
-      }
-      return;
-    }
-
-    const updatedServices = services.map(svc => {
-      if (svc.id === serviceId) {
-        const songIds = [...svc.songIds];
-        songIds[index] = newSongId;
-        return { ...svc, songIds };
-      }
-      return svc;
-    });
-
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-  },
-
-  updateSongNotesInService: async (serviceId, index, notes) => {
-    const { serverUrl, serverToken, services, songs } = get();
-    const current = services.find(svc => svc.id === serviceId);
-    if (!current) return;
-
-    if (serverUrl.trim() !== '') {
-      const localSongId = current.songIds[index];
-      const song = songs.find(s => s.id === localSongId);
-      if (!song?.remoteId) {
-        console.error('Cannot update note: song is not yet synced with the server.');
-        return;
-      }
-      try {
-        const updated = await updateServiceSongNotesApi(serverUrl, serverToken, serviceId, song.remoteId, {
-          updatedAt: current.updatedAt || '',
-          notes,
-        });
-        commitServiceLocally(set, get, updated);
-      } catch (e) {
-        console.error('Failed to update song note', e);
-      }
-      return;
-    }
-
-    const updatedServices = services.map(svc => {
-      if (svc.id === serviceId) {
-        const songNotes = { ...(svc.songNotes || {}) };
-        if (notes.trim() === '') {
-          delete songNotes[index.toString()];
-        } else {
-          songNotes[index.toString()] = notes;
-        }
-        return { ...svc, songNotes };
-      }
-      return svc;
-    });
-
-    set({ services: updatedServices });
-    setStorageItem('cp_services', updatedServices);
-  },
 
   resetApp: () => {
     set({

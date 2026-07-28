@@ -55,9 +55,9 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const setActiveServiceId = useAppStore(state => state.setActiveServiceId);
 
   const updateService = useAppStore(state => state.updateService);
-  const removeSongFromService = useAppStore(state => state.removeSongFromService);
-  const reorderSongsInService = useAppStore(state => state.reorderSongsInService);
-  const updateSongNotesInService = useAppStore(state => state.updateSongNotesInService);
+  
+  
+  
   const updateServiceElements = useAppStore(state => state.updateServiceElements);
   const baseFontSize = useAppStore(state => state.fontSize);
 
@@ -135,13 +135,16 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
     updateService(activeService.id, name, date, activeService.notes);
   };
 
-  const handleMoveSong = (index: number, direction: 'up' | 'down') => {
+  const handleMoveElement = (index: number, direction: 'up' | 'down') => {
     if (!activeService) return;
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
-
-    if (targetIdx < 0 || targetIdx >= activeService.songIds.length) return;
-
-    reorderSongsInService(activeService.id, index, targetIdx);
+    const elements = [...(activeService.elements || [])];
+    if (targetIdx < 0 || targetIdx >= elements.length) return;
+    const [moved] = elements.splice(index, 1);
+    elements.splice(targetIdx, 0, moved);
+    // update positions
+    elements.forEach((e, i) => e.position = i);
+    updateServiceElements(activeService.id, elements);
   };
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
@@ -167,7 +170,11 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
     e.preventDefault();
     if (draggedIdx !== null && draggedIdx !== index) {
       if (!activeService) return;
-      reorderSongsInService(activeService.id, draggedIdx, index);
+      const elements = [...(activeService.elements || [])];
+      const [moved] = elements.splice(draggedIdx, 1);
+      elements.splice(index, 0, moved);
+      elements.forEach((e, i) => e.position = i);
+      updateServiceElements(activeService.id, elements);
     }
     setDraggedIdx(null);
     setDragOverIdx(null);
@@ -194,7 +201,11 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const handleTouchEndList = (e: React.TouchEvent) => {
     if (draggedIdx !== null && dragOverIdx !== null && draggedIdx !== dragOverIdx) {
       if (activeService) {
-        reorderSongsInService(activeService.id, draggedIdx, dragOverIdx);
+        const elements = [...(activeService.elements || [])];
+        const [moved] = elements.splice(draggedIdx, 1);
+        elements.splice(dragOverIdx, 0, moved);
+        elements.forEach((e, i) => e.position = i);
+        updateServiceElements(activeService.id, elements);
       }
     }
     setDraggedIdx(null);
@@ -203,26 +214,7 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   };
 
   // Find actual Song details for IDs in the active service, flagging missing files
-  const serviceSongs = useMemo(() => {
-    if (!activeService) return [];
-    return activeService.songIds.map(id => {
-      const found = songs.find(s => s.id === id);
-      if (found) {
-        return { ...found, isMissing: false };
-      }
-      return {
-        id,
-        title: 'Cântico em falta',
-        artist: 'Ficheiro não sincronizado ou apagado',
-        songNumber: '',
-        content: '',
-        folder: '',
-        fileName: '',
-        updatedAt: 0,
-        isMissing: true
-      };
-    });
-  }, [activeService, songs]);
+  
 
   // Filter list of songs that can be added or replaced
   const addableSongsFiltered = useMemo(() => {
@@ -252,28 +244,27 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
 
   const unifiedItems = useMemo(() => {
     if (!activeService) return [];
-    const songsList = activeService.songIds.map((id, idx) => {
-      const found = songs.find(s => s.id === id);
-      const note = activeService.songNotes?.[idx.toString()] || '';
+    return (activeService.elements || []).map((elem, idx) => {
+      if (elem.type === 'song' && elem.songId) {
+        const found = songs.find(s => s.id === elem.songId);
+        return {
+          kind: 'song' as const,
+          key: `song-${elem.songId}-${idx}`,
+          songId: elem.songId,
+          song: found || null,
+          isMissing: !found,
+          notes: elem.notes || '',
+          position: elem.position !== undefined ? elem.position : idx,
+          element: elem
+        };
+      }
       return {
-        kind: 'song' as const,
-        key: `song-${id}-${idx}`,
-        songId: id,
-        song: found || null,
-        isMissing: !found,
-        notes: note,
-        position: idx,
+        kind: 'element' as const,
+        key: `elem-${elem.id}`,
+        element: elem,
+        position: elem.position !== undefined ? elem.position : idx,
       };
-    });
-
-    const elementsList = (activeService.elements || []).map((elem, idx) => ({
-      kind: 'element' as const,
-      key: `elem-${elem.id}`,
-      element: elem,
-      position: elem.position !== undefined ? elem.position : idx,
-    }));
-
-    return [...songsList, ...elementsList].sort((a, b) => a.position - b.position);
+    }).sort((a, b) => a.position - b.position);
   }, [activeService, songs]);
 
   const activeViewerSong = useMemo(() => {
@@ -1440,7 +1431,12 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
                             <ChevronDown className="w-4 h-4 md:w-3.5 md:h-3.5" />
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); removeSongFromService(activeService.id, index); }}
+                            onClick={(e) => { e.stopPropagation(); 
+    const newElements = [...(activeService.elements || [])];
+    newElements.splice(index, 1);
+    newElements.forEach((e, i) => e.position = i);
+    updateServiceElements(activeService.id, newElements);
+ }}
                             className="p-1.5 md:p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/40 text-red-500 hover:text-red-600 transition-all ml-1"
                           >
                             <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
@@ -1689,9 +1685,13 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
                         <button
                           onClick={() => {
                             if (isReplacingIndex !== null) {
-                              replaceSongInService(activeService.id, isReplacingIndex, song.id);
+                              
+    const newElements = [...(activeService.elements || [])];
+    newElements[isReplacingIndex] = { ...newElements[isReplacingIndex], songId: song.id, title: song.title };
+    updateServiceElements(activeService.id, newElements);
+;
                             } else {
-                              addSongToService(activeService.id, song.id);
+                              updateServiceElements(activeService.id, [...(activeService.elements || []), { id: crypto.randomUUID(), type: 'song', title: song.title, songId: song.id, position: (activeService.elements || []).length }]);
                             }
                             setIsAddingSong(false);
                             setIsReplacingIndex(null);
