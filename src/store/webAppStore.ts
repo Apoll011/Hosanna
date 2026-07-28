@@ -104,6 +104,7 @@ interface AppState {
 
   // Services Actions
   updateService: (id: string, name: string, date: string, notes?: string) => void;
+  updateServiceElements: (serviceId: string, elements: ServiceElement[]) => void;
   addSongToService: (serviceId: string, songId: string) => void;
   removeSongFromService: (serviceId: string, index: number) => void;
   reorderSongsInService: (serviceId: string, fromIndex: number, toIndex: number) => void;
@@ -197,6 +198,7 @@ const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => 
     name: apiService.name,
     date: apiService.date,
     notes: apiService.notes,
+    elements: apiService.elements || [],
     songIds,
     songNotes,
     updatedAt: apiService.updatedAt,
@@ -611,6 +613,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     const updatedServices = services.map(svc => (svc.id === id ? { ...svc, name, date, notes } : svc));
+    set({ services: updatedServices });
+    setStorageItem('cp_services', updatedServices);
+  },
+
+  updateServiceElements: async (serviceId, elements) => {
+    const { serverUrl, serverToken, services } = get();
+    const current = services.find(svc => svc.id === serviceId);
+    if (!current) return;
+
+    if (serverUrl.trim() !== '') {
+      try {
+        const updated = await updateServiceElementsApi(serverUrl, serverToken, serviceId, {
+          updatedAt: current.updatedAt || '',
+          elements,
+        });
+        commitServiceLocally(set, get, updated);
+      } catch (e) {
+        console.error('Failed to update service elements', e);
+      }
+      return;
+    }
+
+    const updatedServices = services.map(svc => (svc.id === serviceId ? { ...svc, elements } : svc));
     set({ services: updatedServices });
     setStorageItem('cp_services', updatedServices);
   },

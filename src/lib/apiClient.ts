@@ -57,11 +57,25 @@ export interface ApiService {
   name: string;
   date: string;
   notes?: string;
+  elements?: any[];
   songIds: string[];
   songs: ApiServiceSong[];
   songNotes?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+}
+
+export async function updateServiceElementsApi(
+  baseUrl: string,
+  token: string | undefined,
+  serviceId: string,
+  body: { updatedAt: string; elements: any[] }
+): Promise<ApiService> {
+  return apiRequest<ApiService>(baseUrl, `/api/services/${serviceId}/elements`, {
+    token,
+    method: 'PUT',
+    body,
+  });
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/$/, '');

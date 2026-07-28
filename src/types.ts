@@ -32,11 +32,20 @@ export interface LibraryFolder {
   songCount?: number;
 }
 
+export interface ServiceElement {
+  id: string;
+  type: 'welcome' | 'scripture' | 'message' | 'reading' | 'announcement' | 'custom' | string;
+  title: string;
+  content?: string;
+  position?: number;
+}
+
 export interface Service {
   id: string;
   name: string;
   date: string;
   songIds: string[]; // Ordered list of song IDs
+  elements?: ServiceElement[];
   notes?: string;
   songNotes?: Record<string, string>; // Map of index to custom notes
   updatedAt?: string; // Server's updatedAt (ISO string), used for optimistic concurrency

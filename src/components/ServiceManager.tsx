@@ -57,9 +57,8 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const updateService = useAppStore(state => state.updateService);
   const removeSongFromService = useAppStore(state => state.removeSongFromService);
   const reorderSongsInService = useAppStore(state => state.reorderSongsInService);
-  const addSongToService = useAppStore(state => state.addSongToService);
-  const replaceSongInService = useAppStore(state => state.replaceSongInService);
   const updateSongNotesInService = useAppStore(state => state.updateSongNotesInService);
+  const updateServiceElements = useAppStore(state => state.updateServiceElements);
   const baseFontSize = useAppStore(state => state.fontSize);
 
   // Active song index within the service alignment for the Special Song Viewer
@@ -251,11 +250,38 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
+  const unifiedItems = useMemo(() => {
+    if (!activeService) return [];
+    const songsList = activeService.songIds.map((id, idx) => {
+      const found = songs.find(s => s.id === id);
+      const note = activeService.songNotes?.[idx.toString()] || '';
+      return {
+        kind: 'song' as const,
+        key: `song-${id}-${idx}`,
+        songId: id,
+        song: found || null,
+        isMissing: !found,
+        notes: note,
+        position: idx,
+      };
+    });
+
+    const elementsList = (activeService.elements || []).map((elem, idx) => ({
+      kind: 'element' as const,
+      key: `elem-${elem.id}`,
+      element: elem,
+      position: elem.position !== undefined ? elem.position : idx,
+    }));
+
+    return [...songsList, ...elementsList].sort((a, b) => a.position - b.position);
+  }, [activeService, songs]);
+
   const activeViewerSong = useMemo(() => {
     if (!activeService || activeServiceSongIndex === null) return null;
-    const songId = activeService.songIds[activeServiceSongIndex];
-    return songs.find(s => s.id === songId) || null;
-  }, [activeService, activeServiceSongIndex, songs]);
+    const currentItem = unifiedItems[activeServiceSongIndex];
+    if (!currentItem || currentItem.kind !== 'song') return null;
+    return songs.find(s => s.id === currentItem.songId) || null;
+  }, [activeService, activeServiceSongIndex, songs, unifiedItems]);
 
   const activeViewerAst = useMemo(() => {
     if (!activeViewerSong) return null;
@@ -458,10 +484,96 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
     setTouchEnd(null);
   };
 
-  // VIEW MODE 3: SPECIAL SONG VIEWER (Full Screen setlist swipe reader inside the tab)
+  // VIEW MODE 3: SPECIAL SETLIST ITEM VIEWER (Full Screen setlist swipe reader inside the tab)
   if (activeService && activeServiceSongIndex !== null) {
-    const songId = activeService.songIds[activeServiceSongIndex];
-    
+    const currentItem = unifiedItems[activeServiceSongIndex];
+
+    if (!currentItem) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-m3-bg dark:bg-m3-dark-bg h-full select-none">
+          <HelpCircle className="w-12 h-12 text-red-500 mb-4 animate-pulse" />
+          <h3 className="text-sm font-black text-red-600 uppercase tracking-wider mb-1">Item Inválido</h3>
+          <button 
+            onClick={() => setActiveServiceSongIndex(null)}
+            className="mt-4 bg-m3-primary text-white text-xs font-black px-4 py-2.5 rounded-full"
+          >
+            Voltar ao Plano do Culto
+          </button>
+        </div>
+      );
+    }
+
+    if (currentItem.kind === 'element') {
+      const elem = currentItem.element;
+      return (
+        <div 
+          className="flex-1 flex flex-col h-full bg-m3-bg dark:bg-m3-dark-bg overflow-hidden relative select-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Top Navbar */}
+          <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none z-10">
+            <button
+              onClick={() => setActiveServiceSongIndex(null)}
+              className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary font-medium"
+            >
+              <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
+              <span className="text-sm">Plano</span>
+            </button>
+
+            <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-m3-primary-light text-m3-primary dark:bg-m3-dark-primary-light dark:text-m3-dark-text border border-m3-border/30">
+              {elem.type}
+            </span>
+          </div>
+
+          {/* Content Body */}
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center">
+            <div className="max-w-xl w-full bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-3xl p-8 shadow-xl space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-primary flex items-center justify-center mx-auto">
+                <FileText className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-black text-m3-text dark:text-m3-dark-text">
+                {elem.title || 'Elemento de Culto'}
+              </h2>
+              {elem.content && (
+                <div className="text-sm font-medium leading-relaxed text-m3-secondary dark:text-m3-dark-secondary whitespace-pre-wrap pt-4 border-t border-m3-border/30 dark:border-m3-dark-border/30">
+                  {elem.content}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Bar Controls */}
+          <div className="h-16 px-6 bg-m3-toolbar dark:bg-m3-dark-toolbar border-t border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none">
+            <button
+              onClick={() => setActiveServiceSongIndex(Math.max(0, activeServiceSongIndex - 1))}
+              disabled={activeServiceSongIndex === 0}
+              className="px-4 py-2 rounded-full border border-m3-border/30 text-xs font-bold text-m3-text dark:text-m3-dark-text disabled:opacity-30 flex items-center gap-1 hover:bg-m3-hover"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Anterior
+            </button>
+
+            <span className="text-xs font-bold text-m3-secondary dark:text-m3-dark-secondary">
+              {activeServiceSongIndex + 1} de {unifiedItems.length}
+            </span>
+
+            <button
+              onClick={() => setActiveServiceSongIndex(Math.min(unifiedItems.length - 1, activeServiceSongIndex + 1))}
+              disabled={activeServiceSongIndex === unifiedItems.length - 1}
+              className="px-4 py-2 rounded-full bg-m3-primary text-white text-xs font-bold disabled:opacity-30 flex items-center gap-1 hover:opacity-95"
+            >
+              Seguinte
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const songId = currentItem.songId;
+
     if (!activeViewerSong || !activeViewerAst) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-m3-bg dark:bg-m3-dark-bg h-full select-none">
@@ -482,7 +594,7 @@ export default function ServiceManager({ onSelectSong }: ServiceManagerProps) {
             </button>
             <button 
               onClick={() => setActiveServiceSongIndex(null)}
-              className="bg-m3-sidebar dark:bg-m3-dark-sidebar text-m3-secondary text-xs font-black px-4 py-2.5 rounded-full border border-m3-border/30 hover:bg-m3-hover"
+              className="bg-m3-sidebar dark:bg-m3-dark-sidebar text-m3-secondary dark:text-m3-dark-secondary text-xs font-black px-4 py-2.5 rounded-full border border-m3-border/30 hover:bg-m3-hover"
             >
               Voltar ao Plano do Culto
             </button>
