@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Music, CalendarRange, Settings, RefreshCw, Bookmark, AlertTriangle, Menu, Search } from 'lucide-react';
+import { Music, CalendarRange, RefreshCw, AlertTriangle, Menu, Search } from 'lucide-react';
 import { useAppStore } from './store/appStore';
 
 import SongBrowser from './components/SongBrowser';
@@ -224,6 +224,7 @@ export default function App() {
                     songId={activeSongId}
                     onBack={() => setActiveSongId(null)}
                     onEdit={() => setIsEditing(true)}
+                    setSong={setActiveSongId}
                   />
                 ) : (
                   <SongBrowser
@@ -248,7 +249,7 @@ export default function App() {
           </div>
         </div>
 
-        {!activeSongId && !isEditing && !isPresenting && (
+        {(!activeSongId && !isEditing && !isPresenting) && (
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[70%] max-w-[220px] h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
             <button
                 onClick={() => {

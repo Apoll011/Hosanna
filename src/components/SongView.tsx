@@ -3,10 +3,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Edit2, Music, Eye, EyeOff, Check, User, 
-  CalendarPlus, ChevronLeft, ChevronRight, SlidersHorizontal, 
+  ChevronLeft, ChevronRight, SlidersHorizontal, 
   Heart, X, BookOpen, HelpCircle,
   Youtube as YTIcon, Play, Pause, Repeat, SkipBack, SkipForward, Disc,
-  Plus, Minus, RotateCcw, Sun, ChevronsDown, Sparkles
+  Plus, Minus, Sun, ChevronsDown
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { parseChordPro, transposeChord } from '../lib/chordpro';
@@ -47,9 +47,10 @@ interface SongViewProps {
   songId: string;
   onBack: () => void;
   onEdit: () => void;
+  setSong: (id: string) => void;
 }
 
-export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
+export default function SongView({ songId, onBack, onEdit, setSong }: SongViewProps) {
   const songs = useAppStore(state => state.songs);
   const services = useAppStore(state => state.services);
   
@@ -67,8 +68,6 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
   const setInstrument = useAppStore(state => state.setInstrument);
   const favoriteSongIds = useAppStore(state => state.favoriteSongIds);
   const toggleFavoriteSong = useAppStore(state => state.toggleFavoriteSong);
-  const activeSongId = useAppStore(state => state.activeSongId);
-  const setActiveSongId = useAppStore(state => state.setActiveSongId);
 
   // Swipe logic & active song lists
   const getActiveSongListIds = useAppStore(state => state.getActiveSongListIds);
@@ -343,22 +342,10 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
     const distance = touchStart - touchEnd;
     const minSwipeDistance = 70;
 
-    if (distance > minSwipeDistance && currentIndex < activeSongIds.length - 1) {
-      // Swipe Left -> Next Song
-      const nextId = activeSongIds[currentIndex + 1];
-      useAppStore.getState().addRecentlyPlayedSong(nextId);
-      setActiveSongId(nextId);
-      setTransposeVal(0); // Reset transpose on slide
-      setShowYoutubePlayer(false);
-      setIsPlayingYoutube(false);
-    } else if (distance < -minSwipeDistance && currentIndex > 0) {
-      // Swipe Right -> Previous Song
-      const prevId = activeSongIds[currentIndex - 1];
-      useAppStore.getState().addRecentlyPlayedSong(prevId);
-      setActiveSongId(prevId);
-      setTransposeVal(0);
-      setShowYoutubePlayer(false);
-      setIsPlayingYoutube(false);
+    if (distance > minSwipeDistance) {
+        handleNextSong()
+    } else if (distance < -minSwipeDistance) {
+        handlePrevSong()
     }
 
     setTouchStart(null);
@@ -370,7 +357,7 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
     if (currentIndex < activeSongIds.length - 1) {
       const nextId = activeSongIds[currentIndex + 1];
       useAppStore.getState().addRecentlyPlayedSong(nextId);
-      setActiveSongId(nextId);
+      setSong(nextId);
       setTransposeVal(0);
       setShowYoutubePlayer(false);
       setIsPlayingYoutube(false);
@@ -381,7 +368,7 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
     if (currentIndex > 0) {
       const prevId = activeSongIds[currentIndex - 1];
       useAppStore.getState().addRecentlyPlayedSong(prevId);
-      setActiveSongId(prevId);
+      setSong(prevId);
       setTransposeVal(0);
       setShowYoutubePlayer(false);
       setIsPlayingYoutube(false);

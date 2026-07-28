@@ -209,6 +209,10 @@ export default function ServiceManager() {
         songId={viewingSongId}
         onBack={closeSong}
         onEdit={() => {}} 
+        setSong={(id: string) => {
+            setActiveSongId(id);
+            setViewingSongId(id);
+        }}
       />
     );
   }
