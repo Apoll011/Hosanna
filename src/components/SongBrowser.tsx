@@ -25,7 +25,6 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
   const selectedFolder = useAppStore(state => state.selectedFolder);
   const setSelectedFolder = useAppStore(state => state.setSelectedFolder);
   const searchQuery = useAppStore(state => state.searchQuery);
-  const setSearchQuery = useAppStore(state => state.setSearchQuery);
   const sortBy = useAppStore(state => state.sortBy);
   const setSortBy = useAppStore(state => state.setSortBy);
 
