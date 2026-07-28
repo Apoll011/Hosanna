@@ -132,8 +132,10 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
       {/* Header Search Area */}
       <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0">
         
-        {/* Search Bar with Menu toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h2 className="text-lg font-black text-m3-text dark:text-m3-dark-text tracking-tight">{getSectionTitle()}</h2>
+          </div>
           {selectedSection === 'circle' || selectedSection === 'metronome' || selectedSection === 'settings' ? (
             <button
               onClick={() => setSelectedSection('all')}
@@ -142,35 +144,7 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
             >
               <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
             </button>
-          ) : (
-            <button
-              onClick={() => setShowDrawer(true)}
-              id="btn_open_nav_drawer"
-              className="p-1.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95 flex items-center gap-2 pr-3"
-              title="Abrir Menu de Navegação"
-            >
-              <img src="/logo.png" className="w-7 h-7 rounded-lg object-cover border border-m3-border/20 shadow-xs" alt="Hosanna" referrerPolicy="no-referrer" />
-              <Menu className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-            </button>
-          )}
-          
-          {selectedSection !== 'circle' && selectedSection !== 'metronome' && selectedSection !== 'settings' ? (
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-m3-secondary dark:text-m3-dark-secondary" />
-              <input
-                type="text"
-                id="input_search_songs"
-                placeholder="Pesquisar título, letra, autor, número, tom..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70"
-              />
-            </div>
-          ) : (
-            <div className="flex-1 pl-2">
-              <h2 className="text-lg font-black text-m3-text dark:text-m3-dark-text tracking-tight">{getSectionTitle()}</h2>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Filters and Sorting controllers */}

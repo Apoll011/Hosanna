@@ -1,7 +1,6 @@
 
 
-import React, { useState, useMemo } from 'react';
-import { Eye, EyeOff, BookOpen, Music, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useMemo } from 'react';
 import { useAppStore } from '../store/appStore';
 import { chordDictionary } from '../lib/chordDictionary';
 import { transposeChord } from '../lib/chordpro';

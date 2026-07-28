@@ -52,7 +52,6 @@ interface SongViewProps {
 export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
   const songs = useAppStore(state => state.songs);
   const services = useAppStore(state => state.services);
-  const addSongToService = useAppStore(state => state.addSongToService);
   
   // Persisted state preferences from store
   const fontSize = useAppStore(state => state.fontSize);
@@ -328,15 +327,6 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
       if (next < -12) next += 12;
       return next;
     });
-  };
-
-  const handleAddToService = (svcId: string, svcName: string) => {
-    addSongToService(svcId, song.id);
-    setShowServiceSuccess(svcName);
-    setTimeout(() => {
-      setShowServiceSuccess(null);
-      setShowServiceMenu(false);
-    }, 1500);
   };
 
   // Touch Swipe handlers

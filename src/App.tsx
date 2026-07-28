@@ -1,5 +1,6 @@
+// src/App.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Music, CalendarRange, Settings, RefreshCw, Bookmark, AlertTriangle } from 'lucide-react';
+import { Music, CalendarRange, Settings, RefreshCw, Bookmark, AlertTriangle, Menu, Search } from 'lucide-react';
 import { useAppStore } from './store/appStore';
 
 import SongBrowser from './components/SongBrowser';
@@ -7,6 +8,8 @@ import SongView from './components/SongView';
 import SongEditor from './components/SongEditor';
 import ServiceManager from './components/ServiceManager';
 import SettingsView from './components/SettingsView';
+import FirstTimeSetup from './components/FirstTimeSetup';
+import NavigationDrawer from './components/NavigationDrawer';
 
 const PULL_THRESHOLD = 68;
 const PULL_MAX = 96;
@@ -29,21 +32,29 @@ export default function App() {
   const songsLength = useAppStore(state => state.songs.length);
   const syncLibrary = useAppStore(state => state.syncLibrary);
   const syncStatus = useAppStore(state => state.syncStatus);
+  const serverUrl = useAppStore(state => state.serverUrl);
+  const serverToken = useAppStore(state => state.serverToken);
+  const hasSkippedSetup = useAppStore(state => state.hasSkippedSetup);
 
   const activeSongId = useAppStore(state => state.activeSongId);
   const setActiveSongId = useAppStore(state => state.setActiveSongId);
   
   const isEditing = useAppStore(state => state.isEditing);
   const setIsEditing = useAppStore(state => state.setIsEditing);
+  
+  const isPresenting = useAppStore(state => state.isPresenting);
 
   const [activeTab, setActiveTab] = useState<'songs' | 'services' | 'settings'>('songs');
 
-  // Pull-to-refresh gesture state
   const contentRef = useRef<HTMLDivElement>(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const scrollAncestorRef = useRef<HTMLElement | null>(null);
+
+  const searchQuery = useAppStore(state => state.searchQuery);
+  const setSearchQuery = useAppStore(state => state.setSearchQuery);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   useEffect(() => {
     if (songsLength === 0) {
@@ -81,7 +92,7 @@ export default function App() {
     if (!boundary) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (syncStatus === 'syncing' || isEditing) return;
+      if (syncStatus === 'syncing' || isEditing || isPresenting) return;
 
       const scrollEl = findScrollableAncestor(e.target as HTMLElement, boundary);
       scrollAncestorRef.current = scrollEl;
@@ -135,54 +146,47 @@ export default function App() {
       boundary.removeEventListener('touchend', handleTouchEnd);
       boundary.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [syncStatus, isEditing, syncLibrary]);
-
-  // Tab Header titles helper
-  const getHeaderTitle = () => {
-    switch (activeTab) {
-      case 'songs':
-        if (isEditing) return activeSongId ? 'Editar Cântico' : 'Novo Cântico';
-        if (activeSongId) return 'Visualizar Cântico';
-        return 'Cânticos';
-      case 'services':
-        return 'Cultos';
-      case 'settings':
-        return 'Definições';
-      default:
-        return 'Hosanna';
-    }
-  };
-
-  // Icon corresponding to the active view
-  const getHeaderIcon = () => {
-    switch (activeTab) {
-      case 'songs':
-        return <Music className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />;
-      case 'services':
-        return <CalendarRange className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />;
-      case 'settings':
-        return <Settings className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />;
-      default:
-        return <Bookmark className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />;
-    }
-  };
+  }, [syncStatus, isEditing, isPresenting, syncLibrary]);
 
   const indicatorActive = isPulling || syncStatus === 'syncing';
   const indicatorOffset = isPulling ? pullDistance : syncStatus === 'syncing' ? 44 : 0;
   const indicatorProgress = Math.min(1, pullDistance / PULL_THRESHOLD);
   const isSyncing = syncStatus === 'syncing';
 
+  if (!serverUrl && !serverToken && !hasSkippedSetup) {
+    return <FirstTimeSetup />;
+  }
+
   return (
     <div className="flex-1 flex overflow-hidden bg-m3-bg dark:bg-m3-dark-bg text-m3-text dark:text-m3-dark-text relative h-full">
-      
-      {/* Primary Screen Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         
+        {(!activeSongId && !isEditing && !isPresenting) && (
+          <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0 z-10 relative">
+            <button
+              onClick={() => setShowDrawer(true)}
+              className="p-1.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95 flex items-center gap-2 pr-3"
+              title="Abrir Menu de Navegação"
+            >
+              <img src="/logo.png" className="w-7 h-7 rounded-lg object-cover border border-m3-border/20 shadow-xs" alt="Hosanna" referrerPolicy="no-referrer" />
+              <Menu className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
+            </button>
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-m3-secondary dark:text-m3-dark-secondary" />
+              <input
+                type="text"
+                placeholder={activeTab === 'services' ? "Pesquisar cultos..." : "Pesquisar título, autor, letra..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70"
+              />
+            </div>
+          </div>
+        )}
 
+        <NavigationDrawer show={showDrawer} onClose={() => setShowDrawer(false)} />
 
-        {/* Active Tab Screen Content Renderer */}
         <div ref={contentRef} className="flex-1 overflow-hidden relative touch-pan-y">
-          {/* Pull-to-refresh indicator (drag down from the top to sync) */}
           <div
             className="absolute left-1/2 top-2 z-30 flex items-center justify-center w-9 h-9 rounded-full bg-m3-toolbar/95 dark:bg-m3-dark-toolbar/95 border border-m3-border/40 dark:border-m3-dark-border/40 shadow-md pointer-events-none"
             style={{
@@ -237,61 +241,54 @@ export default function App() {
             )}
 
             {activeTab === 'services' && (
-              <ServiceManager
-                onSelectSong={(id) => {
-                  setActiveSongId(id);
-                  setActiveTab('songs');
-                  setIsEditing(false);
-                }}
-              />
+              <ServiceManager />
             )}
 
             {activeTab === 'settings' && <SettingsView />}
           </div>
         </div>
 
-        {!activeSongId && !isEditing && (
+        {!activeSongId && !isEditing && !isPresenting && (
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[70%] max-w-[220px] h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
-                <button
-                    onClick={() => {
-                      setActiveTab('songs');
-                      setActiveSongId(null);
-                      setIsEditing(false);
-                    }}
-                    id="nav_btn_songs"
-                    className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-                        activeTab === 'songs'
-                            ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
-                            : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
-                    }`}
-                >
-                  <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'songs' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
-                    <Music className="w-4.5 h-4.5" />
-                  </div>
-                  <span className="text-[10px] font-black tracking-wide">Cânticos</span>
-                </button>
-
-                <button
-                    onClick={() => {
-                      setActiveTab('services');
-                      setActiveSongId(null);
-                      setIsEditing(false);
-                    }}
-                    id="nav_btn_services"
-                    className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-                        activeTab === 'services'
-                            ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
-                            : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
-                    }`}
-                >
-                  <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'services' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
-                    <CalendarRange className="w-4.5 h-4.5" />
-                  </div>
-                  <span className="text-[10px] font-black tracking-wide">Cultos</span>
-                </button>
+            <button
+                onClick={() => {
+                  setActiveTab('songs');
+                  setActiveSongId(null);
+                  setIsEditing(false);
+                }}
+                id="nav_btn_songs"
+                className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
+                    activeTab === 'songs'
+                        ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
+                        : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
+                }`}
+            >
+              <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'songs' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
+                <Music className="w-4.5 h-4.5" />
               </div>
-        )}
+              <span className="text-[10px] font-black tracking-wide">Cânticos</span>
+            </button>
 
+            <button
+                onClick={() => {
+                  setActiveTab('services');
+                  setActiveSongId(null);
+                  setIsEditing(false);
+                }}
+                id="nav_btn_services"
+                className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
+                    activeTab === 'services'
+                        ? 'text-m3-primary dark:text-m3-dark-primary scale-105'
+                        : 'text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text'
+                }`}
+            >
+              <div className={`px-5 py-0.5 rounded-full transition-all ${activeTab === 'services' ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20' : ''}`}>
+                <CalendarRange className="w-4.5 h-4.5" />
+              </div>
+              <span className="text-[10px] font-black tracking-wide">Cultos</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

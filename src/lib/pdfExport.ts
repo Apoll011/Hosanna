@@ -153,7 +153,7 @@ export async function exportServiceToPDF(
 
   // Add songs
   songsList.forEach((song, idx) => {
-    const customNote = service.songNotes?.[idx.toString()] || '';
+    const customNote = (service.elements?.[idx]?.type === 'song' ? service.elements[idx].notes : '') || '';
     unifiedItems.push({
       kind: 'song',
       song,
@@ -364,7 +364,7 @@ export async function exportServiceToPDF(
       currentY = marginY + 18;
 
       // Custom band arrangement notes for this specific song
-      const songNote = service.songNotes?.[idx.toString()] || '';
+      const songNote = (service.elements?.[idx]?.type === 'song' ? service.elements[idx].notes : '') || '';
       if (songNote.trim().length > 0) {
         doc.setFillColor(240, 249, 255); // light cyan bg (#f0f9ff)
         doc.setDrawColor(186, 230, 253); // border-sky-200 (#bae6fd)

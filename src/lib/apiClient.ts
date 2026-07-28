@@ -244,7 +244,6 @@ export async function createService(
     name: string;
     date: string;
     notes?: string;
-    notes?: string;
   }
 ): Promise<ApiService> {
   return apiRequest<ApiService>(baseUrl, '/api/services', {
@@ -262,7 +261,6 @@ export async function updateServiceApi(
     updatedAt: string;
     name?: string;
     date?: string;
-    notes?: string;
     notes?: string;
   }
 ): Promise<ApiService> {
