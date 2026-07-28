@@ -46,6 +46,25 @@ function formatDate(dateStr: string): string {
   return dateStr;
 }
 
+
+function translateElement(element: string) {
+  switch (element) {
+    case 'welcome':
+      return 'Boas Vindas';
+    case 'scripture':
+      return 'Passagem';
+    case 'message':
+      return 'Pregação';
+    case 'reading':
+      return 'Leitura';
+    case 'announcement':
+      return 'Anuncio';
+    case 'custom':
+      return 'Customizado';
+    default:
+      return 'Elemento';
+  }
+}
 /**
  * Truncates text to fit a maximum width in jsPDF
  */
@@ -300,7 +319,7 @@ export async function exportServiceToPDF(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(192, 38, 211); // Fuchsia/purple for elements
-      doc.text(`[${(elem.type || 'ELEMENTO').toUpperCase()}]`, marginX + 90, currentY + 5);
+      doc.text(translateElement(elem.type as string), marginX + 90, currentY + 5);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
