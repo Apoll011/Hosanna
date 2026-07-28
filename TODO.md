@@ -6,7 +6,7 @@
 
 ### Dashboard
 
-* [ ] **Improve the Service Editor UI**
+* [x] **Improve the Service Editor UI**
 
   * Redesign the layout to feel more modern and polished.
   * Make adding songs faster and require fewer clicks.
@@ -115,7 +115,7 @@ Features:
 
 ### Service Planning
 
-* [ ] Bible verses attached to services.
+* [x] Bible verses attached to services.
 * [ ] Service templates.
 * [ ] Duplicate existing services.
 * [ ] Archive old services.
@@ -125,7 +125,7 @@ Features:
 * [ ] Improve the song editor.
 * [ ] Better ChordPro editing experience.
 * [ ] Smarter import wizard.
-* [ ] Bulk song operations.
+* [x] Bulk song operations.
 * [ ] Detect duplicate songs during import.
 
 ### Synchronization
@@ -137,7 +137,7 @@ Features:
 
 ### SaaS
 
-* [ ] Create a marketing landing page.
+* [x] Create a marketing landing page.
 * [ ] Church registration flow.
 * [ ] Tenant billing.
 * [ ] Affordable monthly subscription per church (not per user).
@@ -148,9 +148,16 @@ Features:
 ## Nice to Have
 
 * [ ] Service statistics.
-* [ ] Recently used songs.
+* [x] Recently used songs.
 * [ ] Better keyboard shortcuts.
 * [ ] Improved accessibility.
 * [ ] More animations and micro-interactions.
 * [ ] Enhanced search filters.
 * [ ] Performance optimizations for very large libraries.
+
+
+-------------
+Autores podem reportar musicas no hosanna sem licensa e enviamos avisos a igreja
+Reporar erros com sentry
+Enviar emails. relatorios etc etc
+Adicionar no mobile alto contraste
