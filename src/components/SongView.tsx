@@ -5,7 +5,7 @@ import {
   ArrowLeft, Edit2, Music, Eye, EyeOff, Check, User, 
   CalendarPlus, ChevronLeft, ChevronRight, SlidersHorizontal, 
   Heart, X, BookOpen, HelpCircle,
-  Youtube, Play, Pause, Repeat, SkipBack, SkipForward, Disc,
+  Youtube as YTIcon, Play, Pause, Repeat, SkipBack, SkipForward, Disc,
   Plus, Minus, RotateCcw, Sun, ChevronsDown, Sparkles
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
@@ -841,7 +841,7 @@ export default function SongView({ songId, onBack, onEdit }: SongViewProps) {
               className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
               title="Ouvir Áudio no YouTube"
             >
-              <Youtube className="w-5 h-5" />
+              <YTIcon className="w-5 h-5" />
             </button>
             <div className="hidden">
               <YouTube 
