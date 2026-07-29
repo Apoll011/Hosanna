@@ -48,9 +48,10 @@ interface SongViewProps {
   onBack: () => void;
   onEdit: () => void;
   setSong: (id: string) => void;
+  serviceMode: boolean;
 }
 
-export default function SongView({ songId, onBack, onEdit, setSong }: SongViewProps) {
+export default function SongView({ songId, onBack, onEdit, setSong, serviceMode = false }: SongViewProps) {
   const songs = useAppStore(state => state.songs);
   const services = useAppStore(state => state.services);
   
@@ -96,8 +97,6 @@ export default function SongView({ songId, onBack, onEdit, setSong }: SongViewPr
 
   // Local overrides (transpose isn't persisted long-term to raw file)
   const [transposeVal, setTransposeVal] = useState(0);
-  const [showServiceMenu, setShowServiceMenu] = useState(false);
-  const [showServiceSuccess, setShowServiceSuccess] = useState<string | null>(null);
   const [showControls, setShowControls] = useState(false);
   const [selectedChord, setSelectedChord] = useState<string | null>(null);
 
@@ -128,7 +127,7 @@ export default function SongView({ songId, onBack, onEdit, setSong }: SongViewPr
   }, [song.content]);
 
   // Screen Keep-Awake states
-  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [wakeLockActive, setWakeLockActive] = useState(keepScreenAwake);
   const wakeLockRef = useRef<any>(null);
 
   // Auto-scroll states
@@ -398,7 +397,7 @@ export default function SongView({ songId, onBack, onEdit, setSong }: SongViewPr
           className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium"
         >
           <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-          <span className="text-sm">Biblioteca</span>
+          <span className="text-sm">{serviceMode ? 'Culto' : 'Biblioteca'}</span>
         </button>
 
         <div className="flex items-center gap-1.5">
@@ -415,27 +414,17 @@ export default function SongView({ songId, onBack, onEdit, setSong }: SongViewPr
           >
             <Heart className={`w-4.5 h-4.5 ${isFav ? 'fill-current' : ''}`} />
           </button>
-
-          <button
-            onClick={() => setShowChords(!showChords)}
-            className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
-              showChords 
-                ? 'bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text border border-m3-border/30' 
-                : 'text-neutral-400 dark:text-neutral-500 border border-m3-border/30'
-            }`}
-            title={showChords ? "Ocultar Cifras / Acordes" : "Mostrar Cifras / Acordes"}
-          >
-            {showChords ? <Eye className="w-4.5 h-4.5" /> : <EyeOff className="w-4.5 h-4.5" />}
-          </button>
-
-          <button
-            onClick={onEdit}
-            id="btn_song_view_edit"
-            className="p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors text-m3-secondary dark:text-m3-dark-secondary"
-            title="Editar Cântico"
-          >
-            <Edit2 className="w-4.5 h-4.5 text-m3-primary dark:text-m3-dark-primary" />
-          </button>
+          
+          {!serviceMode && (
+            <button
+              onClick={onEdit}
+              id="btn_song_view_edit"
+              className="p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors text-m3-secondary dark:text-m3-dark-secondary"
+              title="Editar Cântico"
+            >
+              <Edit2 className="w-4.5 h-4.5 text-m3-primary dark:text-m3-dark-primary" />
+            </button>
+          )}
 
           <button
             onClick={() => setShowControls(!showControls)}
