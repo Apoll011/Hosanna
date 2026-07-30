@@ -39,9 +39,7 @@ export default function FirstTimeSetup() {
     const handleQrScan = (result: IDetectedBarcode[]) => {
         if (!result) return;
 
-        const text = Array.isArray(result)
-            ? result[0]?.rawValue
-            : result?.rawValue || result;
+        const text = result[0]?.rawValue;
 
         if (text && typeof text === "string") {
             const extractedUrl = extractMusicianURL(text);

@@ -390,7 +390,7 @@ export async function exportServiceToPDF(
                 doc.setFontSize(7.5);
                 doc.setTextColor(100, 116, 139);
                 doc.text(
-                    `Conteúdo: ${truncateText(doc, elem.content, 110)}`,
+                    `Conteúdo: ${truncateText(doc, elem.content || "", 110)}`,
                     marginX + 10,
                     currentY + 11,
                 );

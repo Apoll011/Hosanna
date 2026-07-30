@@ -37,9 +37,12 @@ export default function NavigationDrawer({
     const selectedSection = activeListContext.type;
     const selectedFolder = activeListContext.folderName;
 
-    const navigateTo = (type: string, folderName?: string) => {
+    const navigateTo = (
+        type: AppState["activeListContext"]["type"],
+        folderName?: string,
+    ) => {
         setActiveListContext({
-            type: type as AppState["activeListContext"],
+            type: type,
             folderName,
         });
         onClose();

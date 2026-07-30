@@ -104,6 +104,8 @@ export default function App() {
         } else {
             applyTheme(theme);
         }
+
+        return;
     }, [theme]);
 
     useEffect(() => {
