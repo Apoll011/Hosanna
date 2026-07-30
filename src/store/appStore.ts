@@ -1,6 +1,6 @@
 // src/store/appStore.ts
 import { create } from 'zustand';
-import { Song, Service, VirtualFile, SyncReport, ThemeType, LibraryFolder, ServiceElement } from '../types';
+import { Song, Service, VirtualFile, ThemeType, Folder, ServiceElement } from '../types';
 import { parseChordPro } from '../lib/chordpro';
 import {
   ApiSong,
@@ -20,7 +20,7 @@ interface AppState {
   sourceFolderPath: string;
   songs: Song[];
   services: Service[];
-  folders: LibraryFolder[];
+  folders: Folder[];
   songRemoteIds: Record<string, string>;
   favoriteSongIds: string[];
   recentlyPlayedSongIds: string[];
@@ -50,7 +50,6 @@ interface AppState {
 
   syncStatus: 'idle' | 'syncing' | 'success' | 'error';
   lastSyncTime: number | null;
-  syncReport: SyncReport | null;
   hasSkippedSetup: boolean;
 
   setTheme: (theme: ThemeType) => void;
@@ -80,7 +79,7 @@ interface AppState {
   updateVirtualFile: (path: string, content: string) => void;
   deleteVirtualFile: (path: string) => void;
 
-  syncLibrary: () => Promise<SyncReport>;
+  syncLibrary: () => void;
   setHasSkippedSetup: (skipped: boolean) => void;
 
   updateService: (id: string, name: string, date: string, notes?: string) => void;
@@ -111,7 +110,7 @@ const setStorageItem = (key: string, value: any) => {
 type SetFn = (partial: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => void;
 type GetFn = () => AppState;
 
-const toLocalSong = (apiSong: ApiSong, folders: LibraryFolder[]): Song => {
+const toLocalSong = (apiSong: ApiSong, folders: Folder[]): Song => {
   const parsed = parseChordPro(apiSong.content);
   const parts = apiSong.path.split('/');
   const fileName = parts.pop() || '';
@@ -142,7 +141,7 @@ const toLocalSong = (apiSong: ApiSong, folders: LibraryFolder[]): Song => {
   };
 };
 
-const toLSong = (folders: LibraryFolder[]) => (apiSong: ApiSong): Song => toLocalSong(apiSong, folders);
+const toLSong = (folders: Folder[]) => (apiSong: ApiSong): Song => toLocalSong(apiSong, folders);
 
 const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => {
   return {
@@ -209,7 +208,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   sortBy: 'title',
   syncStatus: 'idle',
   lastSyncTime: getStorageItem('cp_last_sync_time', null),
-  syncReport: null,
   hasSkippedSetup: false,
 
   setTheme: (theme) => { set({ theme }); setStorageItem('cp_theme', theme); },
@@ -385,15 +383,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   syncLibrary: async () => {
-    set({ syncStatus: 'syncing', syncReport: null });
+    set({ syncStatus: 'syncing' });
     const { serverUrl, serverToken } = get();
 
     if (!serverUrl || serverUrl.trim() === '') {
-      const report: SyncReport = { added: [], modified: [], deleted: [], conflicts: [] };
       const now = Date.now();
-      set({ syncStatus: 'success', lastSyncTime: now, syncReport: report });
+      set({ syncStatus: 'success', lastSyncTime: now});
       setStorageItem('cp_last_sync_time', now);
-      return report;
     }
 
     try {
@@ -423,7 +419,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       const updatedFavorites = get().favoriteSongIds.filter(id => finalSongIds.has(id));
       const updatedRecent = get().recentlyPlayedSongIds.filter(id => finalSongIds.has(id));
 
-      const report: SyncReport = { added: [], modified: [], deleted: [], conflicts: [] };
       const now = Date.now();
 
       set({
@@ -436,7 +431,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         recentlyPlayedSongIds: updatedRecent,
         syncStatus: 'success',
         lastSyncTime: now,
-        syncReport: report,
       });
 
       setStorageItem('cp_folders', folders);
@@ -448,7 +442,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       setStorageItem('cp_recently_played', updatedRecent);
       setStorageItem('cp_last_sync_time', now);
 
-      return report;
     } catch (err: any) {
       console.error('Erro na sincronização remota:', err);
       set({ syncStatus: 'error' });
@@ -505,7 +498,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       isPresenting: false,
       searchQuery: '',
       selectedFolder: '',
-      syncReport: null,
       syncStatus: 'idle',
       lastSyncTime: null
     });

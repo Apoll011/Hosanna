@@ -1,3 +1,4 @@
+import { Folder } from "../types";
 
 
 const TOKEN_QUERY_KEYS = ['token', 'access_token', 'accessToken', 'bearer'];
@@ -16,15 +17,6 @@ export class ApiError extends Error {
     this.code = code;
     this.details = details;
   }
-}
-
-export interface LibraryFolder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  songCount?: number;
 }
 
 export interface ApiSong {
@@ -177,8 +169,8 @@ export async function apiRequest<T>(baseUrl: string, path: string, options: Requ
   return (await response.text()) as T;
 }
 
-export async function getFoldersFlat(baseUrl: string, token?: string): Promise<LibraryFolder[]> {
-  return apiRequest<LibraryFolder[]>(baseUrl, '/api/folders/flat', {
+export async function getFoldersFlat(baseUrl: string, token?: string): Promise<Folder[]> {
+  return apiRequest<Folder[]>(baseUrl, '/api/folders/flat', {
     token,
     method: 'GET',
   });

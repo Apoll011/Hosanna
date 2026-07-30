@@ -23,7 +23,7 @@ export interface Song {
   tags?: string[];
 }
 
-export interface LibraryFolder {
+export interface Folder {
   id: string;
   name: string;
   parentId: string | null;
@@ -58,19 +58,5 @@ export interface VirtualFile {
   updatedAt: number;
 }
 
-export interface SyncConflict {
-  path: string;
-  localContent: string;
-  incomingContent: string;
-  localTime: number;
-  incomingTime: number;
-}
-
-export interface SyncReport {
-  added: string[];
-  modified: string[];
-  deleted: string[];
-  conflicts: SyncConflict[];
-}
 
 export type ThemeType = 'light' | 'dark' | 'system';
