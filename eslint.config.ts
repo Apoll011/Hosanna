@@ -7,6 +7,15 @@ import globals from "globals";
 
 export default [
     {
+        ignores: [
+            "node_modules/**",
+            "dist/**",
+            "build/**",
+            "coverage/**",
+            "android/**",
+        ],
+    },
+    {
         files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 
         languageOptions: {
@@ -23,19 +32,17 @@ export default [
         rules: {
             ...tseslint.configs.recommended.rules,
             ...prettierConfig.rules,
-            "@typescript-eslint/no-unused-vars": "warn",
-            "no-console": "warn",
-            semi: ["error", "always"],
-            quotes: ["error", "double"],
             "prettier/prettier": "error",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                {
+                    varsIgnorePattern: "^_",
+                    argsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_",
+                    destructuredArrayIgnorePattern: "^_",
+                },
+            ],
         },
-        ignores: [
-            "node_modules/**",
-            "dist/**",
-            "build/**",
-            "coverage/**",
-            "android/**",
-        ],
     },
     pluginReact.configs.flat.recommended,
     {

@@ -1,4 +1,4 @@
-import { Folder } from "../types";
+import { Folder, ServiceElement } from "../types";
 
 const TOKEN_QUERY_KEYS = ["token", "access_token", "accessToken", "bearer"];
 
@@ -47,7 +47,7 @@ export interface ApiService {
     name: string;
     date: string;
     notes?: string;
-    elements?: any[];
+    elements?: ServiceElement[];
     createdAt: string;
     updatedAt: string;
 }
@@ -56,7 +56,7 @@ export async function updateServiceElementsApi(
     baseUrl: string,
     token: string | undefined,
     serviceId: string,
-    body: { updatedAt: string; elements: any[] },
+    body: { updatedAt: string; elements: ServiceElement[] },
 ): Promise<ApiService> {
     return apiRequest<ApiService>(
         baseUrl,
@@ -156,6 +156,7 @@ export async function apiRequest<T>(
     });
 
     if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let errorBody: any = null;
         try {
             errorBody = await response.json();

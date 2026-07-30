@@ -1,16 +1,16 @@
-import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-    Music,
-    Heart,
-    Clock,
     CircleDot,
-    Timer,
-    Settings,
+    Clock,
     Folder,
+    Heart,
+    Music,
+    Settings,
+    Timer,
     X,
 } from "lucide-react";
-import { useAppStore } from "../store/appStore";
+import { useMemo } from "react";
+import { AppState, useAppStore } from "../store/appStore";
 
 export default function NavigationDrawer({
     show,
@@ -38,7 +38,10 @@ export default function NavigationDrawer({
     const selectedFolder = activeListContext.folderName;
 
     const navigateTo = (type: string, folderName?: string) => {
-        setActiveListContext({ type: type as any, folderName });
+        setActiveListContext({
+            type: type as AppState["activeListContext"],
+            folderName,
+        });
         onClose();
     };
 

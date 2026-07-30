@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Play, Square, Plus, Minus, Flame } from "lucide-react";
+import { Flame, Minus, Play, Plus, Square } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Metronome() {
     const [bpm, setBpm] = useState<number>(120);
@@ -40,7 +40,7 @@ export default function Metronome() {
     // Initialize AudioContext
     useEffect(() => {
         audioContextRef.current = new (
-            window.AudioContext || (window as any).webkitAudioContext
+            window.AudioContext || window.webkitAudioContext
         )();
         return () => {
             if (audioContextRef.current?.state !== "closed") {

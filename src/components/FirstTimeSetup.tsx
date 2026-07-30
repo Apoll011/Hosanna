@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Camera as CameraIcon } from "lucide-react";
-import { Scanner } from "@yudiel/react-qr-scanner";
 import { Camera } from "@capacitor/camera";
-import { useAppStore } from "../store/appStore";
+import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
+import { Camera as CameraIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { extractMusicianToken, extractMusicianURL } from "../lib/apiClient";
+import { useAppStore } from "../store/appStore";
 
 export default function FirstTimeSetup() {
     const setServerUrl = useAppStore((state) => state.setServerUrl);
@@ -36,7 +36,7 @@ export default function FirstTimeSetup() {
         }
     };
 
-    const handleQrScan = (result: any) => {
+    const handleQrScan = (result: IDetectedBarcode[]) => {
         if (!result) return;
 
         const text = Array.isArray(result)
@@ -79,7 +79,7 @@ export default function FirstTimeSetup() {
                     louvor, escaneie o código QR de acesso fornecido pelo líder.
                 </p>
 
-                <div className="bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-3xl overflow-hidden shadow-2xl mx-auto w-full max-w-[280px] aspect-square relative flex items-center justify-center">
+                <div className="bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-3xl overflow-hidden shadow-2xl mx-auto w-full max-w-70 aspect-square relative flex items-center justify-center">
                     {hasCameraPermission === false ? (
                         <div className="p-6 text-center space-y-3">
                             <CameraIcon className="w-8 h-8 text-red-500 mx-auto" />

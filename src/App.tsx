@@ -1,22 +1,22 @@
 // src/App.tsx
-import { useEffect, useRef, useState } from "react";
 import {
-    Music,
-    CalendarRange,
-    RefreshCw,
     AlertTriangle,
+    CalendarRange,
     Menu,
+    Music,
+    RefreshCw,
     Search,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "./store/appStore";
 
-import SongBrowser from "./components/SongBrowser";
-import SongView from "./components/SongView";
-import SongEditor from "./components/SongEditor";
-import ServiceManager from "./components/ServiceManager";
-import SettingsView from "./components/SettingsView";
 import FirstTimeSetup from "./components/FirstTimeSetup";
 import NavigationDrawer from "./components/NavigationDrawer";
+import ServiceManager from "./components/ServiceManager";
+import SettingsView from "./components/SettingsView";
+import SongBrowser from "./components/SongBrowser";
+import SongEditor from "./components/SongEditor";
+import SongView from "./components/SongView";
 
 const PULL_THRESHOLD = 68;
 const PULL_MAX = 96;

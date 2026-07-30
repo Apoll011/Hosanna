@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useAppStore } from "../store/appStore";
 import { chordDictionary } from "../lib/chordDictionary";
 import { transposeChord } from "../lib/chordpro";
+import { useAppStore } from "../store/appStore";
 
 /**
  * Guitar dynamic SVG drawer
@@ -354,7 +354,7 @@ export function ChordRoll({
                             </span>
 
                             {/* Diagram visual */}
-                            <div className="flex items-center justify-center flex-1 min-h-[70px]">
+                            <div className="flex items-center justify-center flex-1 min-h-17.5">
                                 {item.fingering ? (
                                     isPiano && item.fingering.piano ? (
                                         <PianoDiagram

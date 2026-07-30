@@ -1,28 +1,28 @@
 // src/store/appStore.ts
 import { create } from "zustand";
 import {
-    Song,
-    Service,
-    VirtualFile,
-    ThemeType,
-    Folder,
-    ServiceElement,
-} from "../types";
-import { parseChordPro } from "../lib/chordpro";
-import {
-    ApiSong,
     ApiService,
+    ApiSong,
     createSong,
     deleteSong,
     getFoldersFlat,
-    getSongs,
     getServices,
-    updateSong,
+    getSongs,
     updateServiceApi,
     updateServiceElementsApi,
+    updateSong,
 } from "../lib/apiClient";
+import { parseChordPro } from "../lib/chordpro";
+import {
+    Folder,
+    Service,
+    ServiceElement,
+    Song,
+    ThemeType,
+    VirtualFile,
+} from "../types";
 
-interface AppState {
+export interface AppState {
     virtualFiles: VirtualFile[];
     sourceFolderPath: string;
     songs: Song[];
@@ -122,15 +122,16 @@ const getStorageItem = <T>(key: string, defaultValue: T): T => {
     try {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : defaultValue;
-    } catch (e) {
+    } catch {
         return defaultValue;
     }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const setStorageItem = (key: string, value: any) => {
     try {
         localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
+    } catch {
         // ignore
     }
 };
@@ -619,7 +620,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             setStorageItem("cp_favorites", updatedFavorites);
             setStorageItem("cp_recently_played", updatedRecent);
             setStorageItem("cp_last_sync_time", now);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Erro na sincronização remota:", err);
             set({ syncStatus: "error" });
             throw err;

@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { Save, X, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Save, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { buildChordProText, parseChordPro } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
-import { parseChordPro, buildChordProText } from "../lib/chordpro";
 
 interface SongEditorProps {
     songId?: string; // If undefined, we are creating a new song
@@ -198,8 +198,8 @@ A [C]glória e o lou[G]vor
             }
 
             onClose();
-        } catch (e: any) {
-            setErrorMsg(e.message || "Erro ao guardar ficheiro.");
+        } catch (e: unknown) {
+            setErrorMsg((e as Error).message || "Erro ao guardar ficheiro.");
         }
     };
 

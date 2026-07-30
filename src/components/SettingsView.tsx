@@ -1,21 +1,21 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { Camera } from "@capacitor/camera";
+import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
 import {
     HardDrive,
-    RefreshCcw,
+    Keyboard,
     KeyRound,
     Link2,
     QrCode,
+    RefreshCcw,
     ScanLine,
-    Keyboard,
 } from "lucide-react";
-import { useAppStore } from "../store/appStore";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     extractMusicianToken,
     extractMusicianURL,
     isMusicianAccessUrl,
 } from "../lib/apiClient";
-import { Scanner } from "@yudiel/react-qr-scanner";
-import { Camera } from "@capacitor/camera";
+import { useAppStore } from "../store/appStore";
 
 export default function SettingsView() {
     const serverUrl = useAppStore((state) => state.serverUrl);
@@ -72,7 +72,7 @@ export default function SettingsView() {
     const lastSyncTime = useAppStore((state) => state.lastSyncTime);
     const songs = useAppStore((state) => state.songs);
 
-    const handleQrScan = (result: any) => {
+    const handleQrScan = (result: IDetectedBarcode[]) => {
         if (!result) return;
 
         const text = Array.isArray(result)

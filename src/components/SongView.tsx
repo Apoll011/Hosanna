@@ -1,35 +1,40 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
     ArrowLeft,
-    Edit2,
-    Music,
-    Eye,
-    EyeOff,
-    User,
+    BookOpen,
     ChevronLeft,
     ChevronRight,
-    SlidersHorizontal,
+    ChevronsDown,
+    Disc,
+    Edit2,
+    Eye,
+    EyeOff,
     Heart,
-    X,
-    BookOpen,
     HelpCircle,
-    Youtube as YTIcon,
-    Play,
+    Minus,
+    Music,
     Pause,
+    Play,
+    Plus,
     Repeat,
     SkipBack,
     SkipForward,
-    Disc,
-    Plus,
-    Minus,
+    SlidersHorizontal,
     Sun,
-    ChevronsDown,
+    User,
+    X,
+    Youtube as YTIcon,
 } from "lucide-react";
-import { useAppStore } from "../store/appStore";
-import { parseChordPro, transposeChord } from "../lib/chordpro";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import YouTube, { YouTubePlayer } from "react-youtube";
 import { chordDictionary } from "../lib/chordDictionary";
+import {
+    LineAST,
+    parseChordPro,
+    SectionAST,
+    transposeChord,
+} from "../lib/chordpro";
+import { useAppStore } from "../store/appStore";
 import { ChordRoll, GuitarDiagram, PianoDiagram } from "./ChordRoll";
-import YouTube from "react-youtube";
 
 const hasRepeatInText = (text?: string): boolean => {
     if (!text) return false;
@@ -48,7 +53,7 @@ const hasRepeatInText = (text?: string): boolean => {
     );
 };
 
-const isSectionRepeated = (section: any): boolean => {
+const isSectionRepeated = (section: SectionAST): boolean => {
     if (section.type === "chorus") return true;
     if (section.label && hasRepeatInText(section.label)) return true;
     for (const line of section.lines) {
@@ -136,7 +141,7 @@ export default function SongView({
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
     const [isYoutubeRepeat, setIsYoutubeRepeat] = useState(false);
-    const [youtubePlayer, setYoutubePlayer] = useState<any>(null);
+    const [youtubePlayer, setYoutubePlayer] = useState<YouTubePlayer>(null);
 
     const song = useMemo(
         () => songs.find((s) => s.id === songId),
@@ -166,12 +171,14 @@ export default function SongView({
 
     // Screen Keep-Awake states
     const [_, setWakeLockActive] = useState(keepScreenAwake);
-    const wakeLockRef = useRef<any>(null);
+    const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
     // Auto-scroll states
     const [isScrolling, setIsScrolling] = useState(false);
-    const [_, setActiveSectionIndex] = useState<number | null>(null);
-    const [_, setIsSlowedDown] = useState(false);
+    const [_activeSectionIndex, setActiveSectionIndex] = useState<
+        number | null
+    >(null);
+    const [_isSlowedDown, setIsSlowedDown] = useState(false);
 
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
     const scrollRequestRef = useRef<number | null>(null);
@@ -192,9 +199,8 @@ export default function SongView({
             }
             try {
                 if (wakeLockRef.current) return;
-                const wakeLock = await (
-                    window.navigator as any
-                ).wakeLock.request("screen");
+                const wakeLock =
+                    await window.navigator.wakeLock.request("screen");
                 if (isMounted) {
                     wakeLockRef.current = wakeLock;
                     setWakeLockActive(true);
@@ -1184,7 +1190,8 @@ export default function SongView({
                                 <div className="text-center p-6 space-y-2">
                                     <HelpCircle className="w-8 h-8 mx-auto text-amber-500 opacity-80" />
                                     <p className="text-xs text-m3-text dark:text-m3-dark-text font-bold">
-                                        Acorde "{selectedChord}" não registado
+                                        Acorde &quot;{selectedChord}&quot; não
+                                        registado
                                     </p>
                                     <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary max-w-[200px] leading-normal">
                                         Este acorde não se encontra no nosso
@@ -1228,11 +1235,11 @@ function LineRenderer({
     transpose,
     onChordClick,
 }: {
-    line: any;
+    line: LineAST;
     showChords: boolean;
     transpose: number;
     onChordClick: (chord: string) => void;
-    key?: any;
+    key?: number;
 }) {
     if (line.type === "empty") {
         return <div className="h-2"></div>;
@@ -1250,7 +1257,7 @@ function LineRenderer({
 
     return (
         <div className="flex flex-wrap items-end leading-relaxed">
-            {segments.map((seg: any, segIdx: number) => {
+            {segments.map((seg, segIdx: number) => {
                 const hasChord = !!seg.chord;
                 const transposed = hasChord
                     ? transposeChord(seg.chord, transpose)

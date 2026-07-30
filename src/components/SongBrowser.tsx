@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
 import {
-    FileText,
-    Music,
-    SlidersHorizontal,
-    Plus,
-    Heart,
     ArrowLeft,
+    FileText,
+    Heart,
+    Music,
+    Plus,
+    SlidersHorizontal,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useAppStore } from "../store/appStore";
 import { Song } from "../types";
 import CircleOfFifths from "./CircleOfFifths";
@@ -190,7 +190,14 @@ export default function SongBrowser({
                                             id="select_sort_songs"
                                             value={sortBy}
                                             onChange={(e) =>
-                                                setSortBy(e.target.value as any)
+                                                setSortBy(
+                                                    (
+                                                        e as React.ChangeEvent<HTMLSelectElement>
+                                                    ).target.value as
+                                                        | "title"
+                                                        | "number"
+                                                        | "folder",
+                                                )
                                             }
                                             className="bg-transparent border-none p-0 pr-4 text-xs font-bold text-m3-text dark:text-m3-dark-text focus:outline-none cursor-pointer"
                                         >

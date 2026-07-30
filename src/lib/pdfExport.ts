@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { Service, Song } from "../types";
+import { Service, ServiceElement, Song } from "../types";
 import { parseChordPro, transposeChord } from "./chordpro";
 
 /**
@@ -160,7 +160,7 @@ export async function exportServiceToPDF(
     const unifiedItems: Array<{
         kind: "song" | "element";
         song?: Song & { isMissing?: boolean };
-        element?: any;
+        element?: ServiceElement;
         position: number;
         notes?: string;
     }> = [];
