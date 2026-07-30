@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Heart, Clock, CircleDot, Timer, Settings, Folder, X } from 'lucide-react';
 import { useAppStore } from '../store/appStore';

@@ -455,7 +455,6 @@ export async function exportServiceToPDF(
             let hasChords = false;
 
             line.segments.forEach((seg) => {
-              const textLength = seg.text.length;
               let chord = seg.chord;
 
               // Transpose chord if required

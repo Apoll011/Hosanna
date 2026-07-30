@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Camera as CameraIcon, Check, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Camera as CameraIcon } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { Camera } from '@capacitor/camera';
 import { useAppStore } from '../store/appStore';

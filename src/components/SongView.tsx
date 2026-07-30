@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
-  ArrowLeft, Edit2, Music, Eye, EyeOff, Check, User, 
+  ArrowLeft, Edit2, Music, Eye, EyeOff, User, 
   ChevronLeft, ChevronRight, SlidersHorizontal, 
   Heart, X, BookOpen, HelpCircle,
   Youtube as YTIcon, Play, Pause, Repeat, SkipBack, SkipForward, Disc,
@@ -48,7 +48,7 @@ interface SongViewProps {
   onBack: () => void;
   onEdit: () => void;
   setSong: (id: string) => void;
-  serviceMode: boolean;
+  serviceMode?: boolean;
 }
 
 export default function SongView({ songId, onBack, onEdit, setSong, serviceMode = false }: SongViewProps) {
@@ -127,13 +127,13 @@ export default function SongView({ songId, onBack, onEdit, setSong, serviceMode 
   }, [song.content]);
 
   // Screen Keep-Awake states
-  const [wakeLockActive, setWakeLockActive] = useState(keepScreenAwake);
+  const [_, setWakeLockActive] = useState(keepScreenAwake);
   const wakeLockRef = useRef<any>(null);
 
   // Auto-scroll states
   const [isScrolling, setIsScrolling] = useState(false);
-  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
-  const [isSlowedDown, setIsSlowedDown] = useState(false);
+  const [_, setActiveSectionIndex] = useState<number | null>(null);
+  const [_, setIsSlowedDown] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const scrollRequestRef = useRef<number | null>(null);

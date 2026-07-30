@@ -1,8 +1,7 @@
 
 
-import React, { useMemo, useState } from 'react';
-import { Search, Folder, FileText, Music, SlidersHorizontal, Plus, Menu, Heart, Clock, X, Check, CircleDot, Timer, ArrowLeft, Settings } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useMemo, useState } from 'react';
+import { FileText, Music, SlidersHorizontal, Plus, Heart, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { Song } from '../types';
 import CircleOfFifths from './CircleOfFifths';
@@ -16,7 +15,6 @@ interface SongBrowserProps {
 
 export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserProps) {
   const songs = useAppStore(state => state.songs);
-  const folders = useAppStore(state => state.folders);
   const favoriteSongIds = useAppStore(state => state.favoriteSongIds);
   const recentlyPlayedSongIds = useAppStore(state => state.recentlyPlayedSongIds);
   const toggleFavoriteSong = useAppStore(state => state.toggleFavoriteSong);
@@ -189,7 +187,7 @@ export default function SongBrowser({ onSelectSong, onAddNewSong }: SongBrowserP
                 <h3 className="text-sm font-bold text-m3-text dark:text-m3-dark-text">
                   Nenhum cântico encontrado
                 </h3>
-                <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary mt-1 max-w-[240px]">
+                <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary mt-1 max-w-60">
                   {selectedSection === 'favorites' 
                     ? "Ainda não marcou nenhum cântico como favorito."
                     : selectedSection === 'recent'

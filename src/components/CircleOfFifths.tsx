@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { CircleDot } from 'lucide-react';
 
 const circleData = [
   { major: 'C', minor: 'Am', degrees: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'] },

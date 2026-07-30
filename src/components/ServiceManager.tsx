@@ -213,6 +213,7 @@ export default function ServiceManager() {
             setActiveSongId(id);
             setViewingSongId(id);
         }}
+        serviceMode={true}
       />
     );
   }

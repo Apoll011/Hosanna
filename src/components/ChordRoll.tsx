@@ -1,6 +1,6 @@
 
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAppStore } from '../store/appStore';
 import { chordDictionary } from '../lib/chordDictionary';
 import { transposeChord } from '../lib/chordpro';

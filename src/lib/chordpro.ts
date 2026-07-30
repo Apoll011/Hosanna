@@ -102,8 +102,6 @@ export function transposeChord(chord: string, semitones: number): string {
  */
 export function parseLineSegments(lineText: string): SegmentAST[] {
   const segments: SegmentAST[] = [];
-  let index = 0;
-
   // Find all [CHORD] matches
   const regex = /\[([^\]]+)\]/g;
   let match;

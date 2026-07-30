@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Music, CalendarRange, RefreshCw, AlertTriangle, Menu, Search } from 'lucide-react';
 import { useAppStore } from './store/appStore';
 
@@ -58,7 +58,7 @@ export default function App() {
 
   useEffect(() => {
     if (songsLength === 0) {
-      syncLibrary().catch(() => {});
+      syncLibrary();
     }
   }, [songsLength, syncLibrary]);
 
@@ -129,7 +129,7 @@ export default function App() {
 
       setPullDistance(current => {
         if (current >= PULL_THRESHOLD) {
-          syncLibrary().catch(() => {});
+          syncLibrary();
         }
         return 0;
       });

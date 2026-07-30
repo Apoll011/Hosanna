@@ -1,7 +1,7 @@
 
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Save, X, Type, Music, Tag, Clock, Hash, AlertTriangle, Info, ListCollapse } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Save, X, AlertTriangle} from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { parseChordPro, buildChordProText } from '../lib/chordpro';
 

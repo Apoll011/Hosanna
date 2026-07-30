@@ -143,7 +143,7 @@ const toLocalSong = (apiSong: ApiSong, folders: Folder[]): Song => {
 
 const toLSong = (folders: Folder[]) => (apiSong: ApiSong): Song => toLocalSong(apiSong, folders);
 
-const toLocalService = (apiService: ApiService, localSongs: Song[]): Service => {
+const toLocalService = (apiService: ApiService): Service => {
   return {
     id: apiService.id,
     name: apiService.name,
@@ -174,7 +174,7 @@ const commitSongLocally = (set: SetFn, get: GetFn, apiSong: ApiSong, previousLoc
 };
 
 const commitServiceLocally = (set: SetFn, get: GetFn, apiService: ApiService) => {
-  const localService = toLocalService(apiService, get().songs);
+  const localService = toLocalService(apiService);
   const services = get().services.map(svc => (svc.id === localService.id ? localService : svc));
   set({ services });
   setStorageItem('cp_services', services);
@@ -332,7 +332,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updatedFiles = [newFile, ...files];
     set({ virtualFiles: updatedFiles });
     setStorageItem('cp_virtual_files', updatedFiles);
-    get().syncLibrary().catch(() => {});
+    get().syncLibrary();
   },
 
   updateVirtualFile: async (path, content) => {
@@ -358,7 +358,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updatedFiles = get().virtualFiles.map(file => file.path === path ? { ...file, content, updatedAt: Date.now() } : file);
     set({ virtualFiles: updatedFiles });
     setStorageItem('cp_virtual_files', updatedFiles);
-    get().syncLibrary().catch(() => {});
+    get().syncLibrary();
   },
 
   deleteVirtualFile: async (path) => {
@@ -413,7 +413,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const virtualFiles: VirtualFile[] = finalSongs.map(s => ({ path: s.id, content: s.content, updatedAt: s.updatedAt }));
       const songRemoteIds: Record<string, string> = {};
       finalSongs.forEach(s => { if (s.remoteId) songRemoteIds[s.id] = s.remoteId; });
-      const finalServices = apiServices.map(svc => toLocalService(svc, finalSongs));
+      const finalServices = apiServices.map(svc => toLocalService(svc));
 
       const finalSongIds = new Set(finalSongs.map(s => s.id));
       const updatedFavorites = get().favoriteSongIds.filter(id => finalSongIds.has(id));

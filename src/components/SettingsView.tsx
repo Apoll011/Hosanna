@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { 
-  Palette, HardDrive, RefreshCcw, KeyRound, 
-  Link2, QrCode, ScanLine, Keyboard, Camera as CameraIcon 
+  HardDrive, RefreshCcw, KeyRound, 
+  Link2, QrCode, ScanLine, Keyboard 
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { extractMusicianToken, extractMusicianURL, isMusicianAccessUrl } from '../lib/apiClient';
@@ -50,18 +50,6 @@ export default function SettingsView() {
     if (!token) return 'Nenhum token configurado';
     return token.length > 12 ? `${token.slice(0, 8)}…${token.slice(-4)}` : token;
   }, [tokenInput]);
-  
-  const theme = useAppStore(state => state.theme);
-  const setTheme = useAppStore(state => state.setTheme);
-
-  const fontSize = useAppStore(state => state.fontSize);
-  const setFontSize = useAppStore(state => state.setFontSize);
-
-  const keepScreenAwake = useAppStore(state => state.keepScreenAwake);
-  const setKeepScreenAwake = useAppStore(state => state.setKeepScreenAwake);
-
-  const slowDownOnRepeat = useAppStore(state => state.slowDownOnRepeat);
-  const setSlowDownOnRepeat = useAppStore(state => state.setSlowDownOnRepeat);
 
   const syncLibrary = useAppStore(state => state.syncLibrary);
   const syncStatus = useAppStore(state => state.syncStatus);
@@ -234,7 +222,7 @@ export default function SettingsView() {
               </div>
               <button
                 onClick={() => {
-                  syncLibrary().catch(() => {});
+                  syncLibrary();
                 }}
                 disabled={syncStatus === 'syncing'}
                 className="px-5 py-2.5 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-full shadow-xs disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
