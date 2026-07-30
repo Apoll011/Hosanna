@@ -29,6 +29,24 @@ export default [
             quotes: ["error", "double"],
             "prettier/prettier": "error",
         },
+        ignores: [
+            "node_modules/**",
+            "dist/**",
+            "build/**",
+            "coverage/**",
+            "android/**",
+        ],
     },
     pluginReact.configs.flat.recommended,
+    {
+        settings: {
+            react: {
+                version: "detect",
+            },
+        },
+        rules: {
+            "react/react-in-jsx-scope": "off",
+            "react/jsx-uses-react": "off",
+        },
+    },
 ];
