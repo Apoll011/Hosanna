@@ -452,7 +452,7 @@ A [C]glória e o lou[G]vor
                         </button>
 
                         {/* Quick Chords inserter */}
-                        <div className="w-[1px] h-4 bg-m3-border/30 dark:bg-m3-dark-border/30 mx-1 self-center" />
+                        <div className="w-px h-4 bg-m3-border/30 dark:bg-m3-dark-border/30 mx-1 self-center" />
 
                         {getQuickChordsForKey(key).map((c) => (
                             <button
@@ -475,7 +475,7 @@ A [C]glória e o lou[G]vor
                     <div className="relative flex-1 bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-m3-primary/20 transition-all text-sm font-mono leading-relaxed">
                         {/* Syntax Highlight Overlay */}
                         <div
-                            className="absolute inset-0 p-4 pointer-events-none whitespace-pre-wrap break-words text-m3-text dark:text-m3-dark-text overflow-hidden"
+                            className="absolute inset-0 p-4 pointer-events-none whitespace-pre-wrap wrap-break-word text-m3-text dark:text-m3-dark-text overflow-hidden"
                             aria-hidden="true"
                             dangerouslySetInnerHTML={{
                                 __html: bodyText
