@@ -2,8 +2,8 @@ import { Camera } from "@capacitor/camera";
 import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
 import { Camera as CameraIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { extractMusicianToken, extractMusicianURL } from "../lib/apiClient";
 import { useAppStore } from "../store/appStore";
+import { extractMusicianToken, extractMusicianURL } from "../utils";
 
 export default function FirstTimeSetup() {
     const setServerUrl = useAppStore((state) => state.setServerUrl);

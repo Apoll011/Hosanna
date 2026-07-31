@@ -1,7 +1,6 @@
 import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
 import {
     ArrowLeft,
-    BookOpen,
     ChevronLeft,
     ChevronRight,
     ChevronsDown,
@@ -9,20 +8,16 @@ import {
     Eye,
     EyeOff,
     Heart,
-    HelpCircle,
     Minus,
     Pause,
     Plus,
     SlidersHorizontal,
     Sun,
-    X,
     Youtube as YTIcon,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { chordDictionary } from "../lib/chordDictionary";
 import { SectionAST } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
-import { GuitarDiagram, PianoDiagram } from "./ChordRoll";
 
 const hasRepeatInText = (text?: string): boolean => {
     if (!text) return false;
@@ -123,7 +118,6 @@ export default function SongView({
     // Local overrides (transpose isn't persisted long-term to raw file)
     const [transposeVal, setTransposeVal] = useState(0);
     const [showControls, setShowControls] = useState(false);
-    const [selectedChord, setSelectedChord] = useState<string | null>(null);
 
     // YouTube Audio Player states
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
@@ -400,12 +394,6 @@ export default function SongView({
     };
 
     const isFav = favoriteSongIds.includes(song.id);
-
-    // Load selected chord fingering
-    const chordFingering = useMemo(() => {
-        if (!selectedChord) return null;
-        return chordDictionary.getFingering(selectedChord);
-    }, [selectedChord]);
 
     return (
         <div
@@ -684,7 +672,6 @@ export default function SongView({
                 fontSize={fontSize}
                 instrument={instrument}
                 showDiagrams={showDiagrams}
-                onChordClick={setSelectedChord}
                 fileName={song.fileName}
                 showYoutubePlayer={isPlayingYoutube}
                 onTransposeChange={setTransposeVal}
@@ -773,116 +760,6 @@ export default function SongView({
                     </button>
                 </div>
             </div>
-
-            {/* Chord Fingering Dictionary Modal Overlay */}
-            {selectedChord && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
-                    <div className="bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col p-6 space-y-4 animate-in zoom-in-95 duration-200">
-                        {/* Modal Header */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <BookOpen className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                                <h3 className="text-sm font-black text-m3-text dark:text-m3-dark-text uppercase tracking-wider">
-                                    Dicionário: {selectedChord}
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => setSelectedChord(null)}
-                                className="p-1 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-secondary dark:text-m3-dark-secondary"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Instrument switcher inside modal */}
-                        <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-1 rounded-2xl border border-m3-border dark:border-m3-dark-border">
-                            <button
-                                onClick={() => setInstrument("guitar")}
-                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                                    instrument === "guitar"
-                                        ? "bg-m3-primary text-white shadow-sm"
-                                        : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                }`}
-                            >
-                                Diagrama de Guitarra
-                            </button>
-                            <button
-                                onClick={() => setInstrument("piano")}
-                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                                    instrument === "piano"
-                                        ? "bg-m3-primary text-white shadow-sm"
-                                        : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                }`}
-                            >
-                                Teclado de Piano
-                            </button>
-                        </div>
-
-                        {/* Fingering render */}
-                        <div className="py-4 flex flex-col items-center justify-center min-h-[140px] border border-m3-border/30 dark:border-m3-dark-border/30 rounded-2xl bg-m3-sidebar/30 dark:bg-m3-dark-sidebar/10">
-                            {chordFingering ? (
-                                instrument === "guitar" &&
-                                chordFingering.guitar ? (
-                                    <GuitarDiagram
-                                        frets={chordFingering.guitar.frets}
-                                        fingers={chordFingering.guitar.fingers}
-                                        barre={chordFingering.guitar.barre}
-                                    />
-                                ) : instrument === "piano" &&
-                                  chordFingering.piano ? (
-                                    <PianoDiagram
-                                        highlightKeys={
-                                            chordFingering.piano.highlightKeys
-                                        }
-                                    />
-                                ) : (
-                                    <div className="text-center p-4">
-                                        <HelpCircle className="w-8 h-8 mx-auto text-amber-500 opacity-80 mb-2" />
-                                        <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary font-medium">
-                                            O diagrama para{" "}
-                                            {instrument === "guitar"
-                                                ? "Guitarra"
-                                                : "Piano"}{" "}
-                                            não pôde ser calculado.
-                                        </p>
-                                    </div>
-                                )
-                            ) : (
-                                <div className="text-center p-6 space-y-2">
-                                    <HelpCircle className="w-8 h-8 mx-auto text-amber-500 opacity-80" />
-                                    <p className="text-xs text-m3-text dark:text-m3-dark-text font-bold">
-                                        Acorde &quot;{selectedChord}&quot; não
-                                        registado
-                                    </p>
-                                    <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary max-w-[200px] leading-normal">
-                                        Este acorde não se encontra no nosso
-                                        dicionário estrito, mas pode tocá-lo com
-                                        as notas de acompanhamento habituais.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Modal Notes representation */}
-                        {chordFingering?.piano && (
-                            <div className="text-center font-mono text-xs text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar py-2 rounded-xl">
-                                Notas do Acorde:{" "}
-                                <span className="font-bold text-m3-primary dark:text-m3-dark-primary">
-                                    {chordFingering.piano.notes.join(" - ")}
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Close button */}
-                        <button
-                            onClick={() => setSelectedChord(null)}
-                            className="w-full bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text text-xs py-3 rounded-2xl border border-m3-border dark:border-m3-dark-border font-bold active:scale-95 transition-all"
-                        >
-                            Voltar ao Cântico
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

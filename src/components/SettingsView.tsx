@@ -10,12 +10,12 @@ import {
     ScanLine,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
+import { useAppStore } from "../store/appStore";
 import {
     extractMusicianToken,
     extractMusicianURL,
     isMusicianAccessUrl,
-} from "../lib/apiClient";
-import { useAppStore } from "../store/appStore";
+} from "../utils";
 
 export default function SettingsView() {
     const serverUrl = useAppStore((state) => state.serverUrl);

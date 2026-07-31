@@ -1,6 +1,6 @@
+import { buildChordProText, parseChordPro } from "@hosanna/shared";
 import { AlertTriangle, Save, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { buildChordProText, parseChordPro } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
 
 interface SongEditorProps {
@@ -467,7 +467,7 @@ A [C]glória e o lou[G]vor
                 </div>
 
                 {/* SECTION 3: LYRICS & CHORDS TEXT AREA */}
-                <div className="flex flex-col flex-1 min-h-[300px]">
+                <div className="flex flex-col flex-1 min-h-75">
                     <label className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary font-bold mb-1">
                         Letra e Acordes Inline (Ex: Este é um [C]cântico
                         [G]novo.)
