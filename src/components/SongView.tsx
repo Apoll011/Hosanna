@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { chordDictionary } from "../lib/chordDictionary";
-import { SectionAST, transposeChord } from "../lib/chordpro";
+import { SectionAST } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
 import { GuitarDiagram, PianoDiagram } from "./ChordRoll";
 
@@ -342,13 +342,6 @@ export default function SongView({
             scrollContainerRef.current.scrollTop = 0;
         }
     }, [songId]);
-
-    // Compute transposed active key
-    const currentKey = useMemo(() => {
-        const baseKey = ast.metadata.key || "G";
-        if (transposeVal === 0) return baseKey;
-        return transposeChord(baseKey, transposeVal);
-    }, [ast.metadata.key, transposeVal]);
 
     const handleTranspose = (amount: number) => {
         setTransposeVal((prev) => {
