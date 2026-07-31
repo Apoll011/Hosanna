@@ -1,40 +1,28 @@
+import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
 import {
     ArrowLeft,
     BookOpen,
     ChevronLeft,
     ChevronRight,
     ChevronsDown,
-    Disc,
     Edit2,
     Eye,
     EyeOff,
     Heart,
     HelpCircle,
     Minus,
-    Music,
     Pause,
-    Play,
     Plus,
-    Repeat,
-    SkipBack,
-    SkipForward,
     SlidersHorizontal,
     Sun,
-    User,
     X,
     Youtube as YTIcon,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import YouTube, { YouTubePlayer } from "react-youtube";
 import { chordDictionary } from "../lib/chordDictionary";
-import {
-    LineAST,
-    parseChordPro,
-    SectionAST,
-    transposeChord,
-} from "../lib/chordpro";
+import { SectionAST, transposeChord } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
-import { ChordRoll, GuitarDiagram, PianoDiagram } from "./ChordRoll";
+import { GuitarDiagram, PianoDiagram } from "./ChordRoll";
 
 const hasRepeatInText = (text?: string): boolean => {
     if (!text) return false;
@@ -140,8 +128,6 @@ export default function SongView({
     // YouTube Audio Player states
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
-    const [isYoutubeRepeat, setIsYoutubeRepeat] = useState(false);
-    const [youtubePlayer, setYoutubePlayer] = useState<YouTubePlayer>(null);
 
     const song = useMemo(
         () => songs.find((s) => s.id === songId),
@@ -303,8 +289,9 @@ export default function SongView({
                     setActiveSectionIndex(activeIndex);
                     const currentSection = ast.sections[activeIndex];
                     if (currentSection) {
-                        isRepeatSectionActive =
-                            isSectionRepeated(currentSection);
+                        isRepeatSectionActive = isSectionRepeated(
+                            currentSection as any,
+                        );
                     }
                 }
             }
@@ -362,23 +349,6 @@ export default function SongView({
         if (transposeVal === 0) return baseKey;
         return transposeChord(baseKey, transposeVal);
     }, [ast.metadata.key, transposeVal]);
-
-    // Extract unique chords used in the song
-    const uniqueChords = useMemo(() => {
-        const list: string[] = [];
-        ast.sections.forEach((section) => {
-            section.lines.forEach((line) => {
-                if (line.segments) {
-                    line.segments.forEach((seg) => {
-                        if (seg.chord && !list.includes(seg.chord)) {
-                            list.push(seg.chord);
-                        }
-                    });
-                }
-            });
-        });
-        return list;
-    }, [ast]);
 
     const handleTranspose = (amount: number) => {
         setTransposeVal((prev) => {
@@ -714,186 +684,18 @@ export default function SongView({
                 </div>
             )}
 
-            {/* Primary Song Sheet Viewport */}
-            <div
-                ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto px-6 py-6 space-y-6 no-scrollbar relative"
-            >
-                {/* Title and Metadata Header block */}
-                <div className="border-b border-neutral-100 dark:border-zinc-900 pb-4 select-none">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                                {ast.metadata.title}
-                            </h2>
-                            {ast.metadata.subtitle && (
-                                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mt-0.5">
-                                    {ast.metadata.subtitle}
-                                </p>
-                            )}
-                            {ast.metadata.artist && (
-                                <div className="flex items-center gap-1 text-xs text-neutral-500 mt-2 font-medium">
-                                    <User className="w-3.5 h-3.5 text-m3-primary" />
-                                    <span>Por: {ast.metadata.artist}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Floating Metadata Pills */}
-                        <div className="flex flex-wrap items-center gap-1.5 justify-end">
-                            {ast.metadata.songNumber && (
-                                <span className="text-[10px] font-bold bg-neutral-100 dark:bg-zinc-900 text-neutral-600 dark:text-neutral-400 px-2 py-1 rounded-lg border border-neutral-200 dark:border-zinc-800">
-                                    Nº {ast.metadata.songNumber}
-                                </span>
-                            )}
-                            {ast.metadata.key && (
-                                <span className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-950/50">
-                                    Tom Original: {ast.metadata.key}
-                                </span>
-                            )}
-                            {ast.metadata.capo && ast.metadata.capo !== "0" && (
-                                <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-lg border border-amber-100 dark:border-amber-950/50">
-                                    Capo: {ast.metadata.capo}ª casa
-                                </span>
-                            )}
-                            {ast.metadata.tempo && (
-                                <span className="text-[10px] bg-neutral-100 dark:bg-zinc-900 text-neutral-500 dark:text-neutral-400 px-2 py-1 rounded-lg font-mono">
-                                    ♩ {ast.metadata.tempo} BPM
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Transposition Indicator Banner */}
-                    {transposeVal !== 0 && (
-                        <div className="mt-4 bg-indigo-50 dark:bg-indigo-950/40 text-xs px-3 py-2 rounded-xl text-indigo-700 dark:text-indigo-300 flex items-center justify-between border border-indigo-100 dark:border-indigo-950/50">
-                            <span className="font-semibold">
-                                Transposto para:{" "}
-                                <span className="text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-zinc-900 px-2 py-0.5 rounded border ml-1 text-sm">
-                                    {currentKey}
-                                </span>
-                            </span>
-                            <button
-                                onClick={() => setTransposeVal(0)}
-                                className="text-[10px] font-bold hover:underline underline-offset-2 uppercase text-indigo-600 dark:text-indigo-400"
-                            >
-                                Repor Tom
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Scrollable Chord Visualizer Row */}
-                <ChordRoll
-                    uniqueChords={uniqueChords}
-                    transposeVal={transposeVal}
-                    onChordClick={(chord) => setSelectedChord(chord)}
-                />
-
-                {/* Custom AST Renderer */}
-                <div
-                    className="space-y-6 select-text"
-                    style={{ fontSize: `${fontSize}px` }}
-                >
-                    {ast.sections.map((section, secIdx) => {
-                        if (section.type === "chorus") {
-                            return (
-                                <div
-                                    key={secIdx}
-                                    data-section-index={secIdx}
-                                    className="pl-4 md:pl-6 border-l-2 border-m3-primary/30 dark:border-m3-dark-primary/30 my-6"
-                                >
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-m3-text dark:text-m3-dark-text uppercase tracking-wider mb-3 select-none">
-                                        <Music className="w-3.5 h-3.5 text-m3-secondary shrink-0" />
-                                        <span>{section.label || "Refrão"}</span>
-                                    </div>
-                                    <div className="space-y-4 font-medium">
-                                        {section.lines.map((line, lineIdx) => (
-                                            <LineRenderer
-                                                key={lineIdx}
-                                                line={line}
-                                                showChords={showChords}
-                                                transpose={transposeVal}
-                                                onChordClick={setSelectedChord}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        if (section.type === "tab") {
-                            return (
-                                <div
-                                    key={secIdx}
-                                    data-section-index={secIdx}
-                                    className="bg-m3-sidebar dark:bg-m3-dark-sidebar p-4 rounded-xl border border-m3-border dark:border-m3-dark-border my-4 select-text"
-                                >
-                                    <div className="text-[10px] font-bold text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider mb-2 select-none">
-                                        {section.label || "Tablatura"}
-                                    </div>
-                                    <pre className="font-mono text-xs text-m3-text dark:text-m3-dark-text overflow-x-auto leading-relaxed whitespace-pre">
-                                        {section.lines
-                                            .map((line) => line.text || "")
-                                            .join("\n")}
-                                    </pre>
-                                </div>
-                            );
-                        }
-
-                        if (section.type === "comment") {
-                            return (
-                                <div
-                                    key={secIdx}
-                                    data-section-index={secIdx}
-                                    className="my-2 select-none pl-3 text-[11px] italic text-m3-secondary/70 dark:text-m3-dark-secondary/70"
-                                >
-                                    {section.lines
-                                        .map((l) => l.text)
-                                        .join(", ")}
-                                </div>
-                            );
-                        }
-
-                        return (
-                            <div
-                                key={secIdx}
-                                data-section-index={secIdx}
-                                className="relative pl-6 sm:pl-8 border-l border-m3-border/30 dark:border-m3-dark-border/30 py-1.5"
-                            >
-                                <div className="space-y-4">
-                                    {section.lines.map((line, lineIdx) => (
-                                        <LineRenderer
-                                            key={lineIdx}
-                                            line={line}
-                                            showChords={showChords}
-                                            transpose={transposeVal}
-                                            onChordClick={setSelectedChord}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Footer info & copyrights */}
-                <div className="border-t border-neutral-100 dark:border-zinc-900 pt-6 mt-12 text-center text-[10px] text-neutral-400 dark:text-neutral-500 select-none space-y-1">
-                    {ast.metadata.artist && (
-                        <p>Artista: {ast.metadata.artist}</p>
-                    )}
-                    {ast.metadata.composer && (
-                        <p>Compositor: {ast.metadata.composer}</p>
-                    )}
-                    {ast.metadata.copyright && (
-                        <p>© Copyright: {ast.metadata.copyright}</p>
-                    )}
-                    {ast.metadata.album && <p>Álbum: {ast.metadata.album}</p>}
-                    <p className="mt-4">
-                        Carregado a partir do ficheiro: {song.fileName}
-                    </p>
-                </div>
-            </div>
+            <ChordProRenderer
+                content={song.content}
+                showChords={showChords}
+                transposeVal={transposeVal}
+                fontSize={fontSize}
+                instrument={instrument}
+                showDiagrams={showDiagrams}
+                onChordClick={setSelectedChord}
+                fileName={song.fileName}
+                showYoutubePlayer={isPlayingYoutube}
+                onTransposeChange={setTransposeVal}
+            />
 
             {/* Swipe Chevron navigation cluster (Desktop support) */}
             <div
@@ -927,11 +729,8 @@ export default function SongView({
                             onClick={() => {
                                 setShowYoutubePlayer((prev) => !prev);
                                 if (showYoutubePlayer) {
-                                    youtubePlayer?.pauseVideo();
                                     setIsPlayingYoutube(false);
                                 } else {
-                                    youtubePlayer?.seekTo(0);
-                                    youtubePlayer?.playVideo();
                                     setIsPlayingYoutube(true);
                                 }
                             }}
@@ -940,39 +739,6 @@ export default function SongView({
                         >
                             <YTIcon className="w-5 h-5" />
                         </button>
-                        <div className="hidden">
-                            <YouTube
-                                videoId={
-                                    ast.metadata.youtube.match(
-                                        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/,
-                                    )?.[1] || ast.metadata.youtube
-                                }
-                                opts={{
-                                    height: "0",
-                                    width: "0",
-                                    playerVars: {
-                                        autoplay: 1,
-                                        controls: 0,
-                                        disablekb: 1,
-                                    },
-                                }}
-                                onReady={(e) => {
-                                    setYoutubePlayer(e.target);
-                                    e.target.pauseVideo();
-                                    setIsPlayingYoutube(false);
-                                }}
-                                onPlay={() => setIsPlayingYoutube(true)}
-                                onPause={() => setIsPlayingYoutube(false)}
-                                onEnd={(e) => {
-                                    if (isYoutubeRepeat) {
-                                        e.target.seekTo(0);
-                                        e.target.playVideo();
-                                    } else {
-                                        setIsPlayingYoutube(false);
-                                    }
-                                }}
-                            />
-                        </div>
                     </>
                 )}
 
@@ -1014,104 +780,6 @@ export default function SongView({
                     </button>
                 </div>
             </div>
-
-            {/* YouTube Spotify-like Mini Player Bottom Bar */}
-            {showYoutubePlayer && ast.metadata.youtube && (
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-m3-card dark:bg-m3-dark-card border-t border-m3-border dark:border-m3-dark-border shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-30 px-4 flex items-center justify-between animate-in slide-in-from-bottom-full">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0 border border-m3-border/50">
-                            {ast.metadata.youtube.match(
-                                /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/,
-                            ) || ast.metadata.youtube.match(/^[^&?]+$/) ? (
-                                <img
-                                    src={`https://img.youtube.com/vi/${ast.metadata.youtube.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1] || ast.metadata.youtube}/default.jpg`}
-                                    alt="YouTube Thumbnail"
-                                    className="w-full h-full object-cover scale-150"
-                                />
-                            ) : (
-                                <Disc className="w-5 h-5 m-auto mt-2.5 text-m3-secondary opacity-50" />
-                            )}
-                        </div>
-                        <div className="hidden sm:block">
-                            <p className="text-[10px] font-black text-m3-text dark:text-m3-dark-text truncate max-w-[120px]">
-                                {ast.metadata.title}
-                            </p>
-                            <p className="text-[9px] text-m3-secondary font-medium">
-                                Áudio do YouTube
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() =>
-                                youtubePlayer?.seekTo(
-                                    Math.max(
-                                        0,
-                                        youtubePlayer.getCurrentTime() - 10,
-                                    ),
-                                )
-                            }
-                            className="text-m3-secondary hover:text-m3-primary transition-colors active:scale-95"
-                            title="Retroceder 10s"
-                        >
-                            <SkipBack className="w-4 h-4" />
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                if (isPlayingYoutube) {
-                                    youtubePlayer?.pauseVideo();
-                                    setIsPlayingYoutube(false);
-                                } else {
-                                    youtubePlayer?.playVideo();
-                                    setIsPlayingYoutube(true);
-                                }
-                            }}
-                            className="w-10 h-10 rounded-full bg-m3-primary text-white flex items-center justify-center hover:opacity-95 shadow-md active:scale-95 transition-all"
-                        >
-                            {isPlayingYoutube ? (
-                                <Pause className="w-5 h-5" />
-                            ) : (
-                                <Play className="w-5 h-5 ml-1" />
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() =>
-                                youtubePlayer?.seekTo(
-                                    youtubePlayer.getCurrentTime() + 10,
-                                )
-                            }
-                            className="text-m3-secondary hover:text-m3-primary transition-colors active:scale-95"
-                            title="Avançar 10s"
-                        >
-                            <SkipForward className="w-4 h-4" />
-                        </button>
-
-                        <button
-                            onClick={() => setIsYoutubeRepeat(!isYoutubeRepeat)}
-                            className={`ml-2 transition-colors active:scale-95 ${isYoutubeRepeat ? "text-m3-primary" : "text-m3-secondary hover:text-m3-text"}`}
-                            title="Repetir Áudio"
-                        >
-                            <Repeat className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => {
-                                setShowYoutubePlayer(false);
-                                setIsPlayingYoutube(false);
-                            }}
-                            className="p-2 text-m3-secondary hover:text-red-500 transition-colors"
-                            title="Fechar Player"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {/* Chord Fingering Dictionary Modal Overlay */}
             {selectedChord && (
@@ -1222,74 +890,6 @@ export default function SongView({
                     </div>
                 </div>
             )}
-        </div>
-    );
-}
-
-/**
- * Sub-component to render a line of text, splitting into segmented block components
- */
-function LineRenderer({
-    line,
-    showChords,
-    transpose,
-    onChordClick,
-}: {
-    line: LineAST;
-    showChords: boolean;
-    transpose: number;
-    onChordClick: (chord: string) => void;
-    key?: number;
-}) {
-    if (line.type === "empty") {
-        return <div className="h-2"></div>;
-    }
-
-    if (line.type === "comment") {
-        return (
-            <div className="text-xs text-neutral-400 dark:text-neutral-500 italic">
-                {line.text}
-            </div>
-        );
-    }
-
-    const segments = line.segments || [];
-
-    return (
-        <div className="flex flex-wrap items-end leading-relaxed">
-            {segments.map((seg, segIdx: number) => {
-                const hasChord = !!seg.chord;
-                const transposed = hasChord
-                    ? transposeChord(seg.chord, transpose)
-                    : "";
-
-                return (
-                    <div
-                        key={segIdx}
-                        className="flex flex-col justify-end relative select-text"
-                        style={{
-                            minWidth:
-                                hasChord && showChords
-                                    ? `${Math.max(1.1, transposed.length * 0.65)}em`
-                                    : undefined,
-                        }}
-                    >
-                        {showChords && hasChord && (
-                            <span
-                                onClick={() => onChordClick(transposed)}
-                                className="font-black text-m3-primary dark:text-m3-dark-primary font-mono select-none pr-1 inline-block pb-0.5 hover:underline cursor-pointer transition-all"
-                                style={{ fontSize: "0.85em", lineHeight: "1" }}
-                                title="Ver fingering / dedilhado"
-                            >
-                                {transposed}
-                            </span>
-                        )}
-                        <span className="text-m3-text dark:text-m3-dark-text whitespace-pre">
-                            {seg.text || "\u00A0"}
-                        </span>
-                    </div>
-                );
-            })}
         </div>
     );
 }
