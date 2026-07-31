@@ -6,7 +6,7 @@ import {
     Plus,
     SlidersHorizontal,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useAppStore } from "../store/appStore";
 import { Song } from "../types";
 import CircleOfFifths from "./CircleOfFifths";
@@ -37,16 +37,9 @@ export default function SongBrowser({
     const sortBy = useAppStore((state) => state.sortBy);
     const setSortBy = useAppStore((state) => state.setSortBy);
 
-    // Section navigation state
-    const [selectedSection, setSelectedSection] = useState<
-        | "all"
-        | "favorites"
-        | "recent"
-        | "folder"
-        | "circle"
-        | "metronome"
-        | "settings"
-    >("all");
+    // Read section from store's activeListContext
+    const activeListContext = useAppStore((state) => state.activeListContext);
+    const selectedSection = activeListContext.type;
 
     // Comprehensive searching and sorting engine
     const filteredAndSortedSongs = useMemo(() => {
@@ -60,8 +53,9 @@ export default function SongBrowser({
                 .map((id) => songs.find((s) => s.id === id))
                 .filter(Boolean) as Song[];
             result = recentList;
-        } else if (selectedSection === "folder" && selectedFolder !== "") {
-            result = result.filter((song) => song.folder === selectedFolder);
+        } else if (selectedSection === "folder" && (activeListContext.folderName || selectedFolder) !== "") {
+            const folderToFilter = activeListContext.folderName || selectedFolder;
+            result = result.filter((song) => song.folder === folderToFilter);
         }
 
         // 2. Query Searching (Title, Lyrics, Artist, Number, Key)
@@ -122,7 +116,7 @@ export default function SongBrowser({
         setActiveListContext({
             type: contextType,
             folderName:
-                selectedSection === "folder" ? selectedFolder : undefined,
+                selectedSection === "folder" ? (activeListContext.folderName || selectedFolder) : undefined,
             searchQuery: searchQuery.trim() !== "" ? searchQuery : undefined,
         });
 
@@ -140,7 +134,7 @@ export default function SongBrowser({
             case "recent":
                 return "Cânticos Recentes";
             case "folder":
-                return selectedFolder || "Pasta";
+                return activeListContext.folderName || selectedFolder || "Pasta";
             case "circle":
                 return "Círculo da Quinta";
             case "metronome":
@@ -167,7 +161,7 @@ export default function SongBrowser({
                     selectedSection === "metronome" ||
                     selectedSection === "settings" ? (
                         <button
-                            onClick={() => setSelectedSection("all")}
+                            onClick={() => setActiveListContext({ type: "all" })}
                             className="p-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95"
                             title="Voltar para Cânticos"
                         >

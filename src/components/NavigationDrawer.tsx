@@ -28,6 +28,8 @@ export default function NavigationDrawer({
     const setActiveListContext = useAppStore(
         (state) => state.setActiveListContext,
     );
+    const setActiveSongId = useAppStore((state) => state.setActiveSongId);
+    const setIsEditing = useAppStore((state) => state.setIsEditing);
 
     const uniqueFolders = useMemo(() => {
         const folders = songs.map((s) => s.folder).filter(Boolean);
@@ -45,6 +47,8 @@ export default function NavigationDrawer({
             type: type,
             folderName,
         });
+        setActiveSongId(null);
+        setIsEditing(false);
         onClose();
     };
 

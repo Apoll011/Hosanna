@@ -13,7 +13,6 @@ import { useAppStore } from "./store/appStore";
 import FirstTimeSetup from "./components/FirstTimeSetup";
 import NavigationDrawer from "./components/NavigationDrawer";
 import ServiceManager from "./components/ServiceManager";
-import SettingsView from "./components/SettingsView";
 import SongBrowser from "./components/SongBrowser";
 import SongEditor from "./components/SongEditor";
 import SongView from "./components/SongView";
@@ -56,9 +55,8 @@ export default function App() {
 
     const isPresenting = useAppStore((state) => state.isPresenting);
 
-    const [activeTab, setActiveTab] = useState<
-        "songs" | "services" | "settings"
-    >("songs");
+    const activeListContext = useAppStore((state) => state.activeListContext);
+    const setActiveListContext = useAppStore((state) => state.setActiveListContext);
 
     const contentRef = useRef<HTMLDivElement>(null);
     const [pullDistance, setPullDistance] = useState(0);
@@ -220,7 +218,7 @@ export default function App() {
                             <input
                                 type="text"
                                 placeholder={
-                                    activeTab === "services"
+                                    activeListContext.type === "service"
                                         ? "Pesquisar cultos..."
                                         : "Pesquisar título, autor, letra..."
                                 }
@@ -280,7 +278,9 @@ export default function App() {
                         }}
                         className="h-full"
                     >
-                        {activeTab === "songs" && (
+                        {activeListContext.type === "service" ? (
+                            <ServiceManager />
+                        ) : (
                             <>
                                 {isEditing ? (
                                     <SongEditor
@@ -308,10 +308,6 @@ export default function App() {
                                 )}
                             </>
                         )}
-
-                        {activeTab === "services" && <ServiceManager />}
-
-                        {activeTab === "settings" && <SettingsView />}
                     </div>
                 </div>
 
@@ -319,19 +315,19 @@ export default function App() {
                     <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[70%] max-w-[220px] h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
                         <button
                             onClick={() => {
-                                setActiveTab("songs");
+                                setActiveListContext({ type: "all" });
                                 setActiveSongId(null);
                                 setIsEditing(false);
                             }}
                             id="nav_btn_songs"
                             className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-                                activeTab === "songs"
+                                activeListContext.type !== "service"
                                     ? "text-m3-primary dark:text-m3-dark-primary scale-105"
                                     : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text"
                             }`}
                         >
                             <div
-                                className={`px-5 py-0.5 rounded-full transition-all ${activeTab === "songs" ? "bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20" : ""}`}
+                                className={`px-5 py-0.5 rounded-full transition-all ${activeListContext.type !== "service" ? "bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20" : ""}`}
                             >
                                 <Music className="w-4.5 h-4.5" />
                             </div>
@@ -342,19 +338,19 @@ export default function App() {
 
                         <button
                             onClick={() => {
-                                setActiveTab("services");
+                                setActiveListContext({ type: "service" });
                                 setActiveSongId(null);
                                 setIsEditing(false);
                             }}
                             id="nav_btn_services"
                             className={`flex flex-col items-center justify-center gap-0.5 w-20 py-1 transition-all ${
-                                activeTab === "services"
+                                activeListContext.type === "service"
                                     ? "text-m3-primary dark:text-m3-dark-primary scale-105"
                                     : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text"
                             }`}
                         >
                             <div
-                                className={`px-5 py-0.5 rounded-full transition-all ${activeTab === "services" ? "bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20" : ""}`}
+                                className={`px-5 py-0.5 rounded-full transition-all ${activeListContext.type === "service" ? "bg-m3-primary-light dark:bg-m3-dark-primary-light border border-m3-border/20 dark:border-m3-dark-border/20" : ""}`}
                             >
                                 <CalendarRange className="w-4.5 h-4.5" />
                             </div>
