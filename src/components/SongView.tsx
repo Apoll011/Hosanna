@@ -1,4 +1,4 @@
-import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
+import { ChordProRenderer, parseChordPro, SectionAST } from "@hosanna/shared";
 import {
     ArrowLeft,
     ChevronLeft,
@@ -15,8 +15,13 @@ import {
     Sun,
     Youtube as YTIcon,
 } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { SectionAST } from "../lib/chordpro";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { useAppStore } from "../store/appStore";
 
 const hasRepeatInText = (text?: string): boolean => {
@@ -68,7 +73,7 @@ export default function SongView({
     const songs = useAppStore((state) => state.songs);
     const services = useAppStore((state) => state.services);
 
-    // Persisted state preferences from store
+    // Persisted state preferences
     const fontSize = useAppStore((state) => state.fontSize);
     const setFontSize = useAppStore((state) => state.setFontSize);
     const showChords = useAppStore((state) => state.showChords);
@@ -83,7 +88,7 @@ export default function SongView({
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
     const toggleFavoriteSong = useAppStore((state) => state.toggleFavoriteSong);
 
-    // Swipe logic & active song lists
+    // Context & Playlists
     const getActiveSongListIds = useAppStore(
         (state) => state.getActiveSongListIds,
     );
@@ -93,7 +98,6 @@ export default function SongView({
     );
     const sortBy = useAppStore((state) => state.sortBy);
 
-    // Memoize the song list IDs to prevent infinite loops (by caching the result array)
     const activeSongIds = useMemo(() => {
         return getActiveSongListIds();
     }, [
@@ -111,76 +115,87 @@ export default function SongView({
         [activeSongIds, songId],
     );
 
-    // Touch state for swiping
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    const canSwipePrev = currentIndex > 0;
+    const canSwipeNext =
+        currentIndex >= 0 && currentIndex < activeSongIds.length - 1;
 
-    // Local overrides (transpose isn't persisted long-term to raw file)
+    // Local states
     const [transposeVal, setTransposeVal] = useState(0);
     const [showControls, setShowControls] = useState(false);
-
-    // YouTube Audio Player states
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const [_, setWakeLockActive] = useState(keepScreenAwake);
 
     const song = useMemo(
         () => songs.find((s) => s.id === songId),
         [songs, songId],
     );
 
-    if (!song) {
-        return (
-            <div className="p-8 text-center bg-m3-bg dark:bg-m3-dark-bg h-full flex flex-col items-center justify-center">
-                <p className="text-sm text-m3-secondary dark:text-m3-dark-secondary">
-                    Cântico não encontrado ou foi removido.
-                </p>
-                <button
-                    onClick={onBack}
-                    className="mt-4 bg-m3-primary text-white px-5 py-2.5 rounded-2xl text-xs font-bold active:scale-95 transition-all"
-                >
-                    Voltar para Biblioteca
-                </button>
-            </div>
-        );
-    }
-
-    // Parse raw ChordPro text on-the-fly
     const ast = useMemo(() => {
-        return parseChordPro(song.content);
-    }, [song.content]);
+        return song ? parseChordPro(song.content) : null;
+    }, [song]);
 
-    // Screen Keep-Awake states
-    const [_, setWakeLockActive] = useState(keepScreenAwake);
+    // High-Perf DOM Refs (prevents re-renders)
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const leftIndicatorRef = useRef<HTMLDivElement | null>(null);
+    const rightIndicatorRef = useRef<HTMLDivElement | null>(null);
     const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
-    // Auto-scroll states
-    const [isScrolling, setIsScrolling] = useState(false);
-    const [_activeSectionIndex, setActiveSectionIndex] = useState<
-        number | null
-    >(null);
-    const [_isSlowedDown, setIsSlowedDown] = useState(false);
-
-    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    // Auto-Scroll Refs
     const scrollRequestRef = useRef<number | null>(null);
     const lastScrollTimeRef = useRef<number | null>(null);
     const exactScrollTopRef = useRef<number>(0);
+    const lastSectionCheckTime = useRef<number>(0);
+    const isRepeatSectionActiveRef = useRef<boolean>(false);
 
-    // Keep-Awake effect
+    // Swipe interaction ref state
+    const swipeInfo = useRef({
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+        isSwiping: false,
+        isLockedVertical: false,
+    });
+
+    // Navigation Actions
+    const handleNextSong = useCallback(() => {
+        if (canSwipeNext) {
+            const nextId = activeSongIds[currentIndex + 1];
+            useAppStore.getState().addRecentlyPlayedSong(nextId);
+            setSong(nextId);
+            setTransposeVal(0);
+            setShowYoutubePlayer(false);
+            setIsPlayingYoutube(false);
+        }
+    }, [canSwipeNext, activeSongIds, currentIndex, setSong]);
+
+    const handlePrevSong = useCallback(() => {
+        if (canSwipePrev) {
+            const prevId = activeSongIds[currentIndex - 1];
+            useAppStore.getState().addRecentlyPlayedSong(prevId);
+            setSong(prevId);
+            setTransposeVal(0);
+            setShowYoutubePlayer(false);
+            setIsPlayingYoutube(false);
+        }
+    }, [canSwipePrev, activeSongIds, currentIndex, setSong]);
+
+    // Screen Keep-Awake effect
     useEffect(() => {
         let isMounted = true;
         async function requestWakeLock() {
-            if (!keepScreenAwake) return;
             if (
+                !keepScreenAwake ||
                 typeof window === "undefined" ||
-                !window.navigator ||
-                !("wakeLock" in window.navigator)
-            ) {
+                !("wakeLock" in navigator)
+            )
                 return;
-            }
             try {
                 if (wakeLockRef.current) return;
-                const wakeLock =
-                    await window.navigator.wakeLock.request("screen");
+                const wakeLock = await navigator.wakeLock.request("screen");
                 if (isMounted) {
                     wakeLockRef.current = wakeLock;
                     setWakeLockActive(true);
@@ -202,13 +217,11 @@ export default function SongView({
         }
 
         const handleVisibility = () => {
-            if (document.visibilityState === "visible" && keepScreenAwake) {
+            if (document.visibilityState === "visible" && keepScreenAwake)
                 requestWakeLock();
-            }
         };
 
         document.addEventListener("visibilitychange", handleVisibility);
-
         return () => {
             isMounted = false;
             document.removeEventListener("visibilitychange", handleVisibility);
@@ -219,7 +232,7 @@ export default function SongView({
         };
     }, [songId, keepScreenAwake]);
 
-    // Auto-Scroll Tick Loop
+    // High-Performance Auto-Scroll Loop
     useEffect(() => {
         if (!isScrolling) {
             if (scrollRequestRef.current !== null) {
@@ -227,23 +240,18 @@ export default function SongView({
                 scrollRequestRef.current = null;
             }
             lastScrollTimeRef.current = null;
-            setIsSlowedDown(false);
             return;
         }
 
         const scrollContainer = scrollContainerRef.current;
-        if (!scrollContainer) return;
+        if (!scrollContainer || !ast) return;
 
-        // Synchronize exact accumulator with actual scroll in case user manually scrolled
         exactScrollTopRef.current = scrollContainer.scrollTop;
 
-        // Tempo multiplier from metadata (BPM)
         const tempo = ast.metadata.tempo
             ? parseInt(ast.metadata.tempo, 10)
             : 80;
-        const tempoFactor = tempo / 100;
-        // Map speed to pixels-per-ms, scaled by the song tempo
-        const basePixelsPerMs = 0.015 * tempoFactor;
+        const basePixelsPerMs = 0.015 * (tempo / 100);
 
         const scrollStep = (timestamp: number) => {
             if (!lastScrollTimeRef.current) {
@@ -256,64 +264,61 @@ export default function SongView({
             lastScrollTimeRef.current = timestamp;
 
             const container = scrollContainerRef.current;
-            let activeIndex = null;
-            let isRepeatSectionActive = false;
+            if (!container) return;
 
-            if (container) {
+            // Recover accumulator sync if user manually scrolls the content
+            if (Math.abs(container.scrollTop - exactScrollTopRef.current) > 2) {
+                exactScrollTopRef.current = container.scrollTop;
+            }
+
+            // Throttle bounding box check to dramatically improve performance (every 300ms)
+            if (timestamp - lastSectionCheckTime.current > 300) {
+                lastSectionCheckTime.current = timestamp;
                 const sectionElems = container.querySelectorAll(
                     "[data-section-index]",
                 );
-                const containerRect = container.getBoundingClientRect();
-                // Focus area is in the upper third of the viewport (which is where performers read)
-                const focusY = containerRect.top + containerRect.height / 3;
+                const focusY =
+                    container.getBoundingClientRect().top +
+                    container.clientHeight / 3;
 
+                let foundIndex = null;
                 for (let i = 0; i < sectionElems.length; i++) {
-                    const elem = sectionElems[i];
-                    const rect = elem.getBoundingClientRect();
+                    const rect = sectionElems[i].getBoundingClientRect();
                     if (rect.top <= focusY && rect.bottom >= focusY) {
-                        activeIndex = parseInt(
-                            elem.getAttribute("data-section-index") || "0",
+                        foundIndex = parseInt(
+                            sectionElems[i].getAttribute(
+                                "data-section-index",
+                            ) || "0",
                             10,
                         );
                         break;
                     }
                 }
 
-                if (activeIndex !== null) {
-                    setActiveSectionIndex(activeIndex);
-                    const currentSection = ast.sections[activeIndex];
-                    if (currentSection) {
-                        isRepeatSectionActive = isSectionRepeated(
-                            currentSection as any,
-                        );
-                    }
+                if (foundIndex !== null && ast.sections[foundIndex]) {
+                    isRepeatSectionActiveRef.current = isSectionRepeated(
+                        ast.sections[foundIndex],
+                    );
                 }
             }
 
-            let speedMultiplier = 1.0;
-            if (slowDownOnRepeat && isRepeatSectionActive) {
-                // Slow down to 35% of selected speed for repeated sections / chorus
-                speedMultiplier = 0.35;
-                setIsSlowedDown(true);
-            } else {
-                setIsSlowedDown(false);
-            }
-
+            const speedMultiplier =
+                slowDownOnRepeat && isRepeatSectionActiveRef.current
+                    ? 0.35
+                    : 1.0;
             const distanceToScroll =
                 basePixelsPerMs * elapsed * speedMultiplier;
 
-            if (container) {
-                // If we reached the bottom, stop
-                if (
-                    container.scrollTop + container.clientHeight >=
-                    container.scrollHeight - 2
-                ) {
-                    setIsScrolling(false);
-                    return;
-                }
-                exactScrollTopRef.current += distanceToScroll;
-                container.scrollTop = exactScrollTopRef.current;
+            if (
+                container.scrollTop + container.clientHeight >=
+                container.scrollHeight - 2
+            ) {
+                setIsScrolling(false);
+                return;
             }
+
+            exactScrollTopRef.current += distanceToScroll;
+            container.scrollTop = exactScrollTopRef.current;
 
             scrollRequestRef.current = requestAnimationFrame(scrollStep);
         };
@@ -321,77 +326,134 @@ export default function SongView({
         scrollRequestRef.current = requestAnimationFrame(scrollStep);
 
         return () => {
-            if (scrollRequestRef.current !== null) {
+            if (scrollRequestRef.current !== null)
                 cancelAnimationFrame(scrollRequestRef.current);
-            }
         };
-    }, [isScrolling, slowDownOnRepeat, ast.sections, ast.metadata.tempo]);
+    }, [isScrolling, slowDownOnRepeat, ast]);
 
-    // Reset scroll & state when song ID changes
+    // Reset when changing songs
     useEffect(() => {
         setIsScrolling(false);
-        setActiveSectionIndex(null);
-        setIsSlowedDown(false);
-        if (scrollContainerRef.current) {
+        if (scrollContainerRef.current)
             scrollContainerRef.current.scrollTop = 0;
-        }
     }, [songId]);
 
-    const handleTranspose = (amount: number) => {
-        setTransposeVal((prev) => {
-            let next = prev + amount;
-            if (next > 11) next -= 12;
-            if (next < -12) next += 12;
-            return next;
-        });
-    };
+    // High-Perf Swipe Handlers
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        swipeInfo.current = {
+            startX: e.touches[0].clientX,
+            startY: e.touches[0].clientY,
+            currentX: e.touches[0].clientX,
+            currentY: e.touches[0].clientY,
+            isSwiping: true,
+            isLockedVertical: false,
+        };
+        if (contentRef.current) {
+            contentRef.current.style.transition = "none";
+        }
+    }, []);
 
-    // Touch Swipe handlers
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchStart(e.targetTouches[0].clientX);
-    };
+    const handleTouchMove = useCallback(
+        (e: React.TouchEvent) => {
+            if (!swipeInfo.current.isSwiping) return;
 
-    const handleTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
-    };
+            swipeInfo.current.currentX = e.touches[0].clientX;
+            swipeInfo.current.currentY = e.touches[0].clientY;
 
-    const handleTouchEnd = () => {
-        if (touchStart === null || touchEnd === null) return;
-        const distance = touchStart - touchEnd;
-        const minSwipeDistance = 70;
+            let dx = swipeInfo.current.currentX - swipeInfo.current.startX;
+            const dy = swipeInfo.current.currentY - swipeInfo.current.startY;
 
-        if (distance > minSwipeDistance) {
-            handleNextSong();
-        } else if (distance < -minSwipeDistance) {
+            // Strict lock to avoid triggering swipe while scrolling down
+            if (
+                !swipeInfo.current.isLockedVertical &&
+                Math.abs(dy) > 10 &&
+                Math.abs(dy) > Math.abs(dx)
+            ) {
+                swipeInfo.current.isLockedVertical = true;
+            }
+
+            if (swipeInfo.current.isLockedVertical) return;
+
+            // Visual dampening physics
+            const resistance = 0.3;
+
+            // Add immense resistance if swiping out of bounds
+            if ((dx > 0 && !canSwipePrev) || (dx < 0 && !canSwipeNext)) {
+                dx = dx * 0.05;
+            }
+
+            if (contentRef.current) {
+                contentRef.current.style.transform = `translateX(${dx * resistance}px)`;
+            }
+
+            // Handle visual glowing indicators
+            if (dx > 20 && canSwipePrev && leftIndicatorRef.current) {
+                const intensity = Math.min((dx - 20) / 100, 1);
+                leftIndicatorRef.current.style.opacity = intensity.toString();
+                leftIndicatorRef.current.style.transform = `scale(${1 + intensity * 0.3})`;
+            } else if (dx < -20 && canSwipeNext && rightIndicatorRef.current) {
+                const intensity = Math.min((Math.abs(dx) - 20) / 100, 1);
+                rightIndicatorRef.current.style.opacity = intensity.toString();
+                rightIndicatorRef.current.style.transform = `scale(${1 + intensity * 0.3})`;
+            }
+        },
+        [canSwipePrev, canSwipeNext],
+    );
+
+    const handleTouchEnd = useCallback(() => {
+        if (!swipeInfo.current.isSwiping) return;
+        swipeInfo.current.isSwiping = false;
+
+        const dx = swipeInfo.current.currentX - swipeInfo.current.startX;
+        const wasLockedVertical = swipeInfo.current.isLockedVertical;
+        swipeInfo.current.isLockedVertical = false;
+
+        // Reset elements with buttery smooth snap-back transition
+        if (contentRef.current) {
+            contentRef.current.style.transition =
+                "transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)";
+            contentRef.current.style.transform = "translateX(0px)";
+        }
+
+        if (leftIndicatorRef.current) {
+            leftIndicatorRef.current.style.transition =
+                "opacity 0.3s ease, transform 0.3s ease";
+            leftIndicatorRef.current.style.opacity = "0";
+            leftIndicatorRef.current.style.transform = "scale(1)";
+        }
+
+        if (rightIndicatorRef.current) {
+            rightIndicatorRef.current.style.transition =
+                "opacity 0.3s ease, transform 0.3s ease";
+            rightIndicatorRef.current.style.opacity = "0";
+            rightIndicatorRef.current.style.transform = "scale(1)";
+        }
+
+        if (wasLockedVertical) return;
+
+        const minSwipeThreshold = 75;
+        if (dx > minSwipeThreshold && canSwipePrev) {
             handlePrevSong();
+        } else if (dx < -minSwipeThreshold && canSwipeNext) {
+            handleNextSong();
         }
+    }, [canSwipePrev, canSwipeNext, handlePrevSong, handleNextSong]);
 
-        setTouchStart(null);
-        setTouchEnd(null);
-    };
-
-    // Desktop click navigations
-    const handleNextSong = () => {
-        if (currentIndex < activeSongIds.length - 1) {
-            const nextId = activeSongIds[currentIndex + 1];
-            useAppStore.getState().addRecentlyPlayedSong(nextId);
-            setSong(nextId);
-            setTransposeVal(0);
-            setShowYoutubePlayer(false);
-            setIsPlayingYoutube(false);
-        }
-    };
-
-    const handlePrevSong = () => {
-        if (currentIndex > 0) {
-            const prevId = activeSongIds[currentIndex - 1];
-            useAppStore.getState().addRecentlyPlayedSong(prevId);
-            setSong(prevId);
-            setTransposeVal(0);
-            setShowYoutubePlayer(false);
-            setIsPlayingYoutube(false);
-        }
-    };
+    if (!song || !ast) {
+        return (
+            <div className="p-8 text-center bg-m3-bg dark:bg-m3-dark-bg h-full flex flex-col items-center justify-center">
+                <p className="text-sm text-m3-secondary dark:text-m3-dark-secondary">
+                    Cântico não encontrado ou foi removido.
+                </p>
+                <button
+                    onClick={onBack}
+                    className="mt-4 bg-m3-primary text-white px-5 py-2.5 rounded-2xl text-xs font-bold active:scale-95 transition-all"
+                >
+                    Voltar para Biblioteca
+                </button>
+            </div>
+        );
+    }
 
     const isFav = favoriteSongIds.includes(song.id);
 
@@ -402,12 +464,11 @@ export default function SongView({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Top Navbar with details */}
-            <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none">
+            {/* Top Navbar */}
+            <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none z-40 relative">
                 <button
                     onClick={onBack}
-                    id="btn_song_view_back"
-                    className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium"
+                    className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
                     <span className="text-sm">
@@ -416,10 +477,8 @@ export default function SongView({
                 </button>
 
                 <div className="flex items-center gap-1.5">
-                    {/* Favorite heart toggle */}
                     <button
                         onClick={() => toggleFavoriteSong(song.id)}
-                        id="btn_song_view_favorite"
                         className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
                             isFav
                                 ? "text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/40"
@@ -439,7 +498,6 @@ export default function SongView({
                     {!serviceMode && (
                         <button
                             onClick={onEdit}
-                            id="btn_song_view_edit"
                             className="p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors text-m3-secondary dark:text-m3-dark-secondary"
                             title="Editar Cântico"
                         >
@@ -449,7 +507,6 @@ export default function SongView({
 
                     <button
                         onClick={() => setShowControls(!showControls)}
-                        id="btn_song_view_controls"
                         className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${showControls ? "bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text border border-m3-border/30" : "text-m3-secondary dark:text-m3-dark-secondary"}`}
                         title="Ajustar Tom e Tamanho"
                     >
@@ -460,7 +517,7 @@ export default function SongView({
 
             {/* Non-modal controls popover */}
             {showControls && (
-                <div className="absolute right-4 top-16 w-64 bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-2xl shadow-xl z-30 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute right-4 top-16 w-64 bg-m3-card/95 dark:bg-m3-dark-card/95 backdrop-blur-xl border border-m3-border dark:border-m3-dark-border rounded-2xl shadow-xl z-50 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="border-b border-m3-border/30 dark:border-m3-dark-border/30 pb-2 flex items-center justify-between">
                         <span className="text-xs font-black text-m3-text dark:text-m3-dark-text uppercase tracking-wider">
                             Ajustes de Leitura
@@ -473,7 +530,6 @@ export default function SongView({
                         </button>
                     </div>
 
-                    {/* Show/Hide Chords Segmented Control */}
                     <div className="space-y-2">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">
                             Exibição:
@@ -487,8 +543,7 @@ export default function SongView({
                                         : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
                                 }`}
                             >
-                                <EyeOff className="w-3 h-3" />
-                                Apenas Letra
+                                <EyeOff className="w-3 h-3" /> Apenas Letra
                             </button>
                             <button
                                 onClick={() => setShowChords(true)}
@@ -498,8 +553,7 @@ export default function SongView({
                                         : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
                                 }`}
                             >
-                                <Eye className="w-3.5 h-3.5" />
-                                Com Cifras
+                                <Eye className="w-3.5 h-3.5" /> Com Cifras
                             </button>
                         </div>
                     </div>
@@ -514,14 +568,17 @@ export default function SongView({
                                     {transposeVal > 0
                                         ? `+${transposeVal}`
                                         : transposeVal}{" "}
-                                    semitons
+                                    st
                                 </span>
                             </div>
                             <div className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
                                 <button
-                                    onClick={() => handleTranspose(-1)}
+                                    onClick={() =>
+                                        setTransposeVal((p) =>
+                                            p - 1 < -12 ? 11 : p - 1,
+                                        )
+                                    }
                                     className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
-                                    title="Diminuir Semitom"
                                 >
                                     <Minus className="w-3 h-3" />
                                     <span>♭</span>
@@ -531,15 +588,18 @@ export default function SongView({
                                     className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
                                         transposeVal === 0
                                             ? "bg-m3-primary text-white shadow-xs"
-                                            : "text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
+                                            : "text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover"
                                     }`}
                                 >
                                     Original
                                 </button>
                                 <button
-                                    onClick={() => handleTranspose(1)}
+                                    onClick={() =>
+                                        setTransposeVal((p) =>
+                                            p + 1 > 11 ? -12 : p + 1,
+                                        )
+                                    }
                                     className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
-                                    title="Aumentar Semitom"
                                 >
                                     <span>#</span>
                                     <Plus className="w-3 h-3" />
@@ -548,61 +608,36 @@ export default function SongView({
                         </div>
                     )}
 
-                    {/* Show/Hide Diagrams & Instrument select (Only visible when chords are enabled) */}
                     {showChords && (
-                        <div className="space-y-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3 animate-in fade-in duration-200">
-                            {/* Show/Hide Diagrams */}
+                        <div className="space-y-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                             <div className="space-y-1.5">
                                 <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">
-                                    Diagramas de Acordes:
+                                    Diagramas / Instrumento:
                                 </span>
-                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
+                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1 mb-1">
                                     <button
                                         onClick={() => setShowDiagrams(false)}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                                            !showDiagrams
-                                                ? "bg-m3-primary text-white shadow-xs"
-                                                : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                        }`}
+                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${!showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Ocultar
                                     </button>
                                     <button
                                         onClick={() => setShowDiagrams(true)}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                                            showDiagrams
-                                                ? "bg-m3-primary text-white shadow-xs"
-                                                : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                        }`}
+                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Mostrar
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* Instrument select */}
-                            <div className="space-y-1.5">
-                                <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">
-                                    Instrumento de Acordes:
-                                </span>
-                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
+                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1">
                                     <button
                                         onClick={() => setInstrument("guitar")}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${
-                                            instrument === "guitar"
-                                                ? "bg-m3-primary text-white shadow-xs"
-                                                : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                        }`}
+                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "guitar" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Guitarra
                                     </button>
                                     <button
                                         onClick={() => setInstrument("piano")}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${
-                                            instrument === "piano"
-                                                ? "bg-m3-primary text-white shadow-xs"
-                                                : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                        }`}
+                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "piano" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Piano
                                     </button>
@@ -611,7 +646,6 @@ export default function SongView({
                         </div>
                     )}
 
-                    {/* Font size */}
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
                             Tamanho da Letra:
@@ -621,7 +655,7 @@ export default function SongView({
                                 onClick={() =>
                                     setFontSize(Math.max(10, fontSize - 1))
                                 }
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center text-xs font-black text-m3-secondary dark:text-m3-dark-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Minus className="w-3.5 h-3.5" />
                             </button>
@@ -632,106 +666,117 @@ export default function SongView({
                                 onClick={() =>
                                     setFontSize(Math.min(28, fontSize + 1))
                                 }
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center text-xs font-black text-m3-secondary dark:text-m3-dark-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
 
-                    {/* Keep Awake */}
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
-                            <Sun className="w-3.5 h-3.5" />
-                            Ecrã Sempre Ativo:
+                            <Sun className="w-3.5 h-3.5" /> Ecrã Sempre Ativo:
                         </span>
                         <button
                             onClick={() => setKeepScreenAwake(!keepScreenAwake)}
-                            className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${
-                                keepScreenAwake
-                                    ? "bg-m3-primary"
-                                    : "bg-neutral-200 dark:bg-zinc-800"
-                            }`}
+                            className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${keepScreenAwake ? "bg-m3-primary" : "bg-neutral-200 dark:bg-zinc-800"}`}
                         >
                             <div
-                                className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${
-                                    keepScreenAwake
-                                        ? "translate-x-4"
-                                        : "translate-x-0"
-                                }`}
+                                className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${keepScreenAwake ? "translate-x-4" : "translate-x-0"}`}
                             />
                         </button>
                     </div>
                 </div>
             )}
 
-            <ChordProRenderer
-                content={song.content}
-                showChords={showChords}
-                transposeVal={transposeVal}
-                fontSize={fontSize}
-                instrument={instrument}
-                showDiagrams={showDiagrams}
-                fileName={song.fileName}
-                showYoutubePlayer={isPlayingYoutube}
-                onTransposeChange={setTransposeVal}
-            />
-
-            {/* Swipe Chevron navigation cluster (Desktop support) */}
+            {/* Glowing Swipe Indicators */}
             <div
-                className={`absolute right-5 flex flex-col items-end gap-3 select-none shrink-0 z-20 transition-all duration-300 ${showYoutubePlayer ? "bottom-20" : "bottom-5"}`}
+                ref={leftIndicatorRef}
+                className="absolute left-0 inset-y-0 w-24 bg-gradient-to-r from-m3-primary/20 to-transparent flex items-center justify-start pl-4 opacity-0 pointer-events-none z-30 transition-opacity"
             >
-                {/* Auto Scroll Floating Button */}
-                <button
-                    onClick={() => setIsScrolling(!isScrolling)}
-                    className={`p-3.5 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4 ${
-                        isScrolling
-                            ? "bg-neutral-800 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300"
-                            : "bg-m3-primary dark:bg-m3-dark-primary text-white border-m3-primary-light dark:border-m3-dark-primary-light hover:opacity-90"
-                    }`}
-                    title={
-                        isScrolling
-                            ? "Pausar Rolar Automático"
-                            : "Iniciar Rolar Automático"
-                    }
-                >
-                    {isScrolling ? (
-                        <Pause className="w-5 h-5" />
-                    ) : (
-                        <ChevronsDown className="w-5 h-5" />
-                    )}
-                </button>
+                <ChevronLeft className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
+            </div>
 
-                {/* YouTube Floating Play Button */}
+            <div
+                ref={rightIndicatorRef}
+                className="absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-m3-primary/20 to-transparent flex items-center justify-end pr-4 opacity-0 pointer-events-none z-30 transition-opacity"
+            >
+                <ChevronRight className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
+            </div>
+
+            {/* Scrollable Main View Engine */}
+            <div
+                ref={scrollContainerRef}
+                className="flex-1 w-full overflow-y-auto overflow-x-hidden relative scroll-smooth will-change-scroll"
+            >
+                <div
+                    ref={contentRef}
+                    className="min-h-full w-full pb-36 will-change-transform"
+                >
+                    <ChordProRenderer
+                        content={song.content}
+                        showChords={showChords}
+                        transposeVal={transposeVal}
+                        fontSize={fontSize}
+                        instrument={instrument}
+                        showDiagrams={showDiagrams}
+                        fileName={song.fileName}
+                        showYoutubePlayer={isPlayingYoutube}
+                        onTransposeChange={setTransposeVal}
+                    />
+                </div>
+            </div>
+
+            {/* Floating Navigation Controls */}
+            <div
+                className={`absolute right-5 flex flex-col items-end gap-3 select-none shrink-0 z-40 transition-all duration-300 pointer-events-none ${showYoutubePlayer ? "bottom-20" : "bottom-5"}`}
+            >
+                <div className="pointer-events-auto">
+                    <button
+                        onClick={() => setIsScrolling(!isScrolling)}
+                        className={`p-3.5 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4 ${
+                            isScrolling
+                                ? "bg-neutral-800 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300 shadow-m3-primary/20"
+                                : "bg-m3-primary dark:bg-m3-dark-primary text-white border-m3-primary-light dark:border-m3-dark-primary-light hover:opacity-90"
+                        }`}
+                        title={
+                            isScrolling
+                                ? "Pausar Rolar Automático"
+                                : "Iniciar Rolar Automático"
+                        }
+                    >
+                        {isScrolling ? (
+                            <Pause className="w-5 h-5" />
+                        ) : (
+                            <ChevronsDown className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
+
                 {ast.metadata.youtube && (
-                    <>
+                    <div className="pointer-events-auto">
                         <button
                             onClick={() => {
                                 setShowYoutubePlayer((prev) => !prev);
-                                if (showYoutubePlayer) {
-                                    setIsPlayingYoutube(false);
-                                } else {
-                                    setIsPlayingYoutube(true);
-                                }
+                                setIsPlayingYoutube(!showYoutubePlayer);
                             }}
                             className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
                             title="Ouvir Áudio no YouTube"
                         >
                             <YTIcon className="w-5 h-5" />
                         </button>
-                    </>
+                    </div>
                 )}
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pointer-events-auto">
                     <button
                         onClick={handlePrevSong}
-                        disabled={currentIndex <= 0}
+                        disabled={!canSwipePrev}
                         className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
-                            currentIndex > 0
+                            canSwipePrev
                                 ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
                                 : "bg-m3-border/20 dark:bg-m3-dark-border/10 text-m3-secondary/40 border-transparent cursor-not-allowed"
                         }`}
-                        title="Cântico Anterior"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
@@ -744,17 +789,12 @@ export default function SongView({
 
                     <button
                         onClick={handleNextSong}
-                        disabled={
-                            currentIndex >= activeSongIds.length - 1 ||
-                            currentIndex === -1
-                        }
+                        disabled={!canSwipeNext}
                         className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
-                            currentIndex < activeSongIds.length - 1 &&
-                            currentIndex !== -1
+                            canSwipeNext
                                 ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
                                 : "bg-m3-border/20 dark:bg-m3-dark-border/10 text-m3-secondary/40 border-transparent cursor-not-allowed"
                         }`}
-                        title="Cântico Seguinte"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
