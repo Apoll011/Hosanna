@@ -1,22 +1,22 @@
 // src/components/ServiceManager.tsx
-import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
-    CalendarRange,
-    ChevronRight,
-    ChevronLeft,
     ArrowLeft,
-    Play,
-    X,
-    Music,
-    FileText,
     BookOpen,
-    MessageSquare,
-    Megaphone,
-    HelpCircle,
+    CalendarRange,
     Check,
+    ChevronLeft,
+    ChevronRight,
     Edit2,
+    FileText,
+    HelpCircle,
+    Megaphone,
+    MessageSquare,
+    Music,
+    Play,
     Save,
+    X,
 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "../store/appStore";
 import { ServiceElement, Song } from "../types";
 import SongView from "./SongView";
