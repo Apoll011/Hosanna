@@ -1,7 +1,7 @@
 {
     "name": "hosanna-mobile",
     "private": true,
-    "version": "1.9.0",
+    "version": "1.9.7",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -17,7 +17,7 @@
         "@capacitor/camera": "^7.0.5",
         "@capacitor/cli": "^7.6.8",
         "@capacitor/core": "^8.4.2",
-        "@hosanna/shared": "^1.5.0",
+        "@hosanna/shared": "^1.6.1",
         "@tailwindcss/vite": "^4.1.14",
         "@vitejs/plugin-react": "^5.0.4",
         "@yudiel/react-qr-scanner": "^2.6.0",
