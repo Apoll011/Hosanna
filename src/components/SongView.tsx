@@ -1,4 +1,4 @@
-import { ChordProRenderer, parseChordPro, SectionAST } from "@hosanna/shared";
+import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
 import {
     ArrowLeft,
     ChevronLeft,
@@ -23,37 +23,6 @@ import React, {
     useState,
 } from "react";
 import { useAppStore } from "../store/appStore";
-
-const hasRepeatInText = (text?: string): boolean => {
-    if (!text) return false;
-    const lower = text.toLowerCase();
-    return (
-        lower.includes("bis") ||
-        lower.includes("2x") ||
-        lower.includes("3x") ||
-        lower.includes("x2") ||
-        lower.includes("x3") ||
-        lower.includes("repetir") ||
-        lower.includes("repete") ||
-        lower.includes("refrão") ||
-        lower.includes("chorus") ||
-        lower.includes("coro")
-    );
-};
-
-const isSectionRepeated = (section: SectionAST): boolean => {
-    if (section.type === "chorus") return true;
-    if (section.label && hasRepeatInText(section.label)) return true;
-    for (const line of section.lines) {
-        if (line.text && hasRepeatInText(line.text)) return true;
-        if (line.segments) {
-            for (const seg of line.segments) {
-                if (seg.text && hasRepeatInText(seg.text)) return true;
-            }
-        }
-    }
-    return false;
-};
 
 interface SongViewProps {
     songId: string;
@@ -82,7 +51,6 @@ export default function SongView({
     const setShowDiagrams = useAppStore((state) => state.setShowDiagrams);
     const keepScreenAwake = useAppStore((state) => state.keepScreenAwake);
     const setKeepScreenAwake = useAppStore((state) => state.setKeepScreenAwake);
-    const slowDownOnRepeat = useAppStore((state) => state.slowDownOnRepeat);
     const instrument = useAppStore((state) => state.instrument);
     const setInstrument = useAppStore((state) => state.setInstrument);
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
@@ -125,6 +93,7 @@ export default function SongView({
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
     const [isScrolling, setIsScrolling] = useState(false);
+    const [scrollSpeed, setScrollSpeed] = useState(5); // Auto-scroll speed (1 to 10)
     const [_, setWakeLockActive] = useState(keepScreenAwake);
 
     const song = useMemo(
@@ -147,8 +116,6 @@ export default function SongView({
     const scrollRequestRef = useRef<number | null>(null);
     const lastScrollTimeRef = useRef<number | null>(null);
     const exactScrollTopRef = useRef<number>(0);
-    const lastSectionCheckTime = useRef<number>(0);
-    const isRepeatSectionActiveRef = useRef<boolean>(false);
 
     // Swipe interaction ref state
     const swipeInfo = useRef({
@@ -232,7 +199,7 @@ export default function SongView({
         };
     }, [songId, keepScreenAwake]);
 
-    // High-Performance Auto-Scroll Loop
+    // Simple & High-Performance Auto-Scroll Loop (Capacitor Safe)
     useEffect(() => {
         if (!isScrolling) {
             if (scrollRequestRef.current !== null) {
@@ -244,14 +211,13 @@ export default function SongView({
         }
 
         const scrollContainer = scrollContainerRef.current;
-        if (!scrollContainer || !ast) return;
+        if (!scrollContainer) return;
 
         exactScrollTopRef.current = scrollContainer.scrollTop;
 
-        const tempo = ast.metadata.tempo
-            ? parseInt(ast.metadata.tempo, 10)
-            : 80;
-        const basePixelsPerMs = 0.015 * (tempo / 100);
+        // Calcula os píxeis a rolar por milissegundo baseado na velocidade (1 a 10)
+        // 1 = ~10px por seg, 10 = ~55px por seg
+        const basePixelsPerMs = 0.005 + scrollSpeed * 0.005;
 
         const scrollStep = (timestamp: number) => {
             if (!lastScrollTimeRef.current) {
@@ -266,49 +232,17 @@ export default function SongView({
             const container = scrollContainerRef.current;
             if (!container) return;
 
-            // Recover accumulator sync if user manually scrolls the content
-            if (Math.abs(container.scrollTop - exactScrollTopRef.current) > 2) {
+            // CAPACITOR FIX: Aumentar tolerância para evitar deteções falsas de scroll manual
+            // devido ao "retina scaling" (DPR) nos ecrãs de telemóvel.
+            if (
+                Math.abs(container.scrollTop - exactScrollTopRef.current) > 15
+            ) {
                 exactScrollTopRef.current = container.scrollTop;
             }
 
-            // Throttle bounding box check to dramatically improve performance (every 300ms)
-            if (timestamp - lastSectionCheckTime.current > 300) {
-                lastSectionCheckTime.current = timestamp;
-                const sectionElems = container.querySelectorAll(
-                    "[data-section-index]",
-                );
-                const focusY =
-                    container.getBoundingClientRect().top +
-                    container.clientHeight / 3;
+            const distanceToScroll = basePixelsPerMs * elapsed;
 
-                let foundIndex = null;
-                for (let i = 0; i < sectionElems.length; i++) {
-                    const rect = sectionElems[i].getBoundingClientRect();
-                    if (rect.top <= focusY && rect.bottom >= focusY) {
-                        foundIndex = parseInt(
-                            sectionElems[i].getAttribute(
-                                "data-section-index",
-                            ) || "0",
-                            10,
-                        );
-                        break;
-                    }
-                }
-
-                if (foundIndex !== null && ast.sections[foundIndex]) {
-                    isRepeatSectionActiveRef.current = isSectionRepeated(
-                        ast.sections[foundIndex],
-                    );
-                }
-            }
-
-            const speedMultiplier =
-                slowDownOnRepeat && isRepeatSectionActiveRef.current
-                    ? 0.35
-                    : 1.0;
-            const distanceToScroll =
-                basePixelsPerMs * elapsed * speedMultiplier;
-
+            // Pára se atingirmos o fundo da página
             if (
                 container.scrollTop + container.clientHeight >=
                 container.scrollHeight - 2
@@ -329,7 +263,7 @@ export default function SongView({
             if (scrollRequestRef.current !== null)
                 cancelAnimationFrame(scrollRequestRef.current);
         };
-    }, [isScrolling, slowDownOnRepeat, ast]);
+    }, [isScrolling, scrollSpeed]);
 
     // Reset when changing songs
     useEffect(() => {
@@ -674,6 +608,35 @@ export default function SongView({
                     </div>
 
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
+                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
+                            Velocidade do Scroll:
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() =>
+                                    setScrollSpeed(Math.max(1, scrollSpeed - 1))
+                                }
+                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                            >
+                                <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center">
+                                {scrollSpeed}
+                            </span>
+                            <button
+                                onClick={() =>
+                                    setScrollSpeed(
+                                        Math.min(10, scrollSpeed + 1),
+                                    )
+                                }
+                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
                             <Sun className="w-3.5 h-3.5" /> Ecrã Sempre Ativo:
                         </span>
@@ -704,26 +667,29 @@ export default function SongView({
                 <ChevronRight className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
             </div>
 
-            {/* Scrollable Main View Engine */}
-            <div
-                ref={scrollContainerRef}
-                className="flex-1 w-full overflow-y-auto overflow-x-hidden relative scroll-smooth will-change-scroll"
-            >
+            {/* Scrollable Main View Engine (Capacitor Safe: min-h-0 + absolute boundary & no scroll-smooth!) */}
+            <div className="flex-1 w-full relative min-h-0 overflow-hidden">
                 <div
-                    ref={contentRef}
-                    className="min-h-full w-full pb-36 will-change-transform"
+                    ref={scrollContainerRef}
+                    className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden will-change-scroll"
+                    style={{ WebkitOverflowScrolling: "touch" }}
                 >
-                    <ChordProRenderer
-                        content={song.content}
-                        showChords={showChords}
-                        transposeVal={transposeVal}
-                        fontSize={fontSize}
-                        instrument={instrument}
-                        showDiagrams={showDiagrams}
-                        fileName={song.fileName}
-                        showYoutubePlayer={isPlayingYoutube}
-                        onTransposeChange={setTransposeVal}
-                    />
+                    <div
+                        ref={contentRef}
+                        className="min-h-full w-full pb-36 will-change-transform"
+                    >
+                        <ChordProRenderer
+                            content={song.content}
+                            showChords={showChords}
+                            transposeVal={transposeVal}
+                            fontSize={fontSize}
+                            instrument={instrument}
+                            showDiagrams={showDiagrams}
+                            fileName={song.fileName}
+                            showYoutubePlayer={isPlayingYoutube}
+                            onTransposeChange={setTransposeVal}
+                        />
+                    </div>
                 </div>
             </div>
 
