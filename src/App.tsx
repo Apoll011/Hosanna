@@ -1,6 +1,7 @@
 // src/App.tsx
 import {
     AlertTriangle,
+    ArrowLeft,
     CalendarRange,
     Menu,
     Music,
@@ -16,6 +17,7 @@ import ServiceManager from "./components/ServiceManager";
 import SongBrowser from "./components/SongBrowser";
 import SongEditor from "./components/SongEditor";
 import SongView from "./components/SongView";
+import { getSectionTitle } from "./utils";
 
 const PULL_THRESHOLD = 68;
 const PULL_MAX = 96;
@@ -56,13 +58,17 @@ export default function App() {
     const isPresenting = useAppStore((state) => state.isPresenting);
 
     const activeListContext = useAppStore((state) => state.activeListContext);
-    const setActiveListContext = useAppStore((state) => state.setActiveListContext);
+    const setActiveListContext = useAppStore(
+        (state) => state.setActiveListContext,
+    );
 
     const contentRef = useRef<HTMLDivElement>(null);
     const [pullDistance, setPullDistance] = useState(0);
     const [isPulling, setIsPulling] = useState(false);
     const touchStartY = useRef<number | null>(null);
     const scrollAncestorRef = useRef<HTMLElement | null>(null);
+
+    const selectedFolder = useAppStore((state) => state.selectedFolder);
 
     const searchQuery = useAppStore((state) => state.searchQuery);
     const setSearchQuery = useAppStore((state) => state.setSearchQuery);
@@ -191,6 +197,11 @@ export default function App() {
     const indicatorProgress = Math.min(1, pullDistance / PULL_THRESHOLD);
     const isSyncing = syncStatus === "syncing";
 
+    const isOnMenu =
+        activeListContext.type === "circle" ||
+        activeListContext.type === "metronome" ||
+        activeListContext.type === "settings";
+
     if (!serverUrl && !serverToken && !hasSkippedSetup) {
         return <FirstTimeSetup />;
     }
@@ -198,37 +209,65 @@ export default function App() {
     return (
         <div className="flex-1 flex overflow-hidden bg-m3-bg dark:bg-m3-dark-bg text-m3-text dark:text-m3-dark-text relative h-full">
             <div className="flex-1 flex flex-col h-full overflow-hidden">
-                {!activeSongId && !isEditing && !isPresenting && (
-                    <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0 z-10 relative">
-                        <button
-                            onClick={() => setShowDrawer(true)}
-                            className="p-1.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95 flex items-center gap-2 pr-3"
-                            title="Abrir Menu de Navegação"
-                        >
-                            <img
-                                src="/logo.png"
-                                className="w-7 h-7 rounded-lg object-cover border border-m3-border/20 shadow-xs"
-                                alt="Hosanna"
-                                referrerPolicy="no-referrer"
-                            />
-                            <Menu className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-                        </button>
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-m3-secondary dark:text-m3-dark-secondary" />
-                            <input
-                                type="text"
-                                placeholder={
-                                    activeListContext.type === "service"
-                                        ? "Pesquisar cultos..."
-                                        : "Pesquisar título, autor, letra..."
-                                }
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70"
-                            />
+                {!activeSongId &&
+                    !isEditing &&
+                    !isPresenting &&
+                    (!isOnMenu ? (
+                        <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0 z-10 relative">
+                            <button
+                                onClick={() => setShowDrawer(true)}
+                                className="p-1.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95 flex items-center gap-2 pr-3"
+                                title="Abrir Menu de Navegação"
+                            >
+                                <img
+                                    src="/logo.png"
+                                    className="w-7 h-7 rounded-lg object-cover border border-m3-border/20 shadow-xs"
+                                    alt="Hosanna"
+                                    referrerPolicy="no-referrer"
+                                />
+                                <Menu className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
+                            </button>
+
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-m3-secondary dark:text-m3-dark-secondary" />
+                                <input
+                                    type="text"
+                                    placeholder={
+                                        activeListContext.type === "service"
+                                            ? "Pesquisar cultos..."
+                                            : "Pesquisar título, autor, letra..."
+                                    }
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    className="w-full pl-10 pr-4 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70"
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <h2 className="text-lg font-black text-m3-text dark:text-m3-dark-text tracking-tight">
+                                    {getSectionTitle(
+                                        activeListContext.type,
+                                        activeListContext.folderName,
+                                        selectedFolder,
+                                    )}
+                                </h2>
+                            </div>
+
+                            <button
+                                onClick={() =>
+                                    setActiveListContext({ type: "all" })
+                                }
+                                className="p-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95"
+                                title="Voltar para Cânticos"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
+                            </button>
+                        </div>
+                    ))}
 
                 <NavigationDrawer
                     show={showDrawer}
