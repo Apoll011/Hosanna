@@ -1,4 +1,4 @@
-import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
+import { ChordProRenderer, parseChordPro, SectionAST } from "@hosanna/shared";
 import {
     ArrowLeft,
     ChevronLeft,
@@ -22,7 +22,6 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { SectionAST } from "../lib/chordpro";
 import { useAppStore } from "../store/appStore";
 
 const hasRepeatInText = (text?: string): boolean => {
@@ -298,7 +297,7 @@ export default function SongView({
 
                 if (foundIndex !== null && ast.sections[foundIndex]) {
                     isRepeatSectionActiveRef.current = isSectionRepeated(
-                        ast.sections[foundIndex] as any,
+                        ast.sections[foundIndex],
                     );
                 }
             }
