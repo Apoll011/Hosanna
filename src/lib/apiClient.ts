@@ -1,7 +1,5 @@
 import { Folder, ServiceElement } from "../types";
 
-const TOKEN_QUERY_KEYS = ["token", "access_token", "accessToken", "bearer"];
-
 export type ApiErrorDetails = { path: string; message: string };
 
 export class ApiError extends Error {
