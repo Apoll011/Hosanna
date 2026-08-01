@@ -1,3 +1,5 @@
+import { AppState } from "./store/appStore";
+
 const TOKEN_QUERY_KEYS = ["token", "access_token", "accessToken", "bearer"];
 
 export const extractMusicianToken = (value: string): string => {
@@ -45,5 +47,29 @@ export const isMusicianAccessUrl = (value: string): boolean => {
         return TOKEN_QUERY_KEYS.some((key) => url.searchParams.has(key));
     } catch {
         return false;
+    }
+};
+
+export const getSectionTitle = (
+    selectedSection: AppState["activeListContext"]["type"],
+    folderName?: string,
+    selectedFolder?: string,
+) => {
+    switch (selectedSection) {
+        case "favorites":
+            return "Favoritos";
+        case "recent":
+            return "Cânticos Recentes";
+        case "folder":
+            return folderName || selectedFolder || "Pasta";
+        case "circle":
+            return "Círculo da Quinta";
+        case "metronome":
+            return "Metrónomo";
+        case "settings":
+            return "Definições & Servidor";
+        case "all":
+        default:
+            return "Todos os Cânticos";
     }
 };

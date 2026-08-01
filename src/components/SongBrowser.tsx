@@ -1,14 +1,8 @@
-import {
-    ArrowLeft,
-    FileText,
-    Heart,
-    Music,
-    Plus,
-    SlidersHorizontal,
-} from "lucide-react";
+import { FileText, Heart, Music, Plus, SlidersHorizontal } from "lucide-react";
 import { useMemo } from "react";
 import { useAppStore } from "../store/appStore";
 import { Song } from "../types";
+import { getSectionTitle } from "../utils";
 import CircleOfFifths from "./CircleOfFifths";
 import Metronome from "./Metronome";
 import SettingsView from "./SettingsView";
@@ -53,8 +47,12 @@ export default function SongBrowser({
                 .map((id) => songs.find((s) => s.id === id))
                 .filter(Boolean) as Song[];
             result = recentList;
-        } else if (selectedSection === "folder" && (activeListContext.folderName || selectedFolder) !== "") {
-            const folderToFilter = activeListContext.folderName || selectedFolder;
+        } else if (
+            selectedSection === "folder" &&
+            (activeListContext.folderName || selectedFolder) !== ""
+        ) {
+            const folderToFilter =
+                activeListContext.folderName || selectedFolder;
             result = result.filter((song) => song.folder === folderToFilter);
         }
 
@@ -116,7 +114,9 @@ export default function SongBrowser({
         setActiveListContext({
             type: contextType,
             folderName:
-                selectedSection === "folder" ? (activeListContext.folderName || selectedFolder) : undefined,
+                selectedSection === "folder"
+                    ? activeListContext.folderName || selectedFolder
+                    : undefined,
             searchQuery: searchQuery.trim() !== "" ? searchQuery : undefined,
         });
 
@@ -127,55 +127,23 @@ export default function SongBrowser({
         onSelectSong(songId);
     };
 
-    const getSectionTitle = () => {
-        switch (selectedSection) {
-            case "favorites":
-                return "Favoritos";
-            case "recent":
-                return "Cânticos Recentes";
-            case "folder":
-                return activeListContext.folderName || selectedFolder || "Pasta";
-            case "circle":
-                return "Círculo da Quinta";
-            case "metronome":
-                return "Metrónomo";
-            case "settings":
-                return "Definições & Servidor";
-            case "all":
-            default:
-                return "Todos os Cânticos";
-        }
-    };
-
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-m3-bg dark:bg-m3-dark-bg relative">
             {/* Header Search Area */}
             <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0">
-                <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                        <h2 className="text-lg font-black text-m3-text dark:text-m3-dark-text tracking-tight">
-                            {getSectionTitle()}
-                        </h2>
-                    </div>
-                    {selectedSection === "circle" ||
-                    selectedSection === "metronome" ||
-                    selectedSection === "settings" ? (
-                        <button
-                            onClick={() => setActiveListContext({ type: "all" })}
-                            className="p-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95"
-                            title="Voltar para Cânticos"
-                        >
-                            <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                        </button>
-                    ) : null}
-                </div>
-
                 {/* Filters and Sorting controllers */}
                 {selectedSection !== "circle" &&
                     selectedSection !== "metronome" &&
                     selectedSection !== "settings" && (
                         <div className="flex items-center justify-between gap-2">
                             {/* Active section breadcrumb */}
+                            <span className="font-mono bg-m3-sidebar dark:bg-m3-dark-sidebar px-2 py-0.5 rounded border border-m3-border/30 dark:border-m3-dark-border/30 text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary">
+                                {getSectionTitle(
+                                    selectedSection,
+                                    activeListContext.folderName,
+                                    selectedFolder,
+                                )}
+                            </span>
                             <div className="flex items-center gap-1.5 text-xs text-m3-secondary dark:text-m3-dark-secondary font-medium">
                                 {selectedSection !== "recent" && (
                                     <>
