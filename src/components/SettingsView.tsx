@@ -218,7 +218,7 @@ export default function SettingsView() {
                                 Ler QR Code
                             </label>
 
-                            <div className="rounded-xl overflow-hidden border border-m3-border dark:border-m3-dark-border relative aspect-square max-w-[300px] mx-auto bg-black flex flex-col items-center justify-center text-white p-4">
+                            <div className="rounded-xl overflow-hidden border border-m3-border dark:border-m3-dark-border relative aspect-square max-w-75 mx-auto bg-black flex flex-col items-center justify-center text-white p-4">
                                 {hasCameraPermission === false && (
                                     <div className="text-center space-y-2">
                                         <p className="text-xs text-red-400 font-bold">

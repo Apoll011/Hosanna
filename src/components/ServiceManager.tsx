@@ -108,7 +108,7 @@ function NotesEditor({
             <textarea
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full bg-m3-bg dark:bg-m3-dark-bg border border-m3-border dark:border-m3-dark-border rounded-xl p-3 text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 min-h-[80px] resize-none"
+                className="w-full bg-m3-bg dark:bg-m3-dark-bg border border-m3-border dark:border-m3-dark-border rounded-xl p-3 text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 min-h-20 resize-none"
                 placeholder="Adicione notas para este elemento..."
                 autoFocus
             />

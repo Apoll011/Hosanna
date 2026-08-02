@@ -655,14 +655,14 @@ export default function SongView({
             {/* Glowing Swipe Indicators */}
             <div
                 ref={leftIndicatorRef}
-                className="absolute left-0 inset-y-0 w-24 bg-gradient-to-r from-m3-primary/20 to-transparent flex items-center justify-start pl-4 opacity-0 pointer-events-none z-30 transition-opacity"
+                className="absolute left-0 inset-y-0 w-24 bg-linear-to-r from-m3-primary/20 to-transparent flex items-center justify-start pl-4 opacity-0 pointer-events-none z-30 transition-opacity"
             >
                 <ChevronLeft className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
             </div>
 
             <div
                 ref={rightIndicatorRef}
-                className="absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-m3-primary/20 to-transparent flex items-center justify-end pr-4 opacity-0 pointer-events-none z-30 transition-opacity"
+                className="absolute right-0 inset-y-0 w-24 bg-linear-to-l from-m3-primary/20 to-transparent flex items-center justify-end pr-4 opacity-0 pointer-events-none z-30 transition-opacity"
             >
                 <ChevronRight className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
             </div>
