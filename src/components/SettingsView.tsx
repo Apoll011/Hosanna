@@ -336,7 +336,8 @@ export default function SettingsView() {
                                 Modo Músico nos Cultos
                             </span>
                             <span className="text-[11px] text-m3-secondary dark:text-m3-dark-secondary block leading-snug">
-                                Abre o culto diretamente no primeiro cântico com menu lateral (estilo Songbook Pro)
+                                Abre o culto diretamente no primeiro cântico com
+                                menu lateral (estilo Songbook Pro)
                             </span>
                         </div>
                     </div>

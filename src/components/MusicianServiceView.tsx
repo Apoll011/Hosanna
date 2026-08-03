@@ -155,9 +155,8 @@ export default function MusicianServiceView({
         return sortedElements[0]?.id || "";
     }, [sortedElements]);
 
-    const [selectedElementId, setSelectedElementId] = useState<string>(
-        initialElementId,
-    );
+    const [selectedElementId, setSelectedElementId] =
+        useState<string>(initialElementId);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
 
@@ -279,7 +278,10 @@ export default function MusicianServiceView({
                                     Elementos do Culto
                                 </span>
                                 <span className="text-[10px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
-                                    {sortedElements.length} {sortedElements.length === 1 ? "item" : "itens"}
+                                    {sortedElements.length}{" "}
+                                    {sortedElements.length === 1
+                                        ? "item"
+                                        : "itens"}
                                 </span>
                             </div>
 
@@ -293,7 +295,9 @@ export default function MusicianServiceView({
                                 return (
                                     <button
                                         key={el.id}
-                                        onClick={() => handleSelectElement(el.id)}
+                                        onClick={() =>
+                                            handleSelectElement(el.id)
+                                        }
                                         className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-all active:scale-[0.98] ${
                                             isSelected
                                                 ? "bg-m3-primary/10 dark:bg-m3-dark-primary/15 border-m3-primary/50 dark:border-m3-dark-primary/50 shadow-xs"
@@ -403,17 +407,17 @@ export default function MusicianServiceView({
                             <Menu className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
                             <span className="text-xs font-bold">Menu</span>
                         </button>
-
                         <div className="text-center min-w-0 px-2">
                             <h2 className="text-xs font-bold text-m3-text dark:text-m3-dark-text truncate">
                                 {service.name}
                             </h2>
                             <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary">
-                                Elemento {selectedElementIndex + 1} de {sortedElements.length}
+                                Elemento {selectedElementIndex + 1} de{" "}
+                                {sortedElements.length}
                             </p>
                         </div>
-
-                        <div className="w-16" /> {/* Spacer for visual center alignment */}
+                        <div className="w-16" />{" "}
+                        {/* Spacer for visual center alignment */}
                     </div>
 
                     {/* Non-Song Main Body */}
@@ -442,7 +446,8 @@ export default function MusicianServiceView({
                         <h1 className="text-xl sm:text-2xl font-black text-center text-m3-text dark:text-m3-dark-text leading-snug">
                             {currentElement.type === "song"
                                 ? "Cântico não encontrado"
-                                : currentElement.title || getElementMeta(currentElement.type).label}
+                                : currentElement.title ||
+                                  getElementMeta(currentElement.type).label}
                         </h1>
 
                         {/* Passage Card */}
@@ -478,11 +483,15 @@ export default function MusicianServiceView({
                                 </span>
                                 {editingNotesId !== currentElement.id && (
                                     <button
-                                        onClick={() => setEditingNotesId(currentElement.id)}
+                                        onClick={() =>
+                                            setEditingNotesId(currentElement.id)
+                                        }
                                         className="text-xs font-bold text-m3-primary dark:text-m3-dark-primary hover:underline flex items-center gap-1"
                                     >
                                         <Edit2 className="w-3 h-3" />
-                                        {currentElement.notes ? "Editar" : "Adicionar"}
+                                        {currentElement.notes
+                                            ? "Editar"
+                                            : "Adicionar"}
                                     </button>
                                 )}
                             </div>
@@ -490,22 +499,32 @@ export default function MusicianServiceView({
                             {editingNotesId === currentElement.id ? (
                                 <MusicianNotesEditor
                                     initialNotes={currentElement.notes || ""}
-                                    onSave={(notes) => handleSaveNotes(currentElement.id, notes)}
+                                    onSave={(notes) =>
+                                        handleSaveNotes(
+                                            currentElement.id,
+                                            notes,
+                                        )
+                                    }
                                     onCancel={() => setEditingNotesId(null)}
                                 />
                             ) : currentElement.notes ? (
                                 <div
-                                    onClick={() => setEditingNotesId(currentElement.id)}
+                                    onClick={() =>
+                                        setEditingNotesId(currentElement.id)
+                                    }
                                     className="p-4 rounded-2xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border text-xs italic text-m3-text dark:text-m3-dark-text whitespace-pre-wrap cursor-pointer hover:border-m3-primary/40 transition-colors"
                                 >
                                     {currentElement.notes}
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => setEditingNotesId(currentElement.id)}
+                                    onClick={() =>
+                                        setEditingNotesId(currentElement.id)
+                                    }
                                     className="w-full p-4 rounded-2xl bg-m3-sidebar/50 dark:bg-m3-dark-sidebar/50 border border-dashed border-m3-border dark:border-m3-dark-border text-xs italic text-m3-secondary dark:text-m3-dark-secondary text-left hover:bg-m3-hover transition-colors"
                                 >
-                                    Nenhuma nota adicionada. Clique para escrever notas de apoio...
+                                    Nenhuma nota adicionada. Clique para
+                                    escrever notas de apoio...
                                 </button>
                             )}
                         </div>
@@ -524,7 +543,10 @@ export default function MusicianServiceView({
 
                         <button
                             onClick={goNextElement}
-                            disabled={selectedElementIndex >= sortedElements.length - 1}
+                            disabled={
+                                selectedElementIndex >=
+                                sortedElements.length - 1
+                            }
                             className="flex-1 py-3 px-4 rounded-xl bg-m3-primary dark:bg-m3-dark-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-30 active:scale-95 transition-all shadow-xs"
                         >
                             Seguinte
