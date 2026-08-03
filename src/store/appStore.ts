@@ -57,6 +57,7 @@ export interface AppState {
     slowDownOnRepeat: boolean;
     musicianMode: boolean;
     instrument: "guitar" | "piano";
+    twoColumnLayout: boolean;
     selectedFolder: string;
     activeSongId: string | null;
     activeServiceId: string | null;
@@ -79,6 +80,7 @@ export interface AppState {
     setSlowDownOnRepeat: (slow: boolean) => void;
     setMusicianMode: (enabled: boolean) => void;
     setInstrument: (instrument: "guitar" | "piano") => void;
+    setTwoColumnLayout: (enabled: boolean) => void;
     setSourceFolderPath: (path: string) => void;
     setSelectedFolder: (folder: string) => void;
     setActiveSongId: (id: string | null) => void;
@@ -270,6 +272,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     slowDownOnRepeat: getStorageItem("cp_slow_down_repeat", true),
     musicianMode: getStorageItem("cp_musician_mode", false),
     instrument: getStorageItem("cp_instrument", "guitar"),
+    twoColumnLayout: getStorageItem("cp_two_column_layout", false),
     selectedFolder: "",
     activeSongId: null,
     activeServiceId: null,
@@ -320,6 +323,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     setInstrument: (instrument) => {
         set({ instrument });
         setStorageItem("cp_instrument", instrument);
+    },
+    setTwoColumnLayout: (twoColumnLayout) => {
+        set({ twoColumnLayout });
+        setStorageItem("cp_two_column_layout", twoColumnLayout);
     },
     setSourceFolderPath: (sourceFolderPath) => {
         set({ sourceFolderPath });

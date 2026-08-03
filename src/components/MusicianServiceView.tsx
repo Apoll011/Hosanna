@@ -2,7 +2,6 @@
 import {
     BookOpen,
     CalendarRange,
-    Check,
     ChevronLeft,
     ChevronRight,
     Edit2,

@@ -1,9 +1,14 @@
-import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
+import {
+    ChordProRenderer,
+    getSuggestedCapo,
+    parseChordPro,
+} from "@hosanna/shared";
 import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
     ChevronsDown,
+    Columns2,
     Edit2,
     Eye,
     EyeOff,
@@ -55,6 +60,8 @@ export default function SongView({
     const setKeepScreenAwake = useAppStore((state) => state.setKeepScreenAwake);
     const instrument = useAppStore((state) => state.instrument);
     const setInstrument = useAppStore((state) => state.setInstrument);
+    const twoColumnLayout = useAppStore((state) => state.twoColumnLayout);
+    const setTwoColumnLayout = useAppStore((state) => state.setTwoColumnLayout);
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
     const toggleFavoriteSong = useAppStore((state) => state.toggleFavoriteSong);
 
@@ -91,6 +98,7 @@ export default function SongView({
 
     // Local states
     const [transposeVal, setTransposeVal] = useState(0);
+    const [capoVal, setCapoVal] = useState(0);
     const [showControls, setShowControls] = useState(false);
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
@@ -113,6 +121,8 @@ export default function SongView({
     const leftIndicatorRef = useRef<HTMLDivElement | null>(null);
     const rightIndicatorRef = useRef<HTMLDivElement | null>(null);
     const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+    const controlsPopoverRef = useRef<HTMLDivElement | null>(null);
+    const settingsBtnRef = useRef<HTMLButtonElement | null>(null);
 
     // Auto-Scroll Refs
     const scrollRequestRef = useRef<number | null>(null);
@@ -129,6 +139,30 @@ export default function SongView({
         isLockedVertical: false,
     });
 
+    // Suggested capo when transpose is applied and instrument is guitar
+    const suggestedCapo = useMemo(() => {
+        if (instrument !== "guitar" || transposeVal === 0) return null;
+        return getSuggestedCapo(ast?.metadata.key, transposeVal);
+    }, [instrument, transposeVal, ast?.metadata.key]);
+
+    // Close popover when clicking outside
+    useEffect(() => {
+        if (!showControls) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            if (
+                controlsPopoverRef.current &&
+                !controlsPopoverRef.current.contains(e.target as Node) &&
+                settingsBtnRef.current &&
+                !settingsBtnRef.current.contains(e.target as Node)
+            ) {
+                setShowControls(false);
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () =>
+            document.removeEventListener("mousedown", handleOutsideClick);
+    }, [showControls]);
+
     // Navigation Actions
     const handleNextSong = useCallback(() => {
         if (canSwipeNext) {
@@ -136,6 +170,7 @@ export default function SongView({
             useAppStore.getState().addRecentlyPlayedSong(nextId);
             setSong(nextId);
             setTransposeVal(0);
+            setCapoVal(0);
             setShowYoutubePlayer(false);
             setIsPlayingYoutube(false);
         }
@@ -147,6 +182,7 @@ export default function SongView({
             useAppStore.getState().addRecentlyPlayedSong(prevId);
             setSong(prevId);
             setTransposeVal(0);
+            setCapoVal(0);
             setShowYoutubePlayer(false);
             setIsPlayingYoutube(false);
         }
@@ -217,8 +253,6 @@ export default function SongView({
 
         exactScrollTopRef.current = scrollContainer.scrollTop;
 
-        // Calcula os píxeis a rolar por milissegundo baseado na velocidade (1 a 10)
-        // 1 = ~10px por seg, 10 = ~55px por seg
         const basePixelsPerMs = 0.005 + scrollSpeed * 0.005;
 
         const scrollStep = (timestamp: number) => {
@@ -234,8 +268,6 @@ export default function SongView({
             const container = scrollContainerRef.current;
             if (!container) return;
 
-            // CAPACITOR FIX: Aumentar tolerância para evitar deteções falsas de scroll manual
-            // devido ao "retina scaling" (DPR) nos ecrãs de telemóvel.
             if (
                 Math.abs(container.scrollTop - exactScrollTopRef.current) > 15
             ) {
@@ -244,7 +276,6 @@ export default function SongView({
 
             const distanceToScroll = basePixelsPerMs * elapsed;
 
-            // Pára se atingirmos o fundo da página
             if (
                 container.scrollTop + container.clientHeight >=
                 container.scrollHeight - 2
@@ -299,7 +330,6 @@ export default function SongView({
             let dx = swipeInfo.current.currentX - swipeInfo.current.startX;
             const dy = swipeInfo.current.currentY - swipeInfo.current.startY;
 
-            // Strict lock to avoid triggering swipe while scrolling down
             if (
                 !swipeInfo.current.isLockedVertical &&
                 Math.abs(dy) > 10 &&
@@ -310,10 +340,8 @@ export default function SongView({
 
             if (swipeInfo.current.isLockedVertical) return;
 
-            // Visual dampening physics
             const resistance = 0.3;
 
-            // Add immense resistance if swiping out of bounds
             if ((dx > 0 && !canSwipePrev) || (dx < 0 && !canSwipeNext)) {
                 dx = dx * 0.05;
             }
@@ -322,7 +350,6 @@ export default function SongView({
                 contentRef.current.style.transform = `translateX(${dx * resistance}px)`;
             }
 
-            // Handle visual glowing indicators
             if (dx > 20 && canSwipePrev && leftIndicatorRef.current) {
                 const intensity = Math.min((dx - 20) / 100, 1);
                 leftIndicatorRef.current.style.opacity = intensity.toString();
@@ -344,7 +371,6 @@ export default function SongView({
         const wasLockedVertical = swipeInfo.current.isLockedVertical;
         swipeInfo.current.isLockedVertical = false;
 
-        // Reset elements with buttery smooth snap-back transition
         if (contentRef.current) {
             contentRef.current.style.transition =
                 "transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)";
@@ -392,6 +418,7 @@ export default function SongView({
     }
 
     const isFav = favoriteSongIds.includes(song.id);
+    const isGuitar = instrument === "guitar";
 
     return (
         <div
@@ -408,6 +435,7 @@ export default function SongView({
                     <button
                         onClick={onBack}
                         className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium transition-colors"
+                        aria-label="Voltar"
                     >
                         <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
                         <span className="text-sm">
@@ -419,6 +447,12 @@ export default function SongView({
                 <div className="flex items-center gap-1.5">
                     <button
                         onClick={() => toggleFavoriteSong(song.id)}
+                        aria-label={
+                            isFav
+                                ? "Remover dos favoritos"
+                                : "Adicionar aos favoritos"
+                        }
+                        aria-pressed={isFav}
                         className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
                             isFav
                                 ? "text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/40"
@@ -440,24 +474,36 @@ export default function SongView({
                             onClick={onEdit}
                             className="p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors text-m3-secondary dark:text-m3-dark-secondary"
                             title="Editar Cântico"
+                            aria-label="Editar Cântico"
                         >
                             <Edit2 className="w-4.5 h-4.5 text-m3-primary dark:text-m3-dark-primary" />
                         </button>
                     )}
 
                     <button
+                        ref={settingsBtnRef}
                         onClick={() => setShowControls(!showControls)}
+                        aria-expanded={showControls}
+                        aria-controls="song-settings-popover"
                         className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${showControls ? "bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text border border-m3-border/30" : "text-m3-secondary dark:text-m3-dark-secondary"}`}
                         title="Ajustar Tom e Tamanho"
+                        aria-label="Ajustar Tom e Tamanho"
                     >
                         <SlidersHorizontal className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
                     </button>
                 </div>
             </div>
 
-            {/* Non-modal controls popover */}
+            {/* Settings Popover — closes on outside click, accessible */}
             {showControls && (
-                <div className="absolute right-4 top-16 w-64 bg-m3-card/95 dark:bg-m3-dark-card/95 backdrop-blur-xl border border-m3-border dark:border-m3-dark-border rounded-2xl shadow-xl z-50 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200">
+                <div
+                    id="song-settings-popover"
+                    role="dialog"
+                    aria-label="Ajustes de Leitura"
+                    ref={controlsPopoverRef}
+                    className="absolute right-4 top-16 w-72 bg-m3-card/95 dark:bg-m3-dark-card/95 backdrop-blur-xl border border-m3-border dark:border-m3-dark-border rounded-2xl shadow-xl z-50 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200 max-h-[80vh] overflow-y-auto"
+                >
+                    {/* Header */}
                     <div className="border-b border-m3-border/30 dark:border-m3-dark-border/30 pb-2 flex items-center justify-between">
                         <span className="text-xs font-black text-m3-text dark:text-m3-dark-text uppercase tracking-wider">
                             Ajustes de Leitura
@@ -465,18 +511,28 @@ export default function SongView({
                         <button
                             onClick={() => setShowControls(false)}
                             className="text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary hover:underline"
+                            aria-label="Fechar ajustes"
                         >
                             Fechar
                         </button>
                     </div>
 
+                    {/* Chord / Lyrics Display */}
                     <div className="space-y-2">
-                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">
+                        <span
+                            id="display-label"
+                            className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block"
+                        >
                             Exibição:
                         </span>
-                        <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
+                        <div
+                            role="group"
+                            aria-labelledby="display-label"
+                            className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
+                        >
                             <button
                                 onClick={() => setShowChords(false)}
+                                aria-pressed={!showChords}
                                 className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
                                     !showChords
                                         ? "bg-m3-primary text-white shadow-xs"
@@ -487,6 +543,7 @@ export default function SongView({
                             </button>
                             <button
                                 onClick={() => setShowChords(true)}
+                                aria-pressed={showChords}
                                 className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
                                     showChords
                                         ? "bg-m3-primary text-white shadow-xs"
@@ -498,6 +555,30 @@ export default function SongView({
                         </div>
                     </div>
 
+                    {/* 2-Column Layout Toggle */}
+                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
+                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
+                            <Columns2 className="w-3.5 h-3.5" /> 2 Colunas:
+                        </span>
+                        <button
+                            onClick={() =>
+                                setTwoColumnLayout(!twoColumnLayout)
+                            }
+                            aria-pressed={twoColumnLayout}
+                            aria-label={
+                                twoColumnLayout
+                                    ? "Desativar 2 colunas"
+                                    : "Ativar 2 colunas"
+                            }
+                            className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${twoColumnLayout ? "bg-m3-primary" : "bg-neutral-200 dark:bg-zinc-800"}`}
+                        >
+                            <div
+                                className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${twoColumnLayout ? "translate-x-4" : "translate-x-0"}`}
+                            />
+                        </button>
+                    </div>
+
+                    {/* Transpose */}
                     {showChords && (
                         <div className="space-y-1.5 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                             <div className="flex items-center justify-between">
@@ -511,13 +592,18 @@ export default function SongView({
                                     st
                                 </span>
                             </div>
-                            <div className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30">
+                            <div
+                                role="group"
+                                aria-label="Controles de transposição"
+                                className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
+                            >
                                 <button
                                     onClick={() =>
                                         setTransposeVal((p) =>
                                             p - 1 < -12 ? 11 : p - 1,
                                         )
                                     }
+                                    aria-label="Descer meio-tom (bemol)"
                                     className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
                                 >
                                     <Minus className="w-3 h-3" />
@@ -525,6 +611,7 @@ export default function SongView({
                                 </button>
                                 <button
                                     onClick={() => setTransposeVal(0)}
+                                    aria-label="Tom original"
                                     className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
                                         transposeVal === 0
                                             ? "bg-m3-primary text-white shadow-xs"
@@ -539,15 +626,158 @@ export default function SongView({
                                             p + 1 > 11 ? -12 : p + 1,
                                         )
                                     }
+                                    aria-label="Subir meio-tom (sustenido)"
                                     className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
                                 >
                                     <span>#</span>
                                     <Plus className="w-3 h-3" />
                                 </button>
                             </div>
+
+                            {/* Capo section — only for guitar */}
+                            {isGuitar && (
+                                <div className="space-y-1.5 pt-2 mt-1 border-t border-m3-border/20 dark:border-m3-dark-border/20">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                                            Capo (guitarra):
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            {capoVal > 0 && (
+                                                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded font-mono border border-amber-300 dark:border-amber-800">
+                                                    {capoVal}ª casa
+                                                </span>
+                                            )}
+                                            <span className="text-[11px] font-bold px-2 py-0.5 bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text rounded font-mono">
+                                                {capoVal}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        role="group"
+                                        aria-label="Controles de capo"
+                                        className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
+                                    >
+                                        <button
+                                            onClick={() =>
+                                                setCapoVal((p) =>
+                                                    Math.max(0, p - 1),
+                                                )
+                                            }
+                                            aria-label="Diminuir capo"
+                                            className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center"
+                                        >
+                                            <Minus className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                            onClick={() => setCapoVal(0)}
+                                            aria-label="Sem capo"
+                                            className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
+                                                capoVal === 0
+                                                    ? "bg-amber-500 text-white shadow-xs"
+                                                    : "text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover"
+                                            }`}
+                                        >
+                                            Sem Capo
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                setCapoVal((p) =>
+                                                    Math.min(11, p + 1),
+                                                )
+                                            }
+                                            aria-label="Aumentar capo"
+                                            className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                        </button>
+                                    </div>
+
+                                    {/* Both controls: apply together */}
+                                    <div className="grid grid-cols-2 gap-1 pt-1">
+                                        <button
+                                            onClick={() => {
+                                                setTransposeVal(0);
+                                                setCapoVal(0);
+                                            }}
+                                            aria-label="Repor tom e capo"
+                                            className="py-1.5 text-[10px] font-bold rounded-lg transition-all text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/30 hover:bg-m3-hover"
+                                        >
+                                            Repor Tudo
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                // Set capo = capoVal, adjust transpose to keep sounding key the same
+                                                const newTranspose =
+                                                    transposeVal + capoVal;
+                                                setTransposeVal(
+                                                    newTranspose > 11
+                                                        ? newTranspose - 12
+                                                        : newTranspose < -12
+                                                          ? newTranspose + 12
+                                                          : newTranspose,
+                                                );
+                                                setCapoVal(0);
+                                            }}
+                                            aria-label="Converter capo em transposição"
+                                            className="py-1.5 text-[10px] font-bold rounded-lg transition-all text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/30 hover:bg-m3-hover"
+                                        >
+                                            Capo → Tom
+                                        </button>
+                                    </div>
+
+                                    {/* Capo suggestion based on transpose */}
+                                    {suggestedCapo && (
+                                        <div className="mt-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-2.5 space-y-1.5">
+                                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+                                                💡 Sugestão de Capo
+                                            </p>
+                                            <p className="text-[10px] text-emerald-800 dark:text-emerald-300">
+                                                Capo na{" "}
+                                                <strong>
+                                                    {suggestedCapo.capo}ª casa
+                                                </strong>{" "}
+                                                → tocar em formato{" "}
+                                                <strong>
+                                                    {suggestedCapo.chordShape}
+                                                </strong>
+                                            </p>
+                                            <button
+                                                onClick={() => {
+                                                    const newTranspose =
+                                                        transposeVal -
+                                                        suggestedCapo.capo;
+                                                    setTransposeVal(
+                                                        ((newTranspose % 12) +
+                                                            12) %
+                                                            12 >
+                                                            6
+                                                            ? (((newTranspose %
+                                                                  12) +
+                                                                  12) %
+                                                                  12) -
+                                                                  12
+                                                            : ((newTranspose %
+                                                                  12) +
+                                                                  12) %
+                                                                  12,
+                                                    );
+                                                    setCapoVal(
+                                                        suggestedCapo.capo,
+                                                    );
+                                                }}
+                                                aria-label={`Aplicar sugestão: capo na ${suggestedCapo.capo}ª casa`}
+                                                className="w-full py-1.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95"
+                                            >
+                                                Aplicar Sugestão
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
+                    {/* Chord Diagrams & Instrument */}
                     {showChords && (
                         <div className="space-y-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                             <div className="space-y-1.5">
@@ -557,26 +787,39 @@ export default function SongView({
                                 <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1 mb-1">
                                     <button
                                         onClick={() => setShowDiagrams(false)}
+                                        aria-pressed={!showDiagrams}
                                         className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${!showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Ocultar
                                     </button>
                                     <button
                                         onClick={() => setShowDiagrams(true)}
+                                        aria-pressed={showDiagrams}
                                         className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Mostrar
                                     </button>
                                 </div>
-                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1">
+                                <div
+                                    role="group"
+                                    aria-label="Instrumento"
+                                    className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1"
+                                >
                                     <button
-                                        onClick={() => setInstrument("guitar")}
+                                        onClick={() => {
+                                            setInstrument("guitar");
+                                        }}
+                                        aria-pressed={instrument === "guitar"}
                                         className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "guitar" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Guitarra
                                     </button>
                                     <button
-                                        onClick={() => setInstrument("piano")}
+                                        onClick={() => {
+                                            setInstrument("piano");
+                                            setCapoVal(0); // piano has no capo
+                                        }}
+                                        aria-pressed={instrument === "piano"}
                                         className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "piano" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
                                     >
                                         Piano
@@ -586,6 +829,7 @@ export default function SongView({
                         </div>
                     )}
 
+                    {/* Font Size */}
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
                             Tamanho da Letra:
@@ -595,17 +839,22 @@ export default function SongView({
                                 onClick={() =>
                                     setFontSize(Math.max(10, fontSize - 1))
                                 }
+                                aria-label="Diminuir tamanho da letra"
                                 className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center">
+                            <span
+                                aria-live="polite"
+                                className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center"
+                            >
                                 {fontSize}px
                             </span>
                             <button
                                 onClick={() =>
                                     setFontSize(Math.min(28, fontSize + 1))
                                 }
+                                aria-label="Aumentar tamanho da letra"
                                 className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Plus className="w-3.5 h-3.5" />
@@ -613,6 +862,7 @@ export default function SongView({
                         </div>
                     </div>
 
+                    {/* Scroll Speed */}
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
                             Velocidade do Scroll:
@@ -620,13 +870,19 @@ export default function SongView({
                         <div className="flex items-center gap-1.5">
                             <button
                                 onClick={() =>
-                                    setScrollSpeed(Math.max(1, scrollSpeed - 1))
+                                    setScrollSpeed(
+                                        Math.max(1, scrollSpeed - 1),
+                                    )
                                 }
+                                aria-label="Diminuir velocidade"
                                 className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center">
+                            <span
+                                aria-live="polite"
+                                className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center"
+                            >
                                 {scrollSpeed}
                             </span>
                             <button
@@ -635,6 +891,7 @@ export default function SongView({
                                         Math.min(10, scrollSpeed + 1),
                                     )
                                 }
+                                aria-label="Aumentar velocidade"
                                 className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
                             >
                                 <Plus className="w-3.5 h-3.5" />
@@ -642,12 +899,22 @@ export default function SongView({
                         </div>
                     </div>
 
+                    {/* Keep Screen Awake */}
                     <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
                         <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
                             <Sun className="w-3.5 h-3.5" /> Ecrã Sempre Ativo:
                         </span>
                         <button
-                            onClick={() => setKeepScreenAwake(!keepScreenAwake)}
+                            onClick={() =>
+                                setKeepScreenAwake(!keepScreenAwake)
+                            }
+                            role="switch"
+                            aria-checked={keepScreenAwake}
+                            aria-label={
+                                keepScreenAwake
+                                    ? "Desativar ecrã sempre ativo"
+                                    : "Ativar ecrã sempre ativo"
+                            }
                             className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${keepScreenAwake ? "bg-m3-primary" : "bg-neutral-200 dark:bg-zinc-800"}`}
                         >
                             <div
@@ -661,6 +928,7 @@ export default function SongView({
             {/* Glowing Swipe Indicators */}
             <div
                 ref={leftIndicatorRef}
+                aria-hidden="true"
                 className="absolute left-0 inset-y-0 w-24 bg-linear-to-r from-m3-primary/20 to-transparent flex items-center justify-start pl-4 opacity-0 pointer-events-none z-30 transition-opacity"
             >
                 <ChevronLeft className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
@@ -668,15 +936,16 @@ export default function SongView({
 
             <div
                 ref={rightIndicatorRef}
+                aria-hidden="true"
                 className="absolute right-0 inset-y-0 w-24 bg-linear-to-l from-m3-primary/20 to-transparent flex items-center justify-end pr-4 opacity-0 pointer-events-none z-30 transition-opacity"
             >
                 <ChevronRight className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
             </div>
 
-            {/* Scrollable Main View Engine (Capacitor Safe: min-h-0 + absolute boundary & no scroll-smooth!) */}
+            {/* Scrollable Main View Engine (Capacitor Safe) */}
             <div
                 ref={scrollContainerRef}
-                className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden will-change-scroll"
+                className="absolute inset-0 top-16 w-full overflow-y-auto overflow-x-hidden will-change-scroll"
                 style={{ WebkitOverflowScrolling: "touch" }}
             >
                 <div
@@ -684,16 +953,18 @@ export default function SongView({
                     className="min-h-full w-full pb-36 will-change-transform"
                 >
                     <ChordProRenderer
-                        scrollContainerRef={scrollContainerRef}
                         content={song.content}
                         showChords={showChords}
                         transposeVal={transposeVal}
+                        capoVal={capoVal}
                         fontSize={fontSize}
                         instrument={instrument}
                         showDiagrams={showDiagrams}
+                        twoColumnLayout={twoColumnLayout}
                         fileName={song.fileName}
                         showYoutubePlayer={isPlayingYoutube}
                         onTransposeChange={setTransposeVal}
+                        onCapoChange={setCapoVal}
                     />
                 </div>
             </div>
@@ -705,12 +976,18 @@ export default function SongView({
                 <div className="pointer-events-auto">
                     <button
                         onClick={() => setIsScrolling(!isScrolling)}
+                        aria-pressed={isScrolling}
                         className={`p-3.5 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4 ${
                             isScrolling
                                 ? "bg-neutral-800 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300 shadow-m3-primary/20"
                                 : "bg-m3-primary dark:bg-m3-dark-primary text-white border-m3-primary-light dark:border-m3-dark-primary-light hover:opacity-90"
                         }`}
                         title={
+                            isScrolling
+                                ? "Pausar Rolar Automático"
+                                : "Iniciar Rolar Automático"
+                        }
+                        aria-label={
                             isScrolling
                                 ? "Pausar Rolar Automático"
                                 : "Iniciar Rolar Automático"
@@ -731,8 +1008,10 @@ export default function SongView({
                                 setShowYoutubePlayer((prev) => !prev);
                                 setIsPlayingYoutube(!showYoutubePlayer);
                             }}
+                            aria-pressed={showYoutubePlayer}
                             className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
                             title="Ouvir Áudio no YouTube"
+                            aria-label="Ouvir Áudio no YouTube"
                         >
                             <YTIcon className="w-5 h-5" />
                         </button>
@@ -743,6 +1022,7 @@ export default function SongView({
                     <button
                         onClick={handlePrevSong}
                         disabled={!canSwipePrev}
+                        aria-label="Cântico anterior"
                         className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
                             canSwipePrev
                                 ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
@@ -752,7 +1032,10 @@ export default function SongView({
                         <ChevronLeft className="w-5 h-5" />
                     </button>
 
-                    <span className="bg-m3-card/90 dark:bg-m3-dark-card/90 border border-m3-border dark:border-m3-dark-border backdrop-blur-md text-[10px] font-bold font-mono px-3 py-2 rounded-full text-m3-secondary dark:text-m3-dark-secondary">
+                    <span
+                        aria-live="polite"
+                        className="bg-m3-card/90 dark:bg-m3-dark-card/90 border border-m3-border dark:border-m3-dark-border backdrop-blur-md text-[10px] font-bold font-mono px-3 py-2 rounded-full text-m3-secondary dark:text-m3-dark-secondary"
+                    >
                         {currentIndex !== -1
                             ? `${currentIndex + 1} / ${activeSongIds.length}`
                             : "Solo"}
@@ -761,6 +1044,7 @@ export default function SongView({
                     <button
                         onClick={handleNextSong}
                         disabled={!canSwipeNext}
+                        aria-label="Próximo cântico"
                         className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
                             canSwipeNext
                                 ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
