@@ -55,7 +55,9 @@ export interface AppState {
     showDiagrams: boolean;
     keepScreenAwake: boolean;
     slowDownOnRepeat: boolean;
+    musicianMode: boolean;
     instrument: "guitar" | "piano";
+    twoColumnLayout: boolean;
     selectedFolder: string;
     activeSongId: string | null;
     activeServiceId: string | null;
@@ -76,7 +78,9 @@ export interface AppState {
     setShowDiagrams: (show: boolean) => void;
     setKeepScreenAwake: (keep: boolean) => void;
     setSlowDownOnRepeat: (slow: boolean) => void;
+    setMusicianMode: (enabled: boolean) => void;
     setInstrument: (instrument: "guitar" | "piano") => void;
+    setTwoColumnLayout: (enabled: boolean) => void;
     setSourceFolderPath: (path: string) => void;
     setSelectedFolder: (folder: string) => void;
     setActiveSongId: (id: string | null) => void;
@@ -266,7 +270,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     showDiagrams: getStorageItem("cp_show_diagrams", true),
     keepScreenAwake: getStorageItem("cp_keep_awake", true),
     slowDownOnRepeat: getStorageItem("cp_slow_down_repeat", true),
+    musicianMode: getStorageItem("cp_musician_mode", false),
     instrument: getStorageItem("cp_instrument", "guitar"),
+    twoColumnLayout: getStorageItem("cp_two_column_layout", false),
     selectedFolder: "",
     activeSongId: null,
     activeServiceId: null,
@@ -310,9 +316,17 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ slowDownOnRepeat });
         setStorageItem("cp_slow_down_repeat", slowDownOnRepeat);
     },
+    setMusicianMode: (musicianMode) => {
+        set({ musicianMode });
+        setStorageItem("cp_musician_mode", musicianMode);
+    },
     setInstrument: (instrument) => {
         set({ instrument });
         setStorageItem("cp_instrument", instrument);
+    },
+    setTwoColumnLayout: (twoColumnLayout) => {
+        set({ twoColumnLayout });
+        setStorageItem("cp_two_column_layout", twoColumnLayout);
     },
     setSourceFolderPath: (sourceFolderPath) => {
         set({ sourceFolderPath });

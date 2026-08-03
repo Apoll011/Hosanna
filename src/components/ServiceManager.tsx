@@ -19,9 +19,10 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "../store/appStore";
 import { ServiceElement, Song } from "../types";
+import MusicianServiceView from "./MusicianServiceView";
 import SongView from "./SongView";
 
-type ViewMode = "list" | "detail" | "present" | "song";
+type ViewMode = "list" | "detail" | "present" | "song" | "musician";
 
 const ELEMENT_META: Record<
     string,
@@ -108,7 +109,7 @@ function NotesEditor({
             <textarea
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full bg-m3-bg dark:bg-m3-dark-bg border border-m3-border dark:border-m3-dark-border rounded-xl p-3 text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 min-h-[80px] resize-none"
+                className="w-full bg-m3-bg dark:bg-m3-dark-bg border border-m3-border dark:border-m3-dark-border rounded-xl p-3 text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 min-h-20 resize-none"
                 placeholder="Adicione notas para este elemento..."
                 autoFocus
             />
@@ -135,6 +136,7 @@ export default function ServiceManager() {
     const services = useAppStore((state) => state.services);
     const songs = useAppStore((state) => state.songs);
     const searchQuery = useAppStore((state) => state.searchQuery);
+    const musicianMode = useAppStore((state) => state.musicianMode);
 
     const setActiveServiceId = useAppStore((state) => state.setActiveServiceId);
     const setActiveListContext = useAppStore(
@@ -222,7 +224,11 @@ export default function ServiceManager() {
 
     const enterService = (id: string) => {
         setSelectedServiceId(id);
-        setMode("detail");
+        if (musicianMode) {
+            setMode("musician");
+        } else {
+            setMode("detail");
+        }
     };
 
     const scopeToService = (serviceId: string) => {
@@ -277,6 +283,20 @@ export default function ServiceManager() {
         if (deltaX < -SWIPE_THRESHOLD) goNext();
         else if (deltaX > SWIPE_THRESHOLD) goPrev();
     };
+
+    // ---------- MUSICIAN SERVICE VIEW ----------
+    if (mode === "musician" && selectedService) {
+        return (
+            <MusicianServiceView
+                service={selectedService}
+                onLeaveService={() => {
+                    setActiveSongId(null);
+                    setViewingSongId(null);
+                    setMode("list");
+                }}
+            />
+        );
+    }
 
     // ---------- SONG VIEW ----------
     if (mode === "song" && viewingSongId) {
