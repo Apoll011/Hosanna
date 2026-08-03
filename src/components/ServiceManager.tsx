@@ -289,7 +289,11 @@ export default function ServiceManager() {
         return (
             <MusicianServiceView
                 service={selectedService}
-                onLeaveService={() => setMode("list")}
+                onLeaveService={() => {
+                    setActiveSongId(null);
+                    setViewingSongId(null);
+                    setMode("list");
+                }}
             />
         );
     }
