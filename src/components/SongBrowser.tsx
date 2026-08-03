@@ -233,7 +233,11 @@ export default function SongBrowser({
                                             <div className="w-10 h-10 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar flex flex-col items-center justify-center shrink-0 border border-m3-border/20 group-hover:bg-m3-primary-light dark:group-hover:bg-m3-dark-primary-light transition-colors">
                                                 {song.metadata?.songNumber ? (
                                                     <span className="text-[11px] font-black text-m3-primary dark:text-m3-dark-primary">
-                                                        #{song.metadata.songNumber}
+                                                        #
+                                                        {
+                                                            song.metadata
+                                                                .songNumber
+                                                        }
                                                     </span>
                                                 ) : (
                                                     <FileText className="w-4 h-4 text-m3-secondary dark:text-m3-dark-secondary group-hover:text-m3-primary" />

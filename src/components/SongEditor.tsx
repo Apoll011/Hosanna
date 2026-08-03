@@ -59,7 +59,11 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
             setCopyright(parsed.metadata.copyright || "");
             setFolder(existingSong?.folderId || existingSong?.folder || "");
 
-            const targetPath = existingSong?.path || existingSong?.id || existingFile?.path || "";
+            const targetPath =
+                existingSong?.path ||
+                existingSong?.id ||
+                existingFile?.path ||
+                "";
             const parts = targetPath.split("/");
             setFileName(parts.pop() || "");
 

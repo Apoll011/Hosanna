@@ -210,9 +210,16 @@ const initialServerUrl = getStorageItem<string>(
 const initialServerToken = getStorageItem<string>("cp_server_token", "");
 ensureApiClient(initialServerUrl, initialServerToken);
 
-const initialRawSongs = getStorageItem<any[]>("cp_songs_cache", []);
+// This is keep for backwards compatibility
+const initialRawSongs = getStorageItem<
+    (Song & {
+        remoteId: string;
+        remoteUpdatedAt: string;
+        parsedUpdatedAt: string;
+    })[]
+>("cp_songs_cache", []);
 const initialSongs: Song[] = initialRawSongs.map((s) => {
-    const { remoteId, remoteUpdatedAt, parsedUpdatedAt, ...rest } = s;
+    const { remoteId, ...rest } = s;
     if (remoteId && s.id !== remoteId) {
         return { ...rest, id: remoteId };
     }
@@ -347,7 +354,9 @@ export const useAppStore = create<AppState>((set, get) => ({
             return (service.elements || [])
                 .filter((e) => e.type === "song" && e.songId)
                 .map((e) => {
-                    const localSong = state.songs.find((s) => s.id === e.songId);
+                    const localSong = state.songs.find(
+                        (s) => s.id === e.songId,
+                    );
                     return localSong?.id;
                 })
                 .filter(Boolean) as string[];
@@ -392,7 +401,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                         const numberMatch =
                             song.metadata?.songNumber?.includes(q) || false;
                         const keyMatch =
-                            song.metadata?.key?.toLowerCase().includes(q) || false;
+                            song.metadata?.key?.toLowerCase().includes(q) ||
+                            false;
                         const lyricsMatch = song.content
                             .toLowerCase()
                             .includes(q);
