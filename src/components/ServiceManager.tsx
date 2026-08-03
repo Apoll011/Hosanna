@@ -202,7 +202,6 @@ export default function ServiceManager() {
     }, [services, searchQuery]);
 
     const songFor = (element: ServiceElement): Song | undefined =>
-        songs.find((s) => s.remoteId === element.songId) ||
         songs.find((s) => s.id === element.songId);
 
     useEffect(() => {

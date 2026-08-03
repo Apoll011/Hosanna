@@ -45,10 +45,11 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
 
     // Load existing song content on mount
     useEffect(() => {
-        if (existingSong && existingFile) {
-            const parsed = parseChordPro(existingFile.content);
-            setTitle(parsed.metadata.title || "");
-            setArtist(parsed.metadata.artist || "");
+        const rawContent = existingSong?.content || existingFile?.content || "";
+        if (existingSong || existingFile) {
+            const parsed = parseChordPro(rawContent);
+            setTitle(parsed.metadata.title || existingSong?.title || "");
+            setArtist(parsed.metadata.artist || existingSong?.artist || "");
             setKey(parsed.metadata.key || "C");
             setCapo(parsed.metadata.capo || "0");
             setTempo(parsed.metadata.tempo || "");
@@ -56,13 +57,14 @@ export default function SongEditor({ songId, onClose }: SongEditorProps) {
             setYoutube(parsed.metadata.youtube || "");
             setComposer(parsed.metadata.composer || "");
             setCopyright(parsed.metadata.copyright || "");
-            setFolder(existingSong.folderId || existingSong.folder || "");
+            setFolder(existingSong?.folderId || existingSong?.folder || "");
 
-            const parts = existingSong.id.split("/");
+            const targetPath = existingSong?.path || existingSong?.id || existingFile?.path || "";
+            const parts = targetPath.split("/");
             setFileName(parts.pop() || "");
 
             // To isolate body text, find the first line that is not a directive at the top
-            const lines = existingFile.content.split("\n");
+            const lines = rawContent.split("\n");
             const bodyLines = lines.filter((line) => {
                 const trimmed = line.trim();
                 // Skip metadata headers for editing body

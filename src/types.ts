@@ -1,65 +1,21 @@
-export interface Song {
-    id: string; // File path inside the folder, e.g., "Worship/Digno_es_Tu.chopro"
-    remoteId?: string;
-    remoteUpdatedAt?: string; // Server's updatedAt (ISO string), used for optimistic concurrency
-    title: string;
-    subtitle?: string;
-    artist?: string;
-    composer?: string;
-    copyright?: string;
-    album?: string;
-    key?: string;
-    tempo?: string;
-    capo?: string;
-    songNumber?: string;
-    comments?: string;
-    folderId?: string | null;
-    folder: string; // e.g. "Worship" or "" (root)
-    fileName: string; // e.g. "Digno_es_Tu.chopro"
-    content: string; // Raw ChordPro content
-    updatedAt: number; // Timestamp of last edit
-    tags?: string[];
-}
+import type {
+    Folder as SharedFolder,
+    ParsedSong as SharedParsedSong,
+    Service as SharedService,
+    ServiceElement as SharedServiceElement,
+    Song as SharedSong,
+} from "@hosanna/shared";
 
-export interface Folder {
-    id: string;
-    name: string;
-    parentId: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-    songCount?: number;
-}
+export type Song = SharedParsedSong;
+export type RawSong = SharedSong;
+export type ParsedSong = SharedParsedSong;
 
-export interface ServiceElement {
-    id: string;
-    type:
-        | "welcome"
-        | "scripture"
-        | "message"
-        | "reading"
-        | "announcement"
-        | "custom"
-        | "song"
-        | string;
-    title: string;
-    content?: string;
-    position?: number;
-    songId?: string;
-    notes?: string;
-    passage?: string;
-}
-
-export interface Service {
-    id: string;
-    name: string;
-    date: string;
-    elements?: ServiceElement[];
-    notes?: string;
-    updatedAt?: string; // Server's updatedAt (ISO string), used for optimistic concurrency
-}
+export type Folder = SharedFolder;
+export type ServiceElement = SharedServiceElement;
+export type Service = SharedService;
 
 export interface VirtualFile {
-    path: string; // Relative path, e.g., "Worship/Digno_es_Tu.chopro"
+    path: string;
     content: string;
     updatedAt: number;
 }
