@@ -1,6 +1,6 @@
+import { parseChordPro, transposeChord } from "@hosanna/shared";
 import { jsPDF } from "jspdf";
 import { Service, ServiceElement, Song } from "../types";
-import { parseChordPro, transposeChord } from "./chordpro";
 
 /**
  * Helper to fetch /logo.png and convert to base64 at runtime in browser
@@ -335,7 +335,7 @@ export async function exportServiceToPDF(
                 !song.isMissing && song.content
                     ? parseChordPro(song.content)
                     : null;
-            const baseKey = ast?.metadata.key || song.key || "-";
+            const baseKey = ast?.metadata.key || song.metadata?.key || "-";
             const offset = transposeOffsets[song.id] || 0;
             const finalKey =
                 offset === 0 || baseKey === "-"
@@ -414,14 +414,14 @@ export async function exportServiceToPDF(
             const offset = transposeOffsets[song.id] || 0;
             const ast = parseChordPro(song.content);
 
-            const origKey = ast.metadata.key || song.key || "-";
+            const origKey = ast.metadata.key || song.metadata?.key || "-";
             const finalKey =
                 offset === 0 || origKey === "-"
                     ? origKey
                     : transposeChord(origKey, offset);
 
             const titleStr = `${idx + 1}. ${song.title}`;
-            const metaStr = `Tom original: ${origKey}  |  Tom do culto: ${finalKey}  |  BPM: ${ast.metadata.tempo || song.tempo || "N/A"}`;
+            const metaStr = `Tom original: ${origKey}  |  Tom do culto: ${finalKey}  |  BPM: ${ast.metadata.tempo || song.metadata?.tempo || "N/A"}`;
 
             drawPageHeader(titleStr, metaStr);
 

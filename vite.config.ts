@@ -11,6 +11,10 @@ export default defineConfig(() => {
                 "@": path.resolve(__dirname, "."),
             },
         },
+        build: {
+            target: "esnext",
+            chunkSizeWarningLimit: 1600,
+        },
         server: {
             hmr: process.env.DISABLE_HMR !== "true",
             watch: process.env.DISABLE_HMR === "true" ? null : {},

@@ -63,8 +63,10 @@ export default function SongBrowser({
                 const titleMatch = song.title.toLowerCase().includes(q);
                 const artistMatch =
                     song.artist?.toLowerCase().includes(q) || false;
-                const numberMatch = song.songNumber?.includes(q) || false;
-                const keyMatch = song.key?.toLowerCase().includes(q) || false;
+                const numberMatch =
+                    song.metadata?.songNumber?.includes(q) || false;
+                const keyMatch =
+                    song.metadata?.key?.toLowerCase().includes(q) || false;
                 const lyricsMatch = song.content.toLowerCase().includes(q);
 
                 return (
@@ -81,8 +83,8 @@ export default function SongBrowser({
         if (selectedSection !== "recent") {
             result.sort((a, b) => {
                 if (sortBy === "number") {
-                    const numA = parseInt(a.songNumber || "99999");
-                    const numB = parseInt(b.songNumber || "99999");
+                    const numA = parseInt(a.metadata?.songNumber || "99999");
+                    const numB = parseInt(b.metadata?.songNumber || "99999");
                     return numA - numB;
                 } else if (sortBy === "folder") {
                     const fComp = a.folder.localeCompare(b.folder);
@@ -229,9 +231,13 @@ export default function SongBrowser({
                                         <div className="flex items-start gap-3 min-w-0 flex-1">
                                             {/* Visual Number badge or note icon */}
                                             <div className="w-10 h-10 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar flex flex-col items-center justify-center shrink-0 border border-m3-border/20 group-hover:bg-m3-primary-light dark:group-hover:bg-m3-dark-primary-light transition-colors">
-                                                {song.songNumber ? (
+                                                {song.metadata?.songNumber ? (
                                                     <span className="text-[11px] font-black text-m3-primary dark:text-m3-dark-primary">
-                                                        #{song.songNumber}
+                                                        #
+                                                        {
+                                                            song.metadata
+                                                                .songNumber
+                                                        }
                                                     </span>
                                                 ) : (
                                                     <FileText className="w-4 h-4 text-m3-secondary dark:text-m3-dark-secondary group-hover:text-m3-primary" />
@@ -259,14 +265,14 @@ export default function SongBrowser({
                                         {/* Badges for Key, Tempo and Heart action */}
                                         <div className="flex items-center gap-3 shrink-0 pl-3">
                                             <div className="flex flex-col items-end gap-1">
-                                                {song.key && (
+                                                {song.metadata?.key && (
                                                     <span className="text-[10px] font-bold bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text px-2 py-0.5 rounded-lg border border-m3-border/30">
-                                                        {song.key}
+                                                        {song.metadata.key}
                                                     </span>
                                                 )}
-                                                {song.tempo && (
+                                                {song.metadata?.tempo && (
                                                     <span className="text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-mono">
-                                                        ♩ {song.tempo}
+                                                        ♩ {song.metadata.tempo}
                                                     </span>
                                                 )}
                                             </div>

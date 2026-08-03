@@ -178,10 +178,7 @@ export default function MusicianServiceView({
 
     const songFor = (element: ServiceElement): Song | undefined => {
         if (element.type !== "song" || !element.songId) return undefined;
-        return (
-            songs.find((s) => s.remoteId === element.songId) ||
-            songs.find((s) => s.id === element.songId)
-        );
+        return songs.find((s) => s.id === element.songId);
     };
 
     const selectedElementIndex = sortedElements.findIndex(
