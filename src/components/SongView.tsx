@@ -561,9 +561,7 @@ export default function SongView({
                             <Columns2 className="w-3.5 h-3.5" /> 2 Colunas:
                         </span>
                         <button
-                            onClick={() =>
-                                setTwoColumnLayout(!twoColumnLayout)
-                            }
+                            onClick={() => setTwoColumnLayout(!twoColumnLayout)}
                             aria-pressed={twoColumnLayout}
                             aria-label={
                                 twoColumnLayout
@@ -729,7 +727,7 @@ export default function SongView({
                                     {suggestedCapo && (
                                         <div className="mt-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-2.5 space-y-1.5">
                                             <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
-                                                💡 Sugestão de Capo
+                                                Sugestão de Capo
                                             </p>
                                             <p className="text-[10px] text-emerald-800 dark:text-emerald-300">
                                                 Capo na{" "}
@@ -870,9 +868,7 @@ export default function SongView({
                         <div className="flex items-center gap-1.5">
                             <button
                                 onClick={() =>
-                                    setScrollSpeed(
-                                        Math.max(1, scrollSpeed - 1),
-                                    )
+                                    setScrollSpeed(Math.max(1, scrollSpeed - 1))
                                 }
                                 aria-label="Diminuir velocidade"
                                 className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
@@ -905,9 +901,7 @@ export default function SongView({
                             <Sun className="w-3.5 h-3.5" /> Ecrã Sempre Ativo:
                         </span>
                         <button
-                            onClick={() =>
-                                setKeepScreenAwake(!keepScreenAwake)
-                            }
+                            onClick={() => setKeepScreenAwake(!keepScreenAwake)}
                             role="switch"
                             aria-checked={keepScreenAwake}
                             aria-label={
