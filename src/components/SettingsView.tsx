@@ -5,6 +5,7 @@ import {
     Keyboard,
     KeyRound,
     Link2,
+    Music,
     QrCode,
     RefreshCcw,
     ScanLine,
@@ -22,6 +23,9 @@ export default function SettingsView() {
     const setServerUrl = useAppStore((state) => state.setServerUrl);
     const serverToken = useAppStore((state) => state.serverToken);
     const setServerToken = useAppStore((state) => state.setServerToken);
+
+    const musicianMode = useAppStore((state) => state.musicianMode);
+    const setMusicianMode = useAppStore((state) => state.setMusicianMode);
 
     const [tokenInput, setTokenInput] = useState(serverToken);
     const [inputMethod, setInputMethod] = useState<"manual" | "qr">("manual");
@@ -320,7 +324,38 @@ export default function SettingsView() {
                 </div>
             </div>
 
-            {/* APPEARANCE & FOOTER REST OF CODE REMAINS THE SAME */}
+            {/* MÚSICIAN MODE SETTING CARD */}
+            <div className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-m3-primary-light dark:bg-m3-dark-primary-light flex items-center justify-center shrink-0">
+                            <Music className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="font-bold text-xs sm:text-sm text-m3-text dark:text-m3-dark-text block truncate">
+                                Modo Músico nos Cultos
+                            </span>
+                            <span className="text-[11px] text-m3-secondary dark:text-m3-dark-secondary block leading-snug">
+                                Abre o culto diretamente no primeiro cântico com menu lateral (estilo Songbook Pro)
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setMusicianMode(!musicianMode)}
+                        className={`w-11 h-6 rounded-full p-1 transition-colors relative flex items-center shrink-0 ${
+                            musicianMode
+                                ? "bg-m3-primary dark:bg-m3-dark-primary"
+                                : "bg-m3-border dark:bg-m3-dark-border"
+                        }`}
+                    >
+                        <div
+                            className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform transform ${
+                                musicianMode ? "translate-x-5" : "translate-x-0"
+                            }`}
+                        />
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

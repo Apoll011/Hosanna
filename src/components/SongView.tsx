@@ -30,6 +30,7 @@ interface SongViewProps {
     onEdit: () => void;
     setSong: (id: string) => void;
     serviceMode?: boolean;
+    customLeftButton?: React.ReactNode;
 }
 
 export default function SongView({
@@ -38,6 +39,7 @@ export default function SongView({
     onEdit,
     setSong,
     serviceMode = false,
+    customLeftButton,
 }: SongViewProps) {
     const songs = useAppStore((state) => state.songs);
     const services = useAppStore((state) => state.services);
@@ -399,16 +401,20 @@ export default function SongView({
             onTouchEnd={handleTouchEnd}
         >
             {/* Top Navbar */}
-            <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none z-40 relative">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium transition-colors"
-                >
-                    <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                    <span className="text-sm">
-                        {serviceMode ? "Culto" : "Biblioteca"}
-                    </span>
-                </button>
+            <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative">
+                {customLeftButton ? (
+                    customLeftButton
+                ) : (
+                    <button
+                        onClick={onBack}
+                        className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
+                        <span className="text-sm">
+                            {serviceMode ? "Culto" : "Biblioteca"}
+                        </span>
+                    </button>
+                )}
 
                 <div className="flex items-center gap-1.5">
                     <button
@@ -668,28 +674,27 @@ export default function SongView({
             </div>
 
             {/* Scrollable Main View Engine (Capacitor Safe: min-h-0 + absolute boundary & no scroll-smooth!) */}
-            <div className="flex-1 w-full relative min-h-0 overflow-hidden">
+            <div
+                ref={scrollContainerRef}
+                className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden will-change-scroll"
+                style={{ WebkitOverflowScrolling: "touch" }}
+            >
                 <div
-                    ref={scrollContainerRef}
-                    className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden will-change-scroll"
-                    style={{ WebkitOverflowScrolling: "touch" }}
+                    ref={contentRef}
+                    className="min-h-full w-full pb-36 will-change-transform"
                 >
-                    <div
-                        ref={contentRef}
-                        className="min-h-full w-full pb-36 will-change-transform"
-                    >
-                        <ChordProRenderer
-                            content={song.content}
-                            showChords={showChords}
-                            transposeVal={transposeVal}
-                            fontSize={fontSize}
-                            instrument={instrument}
-                            showDiagrams={showDiagrams}
-                            fileName={song.fileName}
-                            showYoutubePlayer={isPlayingYoutube}
-                            onTransposeChange={setTransposeVal}
-                        />
-                    </div>
+                    <ChordProRenderer
+                        scrollContainerRef={scrollContainerRef}
+                        content={song.content}
+                        showChords={showChords}
+                        transposeVal={transposeVal}
+                        fontSize={fontSize}
+                        instrument={instrument}
+                        showDiagrams={showDiagrams}
+                        fileName={song.fileName}
+                        showYoutubePlayer={isPlayingYoutube}
+                        onTransposeChange={setTransposeVal}
+                    />
                 </div>
             </div>
 

@@ -55,6 +55,7 @@ export interface AppState {
     showDiagrams: boolean;
     keepScreenAwake: boolean;
     slowDownOnRepeat: boolean;
+    musicianMode: boolean;
     instrument: "guitar" | "piano";
     selectedFolder: string;
     activeSongId: string | null;
@@ -76,6 +77,7 @@ export interface AppState {
     setShowDiagrams: (show: boolean) => void;
     setKeepScreenAwake: (keep: boolean) => void;
     setSlowDownOnRepeat: (slow: boolean) => void;
+    setMusicianMode: (enabled: boolean) => void;
     setInstrument: (instrument: "guitar" | "piano") => void;
     setSourceFolderPath: (path: string) => void;
     setSelectedFolder: (folder: string) => void;
@@ -266,6 +268,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     showDiagrams: getStorageItem("cp_show_diagrams", true),
     keepScreenAwake: getStorageItem("cp_keep_awake", true),
     slowDownOnRepeat: getStorageItem("cp_slow_down_repeat", true),
+    musicianMode: getStorageItem("cp_musician_mode", false),
     instrument: getStorageItem("cp_instrument", "guitar"),
     selectedFolder: "",
     activeSongId: null,
@@ -309,6 +312,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     setSlowDownOnRepeat: (slowDownOnRepeat) => {
         set({ slowDownOnRepeat });
         setStorageItem("cp_slow_down_repeat", slowDownOnRepeat);
+    },
+    setMusicianMode: (musicianMode) => {
+        set({ musicianMode });
+        setStorageItem("cp_musician_mode", musicianMode);
     },
     setInstrument: (instrument) => {
         set({ instrument });
