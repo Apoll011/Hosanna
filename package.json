@@ -1,8 +1,9 @@
 {
-    "name": "hosanna-mobile",
+    "name": "@hosanna/mobile",
     "private": true,
     "version": "1.10.1",
     "type": "module",
+    "license": "Apache-2.0",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
