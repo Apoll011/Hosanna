@@ -347,7 +347,7 @@ export default function App() {
                     </div>
                 </div>
 
-                {!activeSongId && !isEditing && !isPresenting && (
+                {!activeSongId && !isEditing && !isPresenting && !isOnMenu && (
                     <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[70%] max-w-55 h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
                         <button
                             onClick={() => {

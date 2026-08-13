@@ -174,7 +174,8 @@ export default function ServiceManager() {
     }, [selectedService]);
 
     const filteredServices = useMemo(() => {
-        const list = [...services];
+        // Only show non-archived services
+        const list = services.filter((s) => !s.archived);
         const now = new Date().getTime();
 
         if (searchQuery.trim()) {
@@ -205,10 +206,11 @@ export default function ServiceManager() {
         songs.find((s) => s.id === element.songId);
 
     useEffect(() => {
-        setIsPresenting(mode === "present");
+        // Hide the bottom nav in all service sub-views (detail, musician, present)
+        const inSubView = mode === "present" || mode === "detail" || mode === "musician";
+        setIsPresenting(inSubView);
         return () => {
-            // Allow clean teardown of presentation mode lock if unmounted directly
-            if (mode === "present") setIsPresenting(false);
+            setIsPresenting(false);
         };
     }, [mode, setIsPresenting]);
 

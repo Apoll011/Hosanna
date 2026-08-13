@@ -157,7 +157,7 @@ type GetFn = () => AppState;
 
 function ensureApiClient(serverUrl: string, serverToken: string) {
     if (serverUrl && serverUrl.trim() !== "") {
-        configureApiClient(serverUrl.trim());
+        configureApiClient(serverUrl.trim() + "/api");
         getApiClient().setTokens(serverToken ? serverToken.trim() : null);
     }
 }
