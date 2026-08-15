@@ -47,8 +47,6 @@ function AppContent() {
   const songsLength = useAppStore((state) => state.songs.length);
   const syncLibrary = useAppStore((state) => state.syncLibrary);
   const syncStatus = useAppStore((state) => state.syncStatus);
-  const serverUrl = useAppStore((state) => state.serverUrl);
-  const serverToken = useAppStore((state) => state.serverToken);
   const hasSkippedSetup = useAppStore((state) => state.hasSkippedSetup);
 
   const { isAuthenticated } = useAuth();
@@ -202,7 +200,7 @@ function AppContent() {
     activeListContext.type === "metronome" ||
     activeListContext.type === "settings";
 
-  if (!serverUrl && !serverToken && !hasSkippedSetup && !isAuthenticated) {
+  if (!hasSkippedSetup && !isAuthenticated) {
     return <FirstTimeSetup />;
   }
 

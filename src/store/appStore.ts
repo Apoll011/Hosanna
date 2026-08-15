@@ -2,7 +2,6 @@
 import {
     configureApiClient,
     foldersApi,
-    getApiClient,
     parseChordPro,
     parseSong,
     servicesApi,
@@ -47,7 +46,6 @@ export interface AppState {
 
     theme: ThemeType;
     serverUrl: string;
-    serverToken: string;
     fontSize: number;
     showChords: boolean;
     showDiagrams: boolean;
@@ -70,7 +68,6 @@ export interface AppState {
 
     setTheme: (theme: ThemeType) => void;
     setServerUrl: (url: string) => void;
-    setServerToken: (token: string) => void;
     setFontSize: (size: number) => void;
     setShowChords: (show: boolean) => void;
     setShowDiagrams: (show: boolean) => void;
@@ -155,12 +152,9 @@ type SetFn = (
 ) => void;
 type GetFn = () => AppState;
 
-function ensureApiClient(serverUrl: string, serverToken?: string | null) {
+function ensureApiClient(serverUrl: string) {
     if (serverUrl && serverUrl.trim() !== "") {
         configureApiClient(serverUrl.trim() + "/api");
-        if (serverToken && serverToken.trim() !== "") {
-            getApiClient().setTokens(serverToken.trim());
-        }
     }
 }
 
@@ -209,8 +203,7 @@ const initialServerUrl = getStorageItem<string>(
     "cp_server_url",
     import.meta.env.VITE_API_URL || "",
 );
-const initialServerToken = getStorageItem<string>("cp_server_token", "");
-ensureApiClient(initialServerUrl, initialServerToken);
+ensureApiClient(initialServerUrl);
 
 // This is keep for backwards compatibility
 const initialRawSongs = getStorageItem<
@@ -245,7 +238,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     activeListContext: { type: "all" },
     theme: getStorageItem("cp_theme", "light"),
     serverUrl: initialServerUrl,
-    serverToken: initialServerToken,
     fontSize: getStorageItem("cp_font_size", 16),
     showChords: getStorageItem("cp_show_chords", true),
     showDiagrams: getStorageItem("cp_show_diagrams", true),
@@ -272,12 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     setServerUrl: (serverUrl) => {
         set({ serverUrl });
         setStorageItemImmediate("cp_server_url", serverUrl);
-        ensureApiClient(serverUrl, get().serverToken);
-    },
-    setServerToken: (serverToken) => {
-        set({ serverToken });
-        setStorageItemImmediate("cp_server_token", serverToken);
-        ensureApiClient(get().serverUrl, serverToken);
+        ensureApiClient(serverUrl);
     },
     setFontSize: (fontSize) => {
         set({ fontSize });
@@ -448,11 +435,11 @@ export const useAppStore = create<AppState>((set, get) => ({
             );
         }
 
-        const { serverUrl, serverToken } = get();
+        const { serverUrl } = get();
         const parsed = parseChordPro(content);
 
         if (serverUrl.trim() !== "") {
-            ensureApiClient(serverUrl, serverToken);
+            ensureApiClient(serverUrl);
             const created = await songsApi.createSong({
                 title:
                     parsed.metadata.title ||
@@ -478,7 +465,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateVirtualFile: async (path, content) => {
-        const { serverUrl, serverToken, songs } = get();
+        const { serverUrl, songs } = get();
 
         if (serverUrl.trim() !== "") {
             const existing = songs.find((s) => s.id === path);
@@ -487,7 +474,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                     "Não foi possível encontrar este cântico no servidor. Sincronize e tente novamente.",
                 );
             }
-            ensureApiClient(serverUrl, serverToken);
+            ensureApiClient(serverUrl);
             const parsed = parseChordPro(content);
             const updated = await songsApi.updateSong(existing.id, {
                 updatedAt: existing.updatedAt || new Date().toISOString(),
@@ -511,12 +498,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     deleteVirtualFile: async (path) => {
-        const { serverUrl, serverToken, songs } = get();
+        const { serverUrl, songs } = get();
 
         if (serverUrl.trim() !== "") {
             const existing = songs.find((s) => s.id === path);
             if (existing) {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 await songsApi.deleteSong(existing.id);
             }
         }
@@ -538,7 +525,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ syncStatus: "syncing" });
         const {
             serverUrl,
-            serverToken,
             songs: currentSongs,
             folders: currentFolders,
             services: currentServices,
@@ -551,7 +537,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             return;
         }
 
-        ensureApiClient(serverUrl, serverToken);
+        ensureApiClient(serverUrl);
 
         try {
             let status: SyncStatusResponse | null = null;
@@ -697,13 +683,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateService: async (id, name, date, notes) => {
-        const { serverUrl, serverToken, services } = get();
+        const { serverUrl, services } = get();
         const current = services.find((svc) => svc.id === id);
         if (!current) return;
 
         if (serverUrl.trim() !== "") {
             try {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 const updated = await servicesApi.updateService(id, {
                     updatedAt: current.updatedAt || new Date().toISOString(),
                     name,
@@ -725,13 +711,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateServiceElements: async (serviceId, elements) => {
-        const { serverUrl, serverToken, services } = get();
+        const { serverUrl, services } = get();
         const current = services.find((svc) => svc.id === serviceId);
         if (!current) return;
 
         if (serverUrl.trim() !== "") {
             try {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 const updated = await servicesApi.updateServiceElements(
                     serviceId,
                     {
@@ -775,5 +761,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         localStorage.removeItem("cp_last_sync_time");
         localStorage.removeItem("cp_last_sync_timestamps");
         localStorage.removeItem("cp_song_remote_ids");
+        localStorage.removeItem("cp_server_token");
     },
 }));
