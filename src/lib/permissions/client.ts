@@ -8,10 +8,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { authClient } from "../authClient";
 import {
-  statement,
-  type PermissionRequest,
-  type PermissionString,
-  type Resource,
+    statement,
+    type PermissionRequest,
+    type PermissionString,
+    type Resource,
 } from "./permission";
 import { roles, type AppRole } from "./roles";
 
@@ -20,15 +20,15 @@ import { roles, type AppRole } from "./roles";
 // ---------------------------------------------------------------------------
 
 interface PermResult {
-  granted: boolean;
-  loading: boolean;
-  error: Error | null;
+    granted: boolean;
+    loading: boolean;
+    error: Error | null;
 }
 
 const DEFAULT_RESULT: PermResult = {
-  granted: false,
-  loading: true,
-  error: null,
+    granted: false,
+    loading: true,
+    error: null,
 };
 
 // Stores resolved booleans
@@ -37,8 +37,8 @@ const permCache = new Map<string, boolean>();
 const pendingPerms = new Map<string, Promise<boolean>>();
 
 export function clearPermissionCache(): void {
-  permCache.clear();
-  pendingPerms.clear();
+    permCache.clear();
+    pendingPerms.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -50,26 +50,26 @@ export function clearPermissionCache(): void {
  * into { song: ["create"], service: ["create"] }
  */
 function groupPermissions(permissions: PermissionString[]): PermissionRequest {
-  const grouped = {} as Record<Resource, string[]>;
-  for (const perm of permissions) {
-    const dotIndex = perm.indexOf(".");
-    const resource = perm.slice(0, dotIndex) as Resource;
-    const action = perm.slice(dotIndex + 1);
+    const grouped = {} as Record<Resource, string[]>;
+    for (const perm of permissions) {
+        const dotIndex = perm.indexOf(".");
+        const resource = perm.slice(0, dotIndex) as Resource;
+        const action = perm.slice(dotIndex + 1);
 
-    if (!grouped[resource]) grouped[resource] = [];
-    if (!grouped[resource].includes(action)) grouped[resource].push(action);
-  }
-  return grouped as PermissionRequest;
+        if (!grouped[resource]) grouped[resource] = [];
+        if (!grouped[resource].includes(action)) grouped[resource].push(action);
+    }
+    return grouped as PermissionRequest;
 }
 
 /** Creates a deterministic string key for caching */
 function getCacheKey(permissions: PermissionString[]): string {
-  if (permissions.length === 0) return "empty";
-  const grouped = groupPermissions(permissions);
-  return Object.keys(grouped)
-    .sort()
-    .map((res) => `${res}:${grouped[res as Resource]!.sort().join(",")}`)
-    .join("|");
+    if (permissions.length === 0) return "empty";
+    const grouped = groupPermissions(permissions);
+    return Object.keys(grouped)
+        .sort()
+        .map((res) => `${res}:${grouped[res as Resource]!.sort().join(",")}`)
+        .join("|");
 }
 
 // ---------------------------------------------------------------------------
@@ -80,38 +80,45 @@ function getCacheKey(permissions: PermissionString[]): string {
  * Core fetcher. Batches permissions, deduplicates requests, and pre-populates cache.
  */
 function fetchPermissionsBatch(
-  permissions: PermissionString[],
+    permissions: PermissionString[],
 ): Promise<boolean> {
-  if (permissions.length === 0) return Promise.resolve(true);
+    if (permissions.length === 0) return Promise.resolve(true);
 
-  const cacheKey = getCacheKey(permissions);
+    const cacheKey = getCacheKey(permissions);
 
-  if (permCache.has(cacheKey)) return Promise.resolve(permCache.get(cacheKey)!);
+    if (permCache.has(cacheKey))
+        return Promise.resolve(permCache.get(cacheKey)!);
 
-  if (pendingPerms.has(cacheKey)) return pendingPerms.get(cacheKey)!;
+    if (pendingPerms.has(cacheKey)) return pendingPerms.get(cacheKey)!;
 
-  const promise = authClient.organization
-    .hasPermission({
-      permissions: groupPermissions(permissions) as Record<string, string[]>,
-    })
-    .then(({ data, error }) => {
-      if (error) throw new Error(error.message ?? "Permission check failed");
-      const granted = data?.success ?? false;
+    const promise = authClient.organization
+        .hasPermission({
+            permissions: groupPermissions(permissions) as Record<
+                string,
+                string[]
+            >,
+        })
+        .then(({ data, error }) => {
+            if (error)
+                throw new Error(error.message ?? "Permission check failed");
+            const granted = data?.success ?? false;
 
-      permCache.set(cacheKey, granted);
+            permCache.set(cacheKey, granted);
 
-      if (granted) {
-        permissions.forEach((p) => permCache.set(getCacheKey([p]), true));
-      }
+            if (granted) {
+                permissions.forEach((p) =>
+                    permCache.set(getCacheKey([p]), true),
+                );
+            }
 
-      return granted;
-    })
-    .finally(() => {
-      pendingPerms.delete(cacheKey);
-    });
+            return granted;
+        })
+        .finally(() => {
+            pendingPerms.delete(cacheKey);
+        });
 
-  pendingPerms.set(cacheKey, promise);
-  return promise;
+    pendingPerms.set(cacheKey, promise);
+    return promise;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,104 +127,112 @@ function fetchPermissionsBatch(
 
 /** Checks a single permission. */
 export function useCan(permission: PermissionString): PermResult {
-  return useCanAll(useMemo(() => [permission], [permission]));
+    return useCanAll(useMemo(() => [permission], [permission]));
 }
 
 export function useCannot(permission: PermissionString): {
-  denied: boolean;
-  loading: boolean;
-  error: Error | null;
+    denied: boolean;
+    loading: boolean;
+    error: Error | null;
 } {
-  const { granted, loading, error } = useCan(permission);
-  return { denied: !granted, loading, error };
+    const { granted, loading, error } = useCan(permission);
+    return { denied: !granted, loading, error };
 }
 
 /**
  * Checks if ALL permissions are granted.
  */
 export function useCanAll(permissions: PermissionString[]): PermResult {
-  const [result, setResult] = useState<PermResult>(DEFAULT_RESULT);
-  const mounted = useRef(true);
+    const [result, setResult] = useState<PermResult>(DEFAULT_RESULT);
+    const mounted = useRef(true);
 
-  const cacheKey = useMemo(() => getCacheKey(permissions), [permissions]);
+    const cacheKey = useMemo(() => getCacheKey(permissions), [permissions]);
 
-  useEffect(() => {
-    mounted.current = true;
+    useEffect(() => {
+        mounted.current = true;
 
-    if (permCache.has(cacheKey)) {
-      setResult({
-        granted: permCache.get(cacheKey)!,
-        loading: false,
-        error: null,
-      });
-      return;
-    }
+        if (permCache.has(cacheKey)) {
+            setResult({
+                granted: permCache.get(cacheKey)!,
+                loading: false,
+                error: null,
+            });
+            return;
+        }
 
-    setResult({ granted: false, loading: true, error: null });
+        setResult({ granted: false, loading: true, error: null });
 
-    fetchPermissionsBatch(permissions)
-      .then((granted) => {
-        if (mounted.current)
-          setResult({ granted, loading: false, error: null });
-      })
-      .catch((error) => {
-        if (mounted.current)
-          setResult({ granted: false, loading: false, error });
-      });
+        fetchPermissionsBatch(permissions)
+            .then((granted) => {
+                if (mounted.current)
+                    setResult({ granted, loading: false, error: null });
+            })
+            .catch((error) => {
+                if (mounted.current)
+                    setResult({ granted: false, loading: false, error });
+            });
 
-    return () => {
-      mounted.current = false;
-    };
-  }, [cacheKey, permissions]);
+        return () => {
+            mounted.current = false;
+        };
+    }, [cacheKey, permissions]);
 
-  return result;
+    return result;
 }
 
 /**
  * Checks if ANY permissions are granted.
  */
 export function useCanAny(permissions: PermissionString[]): PermResult {
-  const [result, setResult] = useState<PermResult>(DEFAULT_RESULT);
-  const mounted = useRef(true);
+    const [result, setResult] = useState<PermResult>(DEFAULT_RESULT);
+    const mounted = useRef(true);
 
-  const cacheKey = useMemo(() => getCacheKey(permissions), [permissions]);
+    const cacheKey = useMemo(() => getCacheKey(permissions), [permissions]);
 
-  useEffect(() => {
-    mounted.current = true;
+    useEffect(() => {
+        mounted.current = true;
 
-    const checkAny = async () => {
-      for (const p of permissions) {
-        if (permCache.get(getCacheKey([p])) === true) {
-          if (mounted.current)
-            setResult({ granted: true, loading: false, error: null });
-          return;
-        }
-      }
+        const checkAny = async () => {
+            for (const p of permissions) {
+                if (permCache.get(getCacheKey([p])) === true) {
+                    if (mounted.current)
+                        setResult({
+                            granted: true,
+                            loading: false,
+                            error: null,
+                        });
+                    return;
+                }
+            }
 
-      setResult({ granted: false, loading: true, error: null });
+            setResult({ granted: false, loading: true, error: null });
 
-      try {
-        const results = await Promise.all(
-          permissions.map((p) => fetchPermissionsBatch([p])),
-        );
-        const granted = results.some(Boolean);
+            try {
+                const results = await Promise.all(
+                    permissions.map((p) => fetchPermissionsBatch([p])),
+                );
+                const granted = results.some(Boolean);
 
-        if (mounted.current)
-          setResult({ granted, loading: false, error: null });
-      } catch (error) {
-        if (mounted.current)
-          setResult({ granted: false, loading: false, error: error as Error });
-      }
-    };
+                if (mounted.current)
+                    setResult({ granted, loading: false, error: null });
+            } catch (error) {
+                if (mounted.current)
+                    setResult({
+                        granted: false,
+                        loading: false,
+                        error: error as Error,
+                    });
+            }
+        };
 
-    checkAny();
+        checkAny();
 
-    return () => {
-      mounted.current = false;
-    };
-  }, [cacheKey, permissions]);
+        return () => {
+            mounted.current = false;
+        };
+    }, [cacheKey, permissions]);
 
-  return result;
+    return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,70 +240,70 @@ export function useCanAny(permissions: PermissionString[]): PermResult {
 // ---------------------------------------------------------------------------
 
 export function useActiveRole(): {
-  role: AppRole | null;
-  loading: boolean;
-  error: Error | null;
+    role: AppRole | null;
+    loading: boolean;
+    error: Error | null;
 } {
-  const { user, isLoading } = useAuth();
+    const { user, isLoading } = useAuth();
 
-  return {
-    role: (user?.role as AppRole) ?? null,
-    loading: isLoading,
-    error: null,
-  };
+    return {
+        role: (user?.role as AppRole) ?? null,
+        loading: isLoading,
+        error: null,
+    };
 }
 
 export function useRole(role: AppRole) {
-  const { role: activeRole, loading, error } = useActiveRole();
-  return { matched: activeRole === role, loading, error };
+    const { role: activeRole, loading, error } = useActiveRole();
+    return { matched: activeRole === role, loading, error };
 }
 
 export function useAnyRole(...allowedRoles: AppRole[]) {
-  const { role: activeRole, loading, error } = useActiveRole();
-  return {
-    matched: activeRole ? allowedRoles.includes(activeRole) : false,
-    loading,
-    error,
-  };
+    const { role: activeRole, loading, error } = useActiveRole();
+    return {
+        matched: activeRole ? allowedRoles.includes(activeRole) : false,
+        loading,
+        error,
+    };
 }
 
 const ALL_PERMISSIONS: PermissionString[] = Object.entries(statement).flatMap(
-  ([resource, actions]) =>
-    (actions as readonly string[]).map(
-      (action) => `${resource}.${action}` as PermissionString,
-    ),
+    ([resource, actions]) =>
+        (actions as readonly string[]).map(
+            (action) => `${resource}.${action}` as PermissionString,
+        ),
 );
 
 export function preloadPermissionsForRole(role: AppRole | null): void {
-  if (!role || !(role in roles)) return;
+    if (!role || !(role in roles)) return;
 
-  const roleConfig = roles[role];
+    const roleConfig = roles[role];
 
-  ALL_PERMISSIONS.forEach((perm) => {
-    const dotIndex = perm.indexOf(".");
-    const resource = perm.slice(
-      0,
-      dotIndex,
-    ) as keyof typeof roleConfig.statements;
-    const action = perm.slice(dotIndex + 1);
+    ALL_PERMISSIONS.forEach((perm) => {
+        const dotIndex = perm.indexOf(".");
+        const resource = perm.slice(
+            0,
+            dotIndex,
+        ) as keyof typeof roleConfig.statements;
+        const action = perm.slice(dotIndex + 1);
 
-    const allowedActions = roleConfig.statements[resource];
-    const isGranted =
-      Array.isArray(allowedActions) && allowedActions.includes(action);
+        const allowedActions = roleConfig.statements[resource];
+        const isGranted =
+            Array.isArray(allowedActions) && allowedActions.includes(action);
 
-    const cacheKey = getCacheKey([perm]);
-    permCache.set(cacheKey, isGranted);
-  });
+        const cacheKey = getCacheKey([perm]);
+        permCache.set(cacheKey, isGranted);
+    });
 }
 
 export function usePreloadPermissions(): { isReady: boolean } {
-  const { role, loading } = useActiveRole();
+    const { role, loading } = useActiveRole();
 
-  useEffect(() => {
-    if (role && !loading) {
-      preloadPermissionsForRole(role);
-    }
-  }, [role, loading]);
+    useEffect(() => {
+        if (role && !loading) {
+            preloadPermissionsForRole(role);
+        }
+    }, [role, loading]);
 
-  return { isReady: !loading && role !== null };
+    return { isReady: !loading && role !== null };
 }

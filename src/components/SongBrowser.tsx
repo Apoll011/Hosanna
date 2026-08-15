@@ -166,12 +166,8 @@ export default function SongBrowser({
                                         <option value="title">
                                             A-Z Alfabética
                                         </option>
-                                        <option value="number">
-                                            Número
-                                        </option>
-                                        <option value="folder">
-                                            Pasta
-                                        </option>
+                                        <option value="number">Número</option>
+                                        <option value="folder">Pasta</option>
                                     </select>
                                 </div>
                             )}

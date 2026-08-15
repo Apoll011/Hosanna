@@ -207,7 +207,8 @@ export default function ServiceManager() {
 
     useEffect(() => {
         // Hide the bottom nav in all service sub-views (detail, musician, present)
-        const inSubView = mode === "present" || mode === "detail" || mode === "musician";
+        const inSubView =
+            mode === "present" || mode === "detail" || mode === "musician";
         setIsPresenting(inSubView);
         return () => {
             setIsPresenting(false);
