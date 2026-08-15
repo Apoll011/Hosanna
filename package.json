@@ -1,7 +1,7 @@
 {
     "name": "@hosanna/mobile",
     "private": true,
-    "version": "2.0.5-alpha.0",
+    "version": "2.1.0",
     "type": "module",
     "license": "Apache-2.0",
     "scripts": {
