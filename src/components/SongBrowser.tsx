@@ -132,65 +132,62 @@ export default function SongBrowser({
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-m3-bg dark:bg-m3-dark-bg relative">
             {/* Header Search Area */}
-            <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0">
-                {/* Filters and Sorting controllers */}
-                {selectedSection !== "circle" &&
-                    selectedSection !== "metronome" &&
-                    selectedSection !== "settings" && (
-                        <div className="flex items-center justify-between gap-2">
-                            {/* Active section breadcrumb */}
-                            <span className="font-mono bg-m3-sidebar dark:bg-m3-dark-sidebar px-2 py-0.5 rounded border border-m3-border/30 dark:border-m3-dark-border/30 text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary">
-                                {getSectionTitle(
-                                    selectedSection,
-                                    activeListContext.folderName,
-                                    selectedFolder,
-                                )}
-                            </span>
-                            <div className="flex items-center gap-1.5 text-xs text-m3-secondary dark:text-m3-dark-secondary font-medium">
-                                {selectedSection !== "recent" && (
-                                    <>
-                                        <SlidersHorizontal className="w-3 h-3 text-m3-secondary/70" />
-                                        <select
-                                            id="select_sort_songs"
-                                            value={sortBy}
-                                            onChange={(e) =>
-                                                setSortBy(
-                                                    (
-                                                        e as React.ChangeEvent<HTMLSelectElement>
-                                                    ).target.value as
-                                                        | "title"
-                                                        | "number"
-                                                        | "folder",
-                                                )
-                                            }
-                                            className="bg-transparent border-none p-0 pr-4 text-xs font-bold text-m3-text dark:text-m3-dark-text focus:outline-none cursor-pointer"
-                                        >
-                                            <option value="title">
-                                                A-Z Alfabética
-                                            </option>
-                                            <option value="number">
-                                                Número de Cântico
-                                            </option>
-                                            <option value="folder">
-                                                Pasta / Categoria
-                                            </option>
-                                        </select>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Quick Creator Button */}
-                            <button
-                                onClick={onAddNewSong}
-                                id="btn_create_new_song"
-                                className="flex items-center gap-1 bg-m3-primary hover:opacity-90 text-white text-xs px-4 py-2 rounded-full font-bold shadow-xs transition-all active:scale-95"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                Novo
-                            </button>
+            {selectedSection !== "circle" &&
+                selectedSection !== "metronome" &&
+                selectedSection !== "settings" && (
+                    <div className="p-3.5 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between gap-2 shrink-0">
+                        {/* Active section breadcrumb */}
+                        <span className="font-mono bg-m3-sidebar dark:bg-m3-dark-sidebar px-2.5 py-1 rounded-xl border border-m3-border/30 dark:border-m3-dark-border/30 text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary shadow-2xs">
+                            {getSectionTitle(
+                                selectedSection,
+                                activeListContext.folderName,
+                                selectedFolder,
+                            )}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-m3-secondary dark:text-m3-dark-secondary font-medium">
+                            {selectedSection !== "recent" && (
+                                <div className="flex items-center gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar px-2 py-1 rounded-xl border border-m3-border/20">
+                                    <SlidersHorizontal className="w-3 h-3 text-m3-secondary/70" />
+                                    <select
+                                        id="select_sort_songs"
+                                        value={sortBy}
+                                        onChange={(e) =>
+                                            setSortBy(
+                                                (
+                                                    e as React.ChangeEvent<HTMLSelectElement>
+                                                ).target.value as
+                                                    | "title"
+                                                    | "number"
+                                                    | "folder",
+                                            )
+                                        }
+                                        className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-m3-text dark:text-m3-dark-text focus:outline-none cursor-pointer"
+                                    >
+                                        <option value="title">
+                                            A-Z Alfabética
+                                        </option>
+                                        <option value="number">
+                                            Número
+                                        </option>
+                                        <option value="folder">
+                                            Pasta
+                                        </option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
-                    )}
-            </div>
+
+                        {/* Quick Creator Button */}
+                        <button
+                            onClick={onAddNewSong}
+                            id="btn_create_new_song"
+                            className="flex items-center gap-1 bg-m3-primary hover:opacity-90 text-white text-xs px-3.5 py-1.5 rounded-full font-bold shadow-xs transition-all active:scale-95"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Novo
+                        </button>
+                    </div>
+                )}
 
             {/* Main Content Area */}
             {selectedSection === "circle" ? (

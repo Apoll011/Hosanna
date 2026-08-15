@@ -1,8 +1,6 @@
-// src/store/appStore.ts
 import {
     configureApiClient,
     foldersApi,
-    getApiClient,
     parseChordPro,
     parseSong,
     servicesApi,
@@ -12,6 +10,12 @@ import {
     SyncStatusResponse,
 } from "@hosanna/shared";
 import { create } from "zustand";
+import {
+    clearStorage,
+    getStorageItem,
+    setStorageItemDebounced,
+    setStorageItemImmediate,
+} from "../lib/storage";
 import {
     Folder,
     Service,
@@ -47,7 +51,6 @@ export interface AppState {
 
     theme: ThemeType;
     serverUrl: string;
-    serverToken: string;
     fontSize: number;
     showChords: boolean;
     showDiagrams: boolean;
@@ -67,10 +70,11 @@ export interface AppState {
     syncStatus: "idle" | "syncing" | "success" | "error";
     lastSyncTime: number | null;
     hasSkippedSetup: boolean;
+    isHydrated: boolean;
 
+    rehydrateStore: () => Promise<void>;
     setTheme: (theme: ThemeType) => void;
     setServerUrl: (url: string) => void;
-    setServerToken: (token: string) => void;
     setFontSize: (size: number) => void;
     setShowChords: (show: boolean) => void;
     setShowDiagrams: (show: boolean) => void;
@@ -120,45 +124,14 @@ export interface AppState {
 const DEMO_VIRTUAL_FILES: VirtualFile[] = [];
 const INITIAL_SERVICES: Service[] = [];
 
-const getStorageItem = <T>(key: string, defaultValue: T): T => {
-    try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : defaultValue;
-    } catch {
-        return defaultValue;
-    }
-};
-
-const storageTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-
-const setStorageItemDebounced = (key: string, value: unknown, delay = 300) => {
-    if (storageTimers[key]) clearTimeout(storageTimers[key]);
-    storageTimers[key] = setTimeout(() => {
-        try {
-            localStorage.setItem(key, JSON.stringify(value));
-        } catch (e) {
-            console.warn(`Failed to save ${key} to localStorage`, e);
-        }
-    }, delay);
-};
-
-const setStorageItemImmediate = (key: string, value: unknown) => {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-        console.warn(`Failed to save ${key} to localStorage`, e);
-    }
-};
-
 type SetFn = (
     partial: Partial<AppState> | ((s: AppState) => Partial<AppState>),
 ) => void;
 type GetFn = () => AppState;
 
-function ensureApiClient(serverUrl: string, serverToken: string) {
+function ensureApiClient(serverUrl: string) {
     if (serverUrl && serverUrl.trim() !== "") {
         configureApiClient(serverUrl.trim() + "/api");
-        getApiClient().setTokens(serverToken ? serverToken.trim() : null);
     }
 }
 
@@ -203,55 +176,35 @@ const commitServiceLocally = (set: SetFn, get: GetFn, apiService: Service) => {
     setStorageItemImmediate("cp_services", services);
 };
 
-const initialServerUrl = getStorageItem<string>(
+const initialServerUrl = await getStorageItem<string>(
     "cp_server_url",
     import.meta.env.VITE_API_URL || "",
 );
-const initialServerToken = getStorageItem<string>("cp_server_token", "");
-ensureApiClient(initialServerUrl, initialServerToken);
+ensureApiClient(initialServerUrl);
 
-// This is keep for backwards compatibility
-const initialRawSongs = getStorageItem<
-    (Song & {
-        remoteId: string;
-        remoteUpdatedAt: string;
-        parsedUpdatedAt: string;
-    })[]
->("cp_songs_cache", []);
-const initialSongs: Song[] = initialRawSongs.map((s) => {
-    const { remoteId, ...rest } = s;
-    if (remoteId && s.id !== remoteId) {
-        return { ...rest, id: remoteId };
-    }
-    return rest as Song;
-});
 try {
     localStorage.removeItem("cp_song_remote_ids");
 } catch {}
 
 export const useAppStore = create<AppState>((set, get) => ({
-    virtualFiles: getStorageItem("cp_virtual_files", DEMO_VIRTUAL_FILES),
-    sourceFolderPath: getStorageItem(
-        "cp_source_folder",
-        "/Armazenamento/Canticos_Igreja",
-    ),
-    songs: initialSongs,
-    services: getStorageItem("cp_services", INITIAL_SERVICES),
-    folders: getStorageItem("cp_folders", []),
-    favoriteSongIds: getStorageItem("cp_favorites", []),
-    recentlyPlayedSongIds: getStorageItem("cp_recently_played", []),
+    virtualFiles: [],
+    sourceFolderPath: "/Armazenamento/Canticos_Igreja",
+    songs: [],
+    services: [],
+    folders: [],
+    favoriteSongIds: [],
+    recentlyPlayedSongIds: [],
     activeListContext: { type: "all" },
-    theme: getStorageItem("cp_theme", "light"),
-    serverUrl: initialServerUrl,
-    serverToken: initialServerToken,
-    fontSize: getStorageItem("cp_font_size", 16),
-    showChords: getStorageItem("cp_show_chords", true),
-    showDiagrams: getStorageItem("cp_show_diagrams", true),
-    keepScreenAwake: getStorageItem("cp_keep_awake", true),
-    slowDownOnRepeat: getStorageItem("cp_slow_down_repeat", true),
-    musicianMode: getStorageItem("cp_musician_mode", false),
-    instrument: getStorageItem("cp_instrument", "guitar"),
-    twoColumnLayout: getStorageItem("cp_two_column_layout", false),
+    theme: "light",
+    serverUrl: import.meta.env.VITE_API_URL || "",
+    fontSize: 16,
+    showChords: true,
+    showDiagrams: true,
+    keepScreenAwake: true,
+    slowDownOnRepeat: true,
+    musicianMode: false,
+    instrument: "guitar",
+    twoColumnLayout: false,
     selectedFolder: "",
     activeSongId: null,
     activeServiceId: null,
@@ -260,8 +213,89 @@ export const useAppStore = create<AppState>((set, get) => ({
     searchQuery: "",
     sortBy: "title",
     syncStatus: "idle",
-    lastSyncTime: getStorageItem("cp_last_sync_time", null),
+    lastSyncTime: null,
     hasSkippedSetup: false,
+    isHydrated: false,
+
+    rehydrateStore: async () => {
+        try {
+            const [
+                virtualFiles,
+                sourceFolderPath,
+                songsCache,
+                services,
+                folders,
+                favoriteSongIds,
+                recentlyPlayedSongIds,
+                theme,
+                serverUrl,
+                fontSize,
+                showChords,
+                showDiagrams,
+                keepScreenAwake,
+                slowDownOnRepeat,
+                musicianMode,
+                instrument,
+                twoColumnLayout,
+                lastSyncTime,
+            ] = await Promise.all([
+                getStorageItem<VirtualFile[]>(
+                    "cp_virtual_files",
+                    DEMO_VIRTUAL_FILES,
+                ),
+                getStorageItem<string>(
+                    "cp_source_folder",
+                    "/Armazenamento/Canticos_Igreja",
+                ),
+                getStorageItem<Song[]>("cp_songs_cache", []),
+                getStorageItem<Service[]>("cp_services", INITIAL_SERVICES),
+                getStorageItem<Folder[]>("cp_folders", []),
+                getStorageItem<string[]>("cp_favorites", []),
+                getStorageItem<string[]>("cp_recently_played", []),
+                getStorageItem<ThemeType>("cp_theme", "light"),
+                getStorageItem<string>(
+                    "cp_server_url",
+                    import.meta.env.VITE_API_URL || "",
+                ),
+                getStorageItem<number>("cp_font_size", 16),
+                getStorageItem<boolean>("cp_show_chords", true),
+                getStorageItem<boolean>("cp_show_diagrams", true),
+                getStorageItem<boolean>("cp_keep_awake", true),
+                getStorageItem<boolean>("cp_slow_down_repeat", true),
+                getStorageItem<boolean>("cp_musician_mode", false),
+                getStorageItem<"guitar" | "piano">("cp_instrument", "guitar"),
+                getStorageItem<boolean>("cp_two_column_layout", false),
+                getStorageItem<number | null>("cp_last_sync_time", null),
+            ]);
+
+            ensureApiClient(serverUrl);
+
+            set({
+                virtualFiles,
+                sourceFolderPath,
+                songs: songsCache,
+                services,
+                folders,
+                favoriteSongIds,
+                recentlyPlayedSongIds,
+                theme,
+                serverUrl,
+                fontSize,
+                showChords,
+                showDiagrams,
+                keepScreenAwake,
+                slowDownOnRepeat,
+                musicianMode,
+                instrument,
+                twoColumnLayout,
+                lastSyncTime,
+                isHydrated: true,
+            });
+        } catch (err) {
+            console.error("Failed to rehydrate store from IndexedDB:", err);
+            set({ isHydrated: true });
+        }
+    },
 
     setTheme: (theme) => {
         set({ theme });
@@ -270,12 +304,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     setServerUrl: (serverUrl) => {
         set({ serverUrl });
         setStorageItemImmediate("cp_server_url", serverUrl);
-        ensureApiClient(serverUrl, get().serverToken);
-    },
-    setServerToken: (serverToken) => {
-        set({ serverToken });
-        setStorageItemImmediate("cp_server_token", serverToken);
-        ensureApiClient(get().serverUrl, serverToken);
+        ensureApiClient(serverUrl);
     },
     setFontSize: (fontSize) => {
         set({ fontSize });
@@ -446,11 +475,11 @@ export const useAppStore = create<AppState>((set, get) => ({
             );
         }
 
-        const { serverUrl, serverToken } = get();
+        const { serverUrl } = get();
         const parsed = parseChordPro(content);
 
         if (serverUrl.trim() !== "") {
-            ensureApiClient(serverUrl, serverToken);
+            ensureApiClient(serverUrl);
             const created = await songsApi.createSong({
                 title:
                     parsed.metadata.title ||
@@ -476,7 +505,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateVirtualFile: async (path, content) => {
-        const { serverUrl, serverToken, songs } = get();
+        const { serverUrl, songs } = get();
 
         if (serverUrl.trim() !== "") {
             const existing = songs.find((s) => s.id === path);
@@ -485,7 +514,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                     "Não foi possível encontrar este cântico no servidor. Sincronize e tente novamente.",
                 );
             }
-            ensureApiClient(serverUrl, serverToken);
+            ensureApiClient(serverUrl);
             const parsed = parseChordPro(content);
             const updated = await songsApi.updateSong(existing.id, {
                 updatedAt: existing.updatedAt || new Date().toISOString(),
@@ -509,12 +538,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     deleteVirtualFile: async (path) => {
-        const { serverUrl, serverToken, songs } = get();
+        const { serverUrl, songs } = get();
 
         if (serverUrl.trim() !== "") {
             const existing = songs.find((s) => s.id === path);
             if (existing) {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 await songsApi.deleteSong(existing.id);
             }
         }
@@ -536,7 +565,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ syncStatus: "syncing" });
         const {
             serverUrl,
-            serverToken,
             songs: currentSongs,
             folders: currentFolders,
             services: currentServices,
@@ -549,7 +577,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             return;
         }
 
-        ensureApiClient(serverUrl, serverToken);
+        ensureApiClient(serverUrl);
 
         try {
             let status: SyncStatusResponse | null = null;
@@ -695,13 +723,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateService: async (id, name, date, notes) => {
-        const { serverUrl, serverToken, services } = get();
+        const { serverUrl, services } = get();
         const current = services.find((svc) => svc.id === id);
         if (!current) return;
 
         if (serverUrl.trim() !== "") {
             try {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 const updated = await servicesApi.updateService(id, {
                     updatedAt: current.updatedAt || new Date().toISOString(),
                     name,
@@ -723,13 +751,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateServiceElements: async (serviceId, elements) => {
-        const { serverUrl, serverToken, services } = get();
+        const { serverUrl, services } = get();
         const current = services.find((svc) => svc.id === serviceId);
         if (!current) return;
 
         if (serverUrl.trim() !== "") {
             try {
-                ensureApiClient(serverUrl, serverToken);
+                ensureApiClient(serverUrl);
                 const updated = await servicesApi.updateServiceElements(
                     serviceId,
                     {
@@ -752,7 +780,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         setStorageItemImmediate("cp_services", updatedServices);
     },
 
-    resetApp: () => {
+    resetApp: async () => {
         set({
             virtualFiles: [],
             songs: [],
@@ -767,11 +795,6 @@ export const useAppStore = create<AppState>((set, get) => ({
             syncStatus: "idle",
             lastSyncTime: null,
         });
-        localStorage.removeItem("cp_virtual_files");
-        localStorage.removeItem("cp_songs_cache");
-        localStorage.removeItem("cp_services");
-        localStorage.removeItem("cp_last_sync_time");
-        localStorage.removeItem("cp_last_sync_timestamps");
-        localStorage.removeItem("cp_song_remote_ids");
+        await clearStorage();
     },
 }));
