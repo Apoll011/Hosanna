@@ -1,280 +1,290 @@
 import { getApiClient } from "@hosanna/shared";
 import type { InvitationStatus } from "better-auth/plugins/organization";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 import { authClient } from "../lib/authClient";
 import { clearPermissionCache } from "../lib/permissions/client";
 
 export interface SessionUser {
-  id: string;
-  name: string;
-  email: string;
-  image?: string;
-  emailVerified: boolean;
-  twoFactorEnabled?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  role?: string;
-  [key: string]: unknown;
+    id: string;
+    name: string;
+    email: string;
+    image?: string;
+    emailVerified: boolean;
+    twoFactorEnabled?: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    role?: string;
+    [key: string]: unknown;
 }
 
 export type Organization = {
-  id: string;
-  name: string;
-  slug: string;
-  logo?: string | null;
-  createdAt: Date;
-  metadata?: {
-    description?: string;
-    shortName?: string;
-    settings?: {
-      general?: {
-        locale?: string;
-        timezone?: string;
-        weekStartsOn?: number;
-      };
-      services?: {
-        defaultDurations?: {
-          sermon?: number;
-          song?: number;
+    id: string;
+    name: string;
+    slug: string;
+    logo?: string | null;
+    createdAt: Date;
+    metadata?: {
+        description?: string;
+        shortName?: string;
+        settings?: {
+            general?: {
+                locale?: string;
+                timezone?: string;
+                weekStartsOn?: number;
+            };
+            services?: {
+                defaultDurations?: {
+                    sermon?: number;
+                    song?: number;
+                };
+                showNotes?: boolean;
+                showServiceDuration?: boolean;
+                autoSave?: boolean;
+            };
+            appearance?: {
+                accentColor?: string;
+                showBranding?: boolean;
+            };
         };
-        showNotes?: boolean;
-        showServiceDuration?: boolean;
-        autoSave?: boolean;
-      };
-      appearance?: {
-        accentColor?: string;
-        showBranding?: boolean;
-      };
-    };
-    [key: string]: unknown;
-  } | null;
-  members?: {
-    id: string;
-    organizationId: string;
-    role:
-      | "admin"
-      | "editor"
-      | "guest"
-      | "member"
-      | "musician"
-      | "owner"
-      | "teamLeader";
-    createdAt: Date;
-    userId: string;
-    teamId?: string;
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      image?: string;
-    };
-  }[];
-  invitations?: {
-    id: string;
-    organizationId: string;
-    email: string;
-    role:
-      | "admin"
-      | "editor"
-      | "guest"
-      | "member"
-      | "musician"
-      | "owner"
-      | "teamLeader";
-    status: InvitationStatus;
-    inviterId: string;
-    expiresAt: Date;
-    createdAt: Date;
-    teamId?: string;
-  }[];
+        [key: string]: unknown;
+    } | null;
+    members?: {
+        id: string;
+        organizationId: string;
+        role:
+            | "admin"
+            | "editor"
+            | "guest"
+            | "member"
+            | "musician"
+            | "owner"
+            | "teamLeader";
+        createdAt: Date;
+        userId: string;
+        teamId?: string;
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            image?: string;
+        };
+    }[];
+    invitations?: {
+        id: string;
+        organizationId: string;
+        email: string;
+        role:
+            | "admin"
+            | "editor"
+            | "guest"
+            | "member"
+            | "musician"
+            | "owner"
+            | "teamLeader";
+        status: InvitationStatus;
+        inviterId: string;
+        expiresAt: Date;
+        createdAt: Date;
+        teamId?: string;
+    }[];
 };
 
 const normalizeOrganization = (org: unknown): Organization => {
-  const organization = org as Organization & { metadata?: unknown };
+    const organization = org as Organization & { metadata?: unknown };
 
-  if (typeof organization.metadata === "string") {
-    try {
-      organization.metadata = JSON.parse(organization.metadata) as Record<
-        string,
-        unknown
-      >;
-    } catch {
-      organization.metadata = null;
+    if (typeof organization.metadata === "string") {
+        try {
+            organization.metadata = JSON.parse(organization.metadata) as Record<
+                string,
+                unknown
+            >;
+        } catch {
+            organization.metadata = null;
+        }
     }
-  }
 
-  return organization;
+    return organization;
 };
 
 interface AuthContextType {
-  user: SessionUser | null;
-  organization: Organization | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  refetch: () => Promise<void>;
-  logout: () => Promise<void>;
-  setActiveOrganization: (slug: string) => Promise<void>;
+    user: SessionUser | null;
+    organization: Organization | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    refetch: () => Promise<void>;
+    logout: () => Promise<void>;
+    setActiveOrganization: (slug: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
+    children,
 }) => {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<SessionUser | null>(null);
+    const [organization, setOrganization] = useState<Organization | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-  const handleClearSession = useCallback(() => {
-    setUser(null);
-    setOrganization(null);
-    try {
-      localStorage.removeItem("active_org_slug");
-    } catch {}
-    getApiClient().setTokens(null);
-    clearPermissionCache();
-    setIsLoading(false);
-  }, []);
-
-  const fetchSession = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const { data: sessionData, error: sessionError } =
-        await authClient.getSession();
-      const sessionUser = sessionData?.user;
-
-      if (!sessionUser || sessionError) {
-        return handleClearSession();
-      }
-
-      // Sync session token with shared ApiClient if available
-      const token = (sessionData as { session?: { token?: string } })?.session
-        ?.token;
-      if (token) {
-        getApiClient().setTokens(token);
-      }
-
-      let activeOrg: Organization | null = null;
-      let userRole: string | undefined = undefined;
-
-      const { data: initialOrg } =
-        await authClient.organization.getFullOrganization();
-
-      if (initialOrg) {
-        activeOrg = normalizeOrganization(initialOrg);
-      } else {
-        const { data: orgs } = await authClient.organization.list();
-        if (orgs && orgs.length > 0) {
-          const storedSlug = localStorage.getItem("active_org_slug");
-          const targetOrg = orgs.find((o) => o.slug === storedSlug) || orgs[0];
-
-          await authClient.organization.setActive({
-            organizationSlug: targetOrg.slug,
-          });
-
-          const { data: newlyActiveOrg } =
-            await authClient.organization.getFullOrganization();
-          activeOrg = normalizeOrganization(newlyActiveOrg);
-        }
-      }
-
-      if (activeOrg) {
-        const previousSlug = localStorage.getItem("active_org_slug");
-
-        if (previousSlug !== activeOrg.slug) {
-          localStorage.setItem("active_org_slug", activeOrg.slug);
-          clearPermissionCache();
-        }
-
-        const currentUserMember = activeOrg.members?.find(
-          (m) => m.userId === sessionUser.id,
-        );
-
-        if (currentUserMember) {
-          userRole = currentUserMember.role;
-        } else {
-          const { data: roleData } =
-            await authClient.organization.getActiveMemberRole();
-          userRole = roleData?.role || undefined;
-        }
-      } else {
-        localStorage.removeItem("active_org_slug");
+    const handleClearSession = useCallback(() => {
+        setUser(null);
+        setOrganization(null);
+        try {
+            localStorage.removeItem("active_org_slug");
+        } catch {}
+        getApiClient().setTokens(null);
         clearPermissionCache();
-      }
+        setIsLoading(false);
+    }, []);
 
-      setOrganization(activeOrg);
-      setUser({
-        ...sessionUser,
-        role: userRole,
-      } as SessionUser);
-    } catch (error) {
-      console.error("Failed to fetch session:", error);
-      handleClearSession();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleClearSession]);
+    const fetchSession = useCallback(async () => {
+        setIsLoading(true);
 
-  const setActiveOrganization = useCallback(
-    async (slug: string) => {
-      try {
-        await authClient.organization.setActive({
-          organizationSlug: slug,
-        });
-        localStorage.setItem("active_org_slug", slug);
-        clearPermissionCache();
-        await fetchSession();
-      } catch (err) {
-        console.error("Failed to set active organization:", err);
-      }
-    },
-    [fetchSession],
-  );
+        try {
+            const { data: sessionData, error: sessionError } =
+                await authClient.getSession();
+            const sessionUser = sessionData?.user;
 
-  useEffect(() => {
-    fetchSession();
-  }, [fetchSession]);
+            if (!sessionUser || sessionError) {
+                return handleClearSession();
+            }
 
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await authClient.signOut();
-    } catch (e) {
-      console.warn("SignOut call failed:", e);
-    }
-    handleClearSession();
-  }, [handleClearSession]);
+            // Sync session token with shared ApiClient if available
+            const token = (sessionData as { session?: { token?: string } })
+                ?.session?.token;
+            if (token) {
+                getApiClient().setTokens(token);
+            }
 
-  const contextValue = useMemo<AuthContextType>(
-    () => ({
-      user,
-      organization,
-      isAuthenticated: !!user,
-      isLoading,
-      refetch: fetchSession,
-      logout,
-      setActiveOrganization,
-    }),
-    [user, organization, isLoading, fetchSession, logout, setActiveOrganization],
-  );
+            let activeOrg: Organization | null = null;
+            let userRole: string | undefined = undefined;
 
-  return (
-    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
-  );
+            const { data: initialOrg } =
+                await authClient.organization.getFullOrganization();
+
+            if (initialOrg) {
+                activeOrg = normalizeOrganization(initialOrg);
+            } else {
+                const { data: orgs } = await authClient.organization.list();
+                if (orgs && orgs.length > 0) {
+                    const storedSlug = localStorage.getItem("active_org_slug");
+                    const targetOrg =
+                        orgs.find((o) => o.slug === storedSlug) || orgs[0];
+
+                    await authClient.organization.setActive({
+                        organizationSlug: targetOrg.slug,
+                    });
+
+                    const { data: newlyActiveOrg } =
+                        await authClient.organization.getFullOrganization();
+                    activeOrg = normalizeOrganization(newlyActiveOrg);
+                }
+            }
+
+            if (activeOrg) {
+                const previousSlug = localStorage.getItem("active_org_slug");
+
+                if (previousSlug !== activeOrg.slug) {
+                    localStorage.setItem("active_org_slug", activeOrg.slug);
+                    clearPermissionCache();
+                }
+
+                const currentUserMember = activeOrg.members?.find(
+                    (m) => m.userId === sessionUser.id,
+                );
+
+                if (currentUserMember) {
+                    userRole = currentUserMember.role;
+                } else {
+                    const { data: roleData } =
+                        await authClient.organization.getActiveMemberRole();
+                    userRole = roleData?.role || undefined;
+                }
+            } else {
+                localStorage.removeItem("active_org_slug");
+                clearPermissionCache();
+            }
+
+            setOrganization(activeOrg);
+            setUser({
+                ...sessionUser,
+                role: userRole,
+            } as SessionUser);
+        } catch (error) {
+            console.error("Failed to fetch session:", error);
+            handleClearSession();
+        } finally {
+            setIsLoading(false);
+        }
+    }, [handleClearSession]);
+
+    const setActiveOrganization = useCallback(
+        async (slug: string) => {
+            try {
+                await authClient.organization.setActive({
+                    organizationSlug: slug,
+                });
+                localStorage.setItem("active_org_slug", slug);
+                clearPermissionCache();
+                await fetchSession();
+            } catch (err) {
+                console.error("Failed to set active organization:", err);
+            }
+        },
+        [fetchSession],
+    );
+
+    useEffect(() => {
+        fetchSession();
+    }, [fetchSession]);
+
+    const logout = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            await authClient.signOut();
+        } catch (e) {
+            console.warn("SignOut call failed:", e);
+        }
+        handleClearSession();
+    }, [handleClearSession]);
+
+    const contextValue = useMemo<AuthContextType>(
+        () => ({
+            user,
+            organization,
+            isAuthenticated: !!user,
+            isLoading,
+            refetch: fetchSession,
+            logout,
+            setActiveOrganization,
+        }),
+        [
+            user,
+            organization,
+            isLoading,
+            fetchSession,
+            logout,
+            setActiveOrganization,
+        ],
+    );
+
+    return (
+        <AuthContext.Provider value={contextValue}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 };

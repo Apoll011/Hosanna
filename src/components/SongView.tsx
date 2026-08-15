@@ -78,7 +78,6 @@ export default function SongView({
     const activeSongIds = useMemo(() => {
         return getActiveSongListIds();
     }, [
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         songs,
         services,
         favoriteSongIds,
