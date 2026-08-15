@@ -96,7 +96,6 @@ function AppContent() {
         if (shouldSync) {
             syncLibrary().catch(() => {});
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isHydrated]);
 
     useEffect(() => {
@@ -214,7 +213,8 @@ function AppContent() {
             if (document.visibilityState === "visible") {
                 const now = Date.now();
                 const THIRTY_SECONDS = 30 * 1000;
-                if (now - lastVisibilitySyncRef.current < THIRTY_SECONDS) return;
+                if (now - lastVisibilitySyncRef.current < THIRTY_SECONDS)
+                    return;
                 lastVisibilitySyncRef.current = now;
                 rehydrateStore().then(() => {
                     syncLibrary().catch(() => {});

@@ -21,11 +21,7 @@ export const WorkspaceTab: React.FC<WorkspaceTabProps> = ({
     active,
     onShowToast,
 }) => {
-    const {
-        organization,
-        setActiveOrganization,
-        refetch: refetchAuth,
-    } = useAuth();
+    const { organization, setActiveOrganization } = useAuth();
     const syncLibrary = useAppStore((state) => state.syncLibrary);
     const syncStatus = useAppStore((state) => state.syncStatus);
     const lastSyncTime = useAppStore((state) => state.lastSyncTime);

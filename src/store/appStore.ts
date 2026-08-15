@@ -699,14 +699,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         try {
             ensureApiClient();
-            const updated = await servicesApi.updateServiceElements(
-                serviceId,
-                {
-                    updatedAt:
-                        current.updatedAt || new Date().toISOString(),
-                    elements,
-                },
-            );
+            const updated = await servicesApi.updateServiceElements(serviceId, {
+                updatedAt: current.updatedAt || new Date().toISOString(),
+                elements,
+            });
             commitServiceLocally(set, get, updated);
         } catch (e) {
             console.error("Failed to update service elements", e);

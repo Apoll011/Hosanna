@@ -36,14 +36,24 @@ export default function SongBrowser({
     const selectedSection = activeListContext.type;
     const syncStatus = useAppStore((state) => state.syncStatus);
     const isHydrated = useAppStore((state) => state.isHydrated);
-    const isLoading = (!isHydrated || syncStatus === "syncing") && songs.length === 0;
+    const isLoading =
+        (!isHydrated || syncStatus === "syncing") && songs.length === 0;
 
     // Deferred search query to avoid lag on fast keystrokes
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
     // Pre-normalize searchable text once per song list change rather than every keystroke
     const searchIndex = useMemo(() => {
-        const map = new Map<string, { title: string; artist: string; number: string; key: string; content: string }>();
+        const map = new Map<
+            string,
+            {
+                title: string;
+                artist: string;
+                number: string;
+                key: string;
+                content: string;
+            }
+        >();
         for (const song of songs) {
             map.set(song.id, {
                 title: song.title.toLowerCase(),
@@ -165,8 +175,14 @@ export default function SongBrowser({
     const ITEM_HEIGHT = 80;
     const OVERSCAN = 6;
     const totalCount = filteredAndSortedSongs.length;
-    const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
-    const endIndex = Math.min(totalCount, Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + OVERSCAN);
+    const startIndex = Math.max(
+        0,
+        Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN,
+    );
+    const endIndex = Math.min(
+        totalCount,
+        Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + OVERSCAN,
+    );
 
     const visibleSongs = useMemo(
         () => filteredAndSortedSongs.slice(startIndex, endIndex),
@@ -244,7 +260,9 @@ export default function SongBrowser({
                     {/* Songs List Grid with Virtualization */}
                     <div
                         ref={containerRef}
-                        onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+                        onScroll={(e) =>
+                            setScrollTop(e.currentTarget.scrollTop)
+                        }
                         className="flex-1 overflow-y-auto p-4 pb-24 no-scrollbar"
                     >
                         {isLoading ? (
@@ -283,9 +301,17 @@ export default function SongBrowser({
                                 </p>
                             </div>
                         ) : (
-                            <div style={{ paddingTop: `${paddingTop}px`, paddingBottom: `${paddingBottom}px` }} className="space-y-2">
+                            <div
+                                style={{
+                                    paddingTop: `${paddingTop}px`,
+                                    paddingBottom: `${paddingBottom}px`,
+                                }}
+                                className="space-y-2"
+                            >
                                 {visibleSongs.map((song) => {
-                                    const isFav = favoriteSongIds.includes(song.id);
+                                    const isFav = favoriteSongIds.includes(
+                                        song.id,
+                                    );
                                     return (
                                         <div
                                             key={song.id}
@@ -297,7 +323,8 @@ export default function SongBrowser({
                                             <div className="flex items-start gap-3 min-w-0 flex-1">
                                                 {/* Visual Number badge or note icon */}
                                                 <div className="w-10 h-10 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar flex flex-col items-center justify-center shrink-0 border border-m3-border/20 group-hover:bg-m3-primary-light dark:group-hover:bg-m3-dark-primary-light transition-colors">
-                                                    {song.metadata?.songNumber ? (
+                                                    {song.metadata
+                                                        ?.songNumber ? (
                                                         <span className="text-[11px] font-black text-m3-primary dark:text-m3-dark-primary">
                                                             #
                                                             {
@@ -338,7 +365,11 @@ export default function SongBrowser({
                                                     )}
                                                     {song.metadata?.tempo && (
                                                         <span className="text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-mono">
-                                                            ♩ {song.metadata.tempo}
+                                                            ♩{" "}
+                                                            {
+                                                                song.metadata
+                                                                    .tempo
+                                                            }
                                                         </span>
                                                     )}
                                                 </div>
@@ -346,7 +377,9 @@ export default function SongBrowser({
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        toggleFavoriteSong(song.id);
+                                                        toggleFavoriteSong(
+                                                            song.id,
+                                                        );
                                                     }}
                                                     className={`p-2 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
                                                         isFav
