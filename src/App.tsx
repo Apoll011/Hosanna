@@ -197,6 +197,23 @@ function AppContent() {
         };
     }, [syncStatus, isEditing, isPresenting, syncLibrary]);
 
+    useEffect(() => {
+        // Re-sync when the page becomes visible again (works in Capacitor + browser)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                rehydrateStore().then(() => {
+                    syncLibrary().catch(() => {});
+                });
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () =>
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+            );
+    }, [rehydrateStore, syncLibrary]);
+
     const indicatorActive = isPulling || syncStatus === "syncing";
     const indicatorOffset = isPulling
         ? pullDistance
@@ -219,7 +236,7 @@ function AppContent() {
         <div className="flex-1 flex overflow-hidden bg-m3-bg dark:bg-m3-dark-bg text-m3-text dark:text-m3-dark-text relative h-full">
             <div className="flex-1 flex flex-col h-full overflow-hidden">
                 {!activeSongId && !isEditing && !isPresenting && (
-                    <div className="p-4 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0 z-10 relative">
+                    <div className="px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0 z-10 relative">
                         <button
                             onClick={() => setShowDrawer(true)}
                             className="p-1.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-text dark:text-m3-dark-text transition-all active:scale-95 flex items-center gap-2 pr-3"
@@ -366,7 +383,7 @@ function AppContent() {
                 </div>
 
                 {!activeSongId && !isEditing && !isPresenting && !isOnMenu && (
-                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[70%] max-w-55 h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
+                    <div className="absolute bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[70%] max-w-55 h-14 bg-m3-toolbar/90 dark:bg-m3-dark-toolbar/90 border border-m3-border/40 dark:border-m3-dark-border/40 rounded-full shadow-lg shadow-black/10 px-4 flex items-center justify-around select-none z-40 backdrop-blur-md animate-fade-in">
                         <button
                             onClick={() => {
                                 setActiveListContext({ type: "all" });

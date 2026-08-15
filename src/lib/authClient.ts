@@ -6,18 +6,6 @@ import {
 import { ac, roles } from "./permissions";
 
 export const getAuthBaseUrl = (): string => {
-    try {
-        const stored = localStorage.getItem("cp_server_url");
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed && typeof parsed === "string" && parsed.trim() !== "") {
-                return parsed.trim().replace(/\/api\/?$/, "");
-            }
-        }
-    } catch {
-        // Ignore storage parse error
-    }
-
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
         return envUrl.trim().replace(/\/api\/?$/, "");

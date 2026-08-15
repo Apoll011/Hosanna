@@ -196,7 +196,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     recentlyPlayedSongIds: [],
     activeListContext: { type: "all" },
     theme: "light",
-    serverUrl: import.meta.env.VITE_API_URL || "",
+    serverUrl: initialServerUrl,
     fontSize: 16,
     showChords: true,
     showDiagrams: true,
@@ -709,7 +709,6 @@ export const useAppStore = create<AppState>((set, get) => ({
             setStorageItemImmediate("cp_services", services);
             setStorageItemDebounced("cp_virtual_files", virtualFiles);
             setStorageItemDebounced("cp_songs_cache", finalSongs);
-            setStorageItemImmediate("cp_favorites", updatedFavorites);
             setStorageItemImmediate("cp_favorites", updatedFavorites);
             setStorageItemImmediate("cp_recently_played", updatedRecent);
             setStorageItemImmediate("cp_last_sync_time", now);

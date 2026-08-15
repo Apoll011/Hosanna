@@ -96,7 +96,7 @@ export default function NavigationDrawer({
                             className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-m3-card dark:bg-m3-dark-card border-r border-m3-border dark:border-m3-dark-border shadow-2xl z-50 flex flex-col overflow-hidden"
                         >
                             {/* Drawer Header with User Profile / Login CTA */}
-                            <div className="p-4 border-b border-m3-border/30 dark:border-m3-dark-border/30 bg-m3-sidebar dark:bg-m3-dark-sidebar space-y-3">
+                            <div className="pt-[calc(1rem+env(safe-area-inset-top,0px))] px-4 pb-4 border-b border-m3-border/30 dark:border-m3-dark-border/30 bg-m3-sidebar dark:bg-m3-dark-sidebar space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         <img
