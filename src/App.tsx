@@ -48,6 +48,7 @@ function AppContent() {
     const songsLength = useAppStore((state) => state.songs.length);
     const syncLibrary = useAppStore((state) => state.syncLibrary);
     const syncStatus = useAppStore((state) => state.syncStatus);
+    const lastSyncTime = useAppStore((state) => state.lastSyncTime);
     const hasSkippedSetup = useAppStore((state) => state.hasSkippedSetup);
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
@@ -72,6 +73,7 @@ function AppContent() {
     const [isPulling, setIsPulling] = useState(false);
     const touchStartY = useRef<number | null>(null);
     const scrollAncestorRef = useRef<HTMLElement | null>(null);
+    const lastVisibilitySyncRef = useRef<number>(0);
 
     const selectedFolder = useAppStore((state) => state.selectedFolder);
 
@@ -84,10 +86,18 @@ function AppContent() {
     }, [rehydrateStore]);
 
     useEffect(() => {
-        if (isHydrated && songsLength === 0) {
-            syncLibrary();
+        if (!isHydrated) return;
+        // Sync on first load if no songs cached, or if last sync was >5min ago
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        const shouldSync =
+            songsLength === 0 ||
+            !lastSyncTime ||
+            Date.now() - lastSyncTime > FIVE_MINUTES;
+        if (shouldSync) {
+            syncLibrary().catch(() => {});
         }
-    }, [isHydrated, songsLength, syncLibrary]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isHydrated]);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -199,8 +209,13 @@ function AppContent() {
 
     useEffect(() => {
         // Re-sync when the page becomes visible again (works in Capacitor + browser)
+        // Throttled to once per 30s to avoid hammering the server
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
+                const now = Date.now();
+                const THIRTY_SECONDS = 30 * 1000;
+                if (now - lastVisibilitySyncRef.current < THIRTY_SECONDS) return;
+                lastVisibilitySyncRef.current = now;
                 rehydrateStore().then(() => {
                     syncLibrary().catch(() => {});
                 });
@@ -227,6 +242,30 @@ function AppContent() {
         activeListContext.type === "circle" ||
         activeListContext.type === "metronome" ||
         activeListContext.type === "settings";
+
+    // Show loading splash while IndexedDB is being read
+    if (!isHydrated) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center bg-m3-bg dark:bg-m3-dark-bg">
+                <div className="flex flex-col items-center gap-4">
+                    <img
+                        src="/logo.png"
+                        className="w-16 h-16 rounded-2xl shadow-lg border border-m3-border/20 object-cover"
+                        alt="Hosanna"
+                    />
+                    <div className="flex gap-1.5">
+                        {[0, 1, 2].map((i) => (
+                            <div
+                                key={i}
+                                className="w-1.5 h-1.5 rounded-full bg-m3-primary/60 animate-bounce"
+                                style={{ animationDelay: `${i * 150}ms` }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (!hasSkippedSetup && !isAuthenticated) {
         return <FirstTimeSetup />;

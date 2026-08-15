@@ -124,6 +124,9 @@ export interface AppState {
 const DEMO_VIRTUAL_FILES: VirtualFile[] = [];
 const INITIAL_SERVICES: Service[] = [];
 
+// Concurrency guard — prevents parallel sync races
+let syncInProgress = false;
+
 type SetFn = (
     partial: Partial<AppState> | ((s: AppState) => Partial<AppState>),
 ) => void;
@@ -176,10 +179,9 @@ const commitServiceLocally = (set: SetFn, get: GetFn, apiService: Service) => {
     setStorageItemImmediate("cp_services", services);
 };
 
-const initialServerUrl = await getStorageItem<string>(
-    "cp_server_url",
-    import.meta.env.VITE_API_URL || "",
-);
+// Don't use top-level await — use env var as initial value; rehydrateStore will
+// load the persisted URL from IndexedDB and call ensureApiClient with it.
+const initialServerUrl = import.meta.env.VITE_API_URL || "";
 ensureApiClient(initialServerUrl);
 
 try {
@@ -432,9 +434,11 @@ export const useAppStore = create<AppState>((set, get) => ({
                         const keyMatch =
                             song.metadata?.key?.toLowerCase().includes(q) ||
                             false;
-                        const lyricsMatch = song.content
-                            .toLowerCase()
-                            .includes(q);
+                        // Only do expensive lyrics scan for queries > 2 chars
+                        const lyricsMatch =
+                            q.length > 2
+                                ? song.content.toLowerCase().includes(q)
+                                : false;
                         return (
                             titleMatch ||
                             artistMatch ||
@@ -562,6 +566,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     syncLibrary: async (options) => {
+        // Guard: prevent concurrent sync calls from racing each other
+        if (syncInProgress) return;
+        syncInProgress = true;
         set({ syncStatus: "syncing" });
         const {
             serverUrl,
@@ -574,6 +581,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             const now = Date.now();
             set({ syncStatus: "success", lastSyncTime: now });
             setStorageItemImmediate("cp_last_sync_time", now);
+            syncInProgress = false;
             return;
         }
 
@@ -620,6 +628,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 const now = Date.now();
                 set({ syncStatus: "success", lastSyncTime: now });
                 setStorageItemImmediate("cp_last_sync_time", now);
+                syncInProgress = false;
                 return;
             }
 
@@ -713,8 +722,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             setStorageItemImmediate("cp_recently_played", updatedRecent);
             setStorageItemImmediate("cp_last_sync_time", now);
             setStorageItemImmediate("cp_last_sync_timestamps", newTimestamps);
+            syncInProgress = false;
         } catch (err) {
             console.error("Erro na sincronização remota:", err);
+            syncInProgress = false;
             set({ syncStatus: "error" });
             throw err;
         }
