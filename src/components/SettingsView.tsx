@@ -1,362 +1,106 @@
-import { Camera } from "@capacitor/camera";
-import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
 import {
-    HardDrive,
-    Keyboard,
-    KeyRound,
-    Link2,
-    Music,
-    QrCode,
-    RefreshCcw,
-    ScanLine,
+  Building2,
+  CheckCircle2,
+  Info,
+  Sliders,
+  User,
+  XCircle,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
-import { useAppStore } from "../store/appStore";
-import {
-    extractMusicianToken,
-    extractMusicianURL,
-    isMusicianAccessUrl,
-} from "../utils";
+import React, { useState } from "react";
+import { AuthModal } from "./auth/AuthModal";
+import { AccountTab } from "./settings/AccountTab";
+import { PreferencesTab } from "./settings/PreferencesTab";
+import { WorkspaceTab } from "./settings/WorkspaceTab";
+
+type SettingsTab = "account" | "workspace" | "preferences";
+
+interface ToastState {
+  message: string;
+  type: "success" | "error" | "info";
+}
 
 export default function SettingsView() {
-    const serverUrl = useAppStore((state) => state.serverUrl);
-    const setServerUrl = useAppStore((state) => state.setServerUrl);
-    const serverToken = useAppStore((state) => state.serverToken);
-    const setServerToken = useAppStore((state) => state.setServerToken);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("account");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
-    const musicianMode = useAppStore((state) => state.musicianMode);
-    const setMusicianMode = useAppStore((state) => state.setMusicianMode);
+  const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((curr) => (curr?.message === message ? null : curr));
+    }, 3500);
+  };
 
-    const [tokenInput, setTokenInput] = useState(serverToken);
-    const [inputMethod, setInputMethod] = useState<"manual" | "qr">("manual");
-    const [hasCameraPermission, setHasCameraPermission] = useState<
-        boolean | null
-    >(null);
+  const tabs: { id: SettingsTab; label: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: "account", label: "Conta", icon: User },
+    { id: "workspace", label: "Organização", icon: Building2 },
+    { id: "preferences", label: "Preferências", icon: Sliders },
+  ];
 
-    useEffect(() => {
-        setTokenInput(serverToken);
-    }, [serverToken]);
-
-    // Request/Check permission when switching to QR mode
-    useEffect(() => {
-        if (inputMethod === "qr") {
-            checkCameraPermission();
-        }
-    }, [inputMethod]);
-
-    const checkCameraPermission = async () => {
-        try {
-            const status = await Camera.checkPermissions();
-            if (status.camera === "granted") {
-                setHasCameraPermission(true);
-            } else {
-                const req = await Camera.requestPermissions();
-                setHasCameraPermission(req.camera === "granted");
-            }
-        } catch (err) {
-            console.warn(
-                "Capacitor camera check failed (likely running on pure web browser):",
-                err,
-            );
-            // Fallback for standard browsers
-            setHasCameraPermission(true);
-        }
-    };
-
-    const tokenPreview = useMemo(() => {
-        const token = extractMusicianToken(tokenInput);
-        if (!token) return "Nenhum token configurado";
-        return token.length > 12
-            ? `${token.slice(0, 8)}…${token.slice(-4)}`
-            : token;
-    }, [tokenInput]);
-
-    const syncLibrary = useAppStore((state) => state.syncLibrary);
-    const syncStatus = useAppStore((state) => state.syncStatus);
-    const lastSyncTime = useAppStore((state) => state.lastSyncTime);
-    const songs = useAppStore((state) => state.songs);
-
-    const handleQrScan = (result: IDetectedBarcode[]) => {
-        if (!result) return;
-
-        const text = result[0]?.rawValue;
-
-        if (text && typeof text === "string") {
-            const extractedUrl = extractMusicianURL(text);
-            const extractedToken = extractMusicianToken(text);
-
-            if (extractedUrl) {
-                setServerUrl(extractedUrl);
-            }
-            if (extractedToken) {
-                setServerToken(extractedToken);
-                setTokenInput(extractedToken);
-            }
-
-            if (extractedUrl || extractedToken) {
-                setInputMethod("manual");
-            }
-        }
-    };
-
-    return (
-        <div className="w-full h-full overflow-y-auto bg-m3-bg dark:bg-m3-dark-bg p-4 pb-24 space-y-4">
-            {/* CONSOLIDATED SYNC & SERVER CONNECTION */}
-            <div className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 space-y-4">
-                {/* HEADER WITH TABS */}
-                <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider flex items-center gap-1.5">
-                        <HardDrive className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-                        Acesso de Músico
-                    </span>
-                    <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-lg p-0.5 border border-m3-border dark:border-m3-dark-border">
-                        <button
-                            onClick={() => setInputMethod("manual")}
-                            className={`px-3 py-1 text-[10px] font-black rounded-md transition-all flex items-center gap-1.5 ${
-                                inputMethod === "manual"
-                                    ? "bg-m3-primary text-white shadow-xs"
-                                    : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text"
-                            }`}
-                        >
-                            <Keyboard className="w-3 h-3" />
-                            Manual
-                        </button>
-                        <button
-                            onClick={() => setInputMethod("qr")}
-                            className={`px-3 py-1 text-[10px] font-black rounded-md transition-all flex items-center gap-1.5 ${
-                                inputMethod === "qr"
-                                    ? "bg-m3-primary text-white shadow-xs"
-                                    : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text"
-                            }`}
-                        >
-                            <ScanLine className="w-3 h-3" />
-                            QR Code
-                        </button>
-                    </div>
-                </div>
-
-                <div className="space-y-4 text-xs">
-                    {/* TAB: MANUAL */}
-                    {inputMethod === "manual" && (
-                        <div className="space-y-3">
-                            <div>
-                                <label className="text-m3-secondary dark:text-m3-dark-secondary font-bold block mb-1">
-                                    URL do Servidor Remoto
-                                </label>
-                                <input
-                                    type="text"
-                                    value={serverUrl}
-                                    onChange={(
-                                        e: React.ChangeEvent<HTMLInputElement>,
-                                    ) => setServerUrl(e.target.value)}
-                                    className="w-full px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
-                                    placeholder="Ex: https://api.cifras.exemplo.com"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-m3-secondary dark:text-m3-dark-secondary font-bold block mb-1">
-                                    Token do músico ou link do QR
-                                </label>
-                                <div className="space-y-2">
-                                    <input
-                                        type="text"
-                                        value={tokenInput}
-                                        onChange={(
-                                            e: React.ChangeEvent<HTMLInputElement>,
-                                        ) => setTokenInput(e.target.value)}
-                                        className="w-full px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
-                                        placeholder="Cole o mus_... ou o URL do acesso"
-                                        autoComplete="off"
-                                        spellCheck={false}
-                                    />
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <button
-                                            onClick={() =>
-                                                setServerToken(
-                                                    extractMusicianToken(
-                                                        tokenInput,
-                                                    ),
-                                                )
-                                            }
-                                            className="px-4 py-2 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-full shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
-                                        >
-                                            <KeyRound className="w-3.5 h-3.5" />
-                                            Guardar token
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setTokenInput("");
-                                                setServerToken("");
-                                            }}
-                                            className="px-4 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover dark:hover:bg-m3-dark-hover text-m3-secondary dark:text-m3-dark-secondary text-xs font-black rounded-full border border-m3-border/30 dark:border-m3-dark-border/30 transition-all active:scale-95"
-                                        >
-                                            Limpar
-                                        </button>
-                                    </div>
-                                    <div className="flex items-start gap-2 text-[10px] text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-xl border border-m3-border/30 dark:border-m3-dark-border/30 p-3">
-                                        {isMusicianAccessUrl(tokenInput) ? (
-                                            <Link2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-m3-primary dark:text-m3-dark-primary" />
-                                        ) : (
-                                            <QrCode className="w-3.5 h-3.5 mt-0.5 shrink-0 text-m3-primary dark:text-m3-dark-primary" />
-                                        )}
-                                        <span>
-                                            Cole o token bruto ou o URL gerado
-                                            pelo QR. O app extrai
-                                            automaticamente o valor do parâmetro{" "}
-                                            <span className="font-mono font-bold">
-                                                token
-                                            </span>{" "}
-                                            quando houver.
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB: QR CODE */}
-                    {inputMethod === "qr" && (
-                        <div className="space-y-3">
-                            <label className="text-m3-secondary dark:text-m3-dark-secondary font-bold block mb-1">
-                                Ler QR Code
-                            </label>
-
-                            <div className="rounded-xl overflow-hidden border border-m3-border dark:border-m3-dark-border relative aspect-square max-w-75 mx-auto bg-black flex flex-col items-center justify-center text-white p-4">
-                                {hasCameraPermission === false && (
-                                    <div className="text-center space-y-2">
-                                        <p className="text-xs text-red-400 font-bold">
-                                            Permissão de câmara negada.
-                                        </p>
-                                        <button
-                                            onClick={checkCameraPermission}
-                                            className="px-3 py-1.5 bg-m3-primary text-white text-xs font-bold rounded-full"
-                                        >
-                                            Pedir Permissão
-                                        </button>
-                                    </div>
-                                )}
-
-                                {hasCameraPermission === true && (
-                                    <Scanner
-                                        onScan={handleQrScan}
-                                        onError={(error) =>
-                                            console.error(
-                                                "Erro na câmara:",
-                                                error,
-                                            )
-                                        }
-                                        styles={{
-                                            container: {
-                                                width: "100%",
-                                                height: "100%",
-                                            },
-                                        }}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="flex items-start gap-2 text-[10px] text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-xl border border-m3-border/30 dark:border-m3-dark-border/30 p-3">
-                                <QrCode className="w-3.5 h-3.5 mt-0.5 shrink-0 text-m3-primary dark:text-m3-dark-primary" />
-                                <span>
-                                    Aponte a câmara para o QR Code. O URL e o
-                                    Token serão extraídos e guardados
-                                    automaticamente.
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="pt-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 space-y-3">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <span className="font-bold text-m3-text dark:text-m3-dark-text block">
-                                    Sincronização da Base de Dados
-                                </span>
-                                <span className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary block">
-                                    Usa o token do músico para ler os dados
-                                    permitidos pelo servidor.
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    syncLibrary();
-                                }}
-                                disabled={syncStatus === "syncing"}
-                                className="px-5 py-2.5 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-full shadow-xs disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
-                            >
-                                <RefreshCcw
-                                    className={`w-3.5 h-3.5 ${syncStatus === "syncing" ? "animate-spin" : ""}`}
-                                />
-                                Sincronizar
-                            </button>
-                        </div>
-
-                        <div className="bg-m3-sidebar dark:bg-m3-dark-sidebar p-3 rounded-xl border border-m3-border/30 text-[10px] space-y-1 text-m3-secondary dark:text-m3-dark-secondary">
-                            <div>
-                                <span className="font-bold text-m3-text dark:text-m3-dark-text">
-                                    Última sincronização:
-                                </span>{" "}
-                                <span className="font-mono">
-                                    {lastSyncTime
-                                        ? new Date(lastSyncTime).toLocaleString(
-                                              "pt-PT",
-                                          )
-                                        : "Nunca"}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="font-bold text-m3-text dark:text-m3-dark-text">
-                                    Token ativo:
-                                </span>{" "}
-                                <span className="font-mono break-all">
-                                    {tokenPreview}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="font-bold text-m3-text dark:text-m3-dark-text">
-                                    Total indexado:
-                                </span>{" "}
-                                <span>{songs.length} cânticos guardados</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* MÚSICIAN MODE SETTING CARD */}
-            <div className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-m3-primary-light dark:bg-m3-dark-primary-light flex items-center justify-center shrink-0">
-                            <Music className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                        </div>
-                        <div className="min-w-0">
-                            <span className="font-bold text-xs sm:text-sm text-m3-text dark:text-m3-dark-text block truncate">
-                                Modo Músico nos Cultos
-                            </span>
-                            <span className="text-[11px] text-m3-secondary dark:text-m3-dark-secondary block leading-snug">
-                                Abre o culto diretamente no primeiro cântico com
-                                menu lateral (estilo Songbook Pro)
-                            </span>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setMusicianMode(!musicianMode)}
-                        className={`w-11 h-6 rounded-full p-1 transition-colors relative flex items-center shrink-0 ${
-                            musicianMode
-                                ? "bg-m3-primary dark:bg-m3-dark-primary"
-                                : "bg-m3-border dark:bg-m3-dark-border"
-                        }`}
-                    >
-                        <div
-                            className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform transform ${
-                                musicianMode ? "translate-x-5" : "translate-x-0"
-                            }`}
-                        />
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className="w-full h-full overflow-y-auto bg-m3-bg dark:bg-m3-dark-bg p-3 sm:p-4 pb-28 space-y-4 no-scrollbar">
+      {/* Toast Notification Banner */}
+      {toast && (
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl shadow-xl border text-xs font-bold flex items-center gap-2 max-w-[90%] sm:max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${
+            toast.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800"
+              : toast.type === "error"
+                ? "bg-red-50 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-200 dark:border-red-800"
+                : "bg-sky-50 text-sky-800 border-sky-300 dark:bg-sky-950 dark:text-sky-200 dark:border-sky-800"
+          }`}
+        >
+          {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+          {toast.type === "error" && <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />}
+          {toast.type === "info" && <Info className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />}
+          <span className="truncate">{toast.message}</span>
         </div>
-    );
+      )}
+
+      {/* Tab Selector Bar */}
+      <div className="flex bg-m3-card dark:bg-m3-dark-card p-1 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 shadow-xs">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                isActive
+                  ? "bg-m3-primary text-white shadow-xs"
+                  : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text dark:hover:text-m3-dark-text"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Tab Content */}
+      <div className="space-y-4">
+        <AccountTab
+          active={activeTab === "account"}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onShowToast={showToast}
+        />
+        <WorkspaceTab
+          active={activeTab === "workspace"}
+          onShowToast={showToast}
+        />
+        <PreferencesTab
+          active={activeTab === "preferences"}
+          onShowToast={showToast}
+        />
+      </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+    </div>
+  );
 }

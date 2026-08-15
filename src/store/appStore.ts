@@ -155,10 +155,12 @@ type SetFn = (
 ) => void;
 type GetFn = () => AppState;
 
-function ensureApiClient(serverUrl: string, serverToken: string) {
+function ensureApiClient(serverUrl: string, serverToken?: string | null) {
     if (serverUrl && serverUrl.trim() !== "") {
         configureApiClient(serverUrl.trim() + "/api");
-        getApiClient().setTokens(serverToken ? serverToken.trim() : null);
+        if (serverToken && serverToken.trim() !== "") {
+            getApiClient().setTokens(serverToken.trim());
+        }
     }
 }
 
