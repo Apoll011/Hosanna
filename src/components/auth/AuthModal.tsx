@@ -3,13 +3,12 @@ import {
     AlertTriangle,
     CheckCircle2,
     Lock,
-    Server,
     Shield,
     UserPlus,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { authClient, reconfigureAuthClient } from "../../lib/authClient";
+import { authClient } from "../../lib/authClient";
 import { useAppStore } from "../../store/appStore";
 
 interface AuthModalProps {
@@ -24,13 +23,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     initialTab = "signin",
 }) => {
     const { refetch: refetchAuth } = useAuth();
-    const serverUrl = useAppStore((state) => state.serverUrl);
-    const setServerUrl = useAppStore((state) => state.setServerUrl);
     const syncLibrary = useAppStore((state) => state.syncLibrary);
 
     const [tab, setTab] = useState<"signin" | "signup">(initialTab);
-    const [showServerConfig, setShowServerConfig] = useState(false);
-    const [customServerUrl, setCustomServerUrl] = useState(serverUrl);
 
     // Form states
     const [email, setEmail] = useState("");
@@ -56,22 +51,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setTotpCode("");
         setErrorMsg("");
         setSuccessMsg("");
-        setShowServerConfig(false);
     };
 
     const handleClose = () => {
         resetForm();
         onClose();
-    };
-
-    const handleSaveServerUrl = () => {
-        const clean = customServerUrl.trim().replace(/\/api\/?$/, "");
-        setServerUrl(clean);
-        reconfigureAuthClient(clean);
-        setShowServerConfig(false);
-        setErrorMsg("");
-        setSuccessMsg("Endereço do servidor atualizado!");
-        setTimeout(() => setSuccessMsg(""), 3000);
     };
 
     const handleSignIn = async (e?: React.FormEvent) => {
@@ -419,50 +403,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                 </div>
                             </form>
                         )}
-
-                        {/* Server Settings Accordion */}
-                        <div className="pt-3 border-t border-m3-border/30">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setShowServerConfig(!showServerConfig)
-                                }
-                                className="text-[11px] font-bold text-m3-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary flex items-center gap-1.5 mx-auto"
-                            >
-                                <Server className="w-3.5 h-3.5" />
-                                {showServerConfig
-                                    ? "Ocultar URL do Servidor"
-                                    : "Configurar URL do Servidor"}
-                            </button>
-
-                            {showServerConfig && (
-                                <div className="mt-3 p-3 bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-xl border border-m3-border/30 space-y-2">
-                                    <label className="text-[10px] font-black text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider block">
-                                        URL do Servidor Remoto
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={customServerUrl}
-                                            onChange={(e) =>
-                                                setCustomServerUrl(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="https://api.hosanna.exemplo.com"
-                                            className="flex-1 px-3 py-1.5 bg-m3-card dark:bg-m3-dark-card border border-m3-border dark:border-m3-dark-border rounded-lg font-mono text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleSaveServerUrl}
-                                            className="px-3 py-1.5 bg-m3-primary text-white text-xs font-black rounded-lg shadow-xs"
-                                        >
-                                            OK
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </>
                 )}
             </div>

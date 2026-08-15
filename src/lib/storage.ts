@@ -199,7 +199,6 @@ export async function clearStorage(): Promise<void> {
             "cp_last_sync_time",
             "cp_last_sync_timestamps",
             "cp_theme",
-            "cp_server_url",
             "cp_font_size",
             "cp_show_chords",
             "cp_show_diagrams",

@@ -16,6 +16,7 @@ import {
     setStorageItemDebounced,
     setStorageItemImmediate,
 } from "../lib/storage";
+import { API_BASE_URL } from "../lib/authClient";
 import {
     Folder,
     Service,
@@ -50,7 +51,6 @@ export interface AppState {
     };
 
     theme: ThemeType;
-    serverUrl: string;
     fontSize: number;
     showChords: boolean;
     showDiagrams: boolean;
@@ -74,7 +74,6 @@ export interface AppState {
 
     rehydrateStore: () => Promise<void>;
     setTheme: (theme: ThemeType) => void;
-    setServerUrl: (url: string) => void;
     setFontSize: (size: number) => void;
     setShowChords: (show: boolean) => void;
     setShowDiagrams: (show: boolean) => void;
@@ -132,10 +131,8 @@ type SetFn = (
 ) => void;
 type GetFn = () => AppState;
 
-function ensureApiClient(serverUrl: string) {
-    if (serverUrl && serverUrl.trim() !== "") {
-        configureApiClient(serverUrl.trim() + "/api");
-    }
+function ensureApiClient() {
+    configureApiClient(API_BASE_URL.trim() + "/api");
 }
 
 const commitSongLocally = (
@@ -179,10 +176,8 @@ const commitServiceLocally = (set: SetFn, get: GetFn, apiService: Service) => {
     setStorageItemImmediate("cp_services", services);
 };
 
-// Don't use top-level await — use env var as initial value; rehydrateStore will
-// load the persisted URL from IndexedDB and call ensureApiClient with it.
-const initialServerUrl = import.meta.env.VITE_API_URL || "";
-ensureApiClient(initialServerUrl);
+// Configure API client from env on startup
+ensureApiClient();
 
 try {
     localStorage.removeItem("cp_song_remote_ids");
@@ -198,7 +193,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     recentlyPlayedSongIds: [],
     activeListContext: { type: "all" },
     theme: "light",
-    serverUrl: initialServerUrl,
     fontSize: 16,
     showChords: true,
     showDiagrams: true,
@@ -230,7 +224,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                 favoriteSongIds,
                 recentlyPlayedSongIds,
                 theme,
-                serverUrl,
                 fontSize,
                 showChords,
                 showDiagrams,
@@ -255,10 +248,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                 getStorageItem<string[]>("cp_favorites", []),
                 getStorageItem<string[]>("cp_recently_played", []),
                 getStorageItem<ThemeType>("cp_theme", "light"),
-                getStorageItem<string>(
-                    "cp_server_url",
-                    import.meta.env.VITE_API_URL || "",
-                ),
                 getStorageItem<number>("cp_font_size", 16),
                 getStorageItem<boolean>("cp_show_chords", true),
                 getStorageItem<boolean>("cp_show_diagrams", true),
@@ -270,8 +259,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                 getStorageItem<number | null>("cp_last_sync_time", null),
             ]);
 
-            ensureApiClient(serverUrl);
-
             set({
                 virtualFiles,
                 sourceFolderPath,
@@ -281,7 +268,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                 favoriteSongIds,
                 recentlyPlayedSongIds,
                 theme,
-                serverUrl,
                 fontSize,
                 showChords,
                 showDiagrams,
@@ -302,11 +288,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     setTheme: (theme) => {
         set({ theme });
         setStorageItemImmediate("cp_theme", theme);
-    },
-    setServerUrl: (serverUrl) => {
-        set({ serverUrl });
-        setStorageItemImmediate("cp_server_url", serverUrl);
-        ensureApiClient(serverUrl);
     },
     setFontSize: (fontSize) => {
         set({ fontSize });
@@ -479,77 +460,47 @@ export const useAppStore = create<AppState>((set, get) => ({
             );
         }
 
-        const { serverUrl } = get();
         const parsed = parseChordPro(content);
 
-        if (serverUrl.trim() !== "") {
-            ensureApiClient(serverUrl);
-            const created = await songsApi.createSong({
-                title:
-                    parsed.metadata.title ||
-                    cleanFileName.replace(/\.chopro$/i, ""),
-                artist: parsed.metadata.artist,
-                content,
-                folderId: matchedFolder?.id ?? null,
-                path: fullPath,
-            });
-            commitSongLocally(set, get, created);
-            return;
-        }
-
-        const newFile: VirtualFile = {
-            path: fullPath,
+        ensureApiClient();
+        const created = await songsApi.createSong({
+            title:
+                parsed.metadata.title ||
+                cleanFileName.replace(/\.chopro$/i, ""),
+            artist: parsed.metadata.artist,
             content,
-            updatedAt: Date.now(),
-        };
-        const updatedFiles = [newFile, ...files];
-        set({ virtualFiles: updatedFiles });
-        setStorageItemDebounced("cp_virtual_files", updatedFiles);
-        get().syncLibrary();
+            folderId: matchedFolder?.id ?? null,
+            path: fullPath,
+        });
+        commitSongLocally(set, get, created);
     },
 
     updateVirtualFile: async (path, content) => {
-        const { serverUrl, songs } = get();
-
-        if (serverUrl.trim() !== "") {
-            const existing = songs.find((s) => s.id === path);
-            if (!existing) {
-                throw new Error(
-                    "Não foi possível encontrar este cântico no servidor. Sincronize e tente novamente.",
-                );
-            }
-            ensureApiClient(serverUrl);
-            const parsed = parseChordPro(content);
-            const updated = await songsApi.updateSong(existing.id, {
-                updatedAt: existing.updatedAt || new Date().toISOString(),
-                title: parsed.metadata.title || existing.title,
-                content,
-                folderId: existing.folderId ?? null,
-                tags: existing.tags || [],
-            });
-            commitSongLocally(set, get, updated, path);
-            return;
+        const { songs } = get();
+        const existing = songs.find((s) => s.id === path);
+        if (!existing) {
+            throw new Error(
+                "Não foi possível encontrar este cântico no servidor. Sincronize e tente novamente.",
+            );
         }
-
-        const updatedFiles = get().virtualFiles.map((file) =>
-            file.path === path
-                ? { ...file, content, updatedAt: Date.now() }
-                : file,
-        );
-        set({ virtualFiles: updatedFiles });
-        setStorageItemDebounced("cp_virtual_files", updatedFiles);
-        get().syncLibrary();
+        ensureApiClient();
+        const parsed = parseChordPro(content);
+        const updated = await songsApi.updateSong(existing.id, {
+            updatedAt: existing.updatedAt || new Date().toISOString(),
+            title: parsed.metadata.title || existing.title,
+            content,
+            folderId: existing.folderId ?? null,
+            tags: existing.tags || [],
+        });
+        commitSongLocally(set, get, updated, path);
     },
 
     deleteVirtualFile: async (path) => {
-        const { serverUrl, songs } = get();
-
-        if (serverUrl.trim() !== "") {
-            const existing = songs.find((s) => s.id === path);
-            if (existing) {
-                ensureApiClient(serverUrl);
-                await songsApi.deleteSong(existing.id);
-            }
+        const { songs } = get();
+        const existing = songs.find((s) => s.id === path);
+        if (existing) {
+            ensureApiClient();
+            await songsApi.deleteSong(existing.id);
         }
 
         const updatedFiles = get().virtualFiles.filter(
@@ -571,21 +522,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         syncInProgress = true;
         set({ syncStatus: "syncing" });
         const {
-            serverUrl,
             songs: currentSongs,
             folders: currentFolders,
             services: currentServices,
         } = get();
 
-        if (!serverUrl || serverUrl.trim() === "") {
-            const now = Date.now();
-            set({ syncStatus: "success", lastSyncTime: now });
-            setStorageItemImmediate("cp_last_sync_time", now);
-            syncInProgress = false;
-            return;
-        }
-
-        ensureApiClient(serverUrl);
+        ensureApiClient();
 
         try {
             let status: SyncStatusResponse | null = null;
@@ -732,61 +674,43 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     updateService: async (id, name, date, notes) => {
-        const { serverUrl, services } = get();
+        const { services } = get();
         const current = services.find((svc) => svc.id === id);
         if (!current) return;
 
-        if (serverUrl.trim() !== "") {
-            try {
-                ensureApiClient(serverUrl);
-                const updated = await servicesApi.updateService(id, {
-                    updatedAt: current.updatedAt || new Date().toISOString(),
-                    name,
-                    date,
-                    notes,
-                });
-                commitServiceLocally(set, get, updated);
-            } catch (e) {
-                console.error("Failed to update service", e);
-            }
-            return;
+        try {
+            ensureApiClient();
+            const updated = await servicesApi.updateService(id, {
+                updatedAt: current.updatedAt || new Date().toISOString(),
+                name,
+                date,
+                notes,
+            });
+            commitServiceLocally(set, get, updated);
+        } catch (e) {
+            console.error("Failed to update service", e);
         }
-
-        const updatedServices = services.map((svc) =>
-            svc.id === id ? { ...svc, name, date, notes } : svc,
-        );
-        set({ services: updatedServices });
-        setStorageItemImmediate("cp_services", updatedServices);
     },
 
     updateServiceElements: async (serviceId, elements) => {
-        const { serverUrl, services } = get();
+        const { services } = get();
         const current = services.find((svc) => svc.id === serviceId);
         if (!current) return;
 
-        if (serverUrl.trim() !== "") {
-            try {
-                ensureApiClient(serverUrl);
-                const updated = await servicesApi.updateServiceElements(
-                    serviceId,
-                    {
-                        updatedAt:
-                            current.updatedAt || new Date().toISOString(),
-                        elements,
-                    },
-                );
-                commitServiceLocally(set, get, updated);
-            } catch (e) {
-                console.error("Failed to update service elements", e);
-            }
-            return;
+        try {
+            ensureApiClient();
+            const updated = await servicesApi.updateServiceElements(
+                serviceId,
+                {
+                    updatedAt:
+                        current.updatedAt || new Date().toISOString(),
+                    elements,
+                },
+            );
+            commitServiceLocally(set, get, updated);
+        } catch (e) {
+            console.error("Failed to update service elements", e);
         }
-
-        const updatedServices = services.map((svc) =>
-            svc.id === serviceId ? { ...svc, elements } : svc,
-        );
-        set({ services: updatedServices });
-        setStorageItemImmediate("cp_services", updatedServices);
     },
 
     resetApp: async () => {

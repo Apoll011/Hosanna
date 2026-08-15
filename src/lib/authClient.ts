@@ -5,48 +5,30 @@ import {
 } from "better-auth/client/plugins";
 import { ac, roles } from "./permissions";
 
-export const getAuthBaseUrl = (): string => {
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
-        return envUrl.trim().replace(/\/api\/?$/, "");
-    }
-
-    return typeof window !== "undefined"
-        ? window.location.origin
-        : "http://localhost:3000";
-};
-
-export const createHosannaAuthClient = (customBaseURL?: string) => {
-    const baseURL = (customBaseURL || getAuthBaseUrl()).replace(
-        /\/api\/?$/,
-        "",
+export const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)
+    ?.trim()
+    .replace(/\/api\/?$/, "") || (
+        typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"
     );
-    return createAuthClient({
-        baseURL,
-        fetchOptions: {
-            credentials: "include",
-        },
-        plugins: [
-            twoFactorClient({
-                twoFactorPage: "/two-factor",
-            }),
-            organizationClient({
-                ac,
-                roles,
-                teams: {
-                    enabled: true,
-                },
-            }),
-        ],
-    });
-};
 
-export let authClient = createHosannaAuthClient();
-
-export const reconfigureAuthClient = (newBaseUrl?: string) => {
-    authClient = createHosannaAuthClient(newBaseUrl);
-    return authClient;
-};
+export const authClient = createAuthClient({
+    baseURL: API_BASE_URL,
+    fetchOptions: {
+        credentials: "include",
+    },
+    plugins: [
+        twoFactorClient({
+            twoFactorPage: "/two-factor",
+        }),
+        organizationClient({
+            ac,
+            roles,
+            teams: {
+                enabled: true,
+            },
+        }),
+    ],
+});
 
 export type Session = typeof authClient.$Infer.Session;
 export type User = typeof authClient.$Infer.Session.user;

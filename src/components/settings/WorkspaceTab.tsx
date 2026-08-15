@@ -5,13 +5,11 @@ import {
     HardDrive,
     RefreshCcw,
     RotateCcw,
-    Save,
-    Server,
     Users,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { authClient, reconfigureAuthClient } from "../../lib/authClient";
+import { authClient } from "../../lib/authClient";
 import { useAppStore } from "../../store/appStore";
 
 interface WorkspaceTabProps {
@@ -28,18 +26,15 @@ export const WorkspaceTab: React.FC<WorkspaceTabProps> = ({
         setActiveOrganization,
         refetch: refetchAuth,
     } = useAuth();
-    const serverUrl = useAppStore((state) => state.serverUrl);
-    const setServerUrl = useAppStore((state) => state.setServerUrl);
     const syncLibrary = useAppStore((state) => state.syncLibrary);
     const syncStatus = useAppStore((state) => state.syncStatus);
     const lastSyncTime = useAppStore((state) => state.lastSyncTime);
     const songs = useAppStore((state) => state.songs);
     const services = useAppStore((state) => state.services);
 
-    const [urlInput, setUrlInput] = useState(serverUrl);
     const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
 
-    const { data: orgList, refetch: refetchOrgs } = useQuery({
+    const { data: orgList } = useQuery({
         queryKey: ["userOrganizations"],
         queryFn: async () => {
             try {
@@ -58,15 +53,6 @@ export const WorkspaceTab: React.FC<WorkspaceTabProps> = ({
         type: "success" | "error" | "info" = "info",
     ) => {
         onShowToast?.(message, type);
-    };
-
-    const handleSaveUrl = () => {
-        const clean = urlInput.trim().replace(/\/api\/?$/, "");
-        setServerUrl(clean);
-        reconfigureAuthClient(clean);
-        refetchAuth();
-        refetchOrgs();
-        showToast("URL do servidor atualizado com sucesso!", "success");
     };
 
     const handleSwitchOrg = async (slug: string) => {
@@ -216,37 +202,6 @@ export const WorkspaceTab: React.FC<WorkspaceTabProps> = ({
                         </span>
                     </div>
                 )}
-            </div>
-
-            {/* Server URL Configuration */}
-            <div className="bg-m3-card dark:bg-m3-dark-card border border-m3-border/40 dark:border-m3-dark-border/40 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-                <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-m3-text dark:text-m3-dark-text flex items-center gap-1.5">
-                        <Server className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-                        Endereço do Servidor
-                    </h3>
-                    <p className="text-[11px] text-m3-secondary dark:text-m3-dark-secondary mt-0.5">
-                        URL base onde a API do Hosanna e Better Auth estão
-                        alojadas.
-                    </p>
-                </div>
-
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
-                        placeholder="https://api.hosanna.exemplo.com"
-                        className="flex-1 px-3 py-2 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-m3-primary text-m3-text dark:text-m3-dark-text"
-                    />
-                    <button
-                        onClick={handleSaveUrl}
-                        className="px-4 py-2 bg-m3-primary hover:opacity-90 text-white text-xs font-black rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
-                    >
-                        <Save className="w-3.5 h-3.5" />
-                        Guardar
-                    </button>
-                </div>
             </div>
 
             {/* Database Synchronization Card */}
