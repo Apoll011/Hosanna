@@ -176,27 +176,12 @@ const commitServiceLocally = (set: SetFn, get: GetFn, apiService: Service) => {
     setStorageItemImmediate("cp_services", services);
 };
 
-const initialServerUrl = getStorageItem<string>(
+const initialServerUrl = await getStorageItem<string>(
     "cp_server_url",
     import.meta.env.VITE_API_URL || "",
 );
 ensureApiClient(initialServerUrl);
 
-// This is keep for backwards compatibility
-const initialRawSongs = getStorageItem<
-    (Song & {
-        remoteId: string;
-        remoteUpdatedAt: string;
-        parsedUpdatedAt: string;
-    })[]
->("cp_songs_cache", []);
-const initialSongs: Song[] = initialRawSongs.map((s) => {
-    const { remoteId, ...rest } = s;
-    if (remoteId && s.id !== remoteId) {
-        return { ...rest, id: remoteId };
-    }
-    return rest as Song;
-});
 try {
     localStorage.removeItem("cp_song_remote_ids");
 } catch {}
@@ -254,15 +239,24 @@ export const useAppStore = create<AppState>((set, get) => ({
                 twoColumnLayout,
                 lastSyncTime,
             ] = await Promise.all([
-                getStorageItem<VirtualFile[]>("cp_virtual_files", DEMO_VIRTUAL_FILES),
-                getStorageItem<string>("cp_source_folder", "/Armazenamento/Canticos_Igreja"),
+                getStorageItem<VirtualFile[]>(
+                    "cp_virtual_files",
+                    DEMO_VIRTUAL_FILES,
+                ),
+                getStorageItem<string>(
+                    "cp_source_folder",
+                    "/Armazenamento/Canticos_Igreja",
+                ),
                 getStorageItem<Song[]>("cp_songs_cache", []),
                 getStorageItem<Service[]>("cp_services", INITIAL_SERVICES),
                 getStorageItem<Folder[]>("cp_folders", []),
                 getStorageItem<string[]>("cp_favorites", []),
                 getStorageItem<string[]>("cp_recently_played", []),
                 getStorageItem<ThemeType>("cp_theme", "light"),
-                getStorageItem<string>("cp_server_url", import.meta.env.VITE_API_URL || ""),
+                getStorageItem<string>(
+                    "cp_server_url",
+                    import.meta.env.VITE_API_URL || "",
+                ),
                 getStorageItem<number>("cp_font_size", 16),
                 getStorageItem<boolean>("cp_show_chords", true),
                 getStorageItem<boolean>("cp_show_diagrams", true),
