@@ -5,6 +5,7 @@ import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
+import android.webkit.CookieManager;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -12,6 +13,13 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         
         WebView.setWebContentsDebuggingEnabled(true);
+
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(
+            this.bridge.getWebView(),
+            true
+        );
 
         this.bridge.getWebView().setWebChromeClient(new WebChromeClient() {
             @Override
