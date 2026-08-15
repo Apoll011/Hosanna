@@ -590,10 +590,9 @@ export const useAppStore = create<AppState>((set, get) => ({
                 );
             }
 
-            const lastSyncTimestamps = getStorageItem<Record<string, string>>(
-                "cp_last_sync_timestamps",
-                {},
-            );
+            const lastSyncTimestamps = await getStorageItem<
+                Record<string, string>
+            >("cp_last_sync_timestamps", {});
 
             const force = options?.force === true;
             const songsChanged =
