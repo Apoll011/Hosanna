@@ -8,6 +8,7 @@ import {
   Music,
   RefreshCw,
   Search,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import FirstTimeSetup from "./components/FirstTimeSetup";
@@ -48,6 +49,8 @@ function AppContent() {
   const syncLibrary = useAppStore((state) => state.syncLibrary);
   const syncStatus = useAppStore((state) => state.syncStatus);
   const hasSkippedSetup = useAppStore((state) => state.hasSkippedSetup);
+  const rehydrateStore = useAppStore((state) => state.rehydrateStore);
+  const isHydrated = useAppStore((state) => state.isHydrated);
 
   const { isAuthenticated } = useAuth();
 
@@ -77,10 +80,14 @@ function AppContent() {
   const [showDrawer, setShowDrawer] = useState(false);
 
   useEffect(() => {
-    if (songsLength === 0) {
+    rehydrateStore();
+  }, [rehydrateStore]);
+
+  useEffect(() => {
+    if (isHydrated && songsLength === 0) {
       syncLibrary();
     }
-  }, [songsLength, syncLibrary]);
+  }, [isHydrated, songsLength, syncLibrary]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -235,8 +242,17 @@ function AppContent() {
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70"
+                  className="w-full pl-10 pr-9 py-2.5 bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-border/30 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-m3-primary/20 focus:border-m3-primary text-m3-text dark:text-m3-dark-text placeholder-m3-secondary/70 transition-colors"
                 />
+                {searchQuery !== "" && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-m3-secondary hover:text-m3-text dark:hover:text-m3-dark-text transition-colors"
+                    title="Limpar pesquisa"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-between">
