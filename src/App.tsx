@@ -53,7 +53,7 @@ function AppContent() {
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
 
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
     const activeSongId = useAppStore((state) => state.activeSongId);
     const setActiveSongId = useAppStore((state) => state.setActiveSongId);
@@ -267,7 +267,7 @@ function AppContent() {
         );
     }
 
-    if (!hasSkippedSetup && !isAuthenticated) {
+    if (!hasSkippedSetup && !isAuthenticated && !isAuthLoading) {
         return <FirstTimeSetup />;
     }
 

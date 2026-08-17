@@ -233,6 +233,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 instrument,
                 twoColumnLayout,
                 lastSyncTime,
+                hasSkippedSetup,
             ] = await Promise.all([
                 getStorageItem<VirtualFile[]>(
                     "cp_virtual_files",
@@ -257,6 +258,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 getStorageItem<"guitar" | "piano">("cp_instrument", "guitar"),
                 getStorageItem<boolean>("cp_two_column_layout", false),
                 getStorageItem<number | null>("cp_last_sync_time", null),
+                getStorageItem<boolean>("cp_has_skipped_setup", false),
             ]);
 
             set({
@@ -277,6 +279,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 instrument,
                 twoColumnLayout,
                 lastSyncTime,
+                hasSkippedSetup,
                 isHydrated: true,
             });
         } catch (err) {
@@ -332,7 +335,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     setIsPresenting: (isPresenting) => set({ isPresenting }),
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     setSortBy: (sortBy) => set({ sortBy }),
-    setHasSkippedSetup: (hasSkippedSetup) => set({ hasSkippedSetup }),
+    setHasSkippedSetup: (hasSkippedSetup) => {
+        set({ hasSkippedSetup });
+        setStorageItemImmediate("cp_has_skipped_setup", hasSkippedSetup);
+    },
 
     toggleFavoriteSong: (id) => {
         const favoriteSongIds = get().favoriteSongIds;
