@@ -142,9 +142,15 @@ const getCachedAuth = (): CachedAuth | null => {
     }
 };
 
-const setCachedAuth = (user: SessionUser, organization: Organization | null) => {
+const setCachedAuth = (
+    user: SessionUser,
+    organization: Organization | null,
+) => {
     try {
-        localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user, organization }));
+        localStorage.setItem(
+            AUTH_CACHE_KEY,
+            JSON.stringify({ user, organization }),
+        );
     } catch {}
 };
 
@@ -159,7 +165,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     const cached = getCachedAuth();
     const [user, setUser] = useState<SessionUser | null>(cached?.user ?? null);
-    const [organization, setOrganization] = useState<Organization | null>(cached?.organization ?? null);
+    const [organization, setOrganization] = useState<Organization | null>(
+        cached?.organization ?? null,
+    );
     // If we have a cached session, skip the loading state so the app renders immediately
     const [isLoading, setIsLoading] = useState(!cached);
 

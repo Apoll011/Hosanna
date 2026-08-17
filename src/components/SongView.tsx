@@ -427,7 +427,14 @@ export default function SongView({
             onTouchEnd={handleTouchEnd}
         >
             {/* Top Navbar */}
-            <div className="px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.5rem', minHeight: '4rem' }}>
+            <div
+                className="px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative"
+                style={{
+                    paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))",
+                    paddingBottom: "0.5rem",
+                    minHeight: "4rem",
+                }}
+            >
                 {customLeftButton ? (
                     customLeftButton
                 ) : (

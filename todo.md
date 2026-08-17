@@ -5,3 +5,4 @@ Key Issues Found:
 4. Bug: AuthContext.tsx - fetchSession called from useEffect but no guard against multiple
    concurrent calls
 5. Bug: SongEditor.tsx - no unsaved changes guard when closing
+   j
