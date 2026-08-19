@@ -1,19 +1,13 @@
 import {
     configureApiClient,
-    foldersApi,
     parseChordPro,
     parseSong,
-    servicesApi,
     Song as SharedSong,
-    songsApi,
-    syncApi,
-    SyncStatusResponse,
 } from "@hosanna/shared";
 import { create } from "zustand";
 import {
     clearStorage,
     getStorageItem,
-    setStorageItemDebounced,
     setStorageItemImmediate,
 } from "../lib/storage";
 import { API_BASE_URL } from "../lib/authClient";
@@ -25,6 +19,7 @@ import {
     ThemeType,
     VirtualFile,
 } from "../types";
+import { getDatabase, setupReplication, ReplicationManager, SongDocType } from "../db";
 
 export interface AppState {
     virtualFiles: VirtualFile[];
@@ -67,12 +62,13 @@ export interface AppState {
     searchQuery: string;
     sortBy: "title" | "number" | "folder";
 
-    syncStatus: "idle" | "syncing" | "success" | "error";
+    syncStatus: "idle" | "syncing" | "success" | "error" | "offline";
     lastSyncTime: number | null;
     hasSkippedSetup: boolean;
     isHydrated: boolean;
 
     rehydrateStore: () => Promise<void>;
+    initRxDbSubscriptions: () => Promise<() => void>;
     setTheme: (theme: ThemeType) => void;
     setFontSize: (size: number) => void;
     setShowChords: (show: boolean) => void;
@@ -100,9 +96,9 @@ export interface AppState {
         folder: string,
         fileName: string,
         content: string,
-    ) => void;
-    updateVirtualFile: (path: string, content: string) => void;
-    deleteVirtualFile: (path: string) => void;
+    ) => Promise<void>;
+    updateVirtualFile: (path: string, content: string) => Promise<void>;
+    deleteVirtualFile: (path: string) => Promise<void>;
 
     syncLibrary: (options?: { force?: boolean }) => Promise<void>;
     setHasSkippedSetup: (skipped: boolean) => void;
@@ -112,76 +108,21 @@ export interface AppState {
         name: string,
         date: string,
         notes?: string,
-    ) => void;
+    ) => Promise<void>;
     updateServiceElements: (
         serviceId: string,
         elements: ServiceElement[],
-    ) => void;
-    resetApp: () => void;
+    ) => Promise<void>;
+    resetApp: () => Promise<void>;
 }
 
-const DEMO_VIRTUAL_FILES: VirtualFile[] = [];
-const INITIAL_SERVICES: Service[] = [];
-
-// Concurrency guard — prevents parallel sync races
-let syncInProgress = false;
-
-type SetFn = (
-    partial: Partial<AppState> | ((s: AppState) => Partial<AppState>),
-) => void;
-type GetFn = () => AppState;
+let replicationManager: ReplicationManager | null = null;
 
 function ensureApiClient() {
     configureApiClient(API_BASE_URL.trim() + "/api");
 }
 
-const commitSongLocally = (
-    set: SetFn,
-    get: GetFn,
-    apiSong: SharedSong,
-    previousLocalId?: string,
-) => {
-    const folders = get().folders;
-    const localSong = parseSong(apiSong, folders);
-    const songs = get().songs;
-    const virtualFiles = get().virtualFiles;
-
-    const nextSongs = [
-        ...songs.filter(
-            (s) => s.id !== localSong.id && s.id !== previousLocalId,
-        ),
-        localSong,
-    ];
-    const nextFiles = [
-        ...virtualFiles.filter(
-            (f) => f.path !== localSong.id && f.path !== previousLocalId,
-        ),
-        {
-            path: localSong.id,
-            content: localSong.content,
-            updatedAt: Date.now(),
-        },
-    ];
-
-    set({ songs: nextSongs, virtualFiles: nextFiles });
-    setStorageItemDebounced("cp_songs_cache", nextSongs);
-    setStorageItemDebounced("cp_virtual_files", nextFiles);
-};
-
-const commitServiceLocally = (set: SetFn, get: GetFn, apiService: Service) => {
-    const services = get().services.map((svc) =>
-        svc.id === apiService.id ? apiService : svc,
-    );
-    set({ services });
-    setStorageItemImmediate("cp_services", services);
-};
-
-// Configure API client from env on startup
 ensureApiClient();
-
-try {
-    localStorage.removeItem("cp_song_remote_ids");
-} catch {}
 
 export const useAppStore = create<AppState>((set, get) => ({
     virtualFiles: [],
@@ -216,11 +157,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     rehydrateStore: async () => {
         try {
             const [
-                virtualFiles,
-                sourceFolderPath,
-                songsCache,
-                services,
-                folders,
                 favoriteSongIds,
                 recentlyPlayedSongIds,
                 theme,
@@ -235,25 +171,14 @@ export const useAppStore = create<AppState>((set, get) => ({
                 lastSyncTime,
                 hasSkippedSetup,
             ] = await Promise.all([
-                getStorageItem<VirtualFile[]>(
-                    "cp_virtual_files",
-                    DEMO_VIRTUAL_FILES,
-                ),
-                getStorageItem<string>(
-                    "cp_source_folder",
-                    "/Armazenamento/Canticos_Igreja",
-                ),
-                getStorageItem<Song[]>("cp_songs_cache", []),
-                getStorageItem<Service[]>("cp_services", INITIAL_SERVICES),
-                getStorageItem<Folder[]>("cp_folders", []),
                 getStorageItem<string[]>("cp_favorites", []),
                 getStorageItem<string[]>("cp_recently_played", []),
                 getStorageItem<ThemeType>("cp_theme", "light"),
                 getStorageItem<number>("cp_font_size", 16),
                 getStorageItem<boolean>("cp_show_chords", true),
                 getStorageItem<boolean>("cp_show_diagrams", true),
-                getStorageItem<boolean>("cp_keep_awake", true),
-                getStorageItem<boolean>("cp_slow_down_repeat", true),
+                getStorageItem<boolean>("cp_keep_screen_awake", true),
+                getStorageItem<boolean>("cp_slow_down_on_repeat", true),
                 getStorageItem<boolean>("cp_musician_mode", false),
                 getStorageItem<"guitar" | "piano">("cp_instrument", "guitar"),
                 getStorageItem<boolean>("cp_two_column_layout", false),
@@ -262,11 +187,6 @@ export const useAppStore = create<AppState>((set, get) => ({
             ]);
 
             set({
-                virtualFiles,
-                sourceFolderPath,
-                songs: songsCache,
-                services,
-                folders,
                 favoriteSongIds,
                 recentlyPlayedSongIds,
                 theme,
@@ -282,10 +202,85 @@ export const useAppStore = create<AppState>((set, get) => ({
                 hasSkippedSetup,
                 isHydrated: true,
             });
-        } catch (err) {
-            console.error("Failed to rehydrate store from IndexedDB:", err);
+        } catch (error) {
+            console.error("Failed to rehydrate store:", error);
             set({ isHydrated: true });
         }
+    },
+
+    initRxDbSubscriptions: async () => {
+        ensureApiClient();
+        const db = await getDatabase();
+        const repl = setupReplication(db);
+        replicationManager = repl;
+
+        repl.start();
+
+        const statusSub = repl.status$.subscribe((st) => {
+            if (st === "syncing") {
+                set({ syncStatus: "syncing" });
+            } else if (st === "synced") {
+                const now = Date.now();
+                set({ syncStatus: "success", lastSyncTime: now });
+                setStorageItemImmediate("cp_last_sync_time", now);
+            } else if (st === "offline") {
+                set({ syncStatus: "offline" });
+            } else if (st === "error") {
+                set({ syncStatus: "error" });
+            }
+        });
+
+        // Query folders
+        const foldersSub = db.folders
+            .find({ selector: { _deleted: { $ne: true } } })
+            .$.subscribe((docs) => {
+                const rawFolders = docs.map((d) => d.toJSON() as Folder);
+                set({ folders: rawFolders });
+            });
+
+        // Query songs
+        const songsSub = db.songs
+            .find({ selector: { _deleted: { $ne: true } } })
+            .$.subscribe((docs) => {
+                const folders = get().folders;
+                const rawSongs = docs.map((d) => d.toJSON() as SharedSong);
+                const parsedSongs = rawSongs.map((s) => parseSong(s, folders));
+                const virtualFiles = parsedSongs.map((s) => ({
+                    path: s.id,
+                    content: s.content,
+                    updatedAt: Date.now(),
+                }));
+
+                const validSongIds = new Set(parsedSongs.map((s) => s.id));
+                const updatedFavorites = get().favoriteSongIds.filter((id) =>
+                    validSongIds.has(id),
+                );
+                const updatedRecent = get().recentlyPlayedSongIds.filter((id) =>
+                    validSongIds.has(id),
+                );
+
+                set({
+                    songs: parsedSongs,
+                    virtualFiles,
+                    favoriteSongIds: updatedFavorites,
+                    recentlyPlayedSongIds: updatedRecent,
+                });
+            });
+
+        // Query services
+        const servicesSub = db.services
+            .find({ selector: { _deleted: { $ne: true } } })
+            .$.subscribe((docs) => {
+                const rawServices = docs.map((d) => d.toJSON() as Service);
+                set({ services: rawServices });
+            });
+
+        return () => {
+            statusSub.unsubscribe();
+            foldersSub.unsubscribe();
+            songsSub.unsubscribe();
+            servicesSub.unsubscribe();
+        };
     },
 
     setTheme: (theme) => {
@@ -306,11 +301,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
     setKeepScreenAwake: (keepScreenAwake) => {
         set({ keepScreenAwake });
-        setStorageItemImmediate("cp_keep_awake", keepScreenAwake);
+        setStorageItemImmediate("cp_keep_screen_awake", keepScreenAwake);
     },
     setSlowDownOnRepeat: (slowDownOnRepeat) => {
         set({ slowDownOnRepeat });
-        setStorageItemImmediate("cp_slow_down_repeat", slowDownOnRepeat);
+        setStorageItemImmediate("cp_slow_down_on_repeat", slowDownOnRepeat);
     },
     setMusicianMode: (musicianMode) => {
         set({ musicianMode });
@@ -328,24 +323,37 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ sourceFolderPath });
         setStorageItemImmediate("cp_source_folder", sourceFolderPath);
     },
-    setSelectedFolder: (selectedFolder) => set({ selectedFolder }),
-    setActiveSongId: (activeSongId) => set({ activeSongId }),
-    setActiveServiceId: (activeServiceId) => set({ activeServiceId }),
-    setIsEditing: (isEditing) => set({ isEditing }),
-    setIsPresenting: (isPresenting) => set({ isPresenting }),
-    setSearchQuery: (searchQuery) => set({ searchQuery }),
-    setSortBy: (sortBy) => set({ sortBy }),
+    setSelectedFolder: (selectedFolder) => {
+        set({ selectedFolder });
+    },
+    setActiveSongId: (activeSongId) => {
+        set({ activeSongId });
+    },
+    setActiveServiceId: (activeServiceId) => {
+        set({ activeServiceId });
+    },
+    setIsEditing: (isEditing) => {
+        set({ isEditing });
+    },
+    setIsPresenting: (isPresenting) => {
+        set({ isPresenting });
+    },
+    setSearchQuery: (searchQuery) => {
+        set({ searchQuery });
+    },
+    setSortBy: (sortBy) => {
+        set({ sortBy });
+    },
     setHasSkippedSetup: (hasSkippedSetup) => {
         set({ hasSkippedSetup });
         setStorageItemImmediate("cp_has_skipped_setup", hasSkippedSetup);
     },
 
     toggleFavoriteSong: (id) => {
-        const favoriteSongIds = get().favoriteSongIds;
-        const isFav = favoriteSongIds.includes(id);
-        const updated = isFav
-            ? favoriteSongIds.filter((fId) => fId !== id)
-            : [...favoriteSongIds, id];
+        const current = get().favoriteSongIds;
+        const updated = current.includes(id)
+            ? current.filter((x) => x !== id)
+            : [...current, id];
         set({ favoriteSongIds: updated });
         setStorageItemImmediate("cp_favorites", updated);
     },
@@ -421,7 +429,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                         const keyMatch =
                             song.metadata?.key?.toLowerCase().includes(q) ||
                             false;
-                        // Only do expensive lyrics scan for queries > 2 chars
                         const lyricsMatch =
                             q.length > 2
                                 ? song.content.toLowerCase().includes(q)
@@ -467,251 +474,98 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
 
         const parsed = parseChordPro(content);
+        const db = await getDatabase();
+        const now = new Date().toISOString();
+        const id = crypto.randomUUID();
 
-        ensureApiClient();
-        const created = await songsApi.createSong({
-            title:
-                parsed.metadata.title ||
-                cleanFileName.replace(/\.chopro$/i, ""),
-            artist: parsed.metadata.artist,
+        const newDoc: SongDocType = {
+            id,
+            title: parsed.metadata.title || cleanFileName.replace(/\.chopro$/i, ""),
+            artist: parsed.metadata.artist || "",
             content,
             folderId: matchedFolder?.id ?? null,
             path: fullPath,
-        });
-        commitSongLocally(set, get, created);
+            tags: [],
+            song_number: parsed.metadata.songNumber ? parseInt(parsed.metadata.songNumber) || null : null,
+            createdAt: now,
+            updatedAt: now,
+            _deleted: false,
+        };
+
+        await db.songs.insert(newDoc);
     },
 
     updateVirtualFile: async (path, content) => {
         const { songs } = get();
         const existing = songs.find((s) => s.id === path);
         if (!existing) {
-            throw new Error(
-                "Não foi possível encontrar este cântico no servidor. Sincronize e tente novamente.",
-            );
+            throw new Error("Não foi possível encontrar este cântico.");
         }
-        ensureApiClient();
         const parsed = parseChordPro(content);
-        const updated = await songsApi.updateSong(existing.id, {
-            updatedAt: existing.updatedAt || new Date().toISOString(),
-            title: parsed.metadata.title || existing.title,
-            content,
-            folderId: existing.folderId ?? null,
-            tags: existing.tags || [],
-        });
-        commitSongLocally(set, get, updated, path);
+        const db = await getDatabase();
+        const doc = await db.songs.findOne(existing.id).exec();
+        const now = new Date().toISOString();
+
+        if (doc) {
+            await doc.patch({
+                title: parsed.metadata.title || existing.title,
+                artist: parsed.metadata.artist || existing.artist || "",
+                content,
+                updatedAt: now,
+                _deleted: false,
+            });
+        }
     },
 
     deleteVirtualFile: async (path) => {
         const { songs } = get();
         const existing = songs.find((s) => s.id === path);
         if (existing) {
-            ensureApiClient();
-            await songsApi.deleteSong(existing.id);
+            const db = await getDatabase();
+            const doc = await db.songs.findOne(existing.id).exec();
+            if (doc) {
+                await doc.patch({
+                    _deleted: true,
+                    updatedAt: new Date().toISOString(),
+                });
+            }
         }
-
-        const updatedFiles = get().virtualFiles.filter(
-            (file) => file.path !== path,
-        );
-        const updatedSongs = get().songs.filter((s) => s.id !== path);
-
-        set({ virtualFiles: updatedFiles, songs: updatedSongs });
-        setStorageItemDebounced("cp_virtual_files", updatedFiles);
-        setStorageItemDebounced("cp_songs_cache", updatedSongs);
 
         if (get().activeSongId === path)
             set({ activeSongId: null, isEditing: false });
     },
 
-    syncLibrary: async (options) => {
-        // Guard: prevent concurrent sync calls from racing each other
-        if (syncInProgress) return;
-        syncInProgress = true;
-        set({ syncStatus: "syncing" });
-        const {
-            songs: currentSongs,
-            folders: currentFolders,
-            services: currentServices,
-        } = get();
-
-        ensureApiClient();
-
-        try {
-            let status: SyncStatusResponse | null = null;
-            try {
-                status = await syncApi.getStatus();
-            } catch (err) {
-                console.warn(
-                    "Could not fetch server sync status, falling back to full sync:",
-                    err,
-                );
-            }
-
-            const lastSyncTimestamps = await getStorageItem<
-                Record<string, string>
-            >("cp_last_sync_timestamps", {});
-
-            const force = options?.force === true;
-            const songsChanged =
-                force ||
-                !status ||
-                !lastSyncTimestamps.songs ||
-                lastSyncTimestamps.songs !== status.timestamps.songs ||
-                currentSongs.length === 0;
-
-            const foldersChanged =
-                force ||
-                !status ||
-                !lastSyncTimestamps.folders ||
-                lastSyncTimestamps.folders !== status.timestamps.folders ||
-                currentFolders.length === 0;
-
-            const servicesChanged =
-                force ||
-                !status ||
-                !lastSyncTimestamps.services ||
-                lastSyncTimestamps.services !== status.timestamps.services ||
-                currentServices.length === 0;
-
-            if (!songsChanged && !foldersChanged && !servicesChanged) {
-                const now = Date.now();
-                set({ syncStatus: "success", lastSyncTime: now });
-                setStorageItemImmediate("cp_last_sync_time", now);
-                syncInProgress = false;
-                return;
-            }
-
-            let folders: Folder[] = currentFolders;
-            if (foldersChanged) {
-                folders = await foldersApi.getFlatFolders();
-            }
-
-            let services: Service[] = currentServices;
-            if (servicesChanged) {
-                services = await servicesApi.getServices();
-            }
-
-            let finalSongs: Song[] = currentSongs;
-            let virtualFiles: VirtualFile[] = get().virtualFiles;
-
-            if (songsChanged) {
-                const firstPage = await songsApi.getParsedSongs(
-                    {
-                        page: 1,
-                        limit: 200,
-                        sortBy: "title",
-                        sortOrder: "asc",
-                    },
-                    folders,
-                );
-
-                let apiSongs = [...firstPage.songs];
-                if (firstPage.totalPages > 1) {
-                    const remainingPages = await Promise.all(
-                        Array.from(
-                            { length: firstPage.totalPages - 1 },
-                            (_, i) =>
-                                songsApi.getParsedSongs(
-                                    {
-                                        page: i + 2,
-                                        limit: 200,
-                                        sortBy: "title",
-                                        sortOrder: "asc",
-                                    },
-                                    folders,
-                                ),
-                        ),
-                    );
-                    remainingPages.forEach((page) =>
-                        apiSongs.push(...page.songs),
-                    );
-                }
-
-                finalSongs = apiSongs;
-                virtualFiles = finalSongs.map((s) => ({
-                    path: s.id,
-                    content: s.content,
-                    updatedAt: Date.now(),
-                }));
-            }
-
-            const finalSongIds = new Set(finalSongs.map((s) => s.id));
-            const updatedFavorites = get().favoriteSongIds.filter((id) =>
-                finalSongIds.has(id),
-            );
-            const updatedRecent = get().recentlyPlayedSongIds.filter((id) =>
-                finalSongIds.has(id),
-            );
-
-            const now = Date.now();
-            const newTimestamps = status?.timestamps
-                ? {
-                      songs: status.timestamps.songs,
-                      folders: status.timestamps.folders,
-                      services: status.timestamps.services,
-                  }
-                : lastSyncTimestamps;
-
-            set({
-                folders,
-                services,
-                virtualFiles,
-                songs: finalSongs,
-                favoriteSongIds: updatedFavorites,
-                recentlyPlayedSongIds: updatedRecent,
-                syncStatus: "success",
-                lastSyncTime: now,
-            });
-
-            setStorageItemImmediate("cp_folders", folders);
-            setStorageItemImmediate("cp_services", services);
-            setStorageItemDebounced("cp_virtual_files", virtualFiles);
-            setStorageItemDebounced("cp_songs_cache", finalSongs);
-            setStorageItemImmediate("cp_favorites", updatedFavorites);
-            setStorageItemImmediate("cp_recently_played", updatedRecent);
-            setStorageItemImmediate("cp_last_sync_time", now);
-            setStorageItemImmediate("cp_last_sync_timestamps", newTimestamps);
-            syncInProgress = false;
-        } catch (err) {
-            console.error("Erro na sincronização remota:", err);
-            syncInProgress = false;
-            set({ syncStatus: "error" });
-            throw err;
+    syncLibrary: async () => {
+        if (replicationManager) {
+            await replicationManager.replicateNow();
         }
     },
 
     updateService: async (id, name, date, notes) => {
-        const { services } = get();
-        const current = services.find((svc) => svc.id === id);
-        if (!current) return;
-
-        try {
-            ensureApiClient();
-            const updated = await servicesApi.updateService(id, {
-                updatedAt: current.updatedAt || new Date().toISOString(),
+        const db = await getDatabase();
+        const doc = await db.services.findOne(id).exec();
+        const now = new Date().toISOString();
+        if (doc) {
+            await doc.patch({
                 name,
                 date,
-                notes,
+                notes: notes ?? null,
+                updatedAt: now,
+                _deleted: false,
             });
-            commitServiceLocally(set, get, updated);
-        } catch (e) {
-            console.error("Failed to update service", e);
         }
     },
 
     updateServiceElements: async (serviceId, elements) => {
-        const { services } = get();
-        const current = services.find((svc) => svc.id === serviceId);
-        if (!current) return;
-
-        try {
-            ensureApiClient();
-            const updated = await servicesApi.updateServiceElements(serviceId, {
-                updatedAt: current.updatedAt || new Date().toISOString(),
+        const db = await getDatabase();
+        const doc = await db.services.findOne(serviceId).exec();
+        const now = new Date().toISOString();
+        if (doc) {
+            await doc.patch({
                 elements,
+                updatedAt: now,
+                _deleted: false,
             });
-            commitServiceLocally(set, get, updated);
-        } catch (e) {
-            console.error("Failed to update service elements", e);
         }
     },
 
