@@ -125,9 +125,9 @@ let replicationManager: ReplicationManager | null = null;
 
 function ensureApiClient() {
     configureApiClient(
-        API_BASE_URL.trim().endsWith("/")
+        (API_BASE_URL.trim().endsWith("/")
             ? API_BASE_URL.trim().slice(0, -1)
-            : API_BASE_URL.trim() + "/api",
+            : API_BASE_URL.trim()) + "/api",
     );
 }
 
