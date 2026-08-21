@@ -31,7 +31,10 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
 
     const status$ = new Subject<ReplicationSyncState>();
     let currentStatus: ReplicationSyncState = "synced";
-    let activeReplications: RxReplicationState<any, Checkpoint>[] = [];
+    let activeReplications: RxReplicationState<
+        { id: string; updatedAt: string; _deleted?: boolean },
+        Checkpoint
+    >[] = [];
     const activeStateMap = new Map<string, boolean>();
 
     const updateStatus = (status: ReplicationSyncState) => {
@@ -99,7 +102,7 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
                 batchSize: 100,
             },
             push: {
-                async handler(changeRows) {
+                async handler(changeRows): Promise<WithDeleted<T>[]> {
                     try {
                         if (!navigator.onLine) {
                             updateStatus("offline");
@@ -130,10 +133,11 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
                             }),
                         });
 
-                        if (Array.isArray(res)) {
-                            return res;
-                        }
-                        return res?.conflicts || [];
+                        const conflicts = Array.isArray(res) ? res : res?.conflicts || [];
+                        return conflicts.map((doc) => ({
+                            ...doc,
+                            _deleted: !!doc._deleted,
+                        })) as WithDeleted<T>[];
                     } catch (err) {
                         console.error(`Push error on ${collectionName}:`, err);
                         updateStatus(navigator.onLine ? "error" : "offline");
