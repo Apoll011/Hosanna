@@ -19,7 +19,12 @@ import {
     ThemeType,
     VirtualFile,
 } from "../types";
-import { getDatabase, setupReplication, ReplicationManager, SongDocType } from "../db";
+import {
+    getDatabase,
+    setupReplication,
+    ReplicationManager,
+    SongDocType,
+} from "../db";
 
 export interface AppState {
     virtualFiles: VirtualFile[];
@@ -480,13 +485,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         const newDoc: SongDocType = {
             id,
-            title: parsed.metadata.title || cleanFileName.replace(/\.chopro$/i, ""),
+            title:
+                parsed.metadata.title ||
+                cleanFileName.replace(/\.chopro$/i, ""),
             artist: parsed.metadata.artist || "",
             content,
             folderId: matchedFolder?.id ?? null,
             path: fullPath,
             tags: [],
-            song_number: parsed.metadata.songNumber ? parseInt(parsed.metadata.songNumber) || null : null,
+            song_number: parsed.metadata.songNumber
+                ? parseInt(parsed.metadata.songNumber) || null
+                : null,
             createdAt: now,
             updatedAt: now,
             _deleted: false,
