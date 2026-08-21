@@ -133,7 +133,9 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
                             }),
                         });
 
-                        const conflicts = Array.isArray(res) ? res : res?.conflicts || [];
+                        const conflicts = Array.isArray(res)
+                            ? res
+                            : res?.conflicts || [];
                         return conflicts.map((doc) => ({
                             ...doc,
                             _deleted: !!doc._deleted,
