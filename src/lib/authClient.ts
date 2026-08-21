@@ -13,10 +13,26 @@ export const API_BASE_URL =
         ? window.location.origin
         : "http://localhost:3000");
 
+const AUTH_TOKEN_KEY = "hosanna_access_token";
+
 export const authClient = createAuthClient({
     baseURL: API_BASE_URL,
     fetchOptions: {
         credentials: "include",
+        onRequest: (context) => {
+            if (typeof localStorage !== "undefined") {
+                const token = localStorage.getItem(AUTH_TOKEN_KEY);
+                if (token) {
+                    context.headers.set("Authorization", `Bearer ${token}`);
+                }
+            }
+        },
+        onResponse: (context) => {
+            const token = context.response.headers.get("set-auth-token");
+            if (token && typeof localStorage !== "undefined") {
+                localStorage.setItem(AUTH_TOKEN_KEY, token);
+            }
+        },
     },
     plugins: [
         twoFactorClient({
