@@ -1,11 +1,11 @@
+import { getApiClient } from "@hosanna/shared";
+import { RxCollection, WithDeleted } from "rxdb";
 import {
     replicateRxCollection,
     RxReplicationState,
 } from "rxdb/plugins/replication";
-import { HosanaDatabase } from "./database";
-import { getApiClient } from "@hosanna/shared";
 import { Subject } from "rxjs";
-import { WithDeleted } from "rxdb";
+import { HosanaDatabase } from "./database";
 
 export type ReplicationSyncState = "syncing" | "synced" | "offline" | "error";
 
@@ -45,7 +45,7 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
         T extends { id: string; updatedAt: string; _deleted?: boolean },
     >(
         collectionName: "songs" | "folders" | "services",
-        collection: any,
+        collection: RxCollection,
     ) => {
         const replicationState = replicateRxCollection<T, Checkpoint>({
             collection,
@@ -133,7 +133,7 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
                         if (Array.isArray(res)) {
                             return res;
                         }
-                        return (res as any)?.conflicts || [];
+                        return res?.conflicts || [];
                     } catch (err) {
                         console.error(`Push error on ${collectionName}:`, err);
                         updateStatus(navigator.onLine ? "error" : "offline");
