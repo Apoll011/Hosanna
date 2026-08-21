@@ -6,11 +6,17 @@ import {
 } from "@hosanna/shared";
 import { create } from "zustand";
 import {
+    getDatabase,
+    ReplicationManager,
+    setupReplication,
+    SongDocType,
+} from "../db";
+import { API_BASE_URL } from "../lib/authClient";
+import {
     clearStorage,
     getStorageItem,
     setStorageItemImmediate,
 } from "../lib/storage";
-import { API_BASE_URL } from "../lib/authClient";
 import {
     Folder,
     Service,
@@ -19,12 +25,6 @@ import {
     ThemeType,
     VirtualFile,
 } from "../types";
-import {
-    getDatabase,
-    setupReplication,
-    ReplicationManager,
-    SongDocType,
-} from "../db";
 
 export interface AppState {
     virtualFiles: VirtualFile[];
@@ -124,7 +124,11 @@ export interface AppState {
 let replicationManager: ReplicationManager | null = null;
 
 function ensureApiClient() {
-    configureApiClient(API_BASE_URL.trim() + "/api");
+    configureApiClient(
+        API_BASE_URL.trim().endsWith("/")
+            ? API_BASE_URL.trim().slice(0, -1)
+            : API_BASE_URL.trim() + "/api",
+    );
 }
 
 ensureApiClient();
