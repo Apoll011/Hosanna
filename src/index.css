@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @source "../node_modules/@hosanna/shared";
 
-@variant dark (html.dark &);
+@custom-variant dark (html.dark &);
 
 @theme {
     /* Sleek Interface M3 Theme Colors - Cyan/Blue */
@@ -64,7 +64,9 @@
         -moz-osx-font-smoothing: grayscale;
     }
 
-    input, textarea, [contenteditable="true"] {
+    input,
+    textarea,
+    [contenteditable="true"] {
         user-select: text;
     }
 }
@@ -123,4 +125,3 @@
         padding-top: env(safe-area-inset-top);
     }
 }
-
