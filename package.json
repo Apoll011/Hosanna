@@ -1,7 +1,7 @@
 {
     "name": "@hosanna/mobile",
     "private": true,
-    "version": "2.1.0",
+    "version": "2.3.0",
     "type": "module",
     "license": "Apache-2.0",
     "scripts": {
@@ -32,6 +32,8 @@
         "qrcode.react": "^4.2.0",
         "react": "^19.0.1",
         "react-dom": "^19.0.1",
+        "rxdb": "^17.4.0",
+        "rxjs": "^7.8.2",
         "vite": "^6.2.3",
         "zustand": "^5.0.14"
     },

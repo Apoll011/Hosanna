@@ -103,7 +103,7 @@ export default function SongView({
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
     const [isScrolling, setIsScrolling] = useState(false);
     const [scrollSpeed, setScrollSpeed] = useState(5); // Auto-scroll speed (1 to 10)
-    const [_, setWakeLockActive] = useState(keepScreenAwake);
+    const wakeLockActiveRef = useRef(keepScreenAwake);
 
     const song = useMemo(
         () => songs.find((s) => s.id === songId),
@@ -202,9 +202,9 @@ export default function SongView({
                 const wakeLock = await navigator.wakeLock.request("screen");
                 if (isMounted) {
                     wakeLockRef.current = wakeLock;
-                    setWakeLockActive(true);
+                    wakeLockActiveRef.current = true;
                     wakeLock.addEventListener("release", () => {
-                        if (isMounted) setWakeLockActive(false);
+                        if (isMounted) wakeLockActiveRef.current = false;
                     });
                 }
             } catch (err) {
@@ -217,7 +217,7 @@ export default function SongView({
         } else if (wakeLockRef.current) {
             wakeLockRef.current.release().catch(() => {});
             wakeLockRef.current = null;
-            setWakeLockActive(false);
+            wakeLockActiveRef.current = false;
         }
 
         const handleVisibility = () => {
@@ -427,7 +427,14 @@ export default function SongView({
             onTouchEnd={handleTouchEnd}
         >
             {/* Top Navbar */}
-            <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative">
+            <div
+                className="px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative"
+                style={{
+                    paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))",
+                    paddingBottom: "0.5rem",
+                    minHeight: "4rem",
+                }}
+            >
                 {customLeftButton ? (
                     customLeftButton
                 ) : (
@@ -998,8 +1005,9 @@ export default function SongView({
                     <div className="pointer-events-auto">
                         <button
                             onClick={() => {
-                                setShowYoutubePlayer((prev) => !prev);
-                                setIsPlayingYoutube(!showYoutubePlayer);
+                                const next = !isPlayingYoutube;
+                                setShowYoutubePlayer(next);
+                                setIsPlayingYoutube(next);
                             }}
                             aria-pressed={showYoutubePlayer}
                             className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"

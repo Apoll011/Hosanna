@@ -45,15 +45,13 @@ const findScrollableAncestor = (
 
 function AppContent() {
     const theme = useAppStore((state) => state.theme);
-    const songsLength = useAppStore((state) => state.songs.length);
     const syncLibrary = useAppStore((state) => state.syncLibrary);
     const syncStatus = useAppStore((state) => state.syncStatus);
-    const lastSyncTime = useAppStore((state) => state.lastSyncTime);
     const hasSkippedSetup = useAppStore((state) => state.hasSkippedSetup);
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
 
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
     const activeSongId = useAppStore((state) => state.activeSongId);
     const setActiveSongId = useAppStore((state) => state.setActiveSongId);
@@ -81,22 +79,21 @@ function AppContent() {
     const setSearchQuery = useAppStore((state) => state.setSearchQuery);
     const [showDrawer, setShowDrawer] = useState(false);
 
-    useEffect(() => {
-        rehydrateStore();
-    }, [rehydrateStore]);
+    const initRxDbSubscriptions = useAppStore(
+        (state) => state.initRxDbSubscriptions,
+    );
 
     useEffect(() => {
-        if (!isHydrated) return;
-        // Sync on first load if no songs cached, or if last sync was >5min ago
-        const FIVE_MINUTES = 5 * 60 * 1000;
-        const shouldSync =
-            songsLength === 0 ||
-            !lastSyncTime ||
-            Date.now() - lastSyncTime > FIVE_MINUTES;
-        if (shouldSync) {
-            syncLibrary().catch(() => {});
-        }
-    }, [isHydrated]);
+        rehydrateStore();
+        let unsubscribe: (() => void) | undefined;
+        initRxDbSubscriptions().then((unsub) => {
+            unsubscribe = unsub;
+        });
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [rehydrateStore, initRxDbSubscriptions]);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -267,7 +264,7 @@ function AppContent() {
         );
     }
 
-    if (!hasSkippedSetup && !isAuthenticated) {
+    if (!hasSkippedSetup && !isAuthenticated && !isAuthLoading) {
         return <FirstTimeSetup />;
     }
 

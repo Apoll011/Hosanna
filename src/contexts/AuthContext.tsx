@@ -125,16 +125,56 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_CACHE_KEY = "hosanna_auth_cache";
+
+interface CachedAuth {
+    user: SessionUser;
+    organization: Organization | null;
+}
+
+const getCachedAuth = (): CachedAuth | null => {
+    try {
+        const raw = localStorage.getItem(AUTH_CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw) as CachedAuth;
+    } catch {
+        return null;
+    }
+};
+
+const setCachedAuth = (
+    user: SessionUser,
+    organization: Organization | null,
+) => {
+    try {
+        localStorage.setItem(
+            AUTH_CACHE_KEY,
+            JSON.stringify({ user, organization }),
+        );
+    } catch {}
+};
+
+const clearCachedAuth = () => {
+    try {
+        localStorage.removeItem(AUTH_CACHE_KEY);
+    } catch {}
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const [user, setUser] = useState<SessionUser | null>(null);
-    const [organization, setOrganization] = useState<Organization | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const cached = getCachedAuth();
+    const [user, setUser] = useState<SessionUser | null>(cached?.user ?? null);
+    const [organization, setOrganization] = useState<Organization | null>(
+        cached?.organization ?? null,
+    );
+    // If we have a cached session, skip the loading state so the app renders immediately
+    const [isLoading, setIsLoading] = useState(!cached);
 
     const handleClearSession = useCallback(() => {
         setUser(null);
         setOrganization(null);
+        clearCachedAuth();
         try {
             localStorage.removeItem("active_org_slug");
         } catch {}
@@ -144,7 +184,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }, []);
 
     const fetchSession = useCallback(async () => {
-        setIsLoading(true);
+        // Only show loading spinner if there's no cached user to display
+        if (!getCachedAuth()) {
+            setIsLoading(true);
+        }
 
         try {
             const { data: sessionData, error: sessionError } =
@@ -212,10 +255,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             }
 
             setOrganization(activeOrg);
-            setUser({
+            const resolvedUser = {
                 ...sessionUser,
                 role: userRole,
-            } as SessionUser);
+            } as SessionUser;
+            setUser(resolvedUser);
+            setCachedAuth(resolvedUser, activeOrg);
         } catch (error) {
             console.error("Failed to fetch session:", error);
             handleClearSession();
