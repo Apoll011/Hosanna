@@ -237,7 +237,7 @@ export default function MusicianServiceView({
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Drawer Header */}
-                        <div className="p-4 border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0 bg-m3-sidebar dark:bg-m3-dark-sidebar">
+                        <div className="p-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0 bg-m3-sidebar dark:bg-m3-dark-sidebar">
                             <div className="flex items-center justify-between">
                                 <div className="min-w-0 flex-1">
                                     <h3 className="text-base font-black text-m3-text dark:text-m3-dark-text truncate">
@@ -393,7 +393,7 @@ export default function MusicianServiceView({
                 />
             ) : (
                 /* NON-SONG ELEMENT VIEW OR MISSING SONG */
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="flex-1 pt-[calc(1rem+env(safe-area-inset-top,0px))] flex flex-col h-full overflow-hidden">
                     {/* Top Navbar */}
                     <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none z-40 relative">
                         <button

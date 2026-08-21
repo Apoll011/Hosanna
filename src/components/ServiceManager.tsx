@@ -365,7 +365,7 @@ export default function ServiceManager() {
     if (mode === "detail" && selectedService) {
         return (
             <div className="h-full flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0">
+                <div className="pt-[calc(1rem+env(safe-area-inset-top,0px))] border-b border-m3-border dark:border-m3-dark-border flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => setMode("list")}
                         className="p-2 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border active:scale-90 transition-transform touch-manipulation"
@@ -523,7 +523,7 @@ export default function ServiceManager() {
 
         return (
             <div className="h-full flex flex-col overflow-hidden bg-m3-bg dark:bg-m3-dark-bg absolute inset-0 z-50">
-                <div className="pt-4 px-4 shrink-0">
+                <div className="pt-[calc(1rem+env(safe-area-inset-top,0px))] px-4 shrink-0">
                     <div className="flex items-center justify-between mb-3">
                         <button
                             onClick={() => setMode("detail")}
