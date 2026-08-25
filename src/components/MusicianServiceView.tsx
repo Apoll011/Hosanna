@@ -48,12 +48,6 @@ const ELEMENT_META: Record<
         bg: "bg-amber-50 dark:bg-amber-500/10",
         text: "text-amber-600 dark:text-amber-400",
     },
-    reading: {
-        label: "Leitura",
-        icon: FileText,
-        bg: "bg-purple-50 dark:bg-purple-500/10",
-        text: "text-purple-600 dark:text-purple-400",
-    },
     announcement: {
         label: "Avisos",
         icon: Megaphone,

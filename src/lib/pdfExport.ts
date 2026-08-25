@@ -52,8 +52,6 @@ function translateElement(element: string) {
             return "Passagem";
         case "message":
             return "Pregação";
-        case "reading":
-            return "Leitura";
         case "announcement":
             return "Anuncio";
         case "custom":
