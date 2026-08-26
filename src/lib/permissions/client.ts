@@ -13,7 +13,18 @@ import {
     type PermissionString,
     type Resource,
 } from "./permission";
-import { roles, type AppRole } from "./roles";
+import { roles, isPermissionAllowedForRole, type AppRole } from "./roles";
+
+function getCachedUserRole(): AppRole | null {
+    try {
+        const raw = typeof localStorage !== "undefined" ? localStorage.getItem("hosanna_auth_cache") : null;
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return (parsed?.user?.role as AppRole) ?? null;
+    } catch {
+        return null;
+    }
+}
 
 // ---------------------------------------------------------------------------
 // 1. Core Caching & Promise Deduplication Layer
@@ -112,6 +123,23 @@ function fetchPermissionsBatch(
             }
 
             return granted;
+        })
+        .catch((err) => {
+            // If network request failed (e.g. offline mode or temporary server failure), fallback to static cached role definitions
+            const cachedRole = getCachedUserRole();
+            if (cachedRole) {
+                const granted = permissions.every((p) =>
+                    isPermissionAllowedForRole(cachedRole, p),
+                );
+                permCache.set(cacheKey, granted);
+                if (granted) {
+                    permissions.forEach((p) =>
+                        permCache.set(getCacheKey([p]), true),
+                    );
+                }
+                return granted;
+            }
+            throw err;
         })
         .finally(() => {
             pendingPerms.delete(cacheKey);

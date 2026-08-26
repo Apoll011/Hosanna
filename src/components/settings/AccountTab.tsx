@@ -472,13 +472,12 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                                 Cancelar
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="default"
                                 size="sm"
-                                isLoading={isSavingName}
                                 onClick={handleSaveName}
-                                icon={<Save className="w-4 h-4" />}
                             >
-                                Guardar
+                                <Save className="w-4 h-4 mr-1.5" />
+                                {isSavingName ? "A guardar..." : "Guardar"}
                             </Button>
                         </div>
                     </div>
@@ -526,13 +525,12 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                                 Cancelar
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="default"
                                 size="sm"
-                                isLoading={isSavingEmail}
                                 onClick={handleSaveEmail}
-                                icon={<Save className="w-4 h-4" />}
                             >
-                                Guardar E-mail
+                                <Save className="w-4 h-4 mr-1.5" />
+                                {isSavingEmail ? "A guardar..." : "Guardar E-mail"}
                             </Button>
                         </div>
                     </div>
@@ -563,33 +561,45 @@ export const AccountTab: React.FC<AccountTabProps> = ({
 
                 {isEditingPassword ? (
                     <div className="space-y-3 pt-1">
-                        <Input
-                            type="password"
-                            label="Palavra-passe Atual"
-                            value={draftOldPassword}
-                            onChange={(e) =>
-                                setDraftOldPassword(e.target.value)
-                            }
-                            placeholder="Introduza a sua palavra-passe atual"
-                        />
-                        <Input
-                            type="password"
-                            label="Nova Palavra-passe"
-                            value={draftNewPassword}
-                            onChange={(e) =>
-                                setDraftNewPassword(e.target.value)
-                            }
-                            placeholder="Mínimo 6 caracteres"
-                        />
-                        <Input
-                            type="password"
-                            label="Confirmar Nova Palavra-passe"
-                            value={draftConfirmPassword}
-                            onChange={(e) =>
-                                setDraftConfirmPassword(e.target.value)
-                            }
-                            placeholder="Repita a nova palavra-passe"
-                        />
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-m3-secondary dark:text-m3-dark-secondary">
+                                Palavra-passe Atual
+                            </label>
+                            <Input
+                                type="password"
+                                value={draftOldPassword}
+                                onChange={(e) =>
+                                    setDraftOldPassword(e.target.value)
+                                }
+                                placeholder="Introduza a sua palavra-passe atual"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-m3-secondary dark:text-m3-dark-secondary">
+                                Nova Palavra-passe
+                            </label>
+                            <Input
+                                type="password"
+                                value={draftNewPassword}
+                                onChange={(e) =>
+                                    setDraftNewPassword(e.target.value)
+                                }
+                                placeholder="Mínimo 6 caracteres"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-m3-secondary dark:text-m3-dark-secondary">
+                                Confirmar Nova Palavra-passe
+                            </label>
+                            <Input
+                                type="password"
+                                value={draftConfirmPassword}
+                                onChange={(e) =>
+                                    setDraftConfirmPassword(e.target.value)
+                                }
+                                placeholder="Repita a nova palavra-passe"
+                            />
+                        </div>
 
                         <div className="flex justify-end gap-2 pt-2">
                             <Button
@@ -605,18 +615,17 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                                 Cancelar
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="default"
                                 size="sm"
-                                isLoading={isSavingPassword}
                                 onClick={handleSavePassword}
-                                icon={<Save className="w-4 h-4" />}
                             >
-                                Atualizar Palavra-passe
+                                <Save className="w-4 h-4 mr-1.5" />
+                                {isSavingPassword ? "A atualizar..." : "Atualizar Palavra-passe"}
                             </Button>
                         </div>
                     </div>
                 ) : (
-                    <p className="text-sm font-semibold text-m3-secondary tracking-widest">
+                    <p className="text-sm text-m3-secondary dark:text-m3-dark-secondary">
                         ••••••••••••
                     </p>
                 )}

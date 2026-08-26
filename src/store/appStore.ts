@@ -1,17 +1,18 @@
 import {
     configureApiClient,
+    getApiClient,
     parseChordPro,
     parseSong,
     Song as SharedSong,
 } from "@hosanna/shared";
 import { create } from "zustand";
-import { purgeExpiredTrash } from "../db/trash";
 import {
     getDatabase,
     ReplicationManager,
     setupReplication,
     SongDocType,
 } from "../db";
+import { purgeExpiredTrash } from "../db/trash";
 import { API_BASE_URL } from "../lib/authClient";
 import {
     clearStorage,
@@ -123,9 +124,17 @@ export interface AppState {
 }
 
 let replicationManager: ReplicationManager | null = null;
+let rehydrationPromise: Promise<void> | null = null;
+let rxDbSubscriptionsPromise: Promise<() => void> | null = null;
 
-function ensureApiClient() {
+export function ensureApiClient() {
     configureApiClient(API_BASE_URL.trim() + "/api");
+    if (typeof localStorage !== "undefined") {
+        const token = localStorage.getItem("hosanna_access_token");
+        if (token) {
+            getApiClient().setTokens(token);
+        }
+    }
 }
 
 ensureApiClient();
@@ -160,134 +169,162 @@ export const useAppStore = create<AppState>((set, get) => ({
     hasSkippedSetup: false,
     isHydrated: false,
 
-    rehydrateStore: async () => {
-        try {
-            const [
-                favoriteSongIds,
-                recentlyPlayedSongIds,
-                theme,
-                fontSize,
-                showChords,
-                showDiagrams,
-                keepScreenAwake,
-                slowDownOnRepeat,
-                musicianMode,
-                instrument,
-                twoColumnLayout,
-                lastSyncTime,
-                hasSkippedSetup,
-            ] = await Promise.all([
-                getStorageItem<string[]>("cp_favorites", []),
-                getStorageItem<string[]>("cp_recently_played", []),
-                getStorageItem<ThemeType>("cp_theme", "light"),
-                getStorageItem<number>("cp_font_size", 16),
-                getStorageItem<boolean>("cp_show_chords", true),
-                getStorageItem<boolean>("cp_show_diagrams", true),
-                getStorageItem<boolean>("cp_keep_screen_awake", true),
-                getStorageItem<boolean>("cp_slow_down_on_repeat", true),
-                getStorageItem<boolean>("cp_musician_mode", false),
-                getStorageItem<"guitar" | "piano">("cp_instrument", "guitar"),
-                getStorageItem<boolean>("cp_two_column_layout", false),
-                getStorageItem<number | null>("cp_last_sync_time", null),
-                getStorageItem<boolean>("cp_has_skipped_setup", false),
-            ]);
+    rehydrateStore: () => {
+        if (!rehydrationPromise) {
+            rehydrationPromise = (async () => {
+                try {
+                    const [
+                        favoriteSongIds,
+                        recentlyPlayedSongIds,
+                        theme,
+                        fontSize,
+                        showChords,
+                        showDiagrams,
+                        keepScreenAwake,
+                        slowDownOnRepeat,
+                        musicianMode,
+                        instrument,
+                        twoColumnLayout,
+                        lastSyncTime,
+                        hasSkippedSetup,
+                    ] = await Promise.all([
+                        getStorageItem<string[]>("cp_favorites", []),
+                        getStorageItem<string[]>("cp_recently_played", []),
+                        getStorageItem<ThemeType>("cp_theme", "light"),
+                        getStorageItem<number>("cp_font_size", 16),
+                        getStorageItem<boolean>("cp_show_chords", true),
+                        getStorageItem<boolean>("cp_show_diagrams", true),
+                        getStorageItem<boolean>("cp_keep_screen_awake", true),
+                        getStorageItem<boolean>("cp_slow_down_on_repeat", true),
+                        getStorageItem<boolean>("cp_musician_mode", false),
+                        getStorageItem<"guitar" | "piano">(
+                            "cp_instrument",
+                            "guitar",
+                        ),
+                        getStorageItem<boolean>("cp_two_column_layout", false),
+                        getStorageItem<number | null>(
+                            "cp_last_sync_time",
+                            null,
+                        ),
+                        getStorageItem<boolean>("cp_has_skipped_setup", false),
+                    ]);
 
-            set({
-                favoriteSongIds,
-                recentlyPlayedSongIds,
-                theme,
-                fontSize,
-                showChords,
-                showDiagrams,
-                keepScreenAwake,
-                slowDownOnRepeat,
-                musicianMode,
-                instrument,
-                twoColumnLayout,
-                lastSyncTime,
-                hasSkippedSetup,
-                isHydrated: true,
-            });
-        } catch (error) {
-            console.error("Failed to rehydrate store:", error);
-            set({ isHydrated: true });
+                    set({
+                        favoriteSongIds,
+                        recentlyPlayedSongIds,
+                        theme,
+                        fontSize,
+                        showChords,
+                        showDiagrams,
+                        keepScreenAwake,
+                        slowDownOnRepeat,
+                        musicianMode,
+                        instrument,
+                        twoColumnLayout,
+                        lastSyncTime,
+                        hasSkippedSetup,
+                        isHydrated: true,
+                    });
+                } catch (error) {
+                    console.error("Failed to rehydrate store:", error);
+                    set({ isHydrated: true });
+                }
+            })();
         }
+        return rehydrationPromise;
     },
 
-    initRxDbSubscriptions: async () => {
-        ensureApiClient();
-        const db = await getDatabase();
-        const repl = setupReplication(db);
-        replicationManager = repl;
-        purgeExpiredTrash(db).catch(() => {});
+    initRxDbSubscriptions: () => {
+        if (!rxDbSubscriptionsPromise) {
+            rxDbSubscriptionsPromise = (async () => {
+                ensureApiClient();
+                const db = await getDatabase();
+                const repl = setupReplication(db);
+                replicationManager = repl;
+                purgeExpiredTrash(db).catch(() => {});
 
-        repl.start();
+                repl.start();
 
-        const statusSub = repl.status$.subscribe((st) => {
-            if (st === "syncing") {
-                set({ syncStatus: "syncing" });
-            } else if (st === "synced") {
-                const now = Date.now();
-                set({ syncStatus: "success", lastSyncTime: now });
-                setStorageItemImmediate("cp_last_sync_time", now);
-            } else if (st === "offline") {
-                set({ syncStatus: "offline" });
-            } else if (st === "error") {
-                set({ syncStatus: "error" });
-            }
-        });
-
-        // Query folders
-        const foldersSub = db.folders
-            .find({ selector: { _deleted: { $ne: true } } })
-            .$.subscribe((docs) => {
-                const rawFolders = docs.map((d) => d.toJSON() as Folder);
-                set({ folders: rawFolders });
-            });
-
-        // Query songs
-        const songsSub = db.songs
-            .find({ selector: { _deleted: { $ne: true } } })
-            .$.subscribe((docs) => {
-                const folders = get().folders;
-                const rawSongs = docs.map((d) => d.toJSON() as SharedSong);
-                const parsedSongs = rawSongs.map((s) => parseSong(s, folders));
-                const virtualFiles = parsedSongs.map((s) => ({
-                    path: s.id,
-                    content: s.content,
-                    updatedAt: Date.now(),
-                }));
-
-                const validSongIds = new Set(parsedSongs.map((s) => s.id));
-                const updatedFavorites = get().favoriteSongIds.filter((id) =>
-                    validSongIds.has(id),
-                );
-                const updatedRecent = get().recentlyPlayedSongIds.filter((id) =>
-                    validSongIds.has(id),
-                );
-
-                set({
-                    songs: parsedSongs,
-                    virtualFiles,
-                    favoriteSongIds: updatedFavorites,
-                    recentlyPlayedSongIds: updatedRecent,
+                const statusSub = repl.status$.subscribe((st) => {
+                    if (st === "syncing") {
+                        set({ syncStatus: "syncing" });
+                    } else if (st === "synced") {
+                        const now = Date.now();
+                        set({ syncStatus: "success", lastSyncTime: now });
+                        setStorageItemImmediate("cp_last_sync_time", now);
+                    } else if (st === "offline") {
+                        set({ syncStatus: "offline" });
+                    } else if (st === "error") {
+                        set({ syncStatus: "error" });
+                    }
                 });
-            });
 
-        // Query services
-        const servicesSub = db.services
-            .find({ selector: { _deleted: { $ne: true } } })
-            .$.subscribe((docs) => {
-                const rawServices = docs.map((d) => d.toJSON() as Service);
-                set({ services: rawServices });
-            });
+                // Query folders
+                const foldersSub = db.folders
+                    .find({ selector: { _deleted: { $ne: true } } })
+                    .$.subscribe((docs) => {
+                        const rawFolders = docs.map(
+                            (d) => d.toJSON() as Folder,
+                        );
+                        set({ folders: rawFolders });
+                    });
 
-        return () => {
-            statusSub.unsubscribe();
-            foldersSub.unsubscribe();
-            songsSub.unsubscribe();
-            servicesSub.unsubscribe();
-        };
+                // Query songs
+                const songsSub = db.songs
+                    .find({ selector: { _deleted: { $ne: true } } })
+                    .$.subscribe((docs) => {
+                        const folders = get().folders;
+                        const rawSongs = docs.map(
+                            (d) => d.toJSON() as SharedSong,
+                        );
+                        const parsedSongs = rawSongs.map((s) =>
+                            parseSong(s, folders),
+                        );
+                        const virtualFiles = parsedSongs.map((s) => ({
+                            path: s.id,
+                            content: s.content,
+                            updatedAt: Date.now(),
+                        }));
+
+                        const validSongIds = new Set(
+                            parsedSongs.map((s) => s.id),
+                        );
+                        const updatedFavorites = get().favoriteSongIds.filter(
+                            (id) => validSongIds.has(id),
+                        );
+                        const updatedRecent =
+                            get().recentlyPlayedSongIds.filter((id) =>
+                                validSongIds.has(id),
+                            );
+
+                        set({
+                            songs: parsedSongs,
+                            virtualFiles,
+                            favoriteSongIds: updatedFavorites,
+                            recentlyPlayedSongIds: updatedRecent,
+                        });
+                    });
+
+                // Query services
+                const servicesSub = db.services
+                    .find({ selector: { _deleted: { $ne: true } } })
+                    .$.subscribe((docs) => {
+                        const rawServices = docs.map(
+                            (d) => d.toJSON() as Service,
+                        );
+                        set({ services: rawServices });
+                    });
+
+                return () => {
+                    statusSub.unsubscribe();
+                    foldersSub.unsubscribe();
+                    songsSub.unsubscribe();
+                    servicesSub.unsubscribe();
+                    rxDbSubscriptionsPromise = null;
+                };
+            })();
+        }
+        return rxDbSubscriptionsPromise;
     },
 
     setTheme: (theme) => {
@@ -602,3 +639,19 @@ export const useAppStore = create<AppState>((set, get) => ({
         await clearStorage();
     },
 }));
+
+// Immediately start rehydrating preferences and RxDB subscriptions in parallel with module loading
+if (typeof window !== "undefined") {
+    useAppStore
+        .getState()
+        .rehydrateStore()
+        .catch((err) => {
+            console.warn("Eager rehydration warning:", err);
+        });
+    useAppStore
+        .getState()
+        .initRxDbSubscriptions()
+        .catch((err) => {
+            console.warn("Eager RxDB subscriptions warning:", err);
+        });
+}

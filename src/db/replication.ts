@@ -92,10 +92,17 @@ async function pushWithConflictRetry<T extends SyncableDoc>(
                 : null,
         }));
 
+        const token =
+            typeof localStorage !== "undefined"
+                ? localStorage.getItem("hosanna_access_token")
+                : null;
+
         const res = await client.request<{ conflicts?: T[] } | T[]>(
             `/replication/${collectionName}/push`,
             {
                 method: "POST",
+                credentials: "include",
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                 body: JSON.stringify({ changeRows: formattedChanges }),
             },
         );
@@ -180,11 +187,18 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
 
                     try {
                         const client = getApiClient();
+                        const token =
+                            typeof localStorage !== "undefined"
+                                ? localStorage.getItem("hosanna_access_token")
+                                : null;
+
                         const res = await client.request<{
                             documents: T[];
                             checkpoint: Checkpoint | null;
                         }>(`/replication/${collectionName}/pull`, {
                             method: "POST",
+                            credentials: "include",
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                             body: JSON.stringify({
                                 checkpoint: lastCheckpoint || null,
                                 limit: batchSize || 100,

@@ -234,7 +234,9 @@ export default function SongBrowser({
                                         }
                                         className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-foreground focus:outline-none cursor-pointer"
                                     >
-                                        <option value="title">A-Z Alfabética</option>
+                                        <option value="title">
+                                            A-Z Alfabética
+                                        </option>
                                         <option value="number">Número</option>
                                         <option value="folder">Pasta</option>
                                     </select>
@@ -335,7 +337,11 @@ export default function SongBrowser({
                                                     {song.metadata
                                                         ?.songNumber ? (
                                                         <span className="text-xs font-black text-primary">
-                                                            #{song.metadata.songNumber}
+                                                            #
+                                                            {
+                                                                song.metadata
+                                                                    .songNumber
+                                                            }
                                                         </span>
                                                     ) : (
                                                         <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -376,7 +382,11 @@ export default function SongBrowser({
                                                     )}
                                                     {song.metadata?.tempo && (
                                                         <span className="text-[10px] text-muted-foreground font-mono">
-                                                            ♩ {song.metadata.tempo}
+                                                            ♩{" "}
+                                                            {
+                                                                song.metadata
+                                                                    .tempo
+                                                            }
                                                         </span>
                                                     )}
                                                 </div>

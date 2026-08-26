@@ -1,9 +1,5 @@
-// src/components/MusicianServiceView.tsx
 import {
     BookOpen,
-    CalendarRange,
-    ChevronLeft,
-    ChevronRight,
     Edit2,
     FileText,
     HelpCircle,
@@ -65,17 +61,6 @@ const getElementMeta = (type: string) =>
         color: "text-muted-foreground bg-muted border-border",
         badgeVariant: "secondary",
     };
-
-const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("pt-PT", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-    });
-};
 
 interface MusicianNotesEditorProps {
     initialNotes: string;

@@ -1,4 +1,3 @@
-// src/components/ServiceManager.tsx
 import {
     ArrowLeft,
     BookOpen,
@@ -7,7 +6,6 @@ import {
     Check,
     ChevronLeft,
     ChevronRight,
-    Clock,
     Edit2,
     FileText,
     HelpCircle,
@@ -15,9 +13,7 @@ import {
     MessageSquare,
     Music,
     Play,
-    Plus,
     Save,
-    Sparkles,
     X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +23,6 @@ import MusicianServiceView from "./MusicianServiceView";
 import SongView from "./SongView";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card } from "./ui/card";
 
 type ViewMode = "list" | "detail" | "present" | "song" | "musician";
 
@@ -280,6 +275,34 @@ export default function ServiceManager() {
     const goNext = () =>
         setStepIndex((i) => Math.min(sortedElements.length - 1, i + 1));
     const goPrev = () => setStepIndex((i) => Math.max(0, i - 1));
+
+    // Keyboard navigation when presenting a service
+    useEffect(() => {
+        if (mode !== "present") return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isTyping =
+                target?.tagName === "INPUT" ||
+                target?.tagName === "TEXTAREA" ||
+                target?.isContentEditable;
+            if (isTyping) return;
+
+            if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+                e.preventDefault();
+                goNext();
+            } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+                e.preventDefault();
+                goPrev();
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                setMode("detail");
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [mode, sortedElements.length]);
 
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;

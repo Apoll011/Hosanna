@@ -1,6 +1,5 @@
 import {
     ChordProRenderer,
-    getSuggestedCapo,
     parseChordPro,
 } from "@hosanna/shared";
 import {
@@ -29,7 +28,6 @@ import React, {
     useState,
 } from "react";
 import { useAppStore } from "../store/appStore";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
 interface SongViewProps {
@@ -58,11 +56,9 @@ export default function SongView({
     const showChords = useAppStore((state) => state.showChords);
     const setShowChords = useAppStore((state) => state.setShowChords);
     const showDiagrams = useAppStore((state) => state.showDiagrams);
-    const setShowDiagrams = useAppStore((state) => state.setShowDiagrams);
     const keepScreenAwake = useAppStore((state) => state.keepScreenAwake);
     const setKeepScreenAwake = useAppStore((state) => state.setKeepScreenAwake);
     const instrument = useAppStore((state) => state.instrument);
-    const setInstrument = useAppStore((state) => state.setInstrument);
     const twoColumnLayout = useAppStore((state) => state.twoColumnLayout);
     const setTwoColumnLayout = useAppStore((state) => state.setTwoColumnLayout);
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
@@ -182,6 +178,57 @@ export default function SongView({
             setIsPlayingYoutube(false);
         }
     }, [canSwipePrev, activeSongIds, currentIndex, setSong]);
+
+    // Keyboard shortcuts inside SongView
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isTyping =
+                target?.tagName === "INPUT" ||
+                target?.tagName === "TEXTAREA" ||
+                target?.isContentEditable;
+            if (isTyping) return;
+
+            if (e.key === "ArrowRight") {
+                if (canSwipeNext) {
+                    e.preventDefault();
+                    handleNextSong();
+                }
+            } else if (e.key === "ArrowLeft") {
+                if (canSwipePrev) {
+                    e.preventDefault();
+                    handlePrevSong();
+                }
+            } else if (e.key === " " || e.code === "Space") {
+                e.preventDefault();
+                setIsScrolling((prev) => !prev);
+            } else if (e.key === "Escape") {
+                if (showControls) {
+                    e.preventDefault();
+                    setShowControls(false);
+                } else {
+                    e.preventDefault();
+                    onBack();
+                }
+            } else if (e.key === "+" || e.key === "=") {
+                e.preventDefault();
+                setTransposeVal((v) => v + 1);
+            } else if (e.key === "-" || e.key === "_") {
+                e.preventDefault();
+                setTransposeVal((v) => v - 1);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [
+        canSwipeNext,
+        canSwipePrev,
+        handleNextSong,
+        handlePrevSong,
+        showControls,
+        onBack,
+    ]);
 
     // Keep-Awake
     useEffect(() => {

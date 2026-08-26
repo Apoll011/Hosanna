@@ -63,3 +63,20 @@ export const roles = {
 } as const;
 
 export type AppRole = keyof typeof roles;
+
+export function isPermissionAllowedForRole(
+    role: AppRole | null | undefined,
+    permission: string,
+): boolean {
+    if (!role || !(role in roles)) return false;
+    const roleConfig = roles[role];
+    const dotIndex = permission.indexOf(".");
+    if (dotIndex === -1) return false;
+    const resource = permission.slice(
+        0,
+        dotIndex,
+    ) as keyof typeof roleConfig.statements;
+    const action = permission.slice(dotIndex + 1);
+    const allowedActions = roleConfig.statements[resource];
+    return Array.isArray(allowedActions) && allowedActions.includes(action);
+}

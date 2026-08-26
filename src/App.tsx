@@ -10,14 +10,13 @@ import {
     Folder,
     Heart,
     LogIn,
-    LogOut,
     Menu,
     Music,
-    Plus,
     RefreshCw,
     Search,
     Settings,
     Timer,
+    WifiOff,
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -64,7 +63,7 @@ function AppContent() {
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
 
-    const { user, organization, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
+    const { user, organization, isAuthenticated, isLoading: isAuthLoading, isOfflineAuth, refetch: refetchAuth } = useAuth();
 
     const songs = useAppStore((state) => state.songs);
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
@@ -86,6 +85,7 @@ function AppContent() {
     );
 
     const contentRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const [pullDistance, setPullDistance] = useState(0);
     const [isPulling, setIsPulling] = useState(false);
     const touchStartY = useRef<number | null>(null);
@@ -118,6 +118,49 @@ function AppContent() {
             .toUpperCase()
             .slice(0, 2);
     };
+
+    // Global keyboard shortcuts (Cmd+K / Ctrl+K / '/' for search, Esc to close/clear)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isTyping =
+                target?.tagName === "INPUT" ||
+                target?.tagName === "TEXTAREA" ||
+                target?.isContentEditable;
+
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                if (activeSongId) setActiveSongId(null);
+                if (isEditing) setIsEditing(false);
+                if (activeListContext.type === "service" || activeListContext.type === "circle" || activeListContext.type === "metronome" || activeListContext.type === "settings") {
+                    setActiveListContext({ type: "all" });
+                }
+                setTimeout(() => searchInputRef.current?.focus(), 50);
+            } else if (e.key === "/" && !isTyping && !activeSongId && !isEditing && !isPresenting) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            } else if (e.key === "Escape") {
+                if (showDrawer) setShowDrawer(false);
+                else if (isAuthModalOpen) setIsAuthModalOpen(false);
+                else if (searchQuery) setSearchQuery("");
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [
+        activeSongId,
+        isEditing,
+        isPresenting,
+        activeListContext.type,
+        showDrawer,
+        isAuthModalOpen,
+        searchQuery,
+        setActiveSongId,
+        setIsEditing,
+        setActiveListContext,
+        setSearchQuery,
+    ]);
 
     useEffect(() => {
         rehydrateStore();
@@ -660,28 +703,45 @@ function AppContent() {
                         </Button>
 
                         {!isOnMenu ? (
-                            <div className="relative flex-1 max-w-2xl">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <input
-                                    type="text"
-                                    placeholder={
-                                        activeListContext.type === "service"
-                                            ? "Pesquisar cultos..."
-                                            : "Pesquisar título, autor, letra..."
-                                    }
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-9 py-2 bg-card border border-input rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-muted-foreground transition-all shadow-2xs"
-                                />
-                                {searchQuery !== "" && (
+                            <div className="relative flex-1 max-w-2xl flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        placeholder={
+                                            activeListContext.type === "service"
+                                                ? "Pesquisar cultos... (Ctrl+K)"
+                                                : "Pesquisar título, autor, letra... (Ctrl+K)"
+                                        }
+                                        value={searchQuery}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-9 py-2 bg-card border border-input rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-muted-foreground transition-all shadow-2xs"
+                                    />
+                                    {searchQuery !== "" && (
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                                            title="Limpar pesquisa"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {(isOfflineAuth || syncStatus === "offline") && (
                                     <button
-                                        onClick={() => setSearchQuery("")}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
-                                        title="Limpar pesquisa"
+                                        onClick={() => {
+                                            refetchAuth();
+                                            syncLibrary({ force: true }).catch(() => {});
+                                        }}
+                                        className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold shrink-0 hover:bg-amber-500/20 transition-all cursor-pointer"
+                                        title="A funcionar em modo offline com sessão guardada. Clique para tentar reconectar."
                                     >
-                                        <X className="w-3.5 h-3.5" />
+                                        <WifiOff className="w-3.5 h-3.5" />
+                                        <span>Offline</span>
                                     </button>
                                 )}
                             </div>

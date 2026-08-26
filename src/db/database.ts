@@ -85,3 +85,10 @@ export async function getDatabase(): Promise<HosanaDatabase> {
     }
     return dbPromise;
 }
+
+// Start creating RxDB database immediately in the background on module evaluation
+if (typeof window !== "undefined" && "indexedDB" in window) {
+    getDatabase().catch((err) => {
+        console.warn("Eager database initialization warning:", err);
+    });
+}

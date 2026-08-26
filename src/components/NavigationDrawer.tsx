@@ -9,6 +9,7 @@ import {
     Music,
     Settings,
     Timer,
+    WifiOff,
     X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -38,7 +39,7 @@ export default function NavigationDrawer({
     const setActiveSongId = useAppStore((state) => state.setActiveSongId);
     const setIsEditing = useAppStore((state) => state.setIsEditing);
 
-    const { user, organization, isAuthenticated, logout } = useAuth();
+    const { user, organization, isAuthenticated, isOfflineAuth, logout } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     const uniqueFolders = useMemo(() => {
@@ -159,7 +160,13 @@ export default function NavigationDrawer({
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="shrink-0">
+                                        <div className="shrink-0 flex items-center gap-1.5">
+                                            {isOfflineAuth && (
+                                                <span className="flex items-center gap-1 text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                                                    <WifiOff className="w-2.5 h-2.5" />
+                                                    Offline
+                                                </span>
+                                            )}
                                             {getRoleBadge(
                                                 user.role || "member",
                                             )}
