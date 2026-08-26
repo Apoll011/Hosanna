@@ -19,40 +19,42 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "../store/appStore";
 import { Service, ServiceElement, Song } from "../types";
 import SongView from "./SongView";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 const ELEMENT_META: Record<
     string,
-    { label: string; icon: React.ElementType; bg: string; text: string }
+    { label: string; icon: React.ElementType; color: string; badgeVariant: "primaryLight" | "success" | "warning" | "secondary" | "default" }
 > = {
     song: {
         label: "Cântico",
         icon: Music,
-        bg: "bg-m3-primary-light dark:bg-m3-dark-primary-light",
-        text: "text-m3-primary dark:text-m3-dark-primary",
+        color: "text-primary bg-primary/10 border-primary/20",
+        badgeVariant: "primaryLight",
     },
     welcome: {
         label: "Boas-vindas",
         icon: FileText,
-        bg: "bg-blue-50 dark:bg-blue-500/10",
-        text: "text-blue-600 dark:text-blue-400",
+        color: "text-blue-600 bg-blue-500/10 border-blue-500/20",
+        badgeVariant: "secondary",
     },
     scripture: {
         label: "Escritura",
         icon: BookOpen,
-        bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10",
-        text: "text-fuchsia-600 dark:text-fuchsia-400",
+        color: "text-purple-600 bg-purple-500/10 border-purple-500/20",
+        badgeVariant: "secondary",
     },
     message: {
         label: "Mensagem",
         icon: MessageSquare,
-        bg: "bg-amber-50 dark:bg-amber-500/10",
-        text: "text-amber-600 dark:text-amber-400",
+        color: "text-amber-600 bg-amber-500/10 border-amber-500/20",
+        badgeVariant: "warning",
     },
     announcement: {
         label: "Avisos",
         icon: Megaphone,
-        bg: "bg-emerald-50 dark:bg-emerald-500/10",
-        text: "text-emerald-600 dark:text-emerald-400",
+        color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+        badgeVariant: "success",
     },
 };
 
@@ -60,17 +62,17 @@ const getElementMeta = (type: string) =>
     ELEMENT_META[type] || {
         label: type || "Elemento",
         icon: HelpCircle,
-        bg: "bg-m3-sidebar dark:bg-m3-dark-sidebar",
-        text: "text-m3-secondary dark:text-m3-dark-secondary",
+        color: "text-muted-foreground bg-muted border-border",
+        badgeVariant: "secondary",
     };
 
 const formatDate = (iso: string) => {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleDateString("pt-PT", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
+        weekday: "short",
+        day: "numeric",
+        month: "short",
         year: "numeric",
     });
 };
@@ -93,24 +95,27 @@ function MusicianNotesEditor({
             <textarea
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full bg-m3-bg dark:bg-m3-dark-bg border border-m3-border dark:border-m3-dark-border rounded-xl p-3 text-xs text-m3-text dark:text-m3-dark-text focus:outline-none focus:ring-1 focus:ring-m3-primary/30 min-h-24 resize-none"
-                placeholder="Adicione notas para este elemento..."
+                className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring min-h-24 resize-none"
+                placeholder="Adicione anotações para este elemento..."
                 autoFocus
             />
             <div className="flex justify-end gap-2">
-                <button
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={onCancel}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-all"
+                    className="h-8 text-xs"
                 >
                     Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
+                    size="sm"
                     onClick={() => onSave(value)}
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-m3-primary dark:bg-m3-dark-primary text-white active:scale-95 transition-transform shadow-xs"
+                    className="h-8 text-xs font-bold gap-1.5 shadow-xs"
                 >
                     <Save className="w-3.5 h-3.5" />
                     Guardar
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -142,407 +147,274 @@ export default function MusicianServiceView({
         );
     }, [service.elements]);
 
-    // Initial element: find first song element or default to 1st element
     const initialElementId = useMemo(() => {
         const firstSong = sortedElements.find((e) => e.type === "song");
         if (firstSong) return firstSong.id;
         return sortedElements[0]?.id || "";
     }, [sortedElements]);
 
-    const [selectedElementId, setSelectedElementId] =
+    const [currentElementId, setCurrentElementId] =
         useState<string>(initialElementId);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [editingNotes, setEditingNotes] = useState(false);
 
-    // Sync active service context in store
     useEffect(() => {
         setActiveServiceId(service.id);
         setActiveListContext({ type: "service", serviceId: service.id });
     }, [service.id, setActiveServiceId, setActiveListContext]);
 
-    // If selectedElementId is empty or not in sortedElements, reset to initial
-    useEffect(() => {
-        if (
-            sortedElements.length > 0 &&
-            !sortedElements.some((e) => e.id === selectedElementId)
-        ) {
-            setSelectedElementId(initialElementId);
-        }
-    }, [sortedElements, selectedElementId, initialElementId]);
-
-    const songFor = (element: ServiceElement): Song | undefined => {
-        if (element.type !== "song" || !element.songId) return undefined;
-        return songs.find((s) => s.id === element.songId);
-    };
-
-    const selectedElementIndex = sortedElements.findIndex(
-        (e) => e.id === selectedElementId,
+    const currentElement = useMemo(
+        () => sortedElements.find((e) => e.id === currentElementId) || null,
+        [sortedElements, currentElementId],
     );
-    const currentElement: ServiceElement | undefined =
-        sortedElements[selectedElementIndex] || sortedElements[0];
 
-    const currentSong = currentElement ? songFor(currentElement) : undefined;
+    const currentSong = useMemo(() => {
+        if (!currentElement || currentElement.type !== "song") return null;
+        return songs.find((s) => s.id === currentElement.songId) || null;
+    }, [currentElement, songs]);
 
-    // Sync activeSongId in store when switching elements
     useEffect(() => {
-        if (currentElement && currentElement.type === "song" && currentSong) {
+        if (currentSong) {
             setActiveSongId(currentSong.id);
         } else {
             setActiveSongId(null);
         }
-    }, [currentElement, currentSong, setActiveSongId]);
+    }, [currentSong, setActiveSongId]);
 
-    const handleSelectElement = (elementId: string) => {
-        setSelectedElementId(elementId);
-        setIsDrawerOpen(false);
-        setEditingNotesId(null);
+    const currentIndex = sortedElements.findIndex(
+        (e) => e.id === currentElementId,
+    );
+
+    const navigateToElement = (id: string) => {
+        setCurrentElementId(id);
+        setEditingNotes(false);
+        setIsMenuOpen(false);
     };
 
-    const handleSaveNotes = (elementId: string, notes: string) => {
-        const newElements = (service.elements || []).map((e) =>
-            e.id === elementId ? { ...e, notes } : e,
+    const saveNotes = (notes: string) => {
+        if (!currentElement) return;
+        const newElements = sortedElements.map((e) =>
+            e.id === currentElement.id ? { ...e, notes } : e,
         );
         updateServiceElements(service.id, newElements);
-        setEditingNotesId(null);
+        setEditingNotes(false);
     };
 
-    const goPrevElement = () => {
-        if (selectedElementIndex > 0) {
-            handleSelectElement(sortedElements[selectedElementIndex - 1].id);
-        }
-    };
+    const songFor = (element: ServiceElement): Song | undefined =>
+        songs.find((s) => s.id === element.songId);
 
-    const goNextElement = () => {
-        if (selectedElementIndex < sortedElements.length - 1) {
-            handleSelectElement(sortedElements[selectedElementIndex + 1].id);
-        }
-    };
+    const currentMeta = currentElement
+        ? getElementMeta(currentElement.type)
+        : null;
 
     return (
-        <div className="h-full w-full flex flex-col relative overflow-hidden bg-m3-bg dark:bg-m3-dark-bg">
-            {/* LEFT MENU DRAWER (Songbook Pro Style) */}
-            {isDrawerOpen && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
-                    onClick={() => setIsDrawerOpen(false)}
-                >
-                    <div
-                        className="fixed top-0 left-0 bottom-0 z-50 w-80 max-w-[85vw] bg-m3-card dark:bg-m3-dark-card border-r border-m3-border dark:border-m3-dark-border shadow-2xl flex flex-col animate-in slide-in-from-left duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Drawer Header */}
-                        <div className="p-4 border-b border-m3-border dark:border-m3-dark-border flex flex-col gap-3 shrink-0 bg-m3-sidebar dark:bg-m3-dark-sidebar">
-                            <div className="flex items-center justify-between">
-                                <div className="min-w-0 flex-1">
-                                    <h3 className="text-base font-black text-m3-text dark:text-m3-dark-text truncate">
-                                        {service.name}
-                                    </h3>
-                                    <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary capitalize truncate">
-                                        {formatDate(service.date)}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setIsDrawerOpen(false)}
-                                    className="p-2 rounded-xl text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors shrink-0"
+        <div className="h-full flex flex-col overflow-hidden bg-background relative">
+            {/* Direct Song / Service View without redundant top bar */}
+            <div className="flex-1 overflow-hidden relative">
+                {currentSong ? (
+                    <SongView
+                        songId={currentSong.id}
+                        onBack={onLeaveService}
+                        onEdit={() => {}}
+                        setSong={(id: string) => {
+                            const matching = sortedElements.find(
+                                (e) => e.songId === id,
+                            );
+                            if (matching) navigateToElement(matching.id);
+                        }}
+                        serviceMode={true}
+                        customLeftButton={
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    onClick={() => setIsMenuOpen(true)}
+                                    className="rounded-xl shrink-0 h-9 w-9"
+                                    title="Abrir Ordem do Culto"
                                 >
-                                    <X className="w-5 h-5" />
-                                </button>
+                                    <Menu className="w-4 h-4 text-primary" />
+                                </Button>
+                                <div className="hidden sm:flex flex-col min-w-0">
+                                    <span className="text-xs font-bold text-foreground truncate max-w-44">
+                                        {service.name}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                        Item {currentIndex + 1} de {sortedElements.length}
+                                    </span>
+                                </div>
                             </div>
-
-                            {/* LEAVE SERVICE BUTTON */}
-                            <button
-                                onClick={() => {
-                                    setIsDrawerOpen(false);
-                                    onLeaveService();
-                                }}
-                                className="w-full py-2.5 px-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-900/30 font-bold text-xs flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95 transition-all shadow-xs"
+                        }
+                    />
+                ) : (
+                    <div className="h-full flex flex-col overflow-hidden bg-background">
+                        {/* Minimal top action bar only for non-song elements */}
+                        <div className="px-4 py-3 border-b border-border/80 bg-card flex items-center justify-between gap-2 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    onClick={() => setIsMenuOpen(true)}
+                                    className="rounded-xl h-9 w-9"
+                                    title="Abrir Ordem do Culto"
+                                >
+                                    <Menu className="w-4 h-4 text-primary" />
+                                </Button>
+                                <span className="text-xs font-bold text-foreground">
+                                    {service.name}
+                                </span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onLeaveService}
+                                className="text-xs font-bold text-destructive hover:bg-destructive/10 gap-1.5 h-8"
                             >
-                                <LogOut className="w-4 h-4" />
-                                Sair do Culto
-                            </button>
+                                <LogOut className="w-3.5 h-3.5" />
+                                <span>Sair</span>
+                            </Button>
                         </div>
 
-                        {/* Drawer Elements List */}
-                        <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">
-                            <div className="px-2 py-1 flex items-center justify-between">
-                                <span className="text-[10px] font-black text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider">
-                                    Elementos do Culto
-                                </span>
-                                <span className="text-[10px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
-                                    {sortedElements.length}{" "}
-                                    {sortedElements.length === 1
-                                        ? "item"
-                                        : "itens"}
-                                </span>
-                            </div>
+                        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center max-w-lg mx-auto w-full no-scrollbar">
+                            {currentElement && currentMeta && (
+                                <div className="flex flex-col items-center gap-4 w-full">
+                                    <div className={`w-14 h-14 rounded-3xl flex items-center justify-center border shadow-xs ${currentMeta.color}`}>
+                                        <currentMeta.icon className="w-6 h-6" />
+                                    </div>
+                                    <Badge variant={currentMeta.badgeVariant} className="text-xs px-3 py-1 font-bold rounded-full">
+                                        {currentMeta.label}
+                                    </Badge>
+                                    <h2 className="text-xl sm:text-2xl font-black text-foreground">
+                                        {currentElement.title || currentMeta.label}
+                                    </h2>
+                                    {currentElement.passage && (
+                                        <p className="text-sm font-bold text-primary bg-muted/60 px-4 py-2 rounded-xl border border-border">
+                                            {currentElement.passage}
+                                        </p>
+                                    )}
+                                    {currentElement.content && (
+                                        <div className="bg-card border border-border/80 p-5 rounded-2xl text-left w-full shadow-2xs">
+                                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                                                {currentElement.content}
+                                            </p>
+                                        </div>
+                                    )}
 
+                                    {/* Notes in Non-Song items */}
+                                    <div className="w-full mt-2 text-left">
+                                        {editingNotes ? (
+                                            <MusicianNotesEditor
+                                                initialNotes={currentElement.notes || ""}
+                                                onSave={saveNotes}
+                                                onCancel={() => setEditingNotes(false)}
+                                            />
+                                        ) : (
+                                            <div
+                                                className="bg-card border border-border/80 hover:border-primary/40 rounded-2xl p-3.5 transition-all cursor-pointer shadow-2xs"
+                                                onClick={() => setEditingNotes(true)}
+                                            >
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                                        <FileText className="w-3 h-3" />
+                                                        Notas
+                                                    </span>
+                                                    <Edit2 className="w-3 h-3 text-muted-foreground" />
+                                                </div>
+                                                {currentElement.notes ? (
+                                                    <p className="text-xs text-foreground italic whitespace-pre-wrap">
+                                                        {currentElement.notes}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[11px] text-muted-foreground/60 italic">
+                                                        Toque para adicionar anotações...
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Quick Slide-Over Menu for All Service Items */}
+            {isMenuOpen && (
+                <div className="fixed inset-0 z-50 flex">
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+                        onClick={() => setIsMenuOpen(false)}
+                    />
+                    <div className="relative w-80 max-w-[85vw] bg-card border-r border-border h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+                        <div className="p-4 border-b border-border bg-muted/40 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground">
+                                    Ordem do Culto
+                                </h3>
+                                <p className="text-[10px] text-muted-foreground">
+                                    {sortedElements.length} momentos
+                                </p>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="rounded-full"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">
                             {sortedElements.map((el, idx) => {
                                 const meta = getElementMeta(el.type);
-                                const Icon = meta.icon;
-                                const isSong = el.type === "song";
-                                const song = isSong ? songFor(el) : undefined;
-                                const isSelected = el.id === selectedElementId;
-
+                                const isSelected = el.id === currentElementId;
+                                const song =
+                                    el.type === "song" ? songFor(el) : undefined;
                                 return (
                                     <button
                                         key={el.id}
-                                        onClick={() =>
-                                            handleSelectElement(el.id)
-                                        }
-                                        className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-all active:scale-[0.98] ${
+                                        onClick={() => navigateToElement(el.id)}
+                                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer active:scale-[0.98] ${
                                             isSelected
-                                                ? "bg-m3-primary/10 dark:bg-m3-dark-primary/15 border-m3-primary/50 dark:border-m3-dark-primary/50 shadow-xs"
-                                                : "bg-m3-sidebar/50 dark:bg-m3-dark-sidebar/50 border-m3-border/40 dark:border-m3-dark-border/40 hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
+                                                ? "bg-primary text-primary-foreground shadow-xs"
+                                                : "text-foreground hover:bg-accent/60"
                                         }`}
                                     >
-                                        <span
-                                            className={`text-xs font-bold w-4 shrink-0 text-center ${
-                                                isSelected
-                                                    ? "text-m3-primary dark:text-m3-dark-primary"
-                                                    : "text-m3-secondary dark:text-m3-dark-secondary"
-                                            }`}
-                                        >
+                                        <span className={`text-[10px] font-mono w-4 text-center ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                                             {idx + 1}
                                         </span>
-                                        <div
-                                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${meta.bg} ${meta.text}`}
-                                        >
-                                            <Icon className="w-4 h-4" />
-                                        </div>
                                         <div className="min-w-0 flex-1">
-                                            <p
-                                                className={`text-xs font-bold truncate ${
-                                                    isSelected
-                                                        ? "text-m3-primary dark:text-m3-dark-primary"
-                                                        : "text-m3-text dark:text-m3-dark-text"
-                                                }`}
-                                            >
-                                                {isSong
-                                                    ? song
-                                                        ? song.title
-                                                        : "Cântico Desconhecido"
+                                            <p className="truncate font-bold">
+                                                {el.type === "song"
+                                                    ? song?.title || "Cântico"
                                                     : el.title || meta.label}
                                             </p>
-                                            <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary truncate">
-                                                {isSong
-                                                    ? song?.artist || meta.label
-                                                    : el.passage || meta.label}
+                                            <p className={`text-[10px] truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                                                {el.type === "song" ? song?.artist || "Cântico" : meta.label}
                                             </p>
                                         </div>
-                                        {isSelected && (
-                                            <div className="w-2 h-2 rounded-full bg-m3-primary dark:bg-m3-dark-primary shrink-0" />
+                                        {el.type === "song" && song?.metadata?.key && (
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                                                {song.metadata.key}
+                                            </span>
                                         )}
                                     </button>
                                 );
                             })}
                         </div>
-                    </div>
-                </div>
-            )}
 
-            {/* MAIN CONTENT VIEW */}
-            {!currentElement ? (
-                /* Empty state */
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                    <div className="w-14 h-14 rounded-2xl bg-m3-sidebar dark:bg-m3-dark-sidebar flex items-center justify-center mb-3">
-                        <CalendarRange className="w-6 h-6 text-m3-secondary dark:text-m3-dark-secondary" />
-                    </div>
-                    <p className="text-sm font-bold text-m3-text dark:text-m3-dark-text">
-                        Este culto não tem elementos.
-                    </p>
-                    <button
-                        onClick={onLeaveService}
-                        className="mt-4 px-4 py-2 bg-m3-primary text-white text-xs font-bold rounded-xl"
-                    >
-                        Voltar aos Cultos
-                    </button>
-                </div>
-            ) : currentElement.type === "song" && currentSong ? (
-                /* SONG VIEW MODE WITH MENU BUTTON */
-                <SongView
-                    songId={currentSong.id}
-                    onBack={() => setIsDrawerOpen(true)}
-                    onEdit={() => {}}
-                    setSong={(newSongId) => {
-                        const targetEl = sortedElements.find((e) => {
-                            if (e.type !== "song") return false;
-                            const s = songFor(e);
-                            return s?.id === newSongId;
-                        });
-                        if (targetEl) {
-                            setSelectedElementId(targetEl.id);
-                        }
-                    }}
-                    serviceMode={true}
-                    customLeftButton={
-                        <button
-                            onClick={() => setIsDrawerOpen(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/40 dark:border-m3-dark-border/40 text-m3-text dark:text-m3-dark-text font-medium hover:bg-m3-hover active:scale-95 transition-all shadow-xs"
-                            title="Abrir Menu do Culto"
-                        >
-                            <Menu className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                            <span className="text-xs font-bold">Menu</span>
-                        </button>
-                    }
-                />
-            ) : (
-                /* NON-SONG ELEMENT VIEW OR MISSING SONG */
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
-                    {/* Top Navbar */}
-                    <div className="h-16 px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-dark-border flex items-center justify-between shrink-0 select-none z-40 relative">
-                        <button
-                            onClick={() => setIsDrawerOpen(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/40 dark:border-m3-dark-border/40 text-m3-text dark:text-m3-dark-text font-medium hover:bg-m3-hover active:scale-95 transition-all shadow-xs"
-                            title="Abrir Menu do Culto"
-                        >
-                            <Menu className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                            <span className="text-xs font-bold">Menu</span>
-                        </button>
-                        <div className="text-center min-w-0 px-2">
-                            <h2 className="text-xs font-bold text-m3-text dark:text-m3-dark-text truncate">
-                                {service.name}
-                            </h2>
-                            <p className="text-[10px] text-m3-secondary dark:text-m3-dark-secondary">
-                                Elemento {selectedElementIndex + 1} de{" "}
-                                {sortedElements.length}
-                            </p>
+                        {/* Slide-over Footer with Exit Service Option */}
+                        <div className="p-3 border-t border-border bg-muted/30">
+                            <Button
+                                variant="outline"
+                                onClick={onLeaveService}
+                                className="w-full text-xs font-bold text-destructive hover:bg-destructive/10 border-destructive/30 gap-1.5"
+                            >
+                                <LogOut className="w-3.5 h-3.5" />
+                                <span>Sair do Modo Culto</span>
+                            </Button>
                         </div>
-                        <div className="w-16" />{" "}
-                        {/* Spacer for visual center alignment */}
-                    </div>
-
-                    {/* Non-Song Main Body */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-start max-w-2xl mx-auto w-full gap-5 no-scrollbar">
-                        {/* Meta badge */}
-                        {(() => {
-                            const meta = getElementMeta(currentElement.type);
-                            const Icon = meta.icon;
-                            return (
-                                <div className="flex flex-col items-center gap-3 pt-4">
-                                    <div
-                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xs ${meta.bg} ${meta.text}`}
-                                    >
-                                        <Icon className="w-7 h-7" />
-                                    </div>
-                                    <span
-                                        className={`text-xs font-bold px-3.5 py-1 rounded-full uppercase tracking-wider ${meta.bg} ${meta.text}`}
-                                    >
-                                        {meta.label}
-                                    </span>
-                                </div>
-                            );
-                        })()}
-
-                        {/* Title */}
-                        <h1 className="text-xl sm:text-2xl font-black text-center text-m3-text dark:text-m3-dark-text leading-snug">
-                            {currentElement.type === "song"
-                                ? "Cântico não encontrado"
-                                : currentElement.title ||
-                                  getElementMeta(currentElement.type).label}
-                        </h1>
-
-                        {/* Passage Card */}
-                        {currentElement.passage && (
-                            <div className="w-full bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border p-4 rounded-2xl flex items-center gap-3">
-                                <BookOpen className="w-5 h-5 text-fuchsia-600 dark:text-fuchsia-400 shrink-0" />
-                                <div>
-                                    <span className="text-[10px] font-bold text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider block">
-                                        Passagem Bíblica
-                                    </span>
-                                    <p className="text-sm font-bold text-m3-text dark:text-m3-dark-text">
-                                        {currentElement.passage}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Content Box */}
-                        {currentElement.content && (
-                            <div className="w-full bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border p-5 rounded-2xl">
-                                <p className="text-sm text-m3-text dark:text-m3-dark-text whitespace-pre-wrap leading-relaxed">
-                                    {currentElement.content}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Notes Section */}
-                        <div className="w-full space-y-2">
-                            <div className="flex items-center justify-between px-1">
-                                <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary uppercase tracking-wider flex items-center gap-1.5">
-                                    <FileText className="w-3.5 h-3.5" />
-                                    Notas Músico
-                                </span>
-                                {editingNotesId !== currentElement.id && (
-                                    <button
-                                        onClick={() =>
-                                            setEditingNotesId(currentElement.id)
-                                        }
-                                        className="text-xs font-bold text-m3-primary dark:text-m3-dark-primary hover:underline flex items-center gap-1"
-                                    >
-                                        <Edit2 className="w-3 h-3" />
-                                        {currentElement.notes
-                                            ? "Editar"
-                                            : "Adicionar"}
-                                    </button>
-                                )}
-                            </div>
-
-                            {editingNotesId === currentElement.id ? (
-                                <MusicianNotesEditor
-                                    initialNotes={currentElement.notes || ""}
-                                    onSave={(notes) =>
-                                        handleSaveNotes(
-                                            currentElement.id,
-                                            notes,
-                                        )
-                                    }
-                                    onCancel={() => setEditingNotesId(null)}
-                                />
-                            ) : currentElement.notes ? (
-                                <div
-                                    onClick={() =>
-                                        setEditingNotesId(currentElement.id)
-                                    }
-                                    className="p-4 rounded-2xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border text-xs italic text-m3-text dark:text-m3-dark-text whitespace-pre-wrap cursor-pointer hover:border-m3-primary/40 transition-colors"
-                                >
-                                    {currentElement.notes}
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() =>
-                                        setEditingNotesId(currentElement.id)
-                                    }
-                                    className="w-full p-4 rounded-2xl bg-m3-sidebar/50 dark:bg-m3-dark-sidebar/50 border border-dashed border-m3-border dark:border-m3-dark-border text-xs italic text-m3-secondary dark:text-m3-dark-secondary text-left hover:bg-m3-hover transition-colors"
-                                >
-                                    Nenhuma nota adicionada. Clique para
-                                    escrever notas de apoio...
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Bottom Navigation Bar */}
-                    <div className="p-3 bg-m3-toolbar dark:bg-m3-dark-toolbar border-t border-m3-border dark:border-m3-dark-border flex items-center justify-between gap-3 shrink-0">
-                        <button
-                            onClick={goPrevElement}
-                            disabled={selectedElementIndex <= 0}
-                            className="flex-1 py-3 px-4 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border dark:border-m3-dark-border font-bold text-xs flex items-center justify-center gap-1.5 text-m3-text dark:text-m3-dark-text disabled:opacity-30 active:scale-95 transition-all shadow-xs"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                            Anterior
-                        </button>
-
-                        <button
-                            onClick={goNextElement}
-                            disabled={
-                                selectedElementIndex >=
-                                sortedElements.length - 1
-                            }
-                            className="flex-1 py-3 px-4 rounded-xl bg-m3-primary dark:bg-m3-dark-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-30 active:scale-95 transition-all shadow-xs"
-                        >
-                            Seguinte
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
                     </div>
                 </div>
             )}

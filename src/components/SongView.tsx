@@ -13,6 +13,7 @@ import {
     Eye,
     EyeOff,
     Heart,
+    LogOut,
     Minus,
     Pause,
     Plus,
@@ -28,6 +29,8 @@ import React, {
     useState,
 } from "react";
 import { useAppStore } from "../store/appStore";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 interface SongViewProps {
     songId: string;
@@ -102,7 +105,7 @@ export default function SongView({
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [isPlayingYoutube, setIsPlayingYoutube] = useState(false);
     const [isScrolling, setIsScrolling] = useState(false);
-    const [scrollSpeed, setScrollSpeed] = useState(5); // Auto-scroll speed (1 to 10)
+    const [scrollSpeed, setScrollSpeed] = useState(5);
     const wakeLockActiveRef = useRef(keepScreenAwake);
 
     const song = useMemo(
@@ -114,21 +117,18 @@ export default function SongView({
         return song ? parseChordPro(song.content) : null;
     }, [song]);
 
-    // High-Perf DOM Refs (prevents re-renders)
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const leftIndicatorRef = useRef<HTMLDivElement | null>(null);
     const rightIndicatorRef = useRef<HTMLDivElement | null>(null);
-    const wakeLockRef = useRef<WakeLockSentinel | null>(null);
-    const controlsPopoverRef = useRef<HTMLDivElement | null>(null);
-    const settingsBtnRef = useRef<HTMLButtonElement | null>(null);
-
-    // Auto-Scroll Refs
     const scrollRequestRef = useRef<number | null>(null);
     const lastScrollTimeRef = useRef<number | null>(null);
     const exactScrollTopRef = useRef<number>(0);
+    const controlsPopoverRef = useRef<HTMLDivElement | null>(null);
+    const settingsBtnRef = useRef<HTMLButtonElement | null>(null);
+    const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
-    // Swipe interaction ref state
+    // Gestures
     const swipeInfo = useRef({
         startX: 0,
         startY: 0,
@@ -138,16 +138,10 @@ export default function SongView({
         isLockedVertical: false,
     });
 
-    // Suggested capo when transpose is applied and instrument is guitar
-    const suggestedCapo = useMemo(() => {
-        if (instrument !== "guitar" || transposeVal === 0) return null;
-        return getSuggestedCapo(ast?.metadata.key, transposeVal);
-    }, [instrument, transposeVal, ast?.metadata.key]);
-
-    // Close popover when clicking outside
+    // Close controls popover when clicked outside
     useEffect(() => {
         if (!showControls) return;
-        const handleOutsideClick = (e: MouseEvent) => {
+        const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
             if (
                 controlsPopoverRef.current &&
                 !controlsPopoverRef.current.contains(e.target as Node) &&
@@ -158,11 +152,13 @@ export default function SongView({
             }
         };
         document.addEventListener("mousedown", handleOutsideClick);
-        return () =>
+        document.addEventListener("touchstart", handleOutsideClick);
+        return () => {
             document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("touchstart", handleOutsideClick);
+        };
     }, [showControls]);
 
-    // Navigation Actions
     const handleNextSong = useCallback(() => {
         if (canSwipeNext) {
             const nextId = activeSongIds[currentIndex + 1];
@@ -187,7 +183,7 @@ export default function SongView({
         }
     }, [canSwipePrev, activeSongIds, currentIndex, setSong]);
 
-    // Screen Keep-Awake effect
+    // Keep-Awake
     useEffect(() => {
         let isMounted = true;
         async function requestWakeLock() {
@@ -236,7 +232,7 @@ export default function SongView({
         };
     }, [songId, keepScreenAwake]);
 
-    // Simple & High-Performance Auto-Scroll Loop (Capacitor Safe)
+    // Auto-Scroll Loop
     useEffect(() => {
         if (!isScrolling) {
             if (scrollRequestRef.current !== null) {
@@ -251,7 +247,6 @@ export default function SongView({
         if (!scrollContainer) return;
 
         exactScrollTopRef.current = scrollContainer.scrollTop;
-
         const basePixelsPerMs = 0.005 + scrollSpeed * 0.005;
 
         const scrollStep = (timestamp: number) => {
@@ -264,27 +259,21 @@ export default function SongView({
             const elapsed = timestamp - lastScrollTimeRef.current;
             lastScrollTimeRef.current = timestamp;
 
-            const container = scrollContainerRef.current;
-            if (!container) return;
+            const increment = elapsed * basePixelsPerMs;
+            exactScrollTopRef.current += increment;
 
-            if (
-                Math.abs(container.scrollTop - exactScrollTopRef.current) > 15
-            ) {
-                exactScrollTopRef.current = container.scrollTop;
+            if (scrollContainer) {
+                scrollContainer.scrollTop = Math.floor(
+                    exactScrollTopRef.current,
+                );
+                if (
+                    scrollContainer.scrollTop + scrollContainer.clientHeight >=
+                    scrollContainer.scrollHeight - 2
+                ) {
+                    setIsScrolling(false);
+                    return;
+                }
             }
-
-            const distanceToScroll = basePixelsPerMs * elapsed;
-
-            if (
-                container.scrollTop + container.clientHeight >=
-                container.scrollHeight - 2
-            ) {
-                setIsScrolling(false);
-                return;
-            }
-
-            exactScrollTopRef.current += distanceToScroll;
-            container.scrollTop = exactScrollTopRef.current;
 
             scrollRequestRef.current = requestAnimationFrame(scrollStep);
         };
@@ -292,28 +281,26 @@ export default function SongView({
         scrollRequestRef.current = requestAnimationFrame(scrollStep);
 
         return () => {
-            if (scrollRequestRef.current !== null)
+            if (scrollRequestRef.current !== null) {
                 cancelAnimationFrame(scrollRequestRef.current);
+                scrollRequestRef.current = null;
+            }
+            lastScrollTimeRef.current = null;
         };
     }, [isScrolling, scrollSpeed]);
 
-    // Reset when changing songs
-    useEffect(() => {
-        setIsScrolling(false);
-        if (scrollContainerRef.current)
-            scrollContainerRef.current.scrollTop = 0;
-    }, [songId]);
-
-    // High-Perf Swipe Handlers
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        const touch = e.touches[0];
         swipeInfo.current = {
-            startX: e.touches[0].clientX,
-            startY: e.touches[0].clientY,
-            currentX: e.touches[0].clientX,
-            currentY: e.touches[0].clientY,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            currentX: touch.clientX,
+            currentY: touch.clientY,
             isSwiping: true,
             isLockedVertical: false,
         };
+
         if (contentRef.current) {
             contentRef.current.style.transition = "none";
         }
@@ -321,32 +308,30 @@ export default function SongView({
 
     const handleTouchMove = useCallback(
         (e: React.TouchEvent) => {
-            if (!swipeInfo.current.isSwiping) return;
+            if (!swipeInfo.current.isSwiping || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            swipeInfo.current.currentX = touch.clientX;
+            swipeInfo.current.currentY = touch.clientY;
 
-            swipeInfo.current.currentX = e.touches[0].clientX;
-            swipeInfo.current.currentY = e.touches[0].clientY;
-
-            let dx = swipeInfo.current.currentX - swipeInfo.current.startX;
-            const dy = swipeInfo.current.currentY - swipeInfo.current.startY;
+            const dx = touch.clientX - swipeInfo.current.startX;
+            const dy = touch.clientY - swipeInfo.current.startY;
 
             if (
                 !swipeInfo.current.isLockedVertical &&
-                Math.abs(dy) > 10 &&
-                Math.abs(dy) > Math.abs(dx)
+                Math.abs(dy) > Math.abs(dx) &&
+                Math.abs(dy) > 10
             ) {
                 swipeInfo.current.isLockedVertical = true;
             }
 
             if (swipeInfo.current.isLockedVertical) return;
 
-            const resistance = 0.3;
-
-            if ((dx > 0 && !canSwipePrev) || (dx < 0 && !canSwipeNext)) {
-                dx = dx * 0.05;
-            }
-
             if (contentRef.current) {
-                contentRef.current.style.transform = `translateX(${dx * resistance}px)`;
+                const resistedDx =
+                    (dx > 0 && !canSwipePrev) || (dx < 0 && !canSwipeNext)
+                        ? dx * 0.2
+                        : dx * 0.65;
+                contentRef.current.style.transform = `translateX(${resistedDx}px)`;
             }
 
             if (dx > 20 && canSwipePrev && leftIndicatorRef.current) {
@@ -402,16 +387,13 @@ export default function SongView({
 
     if (!song || !ast) {
         return (
-            <div className="p-8 text-center bg-m3-bg dark:bg-m3-dark-bg h-full flex flex-col items-center justify-center">
-                <p className="text-sm text-m3-secondary dark:text-m3-dark-secondary">
+            <div className="p-8 text-center bg-background h-full flex flex-col items-center justify-center">
+                <p className="text-sm text-muted-foreground">
                     Cântico não encontrado ou foi removido.
                 </p>
-                <button
-                    onClick={onBack}
-                    className="mt-4 bg-m3-primary text-white px-5 py-2.5 rounded-2xl text-xs font-bold active:scale-95 transition-all"
-                >
+                <Button onClick={onBack} className="mt-4 text-xs font-bold">
                     Voltar para Biblioteca
-                </button>
+                </Button>
             </div>
         );
     }
@@ -421,532 +403,287 @@ export default function SongView({
 
     return (
         <div
-            className="flex-1 flex flex-col h-full bg-m3-bg dark:bg-m3-dark-bg overflow-hidden relative"
+            className="flex-1 flex flex-col h-full bg-background overflow-hidden relative"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Top Navbar */}
+            {/* Top Clean Navbar */}
             <div
-                className="px-4 bg-m3-toolbar dark:bg-m3-dark-toolbar border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between shrink-0 select-none z-40 relative"
+                className="px-3 sm:px-4 bg-card border-b border-border flex items-center justify-between shrink-0 select-none z-40 relative"
                 style={{
                     paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))",
                     paddingBottom: "0.5rem",
-                    minHeight: "4rem",
+                    minHeight: "3.75rem",
                 }}
             >
                 {customLeftButton ? (
                     customLeftButton
                 ) : (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={onBack}
-                        className="flex items-center gap-1 text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary dark:hover:text-m3-dark-primary font-medium transition-colors"
+                        className="text-xs font-bold gap-1.5 h-9 text-muted-foreground hover:text-foreground"
                         aria-label="Voltar"
                     >
-                        <ArrowLeft className="w-5 h-5 text-m3-primary dark:text-m3-dark-primary" />
-                        <span className="text-sm">
-                            {serviceMode ? "Culto" : "Biblioteca"}
-                        </span>
-                    </button>
+                        <ArrowLeft className="w-4 h-4 text-primary" />
+                        <span>{serviceMode ? "Culto" : "Biblioteca"}</span>
+                    </Button>
                 )}
 
                 <div className="flex items-center gap-1.5">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => toggleFavoriteSong(song.id)}
-                        aria-label={
+                        className={`rounded-full h-9 w-9 ${
                             isFav
-                                ? "Remover dos favoritos"
-                                : "Adicionar aos favoritos"
-                        }
-                        aria-pressed={isFav}
-                        className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
-                            isFav
-                                ? "text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/40"
-                                : "text-m3-secondary dark:text-m3-dark-secondary border border-m3-border/30"
+                                ? "text-rose-500 bg-rose-50 dark:bg-rose-950/30"
+                                : "text-muted-foreground hover:text-foreground"
                         }`}
-                        title={
-                            isFav
-                                ? "Remover dos favoritos"
-                                : "Adicionar aos favoritos"
-                        }
+                        title={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                     >
-                        <Heart
-                            className={`w-4.5 h-4.5 ${isFav ? "fill-current" : ""}`}
-                        />
-                    </button>
+                        <Heart className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                    </Button>
 
                     {!serviceMode && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={onEdit}
-                            className="p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors text-m3-secondary dark:text-m3-dark-secondary"
+                            className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
                             title="Editar Cântico"
-                            aria-label="Editar Cântico"
                         >
-                            <Edit2 className="w-4.5 h-4.5 text-m3-primary dark:text-m3-dark-primary" />
-                        </button>
+                            <Edit2 className="w-4 h-4 text-primary" />
+                        </Button>
                     )}
 
-                    <button
+                    <Button
                         ref={settingsBtnRef}
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setShowControls(!showControls)}
-                        aria-expanded={showControls}
-                        aria-controls="song-settings-popover"
-                        className={`p-2.5 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${showControls ? "bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text border border-m3-border/30" : "text-m3-secondary dark:text-m3-dark-secondary"}`}
+                        className={`rounded-full h-9 w-9 ${
+                            showControls ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                        }`}
                         title="Ajustar Tom e Tamanho"
-                        aria-label="Ajustar Tom e Tamanho"
                     >
-                        <SlidersHorizontal className="w-4 h-4 text-m3-primary dark:text-m3-dark-primary" />
-                    </button>
+                        <SlidersHorizontal className="w-4 h-4 text-primary" />
+                    </Button>
+
+                    {serviceMode && (
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={onBack}
+                            className="rounded-full h-9 w-9 text-destructive hover:bg-destructive/10 ml-1"
+                            title="Sair do Culto"
+                        >
+                            <LogOut className="w-4 h-4" />
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {/* Settings Popover — closes on outside click, accessible */}
+            {/* Settings Popover */}
             {showControls && (
                 <div
                     id="song-settings-popover"
                     role="dialog"
                     aria-label="Ajustes de Leitura"
                     ref={controlsPopoverRef}
-                    className="absolute right-4 top-16 w-72 bg-m3-card/95 dark:bg-m3-dark-card/95 backdrop-blur-xl border border-m3-border dark:border-m3-dark-border rounded-2xl shadow-xl z-50 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200 max-h-[80vh] overflow-y-auto"
+                    className="absolute right-4 top-16 w-72 bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl z-50 p-4 space-y-4 select-none animate-in fade-in slide-in-from-top-1 duration-200 max-h-[80vh] overflow-y-auto"
                 >
-                    {/* Header */}
-                    <div className="border-b border-m3-border/30 dark:border-m3-dark-border/30 pb-2 flex items-center justify-between">
-                        <span className="text-xs font-black text-m3-text dark:text-m3-dark-text uppercase tracking-wider">
+                    <div className="border-b border-border pb-2 flex items-center justify-between">
+                        <span className="text-xs font-black text-foreground uppercase tracking-wider">
                             Ajustes de Leitura
                         </span>
                         <button
                             onClick={() => setShowControls(false)}
-                            className="text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary hover:underline"
-                            aria-label="Fechar ajustes"
+                            className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                         >
                             Fechar
                         </button>
                     </div>
 
-                    {/* Chord / Lyrics Display */}
+                    {/* Transpose & Capo Control */}
                     <div className="space-y-2">
-                        <span
-                            id="display-label"
-                            className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block"
-                        >
-                            Exibição:
-                        </span>
-                        <div
-                            role="group"
-                            aria-labelledby="display-label"
-                            className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
-                        >
-                            <button
-                                onClick={() => setShowChords(false)}
-                                aria-pressed={!showChords}
-                                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                                    !showChords
-                                        ? "bg-m3-primary text-white shadow-xs"
-                                        : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                }`}
-                            >
-                                <EyeOff className="w-3 h-3" /> Apenas Letra
-                            </button>
-                            <button
-                                onClick={() => setShowChords(true)}
-                                aria-pressed={showChords}
-                                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                                    showChords
-                                        ? "bg-m3-primary text-white shadow-xs"
-                                        : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-text"
-                                }`}
-                            >
-                                <Eye className="w-3.5 h-3.5" /> Com Cifras
-                            </button>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                            <span className="text-muted-foreground">Transposição</span>
+                            <span className="font-mono text-primary">
+                                {transposeVal > 0 ? `+${transposeVal}` : transposeVal} semitons
+                            </span>
                         </div>
-                    </div>
-
-                    {/* 2-Column Layout Toggle */}
-                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
-                            <Columns2 className="w-3.5 h-3.5" /> 2 Colunas:
-                        </span>
-                        <button
-                            onClick={() => setTwoColumnLayout(!twoColumnLayout)}
-                            aria-pressed={twoColumnLayout}
-                            aria-label={
-                                twoColumnLayout
-                                    ? "Desativar 2 colunas"
-                                    : "Ativar 2 colunas"
-                            }
-                            className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${twoColumnLayout ? "bg-m3-primary" : "bg-neutral-200 dark:bg-zinc-800"}`}
-                        >
-                            <div
-                                className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${twoColumnLayout ? "translate-x-4" : "translate-x-0"}`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* Transpose */}
-                    {showChords && (
-                        <div className="space-y-1.5 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
-                                    Transposição:
-                                </span>
-                                <span className="text-[11px] font-bold px-2 py-0.5 bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text rounded font-mono">
-                                    {transposeVal > 0
-                                        ? `+${transposeVal}`
-                                        : transposeVal}{" "}
-                                    st
-                                </span>
-                            </div>
-                            <div
-                                role="group"
-                                aria-label="Controles de transposição"
-                                className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
+                        <div className="flex items-center justify-between gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTransposeVal((v) => v - 1)}
+                                className="flex-1 font-black text-sm h-8 rounded-xl"
                             >
-                                <button
-                                    onClick={() =>
-                                        setTransposeVal((p) =>
-                                            p - 1 < -12 ? 11 : p - 1,
-                                        )
-                                    }
-                                    aria-label="Descer meio-tom (bemol)"
-                                    className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
-                                >
-                                    <Minus className="w-3 h-3" />
-                                    <span>♭</span>
-                                </button>
-                                <button
-                                    onClick={() => setTransposeVal(0)}
-                                    aria-label="Tom original"
-                                    className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
-                                        transposeVal === 0
-                                            ? "bg-m3-primary text-white shadow-xs"
-                                            : "text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover"
-                                    }`}
-                                >
-                                    Original
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        setTransposeVal((p) =>
-                                            p + 1 > 11 ? -12 : p + 1,
-                                        )
-                                    }
-                                    aria-label="Subir meio-tom (sustenido)"
-                                    className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center gap-0.5"
-                                >
-                                    <span>#</span>
-                                    <Plus className="w-3 h-3" />
-                                </button>
-                            </div>
+                                <Minus className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTransposeVal(0)}
+                                className="text-[10px] font-bold px-3 h-8 rounded-xl"
+                            >
+                                Original
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTransposeVal((v) => v + 1)}
+                                className="flex-1 font-black text-sm h-8 rounded-xl"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                            </Button>
+                        </div>
 
-                            {/* Capo section — only for guitar */}
-                            {isGuitar && (
-                                <div className="space-y-1.5 pt-2 mt-1 border-t border-m3-border/20 dark:border-m3-dark-border/20">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-                                            Capo (guitarra):
-                                        </span>
-                                        <div className="flex items-center gap-1.5">
-                                            {capoVal > 0 && (
-                                                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded font-mono border border-amber-300 dark:border-amber-800">
-                                                    {capoVal}ª casa
-                                                </span>
-                                            )}
-                                            <span className="text-[11px] font-bold px-2 py-0.5 bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text rounded font-mono">
-                                                {capoVal}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div
-                                        role="group"
-                                        aria-label="Controles de capo"
-                                        className="grid grid-cols-3 gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30"
-                                    >
+                        {isGuitar && (
+                            <div className="pt-2">
+                                <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+                                    <span className="text-muted-foreground">Capotraste</span>
+                                    <span className="font-mono text-primary">
+                                        {capoVal === 0 ? "Nenhum" : `Traste ${capoVal}`}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border">
+                                    {[0, 1, 2, 3, 4, 5].map((traste) => (
                                         <button
-                                            onClick={() =>
-                                                setCapoVal((p) =>
-                                                    Math.max(0, p - 1),
-                                                )
-                                            }
-                                            aria-label="Diminuir capo"
-                                            className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center"
-                                        >
-                                            <Minus className="w-3 h-3" />
-                                        </button>
-                                        <button
-                                            onClick={() => setCapoVal(0)}
-                                            aria-label="Sem capo"
-                                            className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
-                                                capoVal === 0
-                                                    ? "bg-amber-500 text-white shadow-xs"
-                                                    : "text-m3-secondary dark:text-m3-dark-secondary hover:bg-m3-hover"
+                                            key={traste}
+                                            onClick={() => setCapoVal(traste)}
+                                            className={`flex-1 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                capoVal === traste
+                                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                                    : "text-muted-foreground hover:text-foreground"
                                             }`}
                                         >
-                                            Sem Capo
+                                            {traste === 0 ? "-" : traste}
                                         </button>
-                                        <button
-                                            onClick={() =>
-                                                setCapoVal((p) =>
-                                                    Math.min(11, p + 1),
-                                                )
-                                            }
-                                            aria-label="Aumentar capo"
-                                            className="py-1 text-xs font-bold rounded-lg transition-all text-m3-text dark:text-m3-dark-text hover:bg-m3-hover dark:hover:bg-m3-dark-hover flex items-center justify-center"
-                                        >
-                                            <Plus className="w-3 h-3" />
-                                        </button>
-                                    </div>
-
-                                    {/* Both controls: apply together */}
-                                    <div className="grid grid-cols-2 gap-1 pt-1">
-                                        <button
-                                            onClick={() => {
-                                                setTransposeVal(0);
-                                                setCapoVal(0);
-                                            }}
-                                            aria-label="Repor tom e capo"
-                                            className="py-1.5 text-[10px] font-bold rounded-lg transition-all text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/30 hover:bg-m3-hover"
-                                        >
-                                            Repor Tudo
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                // Set capo = capoVal, adjust transpose to keep sounding key the same
-                                                const newTranspose =
-                                                    transposeVal + capoVal;
-                                                setTransposeVal(
-                                                    newTranspose > 11
-                                                        ? newTranspose - 12
-                                                        : newTranspose < -12
-                                                          ? newTranspose + 12
-                                                          : newTranspose,
-                                                );
-                                                setCapoVal(0);
-                                            }}
-                                            aria-label="Converter capo em transposição"
-                                            className="py-1.5 text-[10px] font-bold rounded-lg transition-all text-m3-secondary dark:text-m3-dark-secondary bg-m3-sidebar dark:bg-m3-dark-sidebar border border-m3-border/30 hover:bg-m3-hover"
-                                        >
-                                            Capo → Tom
-                                        </button>
-                                    </div>
-
-                                    {/* Capo suggestion based on transpose */}
-                                    {suggestedCapo && (
-                                        <div className="mt-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-2.5 space-y-1.5">
-                                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
-                                                Sugestão de Capo
-                                            </p>
-                                            <p className="text-[10px] text-emerald-800 dark:text-emerald-300">
-                                                Capo na{" "}
-                                                <strong>
-                                                    {suggestedCapo.capo}ª casa
-                                                </strong>{" "}
-                                                → tocar em formato{" "}
-                                                <strong>
-                                                    {suggestedCapo.chordShape}
-                                                </strong>
-                                            </p>
-                                            <button
-                                                onClick={() => {
-                                                    const newTranspose =
-                                                        transposeVal -
-                                                        suggestedCapo.capo;
-                                                    setTransposeVal(
-                                                        ((newTranspose % 12) +
-                                                            12) %
-                                                            12 >
-                                                            6
-                                                            ? (((newTranspose %
-                                                                  12) +
-                                                                  12) %
-                                                                  12) -
-                                                                  12
-                                                            : ((newTranspose %
-                                                                  12) +
-                                                                  12) %
-                                                                  12,
-                                                    );
-                                                    setCapoVal(
-                                                        suggestedCapo.capo,
-                                                    );
-                                                }}
-                                                aria-label={`Aplicar sugestão: capo na ${suggestedCapo.capo}ª casa`}
-                                                className="w-full py-1.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95"
-                                            >
-                                                Aplicar Sugestão
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Chord Diagrams & Instrument */}
-                    {showChords && (
-                        <div className="space-y-3 border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                            <div className="space-y-1.5">
-                                <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary block">
-                                    Diagramas / Instrumento:
-                                </span>
-                                <div className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1 mb-1">
-                                    <button
-                                        onClick={() => setShowDiagrams(false)}
-                                        aria-pressed={!showDiagrams}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${!showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
-                                    >
-                                        Ocultar
-                                    </button>
-                                    <button
-                                        onClick={() => setShowDiagrams(true)}
-                                        aria-pressed={showDiagrams}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${showDiagrams ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
-                                    >
-                                        Mostrar
-                                    </button>
-                                </div>
-                                <div
-                                    role="group"
-                                    aria-label="Instrumento"
-                                    className="flex bg-m3-sidebar dark:bg-m3-dark-sidebar p-0.5 rounded-xl border border-m3-border/30 gap-1"
-                                >
-                                    <button
-                                        onClick={() => {
-                                            setInstrument("guitar");
-                                        }}
-                                        aria-pressed={instrument === "guitar"}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "guitar" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
-                                    >
-                                        Guitarra
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setInstrument("piano");
-                                            setCapoVal(0); // piano has no capo
-                                        }}
-                                        aria-pressed={instrument === "piano"}
-                                        className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all ${instrument === "piano" ? "bg-m3-primary text-white" : "text-m3-secondary hover:text-m3-text"}`}
-                                    >
-                                        Piano
-                                    </button>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
-                    {/* Font Size */}
-                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
-                            Tamanho da Letra:
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={() =>
-                                    setFontSize(Math.max(10, fontSize - 1))
-                                }
-                                aria-label="Diminuir tamanho da letra"
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                    {/* Font Size Slider */}
+                    <div className="space-y-2 pt-2 border-t border-border">
+                        <div className="flex items-center justify-between text-xs font-bold">
+                            <span className="text-muted-foreground">Tamanho da Letra</span>
+                            <span className="font-mono text-primary">{fontSize}px</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="icon-sm"
+                                onClick={() => setFontSize(Math.max(10, fontSize - 2))}
+                                className="rounded-xl h-8 w-8"
                             >
                                 <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span
-                                aria-live="polite"
-                                className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center"
-                            >
-                                {fontSize}px
-                            </span>
-                            <button
-                                onClick={() =>
-                                    setFontSize(Math.min(28, fontSize + 1))
-                                }
-                                aria-label="Aumentar tamanho da letra"
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
+                            </Button>
+                            <input
+                                type="range"
+                                min={10}
+                                max={34}
+                                step={1}
+                                value={fontSize}
+                                onChange={(e) => setFontSize(parseInt(e.target.value))}
+                                className="flex-1 accent-primary h-2 bg-muted rounded-lg cursor-pointer"
+                            />
+                            <Button
+                                variant="outline"
+                                size="icon-sm"
+                                onClick={() => setFontSize(Math.min(34, fontSize + 2))}
+                                className="rounded-xl h-8 w-8"
                             >
                                 <Plus className="w-3.5 h-3.5" />
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
-                    {/* Scroll Speed */}
-                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary">
-                            Velocidade do Scroll:
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={() =>
-                                    setScrollSpeed(Math.max(1, scrollSpeed - 1))
-                                }
-                                aria-label="Diminuir velocidade"
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
-                            >
-                                <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span
-                                aria-live="polite"
-                                className="text-[10px] font-mono font-black text-m3-text dark:text-m3-dark-text min-w-6 text-center"
-                            >
-                                {scrollSpeed}
-                            </span>
-                            <button
-                                onClick={() =>
-                                    setScrollSpeed(
-                                        Math.min(10, scrollSpeed + 1),
-                                    )
-                                }
-                                aria-label="Aumentar velocidade"
-                                className="w-7 h-7 rounded-lg bg-m3-sidebar dark:bg-m3-dark-sidebar hover:bg-m3-hover flex items-center justify-center text-xs font-black text-m3-secondary border border-m3-border/20 active:scale-90 transition-transform"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                            </button>
+                    {/* Auto-Scroll Speed */}
+                    <div className="space-y-2 pt-2 border-t border-border">
+                        <div className="flex items-center justify-between text-xs font-bold">
+                            <span className="text-muted-foreground">Velocidade do Scroll</span>
+                            <span className="font-mono text-primary">{scrollSpeed}x</span>
                         </div>
+                        <input
+                            type="range"
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={scrollSpeed}
+                            onChange={(e) => setScrollSpeed(parseInt(e.target.value))}
+                            className="w-full accent-primary h-2 bg-muted rounded-lg cursor-pointer"
+                        />
                     </div>
 
-                    {/* Keep Screen Awake */}
-                    <div className="flex items-center justify-between border-t border-m3-border/30 dark:border-m3-dark-border/30 pt-3">
-                        <span className="text-[11px] font-bold text-m3-secondary dark:text-m3-dark-secondary flex items-center gap-1">
-                            <Sun className="w-3.5 h-3.5" /> Ecrã Sempre Ativo:
-                        </span>
+                    {/* Toggles */}
+                    <div className="space-y-1.5 pt-2 border-t border-border">
+                        <button
+                            onClick={() => setShowChords(!showChords)}
+                            className="w-full flex items-center justify-between py-2 px-1 text-xs font-bold text-foreground cursor-pointer"
+                        >
+                            <span>Mostrar Acordes</span>
+                            {showChords ? (
+                                <Eye className="w-4 h-4 text-primary" />
+                            ) : (
+                                <EyeOff className="w-4 h-4 text-muted-foreground" />
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setTwoColumnLayout(!twoColumnLayout)}
+                            className="w-full flex items-center justify-between py-2 px-1 text-xs font-bold text-foreground cursor-pointer"
+                        >
+                            <span>Layout em 2 Colunas</span>
+                            <Columns2
+                                className={`w-4 h-4 ${
+                                    twoColumnLayout ? "text-primary" : "text-muted-foreground"
+                                }`}
+                            />
+                        </button>
+
                         <button
                             onClick={() => setKeepScreenAwake(!keepScreenAwake)}
-                            role="switch"
-                            aria-checked={keepScreenAwake}
-                            aria-label={
-                                keepScreenAwake
-                                    ? "Desativar ecrã sempre ativo"
-                                    : "Ativar ecrã sempre ativo"
-                            }
-                            className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center ${keepScreenAwake ? "bg-m3-primary" : "bg-neutral-200 dark:bg-zinc-800"}`}
+                            className="w-full flex items-center justify-between py-2 px-1 text-xs font-bold text-foreground cursor-pointer"
                         >
-                            <div
-                                className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${keepScreenAwake ? "translate-x-4" : "translate-x-0"}`}
+                            <span>Ecrã Sempre Ativo</span>
+                            <Sun
+                                className={`w-4 h-4 ${
+                                    keepScreenAwake ? "text-amber-500" : "text-muted-foreground"
+                                }`}
                             />
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Glowing Swipe Indicators */}
+            {/* Swipe Indicators */}
             <div
                 ref={leftIndicatorRef}
-                aria-hidden="true"
-                className="absolute left-0 inset-y-0 w-24 bg-linear-to-r from-m3-primary/20 to-transparent flex items-center justify-start pl-4 opacity-0 pointer-events-none z-30 transition-opacity"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-30 opacity-0 pointer-events-none transition-transform"
             >
-                <ChevronLeft className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
+                <div className="bg-primary text-white p-3 rounded-full shadow-xl">
+                    <ChevronLeft className="w-6 h-6" />
+                </div>
             </div>
-
             <div
                 ref={rightIndicatorRef}
-                aria-hidden="true"
-                className="absolute right-0 inset-y-0 w-24 bg-linear-to-l from-m3-primary/20 to-transparent flex items-center justify-end pr-4 opacity-0 pointer-events-none z-30 transition-opacity"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 opacity-0 pointer-events-none transition-transform"
             >
-                <ChevronRight className="w-10 h-10 text-m3-primary dark:text-m3-dark-primary drop-shadow-md" />
+                <div className="bg-primary text-white p-3 rounded-full shadow-xl">
+                    <ChevronRight className="w-6 h-6" />
+                </div>
             </div>
 
-            {/* Scrollable Main View Engine (Capacitor Safe) */}
+            {/* Song Content Area */}
             <div
                 ref={scrollContainerRef}
-                className="absolute inset-0 top-16 w-full overflow-y-auto overflow-x-hidden will-change-scroll"
-                style={{ WebkitOverflowScrolling: "touch" }}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar touch-pan-y"
             >
                 <div
                     ref={contentRef}
@@ -969,29 +706,22 @@ export default function SongView({
                 </div>
             </div>
 
-            {/* Floating Navigation Controls */}
+            {/* Floating Auto-scroll, YouTube & Navigation Controls */}
             <div
-                className={`absolute right-5 flex flex-col items-end gap-3 select-none shrink-0 z-40 transition-all duration-300 pointer-events-none ${showYoutubePlayer ? "bottom-20" : "bottom-5"}`}
+                className={`absolute right-5 flex flex-col items-end gap-3 select-none shrink-0 z-40 transition-all duration-300 pointer-events-none ${
+                    showYoutubePlayer ? "bottom-20" : "bottom-5"
+                }`}
             >
                 <div className="pointer-events-auto">
                     <button
                         onClick={() => setIsScrolling(!isScrolling)}
                         aria-pressed={isScrolling}
-                        className={`p-3.5 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4 ${
+                        className={`p-3.5 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
                             isScrolling
-                                ? "bg-neutral-800 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300 shadow-m3-primary/20"
-                                : "bg-m3-primary dark:bg-m3-dark-primary text-white border-m3-primary-light dark:border-m3-dark-primary-light hover:opacity-90"
+                                ? "bg-neutral-900 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300 shadow-primary/20"
+                                : "bg-primary text-primary-foreground border-primary-foreground/20 hover:opacity-95"
                         }`}
-                        title={
-                            isScrolling
-                                ? "Pausar Rolar Automático"
-                                : "Iniciar Rolar Automático"
-                        }
-                        aria-label={
-                            isScrolling
-                                ? "Pausar Rolar Automático"
-                                : "Iniciar Rolar Automático"
-                        }
+                        title={isScrolling ? "Pausar Scroll" : "Iniciar Scroll Automático"}
                     >
                         {isScrolling ? (
                             <Pause className="w-5 h-5" />
@@ -1010,9 +740,8 @@ export default function SongView({
                                 setIsPlayingYoutube(next);
                             }}
                             aria-pressed={showYoutubePlayer}
-                            className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95 flex items-center justify-center animate-in slide-in-from-bottom-4"
-                            title="Ouvir Áudio no YouTube"
-                            aria-label="Ouvir Áudio no YouTube"
+                            className="p-3.5 rounded-full shadow-lg border border-red-500 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
+                            title="Ouvir no YouTube"
                         >
                             <YTIcon className="w-5 h-5" />
                         </button>
@@ -1024,10 +753,10 @@ export default function SongView({
                         onClick={handlePrevSong}
                         disabled={!canSwipePrev}
                         aria-label="Cântico anterior"
-                        className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
+                        className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
                             canSwipePrev
-                                ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
-                                : "bg-m3-border/20 dark:bg-m3-dark-border/10 text-m3-secondary/40 border-transparent cursor-not-allowed"
+                                ? "bg-card border-border text-primary hover:bg-accent"
+                                : "bg-muted text-muted-foreground/40 border-transparent cursor-not-allowed"
                         }`}
                     >
                         <ChevronLeft className="w-5 h-5" />
@@ -1035,7 +764,7 @@ export default function SongView({
 
                     <span
                         aria-live="polite"
-                        className="bg-m3-card/90 dark:bg-m3-dark-card/90 border border-m3-border dark:border-m3-dark-border backdrop-blur-md text-[10px] font-bold font-mono px-3 py-2 rounded-full text-m3-secondary dark:text-m3-dark-secondary"
+                        className="bg-card/90 border border-border backdrop-blur-md text-[10px] font-bold font-mono px-3 py-2 rounded-full text-muted-foreground"
                     >
                         {currentIndex !== -1
                             ? `${currentIndex + 1} / ${activeSongIds.length}`
@@ -1046,10 +775,10 @@ export default function SongView({
                         onClick={handleNextSong}
                         disabled={!canSwipeNext}
                         aria-label="Próximo cântico"
-                        className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center ${
+                        className={`p-3 rounded-full shadow-lg border transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
                             canSwipeNext
-                                ? "bg-m3-card dark:bg-m3-dark-card border-m3-border dark:border-m3-dark-border text-m3-primary dark:text-m3-dark-primary hover:bg-m3-hover dark:hover:bg-m3-dark-hover"
-                                : "bg-m3-border/20 dark:bg-m3-dark-border/10 text-m3-secondary/40 border-transparent cursor-not-allowed"
+                                ? "bg-card border-border text-primary hover:bg-accent"
+                                : "bg-muted text-muted-foreground/40 border-transparent cursor-not-allowed"
                         }`}
                     >
                         <ChevronRight className="w-5 h-5" />

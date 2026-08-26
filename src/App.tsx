@@ -3,7 +3,14 @@ import {
     AlertTriangle,
     ArrowLeft,
     CalendarRange,
+    ChevronLeft,
+    ChevronRight,
     CircleDot,
+    Clock,
+    Folder,
+    Heart,
+    LogIn,
+    LogOut,
     Menu,
     Music,
     Plus,
@@ -13,18 +20,20 @@ import {
     Timer,
     X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AuthModal } from "./components/auth/AuthModal";
 import FirstTimeSetup from "./components/FirstTimeSetup";
 import NavigationDrawer from "./components/NavigationDrawer";
 import ServiceManager from "./components/ServiceManager";
+import { getRoleBadge } from "./components/settings/settingsUtils";
 import SongBrowser from "./components/SongBrowser";
 import SongEditor from "./components/SongEditor";
 import SongView from "./components/SongView";
+import { Badge } from "./components/ui/badge";
+import { Button } from "./components/ui/button";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useAppStore } from "./store/appStore";
 import { getSectionTitle } from "./utils";
-import { Badge } from "./components/ui/badge";
-import { Button } from "./components/ui/button";
 
 const PULL_THRESHOLD = 68;
 const PULL_MAX = 96;
@@ -55,7 +64,13 @@ function AppContent() {
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
 
-    const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+    const { user, organization, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
+
+    const songs = useAppStore((state) => state.songs);
+    const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
+    const recentlyPlayedSongIds = useAppStore(
+        (state) => state.recentlyPlayedSongIds,
+    );
 
     const activeSongId = useAppStore((state) => state.activeSongId);
     const setActiveSongId = useAppStore((state) => state.setActiveSongId);
@@ -82,10 +97,27 @@ function AppContent() {
     const searchQuery = useAppStore((state) => state.searchQuery);
     const setSearchQuery = useAppStore((state) => state.setSearchQuery);
     const [showDrawer, setShowDrawer] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     const initRxDbSubscriptions = useAppStore(
         (state) => state.initRxDbSubscriptions,
     );
+
+    const uniqueFolders = useMemo(() => {
+        const folders = songs.map((s) => s.folder).filter(Boolean);
+        return Array.from(new Set(folders)).sort();
+    }, [songs]);
+
+    const getUserInitials = (name?: string) => {
+        if (!name) return "U";
+        return name
+            .split(" ")
+            .map((w) => w.charAt(0))
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     useEffect(() => {
         rehydrateStore();
@@ -272,62 +304,228 @@ function AppContent() {
 
     return (
         <div className="flex-1 flex overflow-hidden bg-background text-foreground relative h-full">
-            {/* Tablet Sidebar Navigation for large viewports (>= md / 768px) */}
+            {/* Tablet Sidebar Navigation: Retractable, Direct Folder & Library Access, User Profile Card */}
             {!activeSongId && !isEditing && !isPresenting && (
-                <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card p-4 shrink-0 justify-between select-none">
-                    <div className="space-y-6">
-                        {/* Tablet Brand Header */}
-                        <div className="flex items-center gap-3 px-2">
-                            <img
-                                src="/logo.png"
-                                className="w-9 h-9 rounded-2xl border border-border/40 shadow-xs object-cover"
-                                alt="Hosanna"
-                            />
-                            <div>
-                                <h1 className="text-base font-black text-primary tracking-tight">
+                <aside
+                    className={`hidden md:flex flex-col border-r border-border/80 bg-card select-none transition-all duration-300 relative ${
+                        isSidebarCollapsed ? "w-18 p-2.5" : "w-72 p-3.5"
+                    }`}
+                >
+                    {/* Retract / Expand Collapse Button */}
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        className="absolute -right-3.5 top-6 z-30 w-7 h-7 rounded-full bg-card border border-border/90 shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        title={isSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+                    >
+                        {isSidebarCollapsed ? (
+                            <ChevronRight className="w-4 h-4" />
+                        ) : (
+                            <ChevronLeft className="w-4 h-4" />
+                        )}
+                    </button>
+
+                    {/* Brand Header */}
+                    <div className="flex items-center gap-3 px-2 pt-1 pb-3 shrink-0">
+                        <img
+                            src="/logo.png"
+                            className="w-9 h-9 rounded-2xl border border-border/40 shadow-xs object-cover shrink-0"
+                            alt="Hosanna"
+                        />
+                        {!isSidebarCollapsed && (
+                            <div className="min-w-0 flex-1">
+                                <h1 className="text-base font-black text-primary tracking-tight leading-none">
                                     Hosanna
                                 </h1>
-                                <p className="text-[10px] text-muted-foreground font-semibold">
-                                    Música & Cultos
-                                </p>
+                                {organization ? (
+                                    <p className="text-[10px] text-muted-foreground font-semibold truncate mt-0.5">
+                                        {organization.name}
+                                    </p>
+                                ) : (
+                                    <p className="text-[10px] text-muted-foreground font-semibold">
+                                        Música & Cultos
+                                    </p>
+                                )}
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Navigation Links */}
-                        <nav className="space-y-1">
+                    {/* Main Nav Links */}
+                    <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar py-2">
+                        <div className="space-y-1">
+                            {!isSidebarCollapsed && (
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-2.5 mb-1.5">
+                                    Principal
+                                </p>
+                            )}
+
+                            {/* Songs */}
                             <button
                                 onClick={() => {
                                     setActiveListContext({ type: "all" });
                                     setActiveSongId(null);
                                     setIsEditing(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                    activeListContext.type !== "service" && !isOnMenu
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
+                                    activeListContext.type === "all"
                                         ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                                }`}
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Todos os Cânticos"
                             >
-                                <Music className="w-4 h-4" />
-                                <span>Cânticos</span>
+                                <Music className="w-4 h-4 shrink-0" />
+                                {!isSidebarCollapsed && (
+                                    <>
+                                        <span className="truncate">Todos os Cânticos</span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                                                activeListContext.type === "all"
+                                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {songs.length}
+                                        </Badge>
+                                    </>
+                                )}
                             </button>
 
+                            {/* Services */}
                             <button
                                 onClick={() => {
                                     setActiveListContext({ type: "service" });
                                     setActiveSongId(null);
                                     setIsEditing(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                                     activeListContext.type === "service"
                                         ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                                }`}
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Cultos"
                             >
-                                <CalendarRange className="w-4 h-4" />
-                                <span>Cultos</span>
+                                <CalendarRange className="w-4 h-4 shrink-0" />
+                                {!isSidebarCollapsed && <span>Cultos</span>}
                             </button>
 
-                            <div className="h-px bg-border/60 my-2" />
+                            {/* Favorites */}
+                            <button
+                                onClick={() => {
+                                    setActiveListContext({ type: "favorites" });
+                                    setActiveSongId(null);
+                                    setIsEditing(false);
+                                }}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
+                                    activeListContext.type === "favorites"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Favoritos"
+                            >
+                                <Heart className={`w-4 h-4 shrink-0 ${activeListContext.type === "favorites" ? "fill-primary-foreground" : "text-rose-500 fill-rose-500"}`} />
+                                {!isSidebarCollapsed && (
+                                    <>
+                                        <span className="truncate">Favoritos</span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                                                activeListContext.type === "favorites"
+                                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {favoriteSongIds.length}
+                                        </Badge>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Recently Played */}
+                            <button
+                                onClick={() => {
+                                    setActiveListContext({ type: "recent" });
+                                    setActiveSongId(null);
+                                    setIsEditing(false);
+                                }}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
+                                    activeListContext.type === "recent"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Recentes"
+                            >
+                                <Clock className={`w-4 h-4 shrink-0 ${activeListContext.type === "recent" ? "text-primary-foreground" : "text-amber-500"}`} />
+                                {!isSidebarCollapsed && (
+                                    <>
+                                        <span className="truncate">Recentes</span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                                                activeListContext.type === "recent"
+                                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {recentlyPlayedSongIds.length}
+                                        </Badge>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Folders in Tablet Sidebar */}
+                        {!isSidebarCollapsed && uniqueFolders.length > 0 && (
+                            <div className="space-y-1 pt-2 border-t border-border/60">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-2.5 mb-1.5">
+                                    Pastas
+                                </p>
+                                {uniqueFolders.map((folder) => {
+                                    const count = songs.filter(
+                                        (s) => s.folder === folder,
+                                    ).length;
+                                    const isSelected =
+                                        activeListContext.type === "folder" &&
+                                        activeListContext.folderName === folder;
+                                    return (
+                                        <button
+                                            key={folder}
+                                            onClick={() => {
+                                                setActiveListContext({
+                                                    type: "folder",
+                                                    folderName: folder,
+                                                });
+                                                setActiveSongId(null);
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
+                                                isSelected
+                                                    ? "bg-primary/10 text-primary border border-primary/20"
+                                                    : "text-foreground hover:bg-accent/60"
+                                            }`}
+                                        >
+                                            <Folder className="w-3.5 h-3.5 text-primary shrink-0" />
+                                            <span className="truncate flex-1 text-left">
+                                                {folder}
+                                            </span>
+                                            <Badge
+                                                variant="secondary"
+                                                className="text-[10px] px-1.5 py-0.2 rounded font-mono"
+                                            >
+                                                {count}
+                                            </Badge>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Tools Navigation */}
+                        <div className="space-y-1 pt-2 border-t border-border/60">
+                            {!isSidebarCollapsed && (
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider px-2.5 mb-1.5">
+                                    Ferramentas
+                                </p>
+                            )}
 
                             <button
                                 onClick={() => {
@@ -335,14 +533,15 @@ function AppContent() {
                                     setActiveSongId(null);
                                     setIsEditing(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                                     activeListContext.type === "circle"
                                         ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                                }`}
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Círculo da Quinta"
                             >
-                                <CircleDot className="w-4 h-4 text-emerald-500" />
-                                <span>Círculo da Quinta</span>
+                                <CircleDot className="w-4 h-4 text-emerald-500 shrink-0" />
+                                {!isSidebarCollapsed && <span>Círculo da Quinta</span>}
                             </button>
 
                             <button
@@ -351,14 +550,15 @@ function AppContent() {
                                     setActiveSongId(null);
                                     setIsEditing(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                                     activeListContext.type === "metronome"
                                         ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                                }`}
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Metrónomo"
                             >
-                                <Timer className="w-4 h-4 text-sky-500" />
-                                <span>Metrónomo</span>
+                                <Timer className="w-4 h-4 text-sky-500 shrink-0" />
+                                {!isSidebarCollapsed && <span>Metrónomo</span>}
                             </button>
 
                             <button
@@ -367,36 +567,83 @@ function AppContent() {
                                     setActiveSongId(null);
                                     setIsEditing(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                                     activeListContext.type === "settings"
                                         ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                                }`}
+                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
+                                title="Definições"
                             >
-                                <Settings className="w-4 h-4 text-slate-400" />
-                                <span>Definições</span>
+                                <Settings className="w-4 h-4 text-slate-400 shrink-0" />
+                                {!isSidebarCollapsed && <span>Definições</span>}
                             </button>
-                        </nav>
+                        </div>
                     </div>
 
-                    <div className="pt-4 border-t border-border">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowDrawer(true)}
-                            className="w-full justify-start text-xs font-bold gap-2"
-                        >
-                            <Menu className="w-4 h-4 text-primary" />
-                            <span>Explorar Biblioteca</span>
-                        </Button>
+                    {/* User Profile Card at the Bottom of Tablet Sidebar */}
+                    <div className="pt-3 border-t border-border/80 shrink-0">
+                        {isAuthenticated && user ? (
+                            <div
+                                onClick={() => {
+                                    setActiveListContext({ type: "settings" });
+                                    setActiveSongId(null);
+                                    setIsEditing(false);
+                                }}
+                                className={`p-2.5 rounded-2xl bg-muted/50 border border-border/60 hover:border-primary/40 flex items-center gap-2.5 transition-all cursor-pointer active:scale-[0.98] ${
+                                    isSidebarCollapsed ? "justify-center p-2" : "justify-between"
+                                }`}
+                                title={user.name}
+                            >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-8 h-8 rounded-full bg-linear-to-tr from-sky-600 to-indigo-600 flex items-center justify-center font-black text-white text-xs overflow-hidden shrink-0 shadow-2xs">
+                                        {user.image ? (
+                                            <img
+                                                src={user.image}
+                                                alt={user.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span>{getUserInitials(user.name)}</span>
+                                        )}
+                                    </div>
+                                    {!isSidebarCollapsed && (
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-foreground truncate">
+                                                {user.name}
+                                            </p>
+                                            <p className="text-[10px] text-muted-foreground truncate">
+                                                {user.email}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                {!isSidebarCollapsed && (
+                                    <div className="shrink-0">
+                                        {getRoleBadge(user.role || "member")}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                size="sm"
+                                className={`w-full text-xs font-bold rounded-xl gap-1.5 ${
+                                    isSidebarCollapsed ? "px-0 justify-center" : ""
+                                }`}
+                                title="Iniciar Sessão"
+                            >
+                                <LogIn className="w-3.5 h-3.5" />
+                                {!isSidebarCollapsed && <span>Entrar</span>}
+                            </Button>
+                        )}
                     </div>
                 </aside>
             )}
 
             <div className="flex-1 flex flex-col h-full overflow-hidden">
-                {/* Mobile / Universal Top App Bar */}
+                {/* Top Search / Header Bar */}
                 {!activeSongId && !isEditing && !isPresenting && (
-                    <header className="px-3.5 sm:px-5 pb-3.5 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] bg-background border-b border-border flex items-center gap-2.5 shrink-0 z-20 relative">
+                    <header className="px-3.5 sm:px-5 pb-3.5 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] bg-background border-b border-border/80 flex items-center gap-2.5 shrink-0 z-20 relative">
                         <Button
                             variant="outline"
                             size="sm"
@@ -473,7 +720,7 @@ function AppContent() {
                     ref={contentRef}
                     className="flex-1 overflow-hidden relative touch-pan-y"
                 >
-                    {/* Pull-to-Refresh Native Indicator */}
+                    {/* Pull-to-Refresh Indicator */}
                     <div
                         className="absolute left-1/2 top-2 z-30 flex items-center justify-center w-9 h-9 rounded-full bg-card border border-border/80 shadow-md pointer-events-none"
                         style={{
@@ -546,9 +793,9 @@ function AppContent() {
                     </div>
                 </div>
 
-                {/* Mobile Floating Bottom Bar (Hidden on Tablets/Desktop & in full views) */}
+                {/* Mobile Floating Bottom Bar */}
                 {!activeSongId && !isEditing && !isPresenting && !isOnMenu && (
-                    <div className="md:hidden absolute bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[72%] max-w-60 h-14 bg-card/85 border border-border/80 rounded-full shadow-xl shadow-black/10 px-3 flex items-center justify-around select-none z-40 backdrop-blur-md">
+                    <div className="md:hidden absolute bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[72%] max-w-60 h-14 bg-card/90 border border-border/80 rounded-full shadow-xl shadow-black/10 px-3 flex items-center justify-around select-none z-40 backdrop-blur-md">
                         <button
                             onClick={() => {
                                 setActiveListContext({ type: "all" });
@@ -605,6 +852,11 @@ function AppContent() {
                     </div>
                 )}
             </div>
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+            />
         </div>
     );
 }
