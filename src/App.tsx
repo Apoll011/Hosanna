@@ -1,5 +1,4 @@
 // src/App.tsx
-import { QueryClientProvider } from "@tanstack/react-query";
 import {
     AlertTriangle,
     ArrowLeft,
@@ -18,7 +17,6 @@ import SongBrowser from "./components/SongBrowser";
 import SongEditor from "./components/SongEditor";
 import SongView from "./components/SongView";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { queryClient } from "./queryClient";
 import { useAppStore } from "./store/appStore";
 import { getSectionTitle } from "./utils";
 
@@ -482,10 +480,8 @@ function AppContent() {
 
 export default function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <AppContent />
-            </AuthProvider>
-        </QueryClientProvider>
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
