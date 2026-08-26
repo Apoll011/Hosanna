@@ -17,7 +17,10 @@ import { roles, isPermissionAllowedForRole, type AppRole } from "./roles";
 
 function getCachedUserRole(): AppRole | null {
     try {
-        const raw = typeof localStorage !== "undefined" ? localStorage.getItem("hosanna_auth_cache") : null;
+        const raw =
+            typeof localStorage !== "undefined"
+                ? localStorage.getItem("hosanna_auth_cache")
+                : null;
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         return (parsed?.user?.role as AppRole) ?? null;

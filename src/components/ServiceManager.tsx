@@ -28,7 +28,13 @@ type ViewMode = "list" | "detail" | "present" | "song" | "musician";
 
 const ELEMENT_META: Record<
     string,
-    { label: string; icon: React.ElementType; color: string; badgeVariant: "primaryLight" | "success" | "warning" | "secondary" | "default" }
+    {
+        label: string;
+        icon: React.ElementType;
+        color: string;
+        badgeVariant:
+            "primaryLight" | "success" | "warning" | "secondary" | "default";
+    }
 > = {
     song: {
         label: "Cântico",
@@ -288,7 +294,11 @@ export default function ServiceManager() {
                 target?.isContentEditable;
             if (isTyping) return;
 
-            if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+            if (
+                e.key === "ArrowRight" ||
+                e.key === " " ||
+                e.key === "PageDown"
+            ) {
                 e.preventDefault();
                 goNext();
             } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
@@ -370,7 +380,8 @@ export default function ServiceManager() {
                             Nenhum culto agendado
                         </h3>
                         <p className="text-xs text-muted-foreground max-w-64">
-                            Os cultos e reuniões planeados aparecerão aqui organizados cronologicamente.
+                            Os cultos e reuniões planeados aparecerão aqui
+                            organizados cronologicamente.
                         </p>
                     </div>
                 ) : (
@@ -379,16 +390,22 @@ export default function ServiceManager() {
                             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                                 Próximos & Recentes
                             </span>
-                            <Badge variant="secondary" className="text-[10px] font-mono font-semibold">
-                                {filteredServices.length} {filteredServices.length === 1 ? "culto" : "cultos"}
+                            <Badge
+                                variant="secondary"
+                                className="text-[10px] font-mono font-semibold"
+                            >
+                                {filteredServices.length}{" "}
+                                {filteredServices.length === 1
+                                    ? "culto"
+                                    : "cultos"}
                             </Badge>
                         </div>
 
                         {filteredServices.map((service) => {
                             const count = service.elements?.length || 0;
-                            const songsInService = (service.elements || []).filter(
-                                (e) => e.type === "song",
-                            ).length;
+                            const songsInService = (
+                                service.elements || []
+                            ).filter((e) => e.type === "song").length;
                             return (
                                 <div
                                     key={service.id}
@@ -406,13 +423,22 @@ export default function ServiceManager() {
                                             <span className="text-xs text-muted-foreground capitalize font-medium">
                                                 {formatDate(service.date)}
                                             </span>
-                                            <span className="text-muted-foreground/40 text-xs">•</span>
+                                            <span className="text-muted-foreground/40 text-xs">
+                                                •
+                                            </span>
                                             <span className="text-xs text-muted-foreground font-medium">
-                                                {count} {count === 1 ? "item" : "itens"}
+                                                {count}{" "}
+                                                {count === 1 ? "item" : "itens"}
                                             </span>
                                             {songsInService > 0 && (
-                                                <Badge variant="primaryLight" className="text-[10px] px-1.5 py-0 rounded">
-                                                    {songsInService} {songsInService === 1 ? "cântico" : "cânticos"}
+                                                <Badge
+                                                    variant="primaryLight"
+                                                    className="text-[10px] px-1.5 py-0 rounded"
+                                                >
+                                                    {songsInService}{" "}
+                                                    {songsInService === 1
+                                                        ? "cântico"
+                                                        : "cânticos"}
                                                 </Badge>
                                             )}
                                         </div>
@@ -483,12 +509,22 @@ export default function ServiceManager() {
                     {/* Summary banner */}
                     <div className="flex items-center justify-between px-1">
                         <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs font-semibold">
-                                {sortedElements.length} {sortedElements.length === 1 ? "Elemento" : "Elementos"}
+                            <Badge
+                                variant="outline"
+                                className="text-xs font-semibold"
+                            >
+                                {sortedElements.length}{" "}
+                                {sortedElements.length === 1
+                                    ? "Elemento"
+                                    : "Elementos"}
                             </Badge>
                             {songCount > 0 && (
-                                <Badge variant="primaryLight" className="text-xs font-semibold">
-                                    {songCount} {songCount === 1 ? "Cântico" : "Cânticos"}
+                                <Badge
+                                    variant="primaryLight"
+                                    className="text-xs font-semibold"
+                                >
+                                    {songCount}{" "}
+                                    {songCount === 1 ? "Cântico" : "Cânticos"}
                                 </Badge>
                             )}
                         </div>
@@ -522,7 +558,9 @@ export default function ServiceManager() {
                                 const meta = getElementMeta(el.type);
                                 const Icon = meta.icon;
                                 const song =
-                                    el.type === "song" ? songFor(el) : undefined;
+                                    el.type === "song"
+                                        ? songFor(el)
+                                        : undefined;
                                 const isSong = el.type === "song";
 
                                 return (
@@ -560,10 +598,13 @@ export default function ServiceManager() {
                                                             ? song
                                                                 ? song.title
                                                                 : "Cântico Desconhecido"
-                                                            : el.title || meta.label}
+                                                            : el.title ||
+                                                              meta.label}
                                                     </p>
                                                     <Badge
-                                                        variant={meta.badgeVariant}
+                                                        variant={
+                                                            meta.badgeVariant
+                                                        }
                                                         className="text-[9px] px-1.5 py-0 rounded font-semibold"
                                                     >
                                                         {meta.label}
@@ -571,8 +612,11 @@ export default function ServiceManager() {
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground truncate mt-0.5 font-medium">
                                                     {isSong
-                                                        ? song?.artist || "Artista desconhecido"
-                                                        : el.passage || el.content || ""}
+                                                        ? song?.artist ||
+                                                          "Artista desconhecido"
+                                                        : el.passage ||
+                                                          el.content ||
+                                                          ""}
                                                 </p>
                                             </div>
 
@@ -584,13 +628,15 @@ export default function ServiceManager() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setEditingNotesId(
-                                                            editingNotesId === el.id
+                                                            editingNotesId ===
+                                                                el.id
                                                                 ? null
                                                                 : el.id,
                                                         );
                                                     }}
                                                     className={`rounded-xl text-muted-foreground hover:text-foreground ${
-                                                        editingNotesId === el.id || el.notes
+                                                        editingNotesId ===
+                                                            el.id || el.notes
                                                             ? "text-primary bg-primary/10"
                                                             : ""
                                                     }`}
@@ -609,10 +655,14 @@ export default function ServiceManager() {
                                         {editingNotesId === el.id ? (
                                             <div
                                                 className="mt-2 pl-8"
-                                                onClick={(e) => e.stopPropagation()}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
                                             >
                                                 <NotesEditor
-                                                    initialNotes={el.notes || ""}
+                                                    initialNotes={
+                                                        el.notes || ""
+                                                    }
                                                     onSave={(notes) =>
                                                         saveNotes(el.id, notes)
                                                     }
@@ -669,7 +719,10 @@ export default function ServiceManager() {
                         >
                             <X className="w-4 h-4" />
                         </Button>
-                        <Badge variant="outline" className="text-xs font-mono font-bold">
+                        <Badge
+                            variant="outline"
+                            className="text-xs font-mono font-bold"
+                        >
                             {stepIndex + 1} / {total}
                         </Badge>
                     </div>
@@ -693,7 +746,10 @@ export default function ServiceManager() {
                         <Icon className="w-7 h-7" />
                     </div>
 
-                    <Badge variant={meta.badgeVariant} className="text-xs px-3 py-1 font-bold rounded-full">
+                    <Badge
+                        variant={meta.badgeVariant}
+                        className="text-xs px-3 py-1 font-bold rounded-full"
+                    >
                         {meta.label}
                     </Badge>
 

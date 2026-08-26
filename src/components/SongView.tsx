@@ -1,7 +1,4 @@
-import {
-    ChordProRenderer,
-    parseChordPro,
-} from "@hosanna/shared";
+import { ChordProRenderer, parseChordPro } from "@hosanna/shared";
 import {
     ArrowLeft,
     ChevronLeft,
@@ -489,9 +486,15 @@ export default function SongView({
                                 ? "text-rose-500 bg-rose-50 dark:bg-rose-950/30"
                                 : "text-muted-foreground hover:text-foreground"
                         }`}
-                        title={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                        title={
+                            isFav
+                                ? "Remover dos favoritos"
+                                : "Adicionar aos favoritos"
+                        }
                     >
-                        <Heart className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                        <Heart
+                            className={`w-4 h-4 ${isFav ? "fill-current" : ""}`}
+                        />
                     </Button>
 
                     {!serviceMode && (
@@ -512,7 +515,9 @@ export default function SongView({
                         size="icon-sm"
                         onClick={() => setShowControls(!showControls)}
                         className={`rounded-full h-9 w-9 ${
-                            showControls ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                            showControls
+                                ? "bg-primary/15 text-primary"
+                                : "text-muted-foreground hover:text-foreground"
                         }`}
                         title="Ajustar Tom e Tamanho"
                     >
@@ -557,9 +562,14 @@ export default function SongView({
                     {/* Transpose & Capo Control */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="text-muted-foreground">Transposição</span>
+                            <span className="text-muted-foreground">
+                                Transposição
+                            </span>
                             <span className="font-mono text-primary">
-                                {transposeVal > 0 ? `+${transposeVal}` : transposeVal} semitons
+                                {transposeVal > 0
+                                    ? `+${transposeVal}`
+                                    : transposeVal}{" "}
+                                semitons
                             </span>
                         </div>
                         <div className="flex items-center justify-between gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border">
@@ -592,9 +602,13 @@ export default function SongView({
                         {isGuitar && (
                             <div className="pt-2">
                                 <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                                    <span className="text-muted-foreground">Capotraste</span>
+                                    <span className="text-muted-foreground">
+                                        Capotraste
+                                    </span>
                                     <span className="font-mono text-primary">
-                                        {capoVal === 0 ? "Nenhum" : `Traste ${capoVal}`}
+                                        {capoVal === 0
+                                            ? "Nenhum"
+                                            : `Traste ${capoVal}`}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border">
@@ -619,14 +633,20 @@ export default function SongView({
                     {/* Font Size Slider */}
                     <div className="space-y-2 pt-2 border-t border-border">
                         <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="text-muted-foreground">Tamanho da Letra</span>
-                            <span className="font-mono text-primary">{fontSize}px</span>
+                            <span className="text-muted-foreground">
+                                Tamanho da Letra
+                            </span>
+                            <span className="font-mono text-primary">
+                                {fontSize}px
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
                                 size="icon-sm"
-                                onClick={() => setFontSize(Math.max(10, fontSize - 2))}
+                                onClick={() =>
+                                    setFontSize(Math.max(10, fontSize - 2))
+                                }
                                 className="rounded-xl h-8 w-8"
                             >
                                 <Minus className="w-3.5 h-3.5" />
@@ -637,13 +657,17 @@ export default function SongView({
                                 max={34}
                                 step={1}
                                 value={fontSize}
-                                onChange={(e) => setFontSize(parseInt(e.target.value))}
+                                onChange={(e) =>
+                                    setFontSize(parseInt(e.target.value))
+                                }
                                 className="flex-1 accent-primary h-2 bg-muted rounded-lg cursor-pointer"
                             />
                             <Button
                                 variant="outline"
                                 size="icon-sm"
-                                onClick={() => setFontSize(Math.min(34, fontSize + 2))}
+                                onClick={() =>
+                                    setFontSize(Math.min(34, fontSize + 2))
+                                }
                                 className="rounded-xl h-8 w-8"
                             >
                                 <Plus className="w-3.5 h-3.5" />
@@ -654,8 +678,12 @@ export default function SongView({
                     {/* Auto-Scroll Speed */}
                     <div className="space-y-2 pt-2 border-t border-border">
                         <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="text-muted-foreground">Velocidade do Scroll</span>
-                            <span className="font-mono text-primary">{scrollSpeed}x</span>
+                            <span className="text-muted-foreground">
+                                Velocidade do Scroll
+                            </span>
+                            <span className="font-mono text-primary">
+                                {scrollSpeed}x
+                            </span>
                         </div>
                         <input
                             type="range"
@@ -663,7 +691,9 @@ export default function SongView({
                             max={10}
                             step={1}
                             value={scrollSpeed}
-                            onChange={(e) => setScrollSpeed(parseInt(e.target.value))}
+                            onChange={(e) =>
+                                setScrollSpeed(parseInt(e.target.value))
+                            }
                             className="w-full accent-primary h-2 bg-muted rounded-lg cursor-pointer"
                         />
                     </div>
@@ -689,7 +719,9 @@ export default function SongView({
                             <span>Layout em 2 Colunas</span>
                             <Columns2
                                 className={`w-4 h-4 ${
-                                    twoColumnLayout ? "text-primary" : "text-muted-foreground"
+                                    twoColumnLayout
+                                        ? "text-primary"
+                                        : "text-muted-foreground"
                                 }`}
                             />
                         </button>
@@ -701,7 +733,9 @@ export default function SongView({
                             <span>Ecrã Sempre Ativo</span>
                             <Sun
                                 className={`w-4 h-4 ${
-                                    keepScreenAwake ? "text-amber-500" : "text-muted-foreground"
+                                    keepScreenAwake
+                                        ? "text-amber-500"
+                                        : "text-muted-foreground"
                                 }`}
                             />
                         </button>
@@ -768,7 +802,11 @@ export default function SongView({
                                 ? "bg-neutral-900 dark:bg-zinc-100 text-white dark:text-neutral-900 border-neutral-700 dark:border-zinc-300 shadow-primary/20"
                                 : "bg-primary text-primary-foreground border-primary-foreground/20 hover:opacity-95"
                         }`}
-                        title={isScrolling ? "Pausar Scroll" : "Iniciar Scroll Automático"}
+                        title={
+                            isScrolling
+                                ? "Pausar Scroll"
+                                : "Iniciar Scroll Automático"
+                        }
                     >
                         {isScrolling ? (
                             <Pause className="w-5 h-5" />

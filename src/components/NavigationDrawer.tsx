@@ -39,7 +39,8 @@ export default function NavigationDrawer({
     const setActiveSongId = useAppStore((state) => state.setActiveSongId);
     const setIsEditing = useAppStore((state) => state.setIsEditing);
 
-    const { user, organization, isAuthenticated, isOfflineAuth, logout } = useAuth();
+    const { user, organization, isAuthenticated, isOfflineAuth, logout } =
+        useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     const uniqueFolders = useMemo(() => {

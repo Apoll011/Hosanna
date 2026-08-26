@@ -63,7 +63,14 @@ function AppContent() {
     const rehydrateStore = useAppStore((state) => state.rehydrateStore);
     const isHydrated = useAppStore((state) => state.isHydrated);
 
-    const { user, organization, isAuthenticated, isLoading: isAuthLoading, isOfflineAuth, refetch: refetchAuth } = useAuth();
+    const {
+        user,
+        organization,
+        isAuthenticated,
+        isLoading: isAuthLoading,
+        isOfflineAuth,
+        refetch: refetchAuth,
+    } = useAuth();
 
     const songs = useAppStore((state) => state.songs);
     const favoriteSongIds = useAppStore((state) => state.favoriteSongIds);
@@ -132,11 +139,22 @@ function AppContent() {
                 e.preventDefault();
                 if (activeSongId) setActiveSongId(null);
                 if (isEditing) setIsEditing(false);
-                if (activeListContext.type === "service" || activeListContext.type === "circle" || activeListContext.type === "metronome" || activeListContext.type === "settings") {
+                if (
+                    activeListContext.type === "service" ||
+                    activeListContext.type === "circle" ||
+                    activeListContext.type === "metronome" ||
+                    activeListContext.type === "settings"
+                ) {
                     setActiveListContext({ type: "all" });
                 }
                 setTimeout(() => searchInputRef.current?.focus(), 50);
-            } else if (e.key === "/" && !isTyping && !activeSongId && !isEditing && !isPresenting) {
+            } else if (
+                e.key === "/" &&
+                !isTyping &&
+                !activeSongId &&
+                !isEditing &&
+                !isPresenting
+            ) {
                 e.preventDefault();
                 searchInputRef.current?.focus();
             } else if (e.key === "Escape") {
@@ -356,9 +374,15 @@ function AppContent() {
                 >
                     {/* Retract / Expand Collapse Button */}
                     <button
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        onClick={() =>
+                            setIsSidebarCollapsed(!isSidebarCollapsed)
+                        }
                         className="absolute -right-3.5 top-6 z-30 w-7 h-7 rounded-full bg-card border border-border/90 shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                        title={isSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+                        title={
+                            isSidebarCollapsed
+                                ? "Expandir menu lateral"
+                                : "Recolher menu lateral"
+                        }
                     >
                         {isSidebarCollapsed ? (
                             <ChevronRight className="w-4 h-4" />
@@ -418,7 +442,9 @@ function AppContent() {
                                 <Music className="w-4 h-4 shrink-0" />
                                 {!isSidebarCollapsed && (
                                     <>
-                                        <span className="truncate">Todos os Cânticos</span>
+                                        <span className="truncate">
+                                            Todos os Cânticos
+                                        </span>
                                         <Badge
                                             variant="secondary"
                                             className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
@@ -465,14 +491,19 @@ function AppContent() {
                                 } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
                                 title="Favoritos"
                             >
-                                <Heart className={`w-4 h-4 shrink-0 ${activeListContext.type === "favorites" ? "fill-primary-foreground" : "text-rose-500 fill-rose-500"}`} />
+                                <Heart
+                                    className={`w-4 h-4 shrink-0 ${activeListContext.type === "favorites" ? "fill-primary-foreground" : "text-rose-500 fill-rose-500"}`}
+                                />
                                 {!isSidebarCollapsed && (
                                     <>
-                                        <span className="truncate">Favoritos</span>
+                                        <span className="truncate">
+                                            Favoritos
+                                        </span>
                                         <Badge
                                             variant="secondary"
                                             className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                                                activeListContext.type === "favorites"
+                                                activeListContext.type ===
+                                                "favorites"
                                                     ? "bg-primary-foreground/20 text-primary-foreground"
                                                     : ""
                                             }`}
@@ -497,14 +528,19 @@ function AppContent() {
                                 } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
                                 title="Recentes"
                             >
-                                <Clock className={`w-4 h-4 shrink-0 ${activeListContext.type === "recent" ? "text-primary-foreground" : "text-amber-500"}`} />
+                                <Clock
+                                    className={`w-4 h-4 shrink-0 ${activeListContext.type === "recent" ? "text-primary-foreground" : "text-amber-500"}`}
+                                />
                                 {!isSidebarCollapsed && (
                                     <>
-                                        <span className="truncate">Recentes</span>
+                                        <span className="truncate">
+                                            Recentes
+                                        </span>
                                         <Badge
                                             variant="secondary"
                                             className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                                                activeListContext.type === "recent"
+                                                activeListContext.type ===
+                                                "recent"
                                                     ? "bg-primary-foreground/20 text-primary-foreground"
                                                     : ""
                                             }`}
@@ -584,7 +620,9 @@ function AppContent() {
                                 title="Círculo da Quinta"
                             >
                                 <CircleDot className="w-4 h-4 text-emerald-500 shrink-0" />
-                                {!isSidebarCollapsed && <span>Círculo da Quinta</span>}
+                                {!isSidebarCollapsed && (
+                                    <span>Círculo da Quinta</span>
+                                )}
                             </button>
 
                             <button
@@ -633,7 +671,9 @@ function AppContent() {
                                     setIsEditing(false);
                                 }}
                                 className={`p-2.5 rounded-2xl bg-muted/50 border border-border/60 hover:border-primary/40 flex items-center gap-2.5 transition-all cursor-pointer active:scale-[0.98] ${
-                                    isSidebarCollapsed ? "justify-center p-2" : "justify-between"
+                                    isSidebarCollapsed
+                                        ? "justify-center p-2"
+                                        : "justify-between"
                                 }`}
                                 title={user.name}
                             >
@@ -646,7 +686,9 @@ function AppContent() {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <span>{getUserInitials(user.name)}</span>
+                                            <span>
+                                                {getUserInitials(user.name)}
+                                            </span>
                                         )}
                                     </div>
                                     {!isSidebarCollapsed && (
@@ -671,7 +713,9 @@ function AppContent() {
                                 onClick={() => setIsAuthModalOpen(true)}
                                 size="sm"
                                 className={`w-full text-xs font-bold rounded-xl gap-1.5 ${
-                                    isSidebarCollapsed ? "px-0 justify-center" : ""
+                                    isSidebarCollapsed
+                                        ? "px-0 justify-center"
+                                        : ""
                                 }`}
                                 title="Iniciar Sessão"
                             >
@@ -731,11 +775,14 @@ function AppContent() {
                                     )}
                                 </div>
 
-                                {(isOfflineAuth || syncStatus === "offline") && (
+                                {(isOfflineAuth ||
+                                    syncStatus === "offline") && (
                                     <button
                                         onClick={() => {
                                             refetchAuth();
-                                            syncLibrary({ force: true }).catch(() => {});
+                                            syncLibrary({ force: true }).catch(
+                                                () => {},
+                                            );
                                         }}
                                         className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold shrink-0 hover:bg-amber-500/20 transition-all cursor-pointer"
                                         title="A funcionar em modo offline com sessão guardada. Clique para tentar reconectar."

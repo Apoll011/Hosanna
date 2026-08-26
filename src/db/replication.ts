@@ -102,7 +102,9 @@ async function pushWithConflictRetry<T extends SyncableDoc>(
             {
                 method: "POST",
                 credentials: "include",
-                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                headers: token
+                    ? { Authorization: `Bearer ${token}` }
+                    : undefined,
                 body: JSON.stringify({ changeRows: formattedChanges }),
             },
         );
@@ -198,7 +200,9 @@ export function setupReplication(db: HosanaDatabase): ReplicationManager {
                         }>(`/replication/${collectionName}/pull`, {
                             method: "POST",
                             credentials: "include",
-                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                            headers: token
+                                ? { Authorization: `Bearer ${token}` }
+                                : undefined,
                             body: JSON.stringify({
                                 checkpoint: lastCheckpoint || null,
                                 limit: batchSize || 100,

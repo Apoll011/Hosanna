@@ -128,7 +128,9 @@
         -moz-osx-font-smoothing: grayscale;
     }
 
-    input, textarea, [contenteditable="true"] {
+    input,
+    textarea,
+    [contenteditable="true"] {
         user-select: text;
     }
 }
@@ -144,7 +146,9 @@
 
 /* Native touch ripple & press states */
 .native-touch {
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
+    transition:
+        transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.15s ease;
 }
 .native-touch:active {
     transform: scale(0.97);

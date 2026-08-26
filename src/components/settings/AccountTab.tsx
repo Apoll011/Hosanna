@@ -530,7 +530,9 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                                 onClick={handleSaveEmail}
                             >
                                 <Save className="w-4 h-4 mr-1.5" />
-                                {isSavingEmail ? "A guardar..." : "Guardar E-mail"}
+                                {isSavingEmail
+                                    ? "A guardar..."
+                                    : "Guardar E-mail"}
                             </Button>
                         </div>
                     </div>
@@ -620,7 +622,9 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                                 onClick={handleSavePassword}
                             >
                                 <Save className="w-4 h-4 mr-1.5" />
-                                {isSavingPassword ? "A atualizar..." : "Atualizar Palavra-passe"}
+                                {isSavingPassword
+                                    ? "A atualizar..."
+                                    : "Atualizar Palavra-passe"}
                             </Button>
                         </div>
                     </div>

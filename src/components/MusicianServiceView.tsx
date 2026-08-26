@@ -20,7 +20,13 @@ import { Button } from "./ui/button";
 
 const ELEMENT_META: Record<
     string,
-    { label: string; icon: React.ElementType; color: string; badgeVariant: "primaryLight" | "success" | "warning" | "secondary" | "default" }
+    {
+        label: string;
+        icon: React.ElementType;
+        color: string;
+        badgeVariant:
+            "primaryLight" | "success" | "warning" | "secondary" | "default";
+    }
 > = {
     song: {
         label: "Cântico",
@@ -224,7 +230,8 @@ export default function MusicianServiceView({
                                         {service.name}
                                     </span>
                                     <span className="text-[10px] text-muted-foreground font-mono">
-                                        Item {currentIndex + 1} de {sortedElements.length}
+                                        Item {currentIndex + 1} de{" "}
+                                        {sortedElements.length}
                                     </span>
                                 </div>
                             </div>
@@ -262,14 +269,20 @@ export default function MusicianServiceView({
                         <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center max-w-lg mx-auto w-full no-scrollbar">
                             {currentElement && currentMeta && (
                                 <div className="flex flex-col items-center gap-4 w-full">
-                                    <div className={`w-14 h-14 rounded-3xl flex items-center justify-center border shadow-xs ${currentMeta.color}`}>
+                                    <div
+                                        className={`w-14 h-14 rounded-3xl flex items-center justify-center border shadow-xs ${currentMeta.color}`}
+                                    >
                                         <currentMeta.icon className="w-6 h-6" />
                                     </div>
-                                    <Badge variant={currentMeta.badgeVariant} className="text-xs px-3 py-1 font-bold rounded-full">
+                                    <Badge
+                                        variant={currentMeta.badgeVariant}
+                                        className="text-xs px-3 py-1 font-bold rounded-full"
+                                    >
                                         {currentMeta.label}
                                     </Badge>
                                     <h2 className="text-xl sm:text-2xl font-black text-foreground">
-                                        {currentElement.title || currentMeta.label}
+                                        {currentElement.title ||
+                                            currentMeta.label}
                                     </h2>
                                     {currentElement.passage && (
                                         <p className="text-sm font-bold text-primary bg-muted/60 px-4 py-2 rounded-xl border border-border">
@@ -288,14 +301,20 @@ export default function MusicianServiceView({
                                     <div className="w-full mt-2 text-left">
                                         {editingNotes ? (
                                             <MusicianNotesEditor
-                                                initialNotes={currentElement.notes || ""}
+                                                initialNotes={
+                                                    currentElement.notes || ""
+                                                }
                                                 onSave={saveNotes}
-                                                onCancel={() => setEditingNotes(false)}
+                                                onCancel={() =>
+                                                    setEditingNotes(false)
+                                                }
                                             />
                                         ) : (
                                             <div
                                                 className="bg-card border border-border/80 hover:border-primary/40 rounded-2xl p-3.5 transition-all cursor-pointer shadow-2xs"
-                                                onClick={() => setEditingNotes(true)}
+                                                onClick={() =>
+                                                    setEditingNotes(true)
+                                                }
                                             >
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
@@ -310,7 +329,8 @@ export default function MusicianServiceView({
                                                     </p>
                                                 ) : (
                                                     <p className="text-[11px] text-muted-foreground/60 italic">
-                                                        Toque para adicionar anotações...
+                                                        Toque para adicionar
+                                                        anotações...
                                                     </p>
                                                 )}
                                             </div>
@@ -355,7 +375,9 @@ export default function MusicianServiceView({
                                 const meta = getElementMeta(el.type);
                                 const isSelected = el.id === currentElementId;
                                 const song =
-                                    el.type === "song" ? songFor(el) : undefined;
+                                    el.type === "song"
+                                        ? songFor(el)
+                                        : undefined;
                                 return (
                                     <button
                                         key={el.id}
@@ -366,7 +388,9 @@ export default function MusicianServiceView({
                                                 : "text-foreground hover:bg-accent/60"
                                         }`}
                                     >
-                                        <span className={`text-[10px] font-mono w-4 text-center ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                                        <span
+                                            className={`text-[10px] font-mono w-4 text-center ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                                        >
                                             {idx + 1}
                                         </span>
                                         <div className="min-w-0 flex-1">
@@ -375,15 +399,22 @@ export default function MusicianServiceView({
                                                     ? song?.title || "Cântico"
                                                     : el.title || meta.label}
                                             </p>
-                                            <p className={`text-[10px] truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                                                {el.type === "song" ? song?.artist || "Cântico" : meta.label}
+                                            <p
+                                                className={`text-[10px] truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                                            >
+                                                {el.type === "song"
+                                                    ? song?.artist || "Cântico"
+                                                    : meta.label}
                                             </p>
                                         </div>
-                                        {el.type === "song" && song?.metadata?.key && (
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                                                {song.metadata.key}
-                                            </span>
-                                        )}
+                                        {el.type === "song" &&
+                                            song?.metadata?.key && (
+                                                <span
+                                                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                                                >
+                                                    {song.metadata.key}
+                                                </span>
+                                            )}
                                     </button>
                                 );
                             })}
