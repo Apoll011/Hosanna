@@ -1,6 +1,5 @@
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { useQuery } from "@tanstack/react-query";
 import {
     Camera,
     Info,
@@ -29,21 +28,24 @@ interface AccountTabProps {
 const ActiveSessionsSection: React.FC<{
     onShowToast?: (message: string, type: "success" | "error" | "info") => void;
 }> = ({ onShowToast }) => {
-    const {
-        data: sessions,
-        refetch,
-        isLoading,
-    } = useQuery({
-        queryKey: ["activeSessions"],
-        queryFn: async () => {
-            try {
-                const { data } = await authClient.listSessions();
-                return data || [];
-            } catch {
-                return [];
-            }
-        },
-    });
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const refetch = React.useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const { data } = await authClient.listSessions();
+            if (data) setSessions(data);
+        } catch {
+            setSessions([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
 
     const handleRevoke = async (token: string) => {
         try {

@@ -5,6 +5,7 @@ import {
     Song as SharedSong,
 } from "@hosanna/shared";
 import { create } from "zustand";
+import { purgeExpiredTrash } from "../db/trash";
 import {
     getDatabase,
     ReplicationManager,
@@ -218,6 +219,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         const db = await getDatabase();
         const repl = setupReplication(db);
         replicationManager = repl;
+        purgeExpiredTrash(db).catch(() => {});
 
         repl.start();
 
@@ -545,6 +547,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     syncLibrary: async () => {
+        try {
+            const db = await getDatabase();
+            await purgeExpiredTrash(db).catch(() => {});
+        } catch {}
         if (replicationManager) {
             await replicationManager.replicateNow();
         }

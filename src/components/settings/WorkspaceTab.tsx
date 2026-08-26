@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
     Building2,
     CheckCircle2,
@@ -7,7 +6,7 @@ import {
     RotateCcw,
     Users,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { authClient } from "../../lib/authClient";
 import { useAppStore } from "../../store/appStore";
@@ -30,17 +29,20 @@ export const WorkspaceTab: React.FC<WorkspaceTabProps> = ({
 
     const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
 
-    const { data: orgList } = useQuery({
-        queryKey: ["userOrganizations"],
-        queryFn: async () => {
-            try {
-                const { data } = await authClient.organization.list();
-                return data || [];
-            } catch {
-                return [];
-            }
-        },
-    });
+    const [orgList, setOrgList] = useState<any[]>([]);
+
+    useEffect(() => {
+        let isMounted = true;
+        authClient.organization
+            .list()
+            .then(({ data }) => {
+                if (isMounted && data) setOrgList(data);
+            })
+            .catch(() => {});
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     if (!active) return null;
 
