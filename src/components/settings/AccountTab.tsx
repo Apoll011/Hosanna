@@ -1,4 +1,5 @@
-import { Button, Input } from "@hosanna/shared";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { useQuery } from "@tanstack/react-query";
 import {
     Camera,

@@ -6,6 +6,8 @@ import { getSectionTitle } from "../utils";
 import CircleOfFifths from "./CircleOfFifths";
 import Metronome from "./Metronome";
 import SettingsView from "./SettingsView";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 interface SongBrowserProps {
     onSelectSong: (id: string) => void;
@@ -87,7 +89,7 @@ export default function SongBrowser({
             result = result.filter((song) => song.folder === folderToFilter);
         }
 
-        // 2. Query Searching (Title, Artist, Number, Key, Lyrics with short-circuiting)
+        // 2. Query Searching
         const q = deferredSearchQuery.trim().toLowerCase();
         if (q !== "") {
             result = result.filter((song) => {
@@ -103,7 +105,7 @@ export default function SongBrowser({
             });
         }
 
-        // 3. Sorting (preserves chronological played history for recently played, sorts others)
+        // 3. Sorting
         if (selectedSection !== "recent") {
             result.sort((a, b) => {
                 if (sortBy === "number") {
@@ -133,7 +135,6 @@ export default function SongBrowser({
     ]);
 
     const handleSelectSong = (songId: string) => {
-        // Determine active list context
         const contextType =
             selectedSection === "all" && searchQuery.trim() !== ""
                 ? "search"
@@ -147,10 +148,7 @@ export default function SongBrowser({
             searchQuery: searchQuery.trim() !== "" ? searchQuery : undefined,
         });
 
-        // Automatically record to Recently Played on open
         useAppStore.getState().addRecentlyPlayedSong(songId);
-
-        // Call component onSelect
         onSelectSong(songId);
     };
 
@@ -172,7 +170,8 @@ export default function SongBrowser({
         return () => ro.disconnect();
     }, []);
 
-    const ITEM_HEIGHT = 80;
+    // Responsive height per card (82px)
+    const ITEM_HEIGHT = 84;
     const OVERSCAN = 6;
     const totalCount = filteredAndSortedSongs.length;
     const startIndex = Math.max(
@@ -193,24 +192,33 @@ export default function SongBrowser({
     const paddingBottom = Math.max(0, (totalCount - endIndex) * ITEM_HEIGHT);
 
     return (
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-m3-bg dark:bg-m3-dark-bg relative">
-            {/* Header Search Area */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-background relative">
+            {/* Header Area */}
             {selectedSection !== "circle" &&
                 selectedSection !== "metronome" &&
                 selectedSection !== "settings" && (
-                    <div className="p-3.5 bg-m3-bg dark:bg-m3-dark-bg border-b border-m3-border dark:border-m3-border/30 flex items-center justify-between gap-2 shrink-0">
-                        {/* Active section breadcrumb */}
-                        <span className="font-mono bg-m3-sidebar dark:bg-m3-dark-sidebar px-2.5 py-1 rounded-xl border border-m3-border/30 dark:border-m3-dark-border/30 text-[10px] font-bold text-m3-primary dark:text-m3-dark-primary shadow-2xs">
-                            {getSectionTitle(
-                                selectedSection,
-                                activeListContext.folderName,
-                                selectedFolder,
-                            )}
-                        </span>
-                        <div className="flex items-center gap-1.5 text-xs text-m3-secondary dark:text-m3-dark-secondary font-medium">
+                    <div className="p-3 sm:p-4 bg-background border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
+                        {/* Active section badge */}
+                        <div className="flex items-center gap-2">
+                            <Badge
+                                variant="outline"
+                                className="font-mono bg-muted/50 px-2.5 py-1 rounded-xl border-border text-[11px] font-bold text-primary"
+                            >
+                                {getSectionTitle(
+                                    selectedSection,
+                                    activeListContext.folderName,
+                                    selectedFolder,
+                                )}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground font-semibold hidden sm:inline">
+                                ({filteredAndSortedSongs.length})
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs">
                             {selectedSection !== "recent" && (
-                                <div className="flex items-center gap-1 bg-m3-sidebar dark:bg-m3-dark-sidebar px-2 py-1 rounded-xl border border-m3-border/20">
-                                    <SlidersHorizontal className="w-3 h-3 text-m3-secondary/70" />
+                                <div className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1.5 rounded-xl border border-border/60">
+                                    <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
                                     <select
                                         id="select_sort_songs"
                                         value={sortBy}
@@ -224,27 +232,26 @@ export default function SongBrowser({
                                                     | "folder",
                                             )
                                         }
-                                        className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-m3-text dark:text-m3-dark-text focus:outline-none cursor-pointer"
+                                        className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-foreground focus:outline-none cursor-pointer"
                                     >
-                                        <option value="title">
-                                            A-Z Alfabética
-                                        </option>
+                                        <option value="title">A-Z Alfabética</option>
                                         <option value="number">Número</option>
                                         <option value="folder">Pasta</option>
                                     </select>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Quick Creator Button */}
-                        <button
-                            onClick={onAddNewSong}
-                            id="btn_create_new_song"
-                            className="flex items-center gap-1 bg-m3-primary hover:opacity-90 text-white text-xs px-3.5 py-1.5 rounded-full font-bold shadow-xs transition-all active:scale-95"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            Novo
-                        </button>
+                            {/* Quick Creator Button */}
+                            <Button
+                                onClick={onAddNewSong}
+                                id="btn_create_new_song"
+                                size="sm"
+                                className="rounded-full shadow-xs gap-1 font-bold text-xs h-8 px-3.5"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                Novo
+                            </Button>
+                        </div>
                     </div>
                 )}
 
@@ -257,47 +264,49 @@ export default function SongBrowser({
                 <SettingsView />
             ) : (
                 <>
-                    {/* Songs List Grid with Virtualization */}
+                    {/* Songs List with Virtualization and Native Touch Feel */}
                     <div
                         ref={containerRef}
                         onScroll={(e) =>
                             setScrollTop(e.currentTarget.scrollTop)
                         }
-                        className="flex-1 overflow-y-auto p-4 pb-24 no-scrollbar"
+                        className="flex-1 overflow-y-auto p-3 sm:p-5 pb-24 sm:pb-8 no-scrollbar"
                     >
                         {isLoading ? (
-                            <div className="space-y-2 animate-pulse">
+                            <div className="space-y-2.5 animate-pulse">
                                 {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 flex items-center justify-between"
+                                        className="bg-card p-4 rounded-2xl border border-border/60 flex items-center justify-between"
                                     >
                                         <div className="flex items-start gap-3 min-w-0 flex-1">
-                                            <div className="w-10 h-10 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar shrink-0" />
-                                            <div className="min-w-0 flex-1 space-y-2 pt-0.5">
-                                                <div className="h-4 bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-md w-1/3" />
-                                                <div className="h-3 bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-md w-1/4" />
+                                            <div className="w-11 h-11 rounded-2xl bg-muted shrink-0" />
+                                            <div className="min-w-0 flex-1 space-y-2 pt-1">
+                                                <div className="h-4 bg-muted rounded-md w-1/3" />
+                                                <div className="h-3 bg-muted rounded-md w-1/4" />
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 shrink-0 pl-3">
-                                            <div className="w-10 h-5 bg-m3-sidebar dark:bg-m3-dark-sidebar rounded-lg" />
-                                            <div className="w-8 h-8 rounded-full bg-m3-sidebar dark:bg-m3-dark-sidebar" />
+                                            <div className="w-10 h-6 bg-muted rounded-lg" />
+                                            <div className="w-8 h-8 rounded-full bg-muted" />
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : filteredAndSortedSongs.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-                                <Music className="w-12 h-12 text-m3-secondary dark:text-m3-dark-secondary mb-3 opacity-60" />
-                                <h3 className="text-sm font-bold text-m3-text dark:text-m3-dark-text">
+                            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+                                <div className="w-16 h-16 rounded-3xl bg-muted/60 flex items-center justify-center mb-4 border border-border/40">
+                                    <Music className="w-8 h-8 text-muted-foreground/60" />
+                                </div>
+                                <h3 className="text-base font-bold text-foreground">
                                     Nenhum cântico encontrado
                                 </h3>
-                                <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary mt-1 max-w-60">
+                                <p className="text-xs text-muted-foreground mt-1 max-w-72 leading-relaxed">
                                     {selectedSection === "favorites"
                                         ? "Ainda não marcou nenhum cântico como favorito."
                                         : selectedSection === "recent"
                                           ? "Nenhum cântico tocado recentemente."
-                                          : "Tente redefinir os filtros ou escreva outra palavra de pesquisa."}
+                                          : "Tente redefinir os filtros ou escreva outro termo de pesquisa."}
                                 </p>
                             </div>
                         ) : (
@@ -306,7 +315,7 @@ export default function SongBrowser({
                                     paddingTop: `${paddingTop}px`,
                                     paddingBottom: `${paddingBottom}px`,
                                 }}
-                                className="space-y-2"
+                                className="space-y-2.5 max-w-4xl mx-auto"
                             >
                                 {visibleSongs.map((song) => {
                                     const isFav = favoriteSongIds.includes(
@@ -318,37 +327,36 @@ export default function SongBrowser({
                                             onClick={() =>
                                                 handleSelectSong(song.id)
                                             }
-                                            className="bg-m3-card dark:bg-m3-dark-card p-4 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 hover:border-m3-primary/60 dark:hover:border-m3-dark-primary/60 cursor-pointer transition-all hover:shadow-xs flex items-center justify-between group active:scale-[0.99]"
+                                            className="bg-card p-3.5 sm:p-4 rounded-2xl border border-border/70 hover:border-primary/60 cursor-pointer transition-all hover:shadow-sm flex items-center justify-between group active:scale-[0.985] select-none"
                                         >
-                                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
                                                 {/* Visual Number badge or note icon */}
-                                                <div className="w-10 h-10 rounded-xl bg-m3-sidebar dark:bg-m3-dark-sidebar flex flex-col items-center justify-center shrink-0 border border-m3-border/20 group-hover:bg-m3-primary-light dark:group-hover:bg-m3-dark-primary-light transition-colors">
+                                                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-muted/70 flex flex-col items-center justify-center shrink-0 border border-border/50 group-hover:bg-primary/10 group-hover:border-primary/30 transition-colors">
                                                     {song.metadata
                                                         ?.songNumber ? (
-                                                        <span className="text-[11px] font-black text-m3-primary dark:text-m3-dark-primary">
-                                                            #
-                                                            {
-                                                                song.metadata
-                                                                    .songNumber
-                                                            }
+                                                        <span className="text-xs font-black text-primary">
+                                                            #{song.metadata.songNumber}
                                                         </span>
                                                     ) : (
-                                                        <FileText className="w-4 h-4 text-m3-secondary dark:text-m3-dark-secondary group-hover:text-m3-primary" />
+                                                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                                                     )}
                                                 </div>
 
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        <h4 className="text-sm font-bold text-m3-text dark:text-m3-dark-text truncate">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h4 className="text-sm font-bold text-foreground truncate">
                                                             {song.title}
                                                         </h4>
                                                         {song.folder && (
-                                                            <span className="text-[9px] font-bold bg-m3-sidebar dark:bg-m3-dark-sidebar text-m3-secondary dark:text-m3-dark-secondary px-1.5 py-0.5 rounded border border-m3-border/30">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-[9px] px-1.5 py-0.5 rounded-md font-semibold text-muted-foreground"
+                                                            >
                                                                 {song.folder}
-                                                            </span>
+                                                            </Badge>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-m3-secondary dark:text-m3-dark-secondary mt-0.5 truncate font-medium">
+                                                    <p className="text-xs text-muted-foreground mt-0.5 truncate font-medium">
                                                         {song.artist ||
                                                             "Artista desconhecido"}
                                                     </p>
@@ -356,20 +364,19 @@ export default function SongBrowser({
                                             </div>
 
                                             {/* Badges for Key, Tempo and Heart action */}
-                                            <div className="flex items-center gap-3 shrink-0 pl-3">
+                                            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 pl-3">
                                                 <div className="flex flex-col items-end gap-1">
                                                     {song.metadata?.key && (
-                                                        <span className="text-[10px] font-bold bg-m3-primary-light dark:bg-m3-dark-primary-light text-m3-primary dark:text-m3-dark-text px-2 py-0.5 rounded-lg border border-m3-border/30">
+                                                        <Badge
+                                                            variant="primaryLight"
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg"
+                                                        >
                                                             {song.metadata.key}
-                                                        </span>
+                                                        </Badge>
                                                     )}
                                                     {song.metadata?.tempo && (
-                                                        <span className="text-[9px] text-m3-secondary dark:text-m3-dark-secondary font-mono">
-                                                            ♩{" "}
-                                                            {
-                                                                song.metadata
-                                                                    .tempo
-                                                            }
+                                                        <span className="text-[10px] text-muted-foreground font-mono">
+                                                            ♩ {song.metadata.tempo}
                                                         </span>
                                                     )}
                                                 </div>
@@ -381,10 +388,10 @@ export default function SongBrowser({
                                                             song.id,
                                                         );
                                                     }}
-                                                    className={`p-2 rounded-full hover:bg-m3-hover dark:hover:bg-m3-dark-hover transition-colors ${
+                                                    className={`p-2 rounded-full hover:bg-muted/80 transition-all cursor-pointer active:scale-90 ${
                                                         isFav
-                                                            ? "text-red-500 hover:text-red-600"
-                                                            : "text-m3-secondary dark:text-m3-dark-secondary hover:text-m3-primary"
+                                                            ? "text-rose-500 hover:text-rose-600"
+                                                            : "text-muted-foreground hover:text-primary"
                                                     }`}
                                                     title={
                                                         isFav

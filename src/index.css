@@ -4,43 +4,107 @@
 @variant dark (html.dark &);
 
 @theme {
+    /* Shadcn color variables mapped to Tailwind utilities */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
     /* Sleek Interface M3 Theme Colors - Cyan/Blue */
     --color-m3-primary: #0284c7;
     --color-m3-primary-light: #e0f2fe;
     --color-m3-primary-dark: #075985;
-    --color-m3-text: #1d1b20;
-    --color-m3-secondary: #49454f;
+    --color-m3-text: #0f172a;
+    --color-m3-secondary: #64748b;
     --color-m3-bg: #f8fafc;
     --color-m3-sidebar: #f1f5f9;
-    --color-m3-border: #cbd5e1;
+    --color-m3-border: #e2e8f0;
     --color-m3-hover: #e2e8f0;
-    --color-m3-toolbar: #f1f5f9;
+    --color-m3-toolbar: #ffffff;
     --color-m3-card: #ffffff;
-    --color-m3-input: #79747e;
+    --color-m3-input: #94a3b8;
 
     /* Sleek Interface Dark M3 Theme Colors - Cyan/Blue */
     --color-m3-dark-primary: #38bdf8;
     --color-m3-dark-primary-light: #0c4a6e;
     --color-m3-dark-primary-dark: #082f49;
-    --color-m3-dark-text: #e6e1e5;
-    --color-m3-dark-secondary: #cac4d0;
-    --color-m3-dark-bg: #0f172a;
-    --color-m3-dark-sidebar: #1e293b;
-    --color-m3-dark-border: #334155;
-    --color-m3-dark-hover: #0f172a;
-    --color-m3-dark-toolbar: #1e293b;
-    --color-m3-dark-card: #1c1b1f;
-    --color-m3-dark-input: #938f99;
+    --color-m3-dark-text: #f8fafc;
+    --color-m3-dark-secondary: #94a3b8;
+    --color-m3-dark-bg: #090d16;
+    --color-m3-dark-sidebar: #0f172a;
+    --color-m3-dark-border: #1e293b;
+    --color-m3-dark-hover: #1e293b;
+    --color-m3-dark-toolbar: #0f172a;
+    --color-m3-dark-card: #0f172a;
+    --color-m3-dark-input: #475569;
 }
 
-/* Base custom font integration if needed and styling overrides */
+:root {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #0284c7;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #e0f2fe;
+    --accent-foreground: #0369a1;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #0284c7;
+    --radius: 1rem;
+
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+.dark {
+    --background: #090d16;
+    --foreground: #f8fafc;
+    --card: #0f172a;
+    --card-foreground: #f8fafc;
+    --popover: #0f172a;
+    --popover-foreground: #f8fafc;
+    --primary: #38bdf8;
+    --primary-foreground: #082f49;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #0c4a6e;
+    --accent-foreground: #38bdf8;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fecaca;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #38bdf8;
+}
+
 @layer base {
-    :root {
-        --safe-area-top: env(safe-area-inset-top, 0px);
-        --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-        --safe-area-left: env(safe-area-inset-left, 0px);
-        --safe-area-right: env(safe-area-inset-right, 0px);
-    }
     html,
     body,
     #root {
@@ -57,7 +121,7 @@
         user-select: none;
     }
     body {
-        @apply antialiased font-sans bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+        @apply antialiased font-sans bg-background text-foreground;
         font-feature-settings: "cv02", "cv03", "cv04", "cv11";
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
@@ -69,7 +133,7 @@
     }
 }
 
-/* Utility to hide scrollbars for clean native Android preview look */
+/* Utility to hide scrollbars for clean native Android / iOS look */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -78,49 +142,31 @@
     scrollbar-width: none;
 }
 
-/* Native Android Material 3 touch feedback utilities */
-.android-ripple {
-    position: relative;
-    overflow: hidden;
-    transform: translateZ(0);
+/* Native touch ripple & press states */
+.native-touch {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
+}
+.native-touch:active {
+    transform: scale(0.97);
+    opacity: 0.85;
 }
 
-.android-ripple:active::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: currentColor;
-    opacity: 0.12;
-    pointer-events: none;
-    border-radius: inherit;
+/* Glassmorphism utility for floating native bars */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+.dark .glass-panel {
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-/* Fade-in animation for bottom nav */
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px) translateX(-50%);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) translateX(-50%);
-    }
+/* Safe area padding for mobile devices */
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-.animate-fade-in {
-    animation: fade-in 0.25s cubic-bezier(0.2, 0, 0, 1);
+.safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
 }
-
-/* Safe area padding for mobile devices with notches */
-@supports (padding: env(safe-area-inset-bottom)) {
-    .safe-bottom {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-}
-
-@supports (padding: env(safe-area-inset-top)) {
-    .safe-top {
-        padding-top: env(safe-area-inset-top);
-    }
-}
-

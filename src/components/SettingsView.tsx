@@ -45,7 +45,7 @@ export default function SettingsView() {
     ];
 
     return (
-        <div className="w-full h-full overflow-y-auto bg-m3-bg dark:bg-m3-dark-bg p-3 sm:p-4 pb-28 space-y-4 no-scrollbar">
+        <div className="w-full h-full overflow-y-auto bg-background p-3 sm:p-4 pb-28 space-y-4 no-scrollbar">
             {/* Toast Notification Banner */}
             {toast && (
                 <div
@@ -71,7 +71,7 @@ export default function SettingsView() {
             )}
 
             {/* Tab Selector Bar */}
-            <div className="flex bg-m3-card dark:bg-m3-dark-card p-1 rounded-2xl border border-m3-border/40 dark:border-m3-dark-border/40 shadow-xs">
+            <div className="flex bg-muted/60 p-1 rounded-2xl border border-border shadow-xs max-w-2xl mx-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
