@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Hosanna.iml" filepath="$PROJECT_DIR$/.idea/Hosanna.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mobile_flutter.iml" filepath="$PROJECT_DIR$/mobile_flutter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/mobile_flutter_android.iml" filepath="$PROJECT_DIR$/android/mobile_flutter_android.iml" />
     </modules>
   </component>
 </project>

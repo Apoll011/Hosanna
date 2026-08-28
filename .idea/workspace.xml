@@ -1,172 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="main.dart" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/lib/main.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
-  <component name="ChangeListManager">
-    <list default="true" id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="Moved server out">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/capacitor.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store/webAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/webAppStore.ts" afterDir="false" />
-    </list>
-    <option name="SHOW_DIALOG" value="false" />
-    <option name="HIGHLIGHT_CONFLICTS" value="true" />
-    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
-    <option name="LAST_RESOLUTION" value="IGNORE" />
+  <component name="ToolWindowManager">
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+    </layout>
   </component>
-  <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <option name="show-excluded-files" value="false" />
+      </pane>
+    </panes>
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;Apoll011&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Apoll011/Hosanna.git&quot;,
-    &quot;accountId&quot;: &quot;e1f01405-22b3-4c3f-8a21-213cfd8f4fdb&quot;
-  }
-}</component>
-  <component name="NextEditCompletionFeaturesState">
-    <decayedCancelled>
-      <entry key="MS100" value="2.35493247572432E-60" />
-      <entry key="MS500" value="1.1868496109754735E-12" />
-      <entry key="S2" value="0.0010437558508109583" />
-      <entry key="S5" value="0.064192194136256" />
-      <entry key="S10" value="0.25828501222125466" />
-      <entry key="S30" value="1.1639501848161904" />
-      <entry key="S60" value="2.8068398647119697" />
-      <entry key="M2" value="5.402190843238197" />
-      <entry key="M5" value="10.15495496384925" />
-      <entry key="M10" value="15.593784058995812" />
-      <entry key="M15" value="19.496383906012838" />
-      <entry key="M30" value="26.07710400343626" />
-      <entry key="H1" value="31.113233479210503" />
-      <entry key="H2" value="34.281085667249236" />
-      <entry key="H4" value="36.06513469739307" />
-      <entry key="D1" value="37.66644088131595" />
-      <entry key="W1" value="37.9520689845516" />
-    </decayedCancelled>
-    <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0000001147842608" />
-      <entry key="S10" value="1.000462791447232" />
-      <entry key="S30" value="1.1221552547091147" />
-      <entry key="S60" value="1.526627008574994" />
-      <entry key="M2" value="2.312829835962165" />
-      <entry key="M5" value="3.8247370467116792" />
-      <entry key="M10" value="4.9558983842059945" />
-      <entry key="M15" value="5.496353190400312" />
-      <entry key="M30" value="6.163161101290257" />
-      <entry key="H1" value="6.556954194704213" />
-      <entry key="H2" value="6.771830196876089" />
-      <entry key="H4" value="6.884187148235457" />
-      <entry key="D1" value="6.98045199697694" />
-      <entry key="W1" value="6.997201328809147" />
-    </decayedSelected>
-    <decayedShown>
-      <entry key="MS100" value="0.0016310310926335343" />
-      <entry key="MS500" value="0.27700808696655577" />
-      <entry key="S2" value="0.726230704063243" />
-      <entry key="S5" value="0.9359076802745105" />
-      <entry key="S10" value="1.1802163688709093" />
-      <entry key="S30" value="2.2309923962078013" />
-      <entry key="S60" value="4.274755187377391" />
-      <entry key="M2" value="7.660229348552927" />
-      <entry key="M5" value="13.940371055653607" />
-      <entry key="M10" value="20.52212790592868" />
-      <entry key="M15" value="24.97103121886124" />
-      <entry key="M30" value="32.22677796989191" />
-      <entry key="H1" value="37.66247866229709" />
-      <entry key="H2" value="41.04876389023075" />
-      <entry key="H4" value="42.94716293307263" />
-      <entry key="D1" value="44.646520729649204" />
-      <entry key="W1" value="44.94921683608358" />
-    </decayedShown>
-  </component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 4
-}</component>
-  <component name="ProjectId" id="3Gjw8LsR8VNW5Xw12lNI04ahuhy" />
-  <component name="ProjectViewState">
-    <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showLibraryContents" value="true" />
-  </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/apoll011/coding/Hosanna-server&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/home/apoll011/coding/Hosanna/node_modules/typescript/lib&quot;
-  }
-}</component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.8665.259" />
-      </set>
-    </attachedChunks>
-  </component>
-  <component name="TaskManager">
-    <task active="true" id="Default" summary="Default task">
-      <changelist id="1e6efa83-aeeb-4438-8ada-e2d37015aba0" name="Changes" comment="" />
-      <created>1784498135837</created>
-      <option name="number" value="Default" />
-      <option name="presentableId" value="Default" />
-      <updated>1784498135837</updated>
-      <workItem from="1784498145720" duration="1543000" />
-      <workItem from="1784500836346" duration="188000" />
-      <workItem from="1784501081336" duration="581000" />
-      <workItem from="1784503256656" duration="60000" />
-      <workItem from="1784505396566" duration="1154000" />
-      <workItem from="1784507755299" duration="1293000" />
-      <workItem from="1784509302003" duration="41000" />
-      <workItem from="1784509508232" duration="2004000" />
-      <workItem from="1784920469480" duration="1873000" />
-    </task>
-    <task id="LOCAL-00001" summary="Test">
-      <option name="closed" value="true" />
-      <created>1784499612266</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1784499612266</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Moved server out">
-      <option name="closed" value="true" />
-      <created>1784503305238</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1784503305238</updated>
-    </task>
-    <option name="localTasksCounter" value="3" />
-    <servers />
-  </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Test" />
-    <MESSAGE value="Moved server out" />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved server out" />
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="dart.analysis.tool.window.force.activate" value="true" />
+    <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
 </project>
