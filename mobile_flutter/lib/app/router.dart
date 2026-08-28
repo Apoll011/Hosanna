@@ -126,7 +126,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/settings',
-        builder: (_, _) => const SettingsPage(),
+        builder: (_, state) {
+          final tab = state.uri.queryParameters['tab'];
+          return SettingsPage(
+            initialTab: switch (tab) {
+              'workspace' => SettingsTab.workspace,
+              'preferences' => SettingsTab.preferences,
+              _ => SettingsTab.account,
+            },
+          );
+        },
       ),
       GoRoute(
         path: '/songs/:id',

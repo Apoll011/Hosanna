@@ -13,20 +13,22 @@ import '../../services/data/service_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 
-enum _SettingsTab { account, workspace, preferences }
+enum SettingsTab { account, workspace, preferences }
 
 /// Tabbed settings, mirroring the React `SettingsView` (Conta / Organização /
 /// Preferências). Tools (metronome, circle of fifths, PDF export) live in the
 /// navigation drawer, not here.
 class SettingsPage extends ConsumerStatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.initialTab = SettingsTab.account});
+
+  final SettingsTab initialTab;
 
   @override
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  _SettingsTab _tab = _SettingsTab.account;
+  late SettingsTab _tab = widget.initialTab;
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +51,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           Expanded(
             child: switch (_tab) {
-              _SettingsTab.account => const _AccountTab(),
-              _SettingsTab.workspace => const _WorkspaceTab(),
-              _SettingsTab.preferences => const _PreferencesTab(),
+              SettingsTab.account => const _AccountTab(),
+              SettingsTab.workspace => const _WorkspaceTab(),
+              SettingsTab.preferences => const _PreferencesTab(),
             },
           ),
         ],
@@ -63,8 +65,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 class _TabBar extends StatelessWidget {
   const _TabBar({required this.selected, required this.onChanged});
 
-  final _SettingsTab selected;
-  final ValueChanged<_SettingsTab> onChanged;
+  final SettingsTab selected;
+  final ValueChanged<SettingsTab> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +74,9 @@ class _TabBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     final tabs = [
-      (_SettingsTab.account, l10n.settingsTabAccount, Icons.person_outline),
-      (_SettingsTab.workspace, l10n.settingsTabWorkspace, Icons.business_outlined),
-      (_SettingsTab.preferences, l10n.settingsTabPreferences, Icons.tune),
+      (SettingsTab.account, l10n.settingsTabAccount, Icons.person_outline),
+      (SettingsTab.workspace, l10n.settingsTabWorkspace, Icons.business_outlined),
+      (SettingsTab.preferences, l10n.settingsTabPreferences, Icons.tune),
     ];
 
     return Container(
