@@ -25,14 +25,13 @@ Configuration is injected at compile time via `--dart-define`:
 | Key | Purpose | Default |
 | --- | --- | --- |
 | `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://api.hosanna.live` |
-| `HOSANNA_TURNSTILE_SITE_KEY` | Cloudflare Turnstile **site** (public) key | *(empty)* |
 | `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL | `https://studio.hosanna.live/captcha` |
 | `HOSANNA_ORIGIN` | `Origin` header sent on state-changing requests | `http://localhost` |
 
 ```bash
 flutter run \
   --dart-define=HOSANNA_API_URL=https://your-api.example.com \
-  --dart-define=HOSANNA_TURNSTILE_SITE_KEY=0x4AAAAAAEd2fDA6HDsaju7K
+  --dart-define=HOSANNA_TURNSTILE_URL=https://studio.hosanna.live/captcha
 ```
 
 > **Turnstile is required.** The backend enforces Cloudflare Turnstile on
@@ -69,4 +68,4 @@ reactive `watch()` streams), **go_router** (navigation), **intl** +
   per ABI) and App Bundle, then publishes them to a GitHub Release on tags
   (`v*`) or manual dispatch. Requires secrets `KEYSTORE_BASE64`,
   `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `API_URL`,
-  `TURNSTILE_SITE_KEY`, `GITHUB_TOKEN`.
+  `GITHUB_TOKEN`.

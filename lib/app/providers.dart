@@ -10,7 +10,7 @@ import '../core/db/database.dart';
 import '../core/network/api_client.dart';
 import '../features/auth/data/auth_repository.dart';
 
-/// Compile-time configuration (API URL, Turnstile site key).
+/// Compile-time configuration (API URL, hosted Turnstile page URL).
 final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.instance);
 
 /// In-memory bearer token read by the Dio auth interceptor.

@@ -3,29 +3,20 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/config/app_config.dart';
 
-/// Renders a Cloudflare Turnstile widget in a WebView and returns the token.
+/// Renders the hosted Cloudflare Turnstile page in a WebView and returns the
+/// token.
 ///
 /// Turnstile's challenge is browser-side JS and validates the *hostname* of the
-/// page rendering the widget. Two modes are supported:
-///
-/// - **Hosted page (production):** when [AppConfig.turnstileUrl] is set, the
-///   WebView loads that URL. The page must render the Turnstile widget with the
-///   site key and call `TurnstileCallback.postMessage(token)` on success. The
-///   page's domain must be listed in Cloudflare's "Hostname Management".
-/// - **Inline HTML (dev/test):** otherwise the widget is injected here. This
-///   has no hostname (`about:blank`), so it only works with Cloudflare's
-///   *test* keys (`1x00000000000000000000AA`), which skip hostname checks.
+/// page rendering the widget, so the challenge is always loaded from
+/// [AppConfig.turnstileUrl] (a page served from a domain listed in Cloudflare's
+/// "Hostname Management"). The page must render the Turnstile widget and call
+/// `TurnstileCallback.postMessage(token)` on success.
 ///
 /// Pops with the token on success, or `null` when the user backs out / fails.
 class TurnstileCaptchaPage extends StatefulWidget {
-  const TurnstileCaptchaPage({
-    super.key,
-    required this.siteKey,
-    this.url,
-  });
+  const TurnstileCaptchaPage({super.key, required this.url});
 
-  final String siteKey;
-  final String? url;
+  final String url;
 
   @override
   State<TurnstileCaptchaPage> createState() => _TurnstileCaptchaPageState();
@@ -49,45 +40,8 @@ class _TurnstileCaptchaPageState extends State<TurnstileCaptchaPage> {
             Navigator.of(context).pop(token);
           }
         },
-      );
-
-    final url = widget.url;
-    if (url != null && url.isNotEmpty) {
-      _controller.loadRequest(Uri.parse(url));
-    } else {
-      _controller.loadHtmlString(_buildHtml());
-    }
-  }
-
-  String _buildHtml() {
-    return '''
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <style>
-    body { margin: 0; display: flex; align-items: center; justify-content: center;
-           min-height: 100vh; background: transparent; }
-  </style>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onload" async defer></script>
-</head>
-<body>
-  <div id="cf-turnstile"></div>
-  <script>
-    function __onload() {
-      turnstile.render('#cf-turnstile', {
-        sitekey: '${widget.siteKey}',
-        callback: function(token) { TurnstileCallback.postMessage(token); },
-        'error-callback': function() { TurnstileCallback.postMessage('error'); },
-        'expired-callback': function() { TurnstileCallback.postMessage('expired'); },
-        theme: 'auto'
-      });
-    }
-  </script>
-</body>
-</html>
-''';
+      )
+      ..loadRequest(Uri.parse(widget.url));
   }
 
   @override
@@ -114,10 +68,7 @@ Future<String?> resolveCaptchaToken(
   if (!config.isTurnstileConfigured) return null;
   final token = await Navigator.of(context).push<String>(
     MaterialPageRoute(
-      builder: (_) => TurnstileCaptchaPage(
-        siteKey: config.turnstileSiteKey,
-        url: config.turnstileUrl,
-      ),
+      builder: (_) => TurnstileCaptchaPage(url: config.turnstileUrl),
     ),
   );
   return token;

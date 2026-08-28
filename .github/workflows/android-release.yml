@@ -42,7 +42,6 @@ jobs:
             - name: Build APK (split per ABI)
               env:
                   HOSANNA_API_URL: ${{ secrets.API_URL }}
-                  HOSANNA_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
                   KEYSTORE_FILE: release.keystore
                   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
                   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -53,7 +52,6 @@ jobs:
             - name: Build App Bundle
               env:
                   HOSANNA_API_URL: ${{ secrets.API_URL }}
-                  HOSANNA_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
                   KEYSTORE_FILE: release.keystore
                   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
                   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
