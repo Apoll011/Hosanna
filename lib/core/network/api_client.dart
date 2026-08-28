@@ -45,8 +45,8 @@ Dio buildDio({
     ),
   );
 
+  //_LoggingInterceptor(),
   dio.interceptors.addAll([
-    _LoggingInterceptor(),
     CookieManager(cookieJar),
     _OriginInterceptor(config.origin),
     _AuthInterceptor(tokenStore),
@@ -210,7 +210,10 @@ ApiException toApiException(DioException error) {
     try {
       final decoded = jsonDecode(data);
       if (decoded is Map) {
-        message = (decoded['message'] as String?) ?? decoded['error']?.toString() ?? data;
+        message =
+            (decoded['message'] as String?) ??
+            decoded['error']?.toString() ??
+            data;
         code = decoded['code'] as String?;
       } else {
         message = data;
@@ -219,7 +222,10 @@ ApiException toApiException(DioException error) {
       message = data;
     }
   } else if (data is Map) {
-    message = (data['message'] as String?) ?? data['error']?.toString() ?? 'Request failed';
+    message =
+        (data['message'] as String?) ??
+        data['error']?.toString() ??
+        'Request failed';
     code = data['code'] as String?;
   } else {
     message = _networkMessage(error);
