@@ -50,6 +50,7 @@ dependencies:
   webview_flutter: ^4.14.1
   shared_preferences: ^2.5.5
   intl: ^0.20.3
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
