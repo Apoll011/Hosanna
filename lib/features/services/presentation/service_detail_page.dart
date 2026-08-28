@@ -87,8 +87,9 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
     // Resolve the current element, defaulting to the first song element (the
     // React app opens the service on the first cântico).
-    final firstSong =
-        elements.where((e) => e.type == 'song' && e.songId != null).firstOrNull;
+    final firstSong = elements
+        .where((e) => e.type == 'song' && e.songId != null)
+        .firstOrNull;
     final current = elements.firstWhere(
       (e) => e.id == _currentElementId,
       orElse: () => firstSong ?? elements.first,
@@ -96,8 +97,9 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     _currentElementId ??= current.id;
 
     // Song elements (in service order) for prev/next navigation.
-    final songElements =
-        elements.where((e) => e.type == 'song' && e.songId != null).toList();
+    final songElements = elements
+        .where((e) => e.type == 'song' && e.songId != null)
+        .toList();
     final songIndex = songElements.indexWhere((e) => e.id == current.id);
 
     return Column(
@@ -110,15 +112,16 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
           onLeave: () => context.pop(),
+          isSong: current.type == 'song',
         ),
         Expanded(
           child: current.type == 'song' && current.songId != null
               ? _SongElementView(
                   songId: current.songId!,
                   canPrev: songIndex > 0,
-                  canNext: songIndex >= 0 && songIndex < songElements.length - 1,
-                  positionLabel:
-                      '${songIndex + 1} / ${songElements.length}',
+                  canNext:
+                      songIndex >= 0 && songIndex < songElements.length - 1,
+                  positionLabel: '${songIndex + 1} / ${songElements.length}',
                   onPrev: () => setState(() {
                     _currentElementId = songElements[songIndex - 1].id;
                   }),
@@ -139,12 +142,14 @@ class _MusicianTopBar extends StatelessWidget {
     required this.itemLabel,
     required this.onOpenOrder,
     required this.onLeave,
+    required this.isSong,
   });
 
   final String serviceName;
   final String itemLabel;
   final VoidCallback onOpenOrder;
   final VoidCallback onLeave;
+  final bool isSong;
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +188,7 @@ class _MusicianTopBar extends StatelessWidget {
                 ],
               ),
             ),
-            const SongToolbarButton(),
+            if (isSong) const SongToolbarButton(),
             TextButton.icon(
               onPressed: onLeave,
               style: TextButton.styleFrom(
@@ -268,7 +273,10 @@ class _NonSongElementView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: meta.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(999),
@@ -284,15 +292,18 @@ class _NonSongElementView extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 element.title.isNotEmpty ? element.title : meta.label,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
                 textAlign: TextAlign.center,
               ),
               if (element.passage != null && element.passage!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
@@ -315,8 +326,7 @@ class _NonSongElementView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: theme.colorScheme.outlineVariant),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
                   ),
                   child: Text(
                     element.content!,
@@ -367,7 +377,9 @@ class _NotesCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             notes,
-            style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
@@ -409,8 +421,9 @@ class _OrderDrawer extends StatelessWidget {
                       children: [
                         Text(
                           l10n.servicesOrderTitle,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -522,8 +535,8 @@ class _OrderItem extends ConsumerWidget {
                       element.type == 'song'
                           ? (song?.title ?? l10n.servicesElementSong)
                           : (element.title.isNotEmpty
-                              ? element.title
-                              : meta.label),
+                                ? element.title
+                                : meta.label),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -541,8 +554,9 @@ class _OrderItem extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: selected
-                            ? theme.colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.8)
+                            ? theme.colorScheme.onPrimaryContainer.withValues(
+                                alpha: 0.8,
+                              )
                             : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -568,35 +582,35 @@ class _ElementMeta {
 _ElementMeta _elementMeta(AppLocalizations l10n, String type) {
   return switch (type) {
     'song' => _ElementMeta(
-        l10n.servicesElementSong,
-        Icons.music_note,
-        const Color(0xFF0284C7),
-      ),
+      l10n.servicesElementSong,
+      Icons.music_note,
+      const Color(0xFF0284C7),
+    ),
     'welcome' => _ElementMeta(
-        l10n.servicesElementWelcome,
-        Icons.waving_hand_outlined,
-        const Color(0xFF2563EB),
-      ),
+      l10n.servicesElementWelcome,
+      Icons.waving_hand_outlined,
+      const Color(0xFF2563EB),
+    ),
     'scripture' => _ElementMeta(
-        l10n.servicesElementScripture,
-        Icons.menu_book_outlined,
-        const Color(0xFF9333EA),
-      ),
+      l10n.servicesElementScripture,
+      Icons.menu_book_outlined,
+      const Color(0xFF9333EA),
+    ),
     'message' => _ElementMeta(
-        l10n.servicesElementMessage,
-        Icons.chat_bubble_outline,
-        const Color(0xFFD97706),
-      ),
+      l10n.servicesElementMessage,
+      Icons.chat_bubble_outline,
+      const Color(0xFFD97706),
+    ),
     'announcement' => _ElementMeta(
-        l10n.servicesElementAnnouncement,
-        Icons.campaign_outlined,
-        const Color(0xFF059669),
-      ),
+      l10n.servicesElementAnnouncement,
+      Icons.campaign_outlined,
+      const Color(0xFF059669),
+    ),
     _ => _ElementMeta(
-        l10n.servicesElementDefault,
-        Icons.label_outline,
-        const Color(0xFF64748B),
-      ),
+      l10n.servicesElementDefault,
+      Icons.label_outline,
+      const Color(0xFF64748B),
+    ),
   };
 }
 
