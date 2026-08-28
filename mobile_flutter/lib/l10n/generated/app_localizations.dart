@@ -958,6 +958,12 @@ abstract class AppLocalizations {
   /// **'Sem cultos'**
   String get servicesEmpty;
 
+  /// No description provided for @servicesSearchHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pesquisar cultos…'**
+  String get servicesSearchHint;
+
   /// No description provided for @servicesItems.
   ///
   /// In pt, this message translates to:
@@ -1131,6 +1137,198 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Modo offline'**
   String get settingsOffline;
+
+  /// No description provided for @settingsTabAccount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conta'**
+  String get settingsTabAccount;
+
+  /// No description provided for @settingsTabWorkspace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Organização'**
+  String get settingsTabWorkspace;
+
+  /// No description provided for @settingsTabPreferences.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preferências'**
+  String get settingsTabPreferences;
+
+  /// No description provided for @settingsActive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativa'**
+  String get settingsActive;
+
+  /// No description provided for @settingsSwitchOrg.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alternar Organização'**
+  String get settingsSwitchOrg;
+
+  /// No description provided for @settingsOrganization.
+  ///
+  /// In pt, this message translates to:
+  /// **'Organização'**
+  String get settingsOrganization;
+
+  /// No description provided for @settingsSyncLibrary.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sincronização da Biblioteca'**
+  String get settingsSyncLibrary;
+
+  /// No description provided for @settingsSyncLibraryDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sincroniza cânticos, pastas e cultos da sua organização.'**
+  String get settingsSyncLibraryDesc;
+
+  /// No description provided for @settingsSyncNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sincronizar'**
+  String get settingsSyncNow;
+
+  /// No description provided for @settingsLastSync.
+  ///
+  /// In pt, this message translates to:
+  /// **'Última Sincronização'**
+  String get settingsLastSync;
+
+  /// No description provided for @settingsSyncState.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estado do Sync'**
+  String get settingsSyncState;
+
+  /// No description provided for @settingsLocalSongs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cânticos Locais'**
+  String get settingsLocalSongs;
+
+  /// No description provided for @settingsSavedServices.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cultos Guardados'**
+  String get settingsSavedServices;
+
+  /// No description provided for @settingsUserId.
+  ///
+  /// In pt, this message translates to:
+  /// **'ID do Utilizador'**
+  String get settingsUserId;
+
+  /// No description provided for @settingsRole.
+  ///
+  /// In pt, this message translates to:
+  /// **'Função'**
+  String get settingsRole;
+
+  /// No description provided for @settingsActiveOrg.
+  ///
+  /// In pt, this message translates to:
+  /// **'Organização Ativa'**
+  String get settingsActiveOrg;
+
+  /// No description provided for @settingsNoActiveOrg.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem organização ativa'**
+  String get settingsNoActiveOrg;
+
+  /// No description provided for @settingsChangeEmail.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alterar E-mail'**
+  String get settingsChangeEmail;
+
+  /// No description provided for @settingsNewEmail.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo E-mail'**
+  String get settingsNewEmail;
+
+  /// No description provided for @settingsSaveEmail.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar E-mail'**
+  String get settingsSaveEmail;
+
+  /// No description provided for @settingsEmailChangeSent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pedido de alteração de e-mail enviado!'**
+  String get settingsEmailChangeSent;
+
+  /// No description provided for @settingsEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get settingsEdit;
+
+  /// No description provided for @settingsCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get settingsCancel;
+
+  /// No description provided for @settingsSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar'**
+  String get settingsSave;
+
+  /// No description provided for @settingsSaving.
+  ///
+  /// In pt, this message translates to:
+  /// **'A guardar…'**
+  String get settingsSaving;
+
+  /// No description provided for @settingsNameEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'O nome não pode estar vazio.'**
+  String get settingsNameEmpty;
+
+  /// No description provided for @settingsEmailInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Introduza um e-mail válido.'**
+  String get settingsEmailInvalid;
+
+  /// No description provided for @settingsMusicianMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo Músico nos Cultos'**
+  String get settingsMusicianMode;
+
+  /// No description provided for @settingsMusicianModeDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.'**
+  String get settingsMusicianModeDesc;
+
+  /// No description provided for @settingsKeepAwake.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manter Ecrã Ligado'**
+  String get settingsKeepAwake;
+
+  /// No description provided for @settingsKeepAwakeDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Impede o ecrã de suspender durante a visualização de cânticos.'**
+  String get settingsKeepAwakeDesc;
+
+  /// No description provided for @settingsSessionsOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apenas a sessão atual deste dispositivo está ativa.'**
+  String get settingsSessionsOnly;
 
   /// No description provided for @metronomeTitle.
   ///

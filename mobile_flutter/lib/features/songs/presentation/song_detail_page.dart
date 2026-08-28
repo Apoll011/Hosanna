@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/song_repository.dart';
 import 'song_reader.dart';
@@ -21,8 +22,9 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Keep the screen awake while viewing a song.
-    WakelockPlus.enable();
+    if (ref.read(settingsControllerProvider).keepScreenAwake) {
+      WakelockPlus.enable();
+    }
   }
 
   @override

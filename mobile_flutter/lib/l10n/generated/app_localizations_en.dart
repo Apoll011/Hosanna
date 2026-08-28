@@ -466,6 +466,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesEmpty => 'No services';
 
   @override
+  String get servicesSearchHint => 'Search services…';
+
+  @override
   String get servicesItems => 'Items';
 
   @override
@@ -561,6 +564,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOffline => 'Offline mode';
+
+  @override
+  String get settingsTabAccount => 'Account';
+
+  @override
+  String get settingsTabWorkspace => 'Organization';
+
+  @override
+  String get settingsTabPreferences => 'Preferences';
+
+  @override
+  String get settingsActive => 'Active';
+
+  @override
+  String get settingsSwitchOrg => 'Switch Organization';
+
+  @override
+  String get settingsOrganization => 'Organization';
+
+  @override
+  String get settingsSyncLibrary => 'Library Sync';
+
+  @override
+  String get settingsSyncLibraryDesc =>
+      'Syncs your organization\'s songs, folders and services.';
+
+  @override
+  String get settingsSyncNow => 'Sync';
+
+  @override
+  String get settingsLastSync => 'Last Sync';
+
+  @override
+  String get settingsSyncState => 'Sync State';
+
+  @override
+  String get settingsLocalSongs => 'Local Songs';
+
+  @override
+  String get settingsSavedServices => 'Saved Services';
+
+  @override
+  String get settingsUserId => 'User ID';
+
+  @override
+  String get settingsRole => 'Role';
+
+  @override
+  String get settingsActiveOrg => 'Active Organization';
+
+  @override
+  String get settingsNoActiveOrg => 'No active organization';
+
+  @override
+  String get settingsChangeEmail => 'Change Email';
+
+  @override
+  String get settingsNewEmail => 'New Email';
+
+  @override
+  String get settingsSaveEmail => 'Save Email';
+
+  @override
+  String get settingsEmailChangeSent => 'Email change request sent!';
+
+  @override
+  String get settingsEdit => 'Edit';
+
+  @override
+  String get settingsCancel => 'Cancel';
+
+  @override
+  String get settingsSave => 'Save';
+
+  @override
+  String get settingsSaving => 'Saving…';
+
+  @override
+  String get settingsNameEmpty => 'Name cannot be empty.';
+
+  @override
+  String get settingsEmailInvalid => 'Please enter a valid email.';
+
+  @override
+  String get settingsMusicianMode => 'Musician Mode in Services';
+
+  @override
+  String get settingsMusicianModeDesc =>
+      'Opens the service directly on the first song with continuous side navigation.';
+
+  @override
+  String get settingsKeepAwake => 'Keep Screen Awake';
+
+  @override
+  String get settingsKeepAwakeDesc =>
+      'Prevents the screen from sleeping while viewing songs.';
+
+  @override
+  String get settingsSessionsOnly =>
+      'Only this device\'s current session is active.';
 
   @override
   String get metronomeTitle => 'Metronome';

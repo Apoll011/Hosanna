@@ -195,6 +195,19 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> rejectInvitation(String invitationId) =>
       _repository.rejectInvitation(invitationId);
 
+  /// Organizations the user belongs to (for the workspace switcher).
+  Future<List<Organization>> listOrganizations() =>
+      _repository.listOrganizations();
+
+  /// Switches the active organization and re-resolves it locally.
+  Future<void> switchOrganization(String slug) async {
+    await _repository.setActiveOrganization(slug);
+    final session = state.session;
+    if (session != null) {
+      await _resolveOrganization(session);
+    }
+  }
+
   // ── Internals ────────────────────────────────────────────────────────────
 
   void _requireCaptchaIfNeeded(String? captchaToken) {

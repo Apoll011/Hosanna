@@ -472,6 +472,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesEmpty => 'Sem cultos';
 
   @override
+  String get servicesSearchHint => 'Pesquisar cultos…';
+
+  @override
   String get servicesItems => 'Itens';
 
   @override
@@ -567,6 +570,107 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsOffline => 'Modo offline';
+
+  @override
+  String get settingsTabAccount => 'Conta';
+
+  @override
+  String get settingsTabWorkspace => 'Organização';
+
+  @override
+  String get settingsTabPreferences => 'Preferências';
+
+  @override
+  String get settingsActive => 'Ativa';
+
+  @override
+  String get settingsSwitchOrg => 'Alternar Organização';
+
+  @override
+  String get settingsOrganization => 'Organização';
+
+  @override
+  String get settingsSyncLibrary => 'Sincronização da Biblioteca';
+
+  @override
+  String get settingsSyncLibraryDesc =>
+      'Sincroniza cânticos, pastas e cultos da sua organização.';
+
+  @override
+  String get settingsSyncNow => 'Sincronizar';
+
+  @override
+  String get settingsLastSync => 'Última Sincronização';
+
+  @override
+  String get settingsSyncState => 'Estado do Sync';
+
+  @override
+  String get settingsLocalSongs => 'Cânticos Locais';
+
+  @override
+  String get settingsSavedServices => 'Cultos Guardados';
+
+  @override
+  String get settingsUserId => 'ID do Utilizador';
+
+  @override
+  String get settingsRole => 'Função';
+
+  @override
+  String get settingsActiveOrg => 'Organização Ativa';
+
+  @override
+  String get settingsNoActiveOrg => 'Sem organização ativa';
+
+  @override
+  String get settingsChangeEmail => 'Alterar E-mail';
+
+  @override
+  String get settingsNewEmail => 'Novo E-mail';
+
+  @override
+  String get settingsSaveEmail => 'Guardar E-mail';
+
+  @override
+  String get settingsEmailChangeSent =>
+      'Pedido de alteração de e-mail enviado!';
+
+  @override
+  String get settingsEdit => 'Editar';
+
+  @override
+  String get settingsCancel => 'Cancelar';
+
+  @override
+  String get settingsSave => 'Guardar';
+
+  @override
+  String get settingsSaving => 'A guardar…';
+
+  @override
+  String get settingsNameEmpty => 'O nome não pode estar vazio.';
+
+  @override
+  String get settingsEmailInvalid => 'Introduza um e-mail válido.';
+
+  @override
+  String get settingsMusicianMode => 'Modo Músico nos Cultos';
+
+  @override
+  String get settingsMusicianModeDesc =>
+      'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.';
+
+  @override
+  String get settingsKeepAwake => 'Manter Ecrã Ligado';
+
+  @override
+  String get settingsKeepAwakeDesc =>
+      'Impede o ecrã de suspender durante a visualização de cânticos.';
+
+  @override
+  String get settingsSessionsOnly =>
+      'Apenas a sessão atual deste dispositivo está ativa.';
 
   @override
   String get metronomeTitle => 'Metrónomo';

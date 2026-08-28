@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -30,7 +31,9 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable();
+    if (ref.read(settingsControllerProvider).keepScreenAwake) {
+      WakelockPlus.enable();
+    }
   }
 
   @override

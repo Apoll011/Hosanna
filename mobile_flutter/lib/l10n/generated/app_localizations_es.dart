@@ -471,6 +471,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesEmpty => 'Sin servicios';
 
   @override
+  String get servicesSearchHint => 'Buscar servicios…';
+
+  @override
   String get servicesItems => 'Elementos';
 
   @override
@@ -566,6 +569,107 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsOffline => 'Modo sin conexión';
+
+  @override
+  String get settingsTabAccount => 'Cuenta';
+
+  @override
+  String get settingsTabWorkspace => 'Organización';
+
+  @override
+  String get settingsTabPreferences => 'Preferencias';
+
+  @override
+  String get settingsActive => 'Activa';
+
+  @override
+  String get settingsSwitchOrg => 'Cambiar Organización';
+
+  @override
+  String get settingsOrganization => 'Organización';
+
+  @override
+  String get settingsSyncLibrary => 'Sincronización de la Biblioteca';
+
+  @override
+  String get settingsSyncLibraryDesc =>
+      'Sincroniza las canciones, carpetas y servicios de tu organización.';
+
+  @override
+  String get settingsSyncNow => 'Sincronizar';
+
+  @override
+  String get settingsLastSync => 'Última Sincronización';
+
+  @override
+  String get settingsSyncState => 'Estado de Sincronización';
+
+  @override
+  String get settingsLocalSongs => 'Canciones Locales';
+
+  @override
+  String get settingsSavedServices => 'Servicios Guardados';
+
+  @override
+  String get settingsUserId => 'ID de Usuario';
+
+  @override
+  String get settingsRole => 'Rol';
+
+  @override
+  String get settingsActiveOrg => 'Organización Activa';
+
+  @override
+  String get settingsNoActiveOrg => 'Sin organización activa';
+
+  @override
+  String get settingsChangeEmail => 'Cambiar Correo';
+
+  @override
+  String get settingsNewEmail => 'Nuevo Correo';
+
+  @override
+  String get settingsSaveEmail => 'Guardar Correo';
+
+  @override
+  String get settingsEmailChangeSent =>
+      '¡Solicitud de cambio de correo enviada!';
+
+  @override
+  String get settingsEdit => 'Editar';
+
+  @override
+  String get settingsCancel => 'Cancelar';
+
+  @override
+  String get settingsSave => 'Guardar';
+
+  @override
+  String get settingsSaving => 'Guardando…';
+
+  @override
+  String get settingsNameEmpty => 'El nombre no puede estar vacío.';
+
+  @override
+  String get settingsEmailInvalid => 'Introduce un correo válido.';
+
+  @override
+  String get settingsMusicianMode => 'Modo Músico en los Servicios';
+
+  @override
+  String get settingsMusicianModeDesc =>
+      'Abre el servicio directamente en la primera canción con navegación lateral continua.';
+
+  @override
+  String get settingsKeepAwake => 'Mantener Pantalla Encendida';
+
+  @override
+  String get settingsKeepAwakeDesc =>
+      'Evita que la pantalla se suspenda al ver canciones.';
+
+  @override
+  String get settingsSessionsOnly =>
+      'Solo está activa la sesión actual de este dispositivo.';
 
   @override
   String get metronomeTitle => 'Metrónomo';
