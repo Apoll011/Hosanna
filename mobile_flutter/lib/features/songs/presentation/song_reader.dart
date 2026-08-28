@@ -99,15 +99,6 @@ class _SongReaderState extends ConsumerState<SongReader>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (showNav)
-                _ReaderNav(
-                  positionLabel: widget.positionLabel,
-                  canPrev: widget.canPrev,
-                  canNext: widget.canNext,
-                  onPrev: widget.onPrev!,
-                  onNext: widget.onNext!,
-                ),
-              if (showNav) const SizedBox(height: 12),
               FloatingActionButton.small(
                 heroTag: null,
                 onPressed: _toggleAutoScroll,
@@ -124,6 +115,15 @@ class _SongReaderState extends ConsumerState<SongReader>
                   _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
                 ),
               ),
+              if (showNav) const SizedBox(height: 12),
+              if (showNav)
+                _ReaderNav(
+                  positionLabel: widget.positionLabel,
+                  canPrev: widget.canPrev,
+                  canNext: widget.canNext,
+                  onPrev: widget.onPrev!,
+                  onNext: widget.onNext!,
+                ),
             ],
           ),
         ),
