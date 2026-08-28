@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
 import '../config/app_config.dart';
 import 'api_exception.dart';
@@ -62,6 +61,7 @@ Dio buildDio({
 /// Placed first so it captures the request before other interceptors mutate
 /// headers, and logs the response/error as they come back. Sensitive headers
 /// (Authorization, cookies, captcha) are redacted.
+/*
 class _LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -138,7 +138,7 @@ class _LoggingInterceptor extends Interceptor {
     return '${value.substring(0, max)}… (+${value.length - max} chars)';
   }
 }
-
+*/
 /// Adds an `Origin` header to state-changing requests.
 ///
 /// Better Auth's `originCheckMiddleware` requires non-GET requests that carry a
