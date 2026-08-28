@@ -40,7 +40,10 @@ class AppConfig {
   /// Full API root, e.g. `https://host/api`.
   String get apiRoot => '${apiBaseUrl.replaceFirst(RegExp(r'/$'), '')}/api';
 
-  bool get isTurnstileConfigured => turnstileSiteKey.trim().isNotEmpty;
+  /// Captcha is available when either a site key (inline fallback) or a
+  /// hosted page URL (default: the Studio captcha page) is configured.
+  bool get isTurnstileConfigured =>
+      turnstileSiteKey.trim().isNotEmpty || turnstileUrl.trim().isNotEmpty;
 
   static const AppConfig instance = AppConfig(
     apiBaseUrl: String.fromEnvironment(
@@ -48,6 +51,9 @@ class AppConfig {
       defaultValue: 'https://hosanna-server-beta.vercel.app',
     ),
     turnstileSiteKey: String.fromEnvironment('HOSANNA_TURNSTILE_SITE_KEY'),
-    turnstileUrl: String.fromEnvironment('HOSANNA_TURNSTILE_URL'),
+    turnstileUrl: String.fromEnvironment(
+      'HOSANNA_TURNSTILE_URL',
+      defaultValue: 'https://studio.hosanna.live/captcha',
+    ),
   );
 }

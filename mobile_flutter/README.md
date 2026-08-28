@@ -28,30 +28,27 @@ Configuration is injected at compile time via `--dart-define`:
 | --- | --- | --- |
 | `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://hosanna-server-beta.vercel.app` |
 | `HOSANNA_TURNSTILE_SITE_KEY` | Cloudflare Turnstile **site** (public) key | *(empty)* |
-| `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL (see below) | *(empty)* |
+| `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL | `https://studio.hosanna.live/captcha` |
 
 ```bash
 flutter run \
   --dart-define=HOSANNA_API_URL=https://your-api.example.com \
-  --dart-define=HOSANNA_TURNSTILE_SITE_KEY=0x4AAAAAAEd2fDA6HDsaju7K \
-  --dart-define=HOSANNA_TURNSTILE_URL=https://your-domain.example/captcha
+  --dart-define=HOSANNA_TURNSTILE_SITE_KEY=0x4AAAAAAEd2fDA6HDsaju7K
 ```
 
 > **Turnstile is required.** The backend enforces Cloudflare Turnstile on
-> `/sign-up/email`, `/sign-in/email`, and `/request-password-reset`. Until
-> `HOSANNA_TURNSTILE_SITE_KEY` is provided, those actions surface a localized
-> "captcha not configured" message.
+> `/sign-up/email`, `/sign-in/email`, and `/request-password-reset`.
 >
-> **Why "Missing CAPTCHA response"?** Turnstile validates the *hostname* of the
-> page that renders the widget. The app's WebView loads inline HTML
-> (`about:blank`, no hostname), which Cloudflare rejects — so the widget never
-> produces a token and the server reports `MISSING_RESPONSE`. Fix: host a small
-> captcha page on a domain you control, add **that domain** to the widget's
-> **Hostname Management** in the Cloudflare Turnstile dashboard, then set
-> `HOSANNA_TURNSTILE_URL` to it. The hosted page must render the widget with the
-> site key and call `TurnstileCallback.postMessage(token)` in its callback. For
-> local dev you can use Cloudflare's *test* keys (`1x00000000000000000000AA`),
-> which skip the hostname check.
+> The app's WebView loads the **Studio captcha page** at
+> `https://studio.hosanna.live/captcha` (a public, unauthenticated page added to
+> the Studio app). That page renders the widget with the Studio's site key and
+> posts the token back to the app via the `TurnstileCallback` JS channel, so it
+> works without inline HTML and without hostname errors. Make sure
+> `studio.hosanna.live` is listed in the widget's **Hostname Management** in the
+> Cloudflare Turnstile dashboard (it already is, since Studio's own login uses
+> the same key). `HOSANNA_TURNSTILE_SITE_KEY` is only used for the inline-HTML
+> dev fallback; for local testing you can use Cloudflare's *test* keys
+> (`1x00000000000000000000AA`), which skip the hostname check.
 
 ## Architecture
 
