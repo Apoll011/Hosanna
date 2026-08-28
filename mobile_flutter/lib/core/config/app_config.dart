@@ -14,6 +14,7 @@ class AppConfig {
     required this.apiBaseUrl,
     required this.turnstileSiteKey,
     required this.turnstileUrl,
+    required this.origin,
   });
 
   /// Base URL of the Hosanna backend (no trailing slash, no `/api`).
@@ -37,6 +38,16 @@ class AppConfig {
   /// must call `TurnstileCallback.postMessage(token)` in its success callback.
   final String turnstileUrl;
 
+  /// `Origin` header value sent on state-changing requests.
+  ///
+  /// Better Auth's CSRF protection requires a non-GET request that carries a
+  /// session cookie to also carry an `Origin` (or `Referer`) matching its
+  /// `trustedOrigins`. The React/Capacitor app sends `capacitor://localhost`
+  /// / `http://localhost`; Dio does not send one, so we set it explicitly.
+  /// The backend trusts `http://localhost`, `capacitor://localhost`, and
+  /// `https://*.hosanna.live`.
+  final String origin;
+
   /// Full API root, e.g. `https://host/api`.
   String get apiRoot => '${apiBaseUrl.replaceFirst(RegExp(r'/$'), '')}/api';
 
@@ -48,12 +59,16 @@ class AppConfig {
   static const AppConfig instance = AppConfig(
     apiBaseUrl: String.fromEnvironment(
       'HOSANNA_API_URL',
-      defaultValue: 'https://hosanna-server-beta.vercel.app',
+      defaultValue: 'https://api.hosanna.live',
     ),
     turnstileSiteKey: String.fromEnvironment('HOSANNA_TURNSTILE_SITE_KEY'),
     turnstileUrl: String.fromEnvironment(
       'HOSANNA_TURNSTILE_URL',
       defaultValue: 'https://studio.hosanna.live/captcha',
+    ),
+    origin: String.fromEnvironment(
+      'HOSANNA_ORIGIN',
+      defaultValue: 'http://localhost',
     ),
   );
 }

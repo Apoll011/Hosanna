@@ -48,7 +48,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (loading) return path == '/splash' ? null : '/splash';
 
       if (!loggedIn) {
-        return (onAuthRoute || path == '/splash') ? null : '/sign-in';
+        return onAuthRoute ? null : '/sign-in';
       }
 
       // Signed in.
