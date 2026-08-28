@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app talks to the Hosanna backend over HTTPS. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="mobile_flutter"
+        android:label="Hosanna"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

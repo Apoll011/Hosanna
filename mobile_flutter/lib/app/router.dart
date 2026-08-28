@@ -1,0 +1,152 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../features/auth/domain/auth_controller.dart';
+import '../features/auth/presentation/account_page.dart';
+import '../features/auth/presentation/email_verification_page.dart';
+import '../features/auth/presentation/forgot_password_page.dart';
+import '../features/auth/presentation/reset_password_page.dart';
+import '../features/auth/presentation/sign_in_page.dart';
+import '../features/auth/presentation/sign_up_page.dart';
+import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
+import '../features/export/presentation/export_pdf_page.dart';
+import '../features/folders/presentation/folder_browser_page.dart';
+import '../features/metronome/presentation/metronome_page.dart';
+import '../features/services/presentation/service_detail_page.dart';
+import '../features/services/presentation/service_list_page.dart';
+import '../features/settings/presentation/settings_page.dart';
+import '../features/songs/presentation/song_detail_page.dart';
+import '../features/songs/presentation/song_library_page.dart';
+import 'shell.dart';
+
+bool _isAuthRoute(String path) {
+  return path == '/sign-in' ||
+      path == '/sign-up' ||
+      path == '/forgot-password' ||
+      path == '/reset-password' ||
+      path == '/verify-email';
+}
+
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(authControllerProvider, (_, _) => refresh.value++);
+
+  return GoRouter(
+    initialLocation: '/splash',
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final auth = ref.read(authControllerProvider);
+      final path = state.uri.path;
+      final loading = auth.status == AuthStatus.loading;
+      final loggedIn = auth.isAuthenticated;
+      final onAuthRoute = _isAuthRoute(path);
+
+      if (loading) return path == '/splash' ? null : '/splash';
+      if (!loggedIn && !onAuthRoute) return '/sign-in';
+      if (loggedIn && onAuthRoute) return '/songs';
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, _) => const _SplashPage(),
+      ),
+      GoRoute(
+        path: '/sign-in',
+        builder: (_, _) => const SignInPage(),
+      ),
+      GoRoute(
+        path: '/sign-up',
+        builder: (_, _) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (_, state) =>
+            ResetPasswordPage(token: state.uri.queryParameters['token'] ?? ''),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (_, _) => const EmailVerificationPage(),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, navigationShell) =>
+            HosannaShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/songs',
+                builder: (_, _) => const SongLibraryPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/folders',
+                builder: (_, _) => const FolderBrowserPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/services',
+                builder: (_, _) => const ServiceListPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (_, _) => const SettingsPage(),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/songs/:id',
+        builder: (_, state) => SongDetailPage(songId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/services/:id',
+        builder: (_, state) =>
+            ServiceDetailPage(serviceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/metronome',
+        builder: (_, _) => const MetronomePage(),
+      ),
+      GoRoute(
+        path: '/circle-of-fifths',
+        builder: (_, _) => const CircleOfFifthsPage(),
+      ),
+      GoRoute(
+        path: '/export-pdf',
+        builder: (_, _) => const ExportPdfPage(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (_, _) => const AccountPage(),
+      ),
+    ],
+  );
+});
+
+class _SplashPage extends StatelessWidget {
+  const _SplashPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
