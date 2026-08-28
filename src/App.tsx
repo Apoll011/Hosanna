@@ -15,7 +15,6 @@ import {
     RefreshCw,
     Search,
     Settings,
-    Timer,
     WifiOff,
     X,
 } from "lucide-react";
@@ -142,7 +141,6 @@ function AppContent() {
                 if (
                     activeListContext.type === "service" ||
                     activeListContext.type === "circle" ||
-                    activeListContext.type === "metronome" ||
                     activeListContext.type === "settings"
                 ) {
                     setActiveListContext({ type: "all" });
@@ -332,7 +330,6 @@ function AppContent() {
 
     const isOnMenu =
         activeListContext.type === "circle" ||
-        activeListContext.type === "metronome" ||
         activeListContext.type === "settings";
 
     // Show loading splash while IndexedDB is being read
@@ -623,23 +620,6 @@ function AppContent() {
                                 {!isSidebarCollapsed && (
                                     <span>Círculo da Quinta</span>
                                 )}
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    setActiveListContext({ type: "metronome" });
-                                    setActiveSongId(null);
-                                    setIsEditing(false);
-                                }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
-                                    activeListContext.type === "metronome"
-                                        ? "bg-primary text-primary-foreground shadow-xs"
-                                        : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
-                                } ${isSidebarCollapsed ? "justify-center px-0" : ""}`}
-                                title="Metrónomo"
-                            >
-                                <Timer className="w-4 h-4 text-sky-500 shrink-0" />
-                                {!isSidebarCollapsed && <span>Metrónomo</span>}
                             </button>
 
                             <button

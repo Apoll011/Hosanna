@@ -4,7 +4,6 @@ import { useAppStore } from "../store/appStore";
 import { Song } from "../types";
 import { getSectionTitle } from "../utils";
 import CircleOfFifths from "./CircleOfFifths";
-import Metronome from "./Metronome";
 import SettingsView from "./SettingsView";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -194,74 +193,68 @@ export default function SongBrowser({
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-background relative">
             {/* Header Area */}
-            {selectedSection !== "circle" &&
-                selectedSection !== "metronome" &&
-                selectedSection !== "settings" && (
-                    <div className="p-3 sm:p-4 bg-background border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
-                        {/* Active section badge */}
-                        <div className="flex items-center gap-2">
-                            <Badge
-                                variant="outline"
-                                className="font-mono bg-muted/50 px-2.5 py-1 rounded-xl border-border text-[11px] font-bold text-primary"
-                            >
-                                {getSectionTitle(
-                                    selectedSection,
-                                    activeListContext.folderName,
-                                    selectedFolder,
-                                )}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground font-semibold hidden sm:inline">
-                                ({filteredAndSortedSongs.length})
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs">
-                            {selectedSection !== "recent" && (
-                                <div className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1.5 rounded-xl border border-border/60">
-                                    <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <select
-                                        id="select_sort_songs"
-                                        value={sortBy}
-                                        onChange={(e) =>
-                                            setSortBy(
-                                                (
-                                                    e as React.ChangeEvent<HTMLSelectElement>
-                                                ).target.value as
-                                                    | "title"
-                                                    | "number"
-                                                    | "folder",
-                                            )
-                                        }
-                                        className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-foreground focus:outline-none cursor-pointer"
-                                    >
-                                        <option value="title">
-                                            A-Z Alfabética
-                                        </option>
-                                        <option value="number">Número</option>
-                                        <option value="folder">Pasta</option>
-                                    </select>
-                                </div>
+            {selectedSection !== "circle" && selectedSection !== "settings" && (
+                <div className="p-3 sm:p-4 bg-background border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
+                    {/* Active section badge */}
+                    <div className="flex items-center gap-2">
+                        <Badge
+                            variant="outline"
+                            className="font-mono bg-muted/50 px-2.5 py-1 rounded-xl border-border text-[11px] font-bold text-primary"
+                        >
+                            {getSectionTitle(
+                                selectedSection,
+                                activeListContext.folderName,
+                                selectedFolder,
                             )}
-
-                            {/* Quick Creator Button */}
-                            <Button
-                                onClick={onAddNewSong}
-                                id="btn_create_new_song"
-                                size="sm"
-                                className="rounded-full shadow-xs gap-1 font-bold text-xs h-8 px-3.5"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                Novo
-                            </Button>
-                        </div>
+                        </Badge>
+                        <span className="text-xs text-muted-foreground font-semibold hidden sm:inline">
+                            ({filteredAndSortedSongs.length})
+                        </span>
                     </div>
-                )}
+
+                    <div className="flex items-center gap-2 text-xs">
+                        {selectedSection !== "recent" && (
+                            <div className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1.5 rounded-xl border border-border/60">
+                                <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+                                <select
+                                    id="select_sort_songs"
+                                    value={sortBy}
+                                    onChange={(e) =>
+                                        setSortBy(
+                                            (
+                                                e as React.ChangeEvent<HTMLSelectElement>
+                                            ).target.value as
+                                                "title" | "number" | "folder",
+                                        )
+                                    }
+                                    className="bg-transparent border-none p-0 pr-1 text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                                >
+                                    <option value="title">
+                                        A-Z Alfabética
+                                    </option>
+                                    <option value="number">Número</option>
+                                    <option value="folder">Pasta</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Quick Creator Button */}
+                        <Button
+                            onClick={onAddNewSong}
+                            id="btn_create_new_song"
+                            size="sm"
+                            className="rounded-full shadow-xs gap-1 font-bold text-xs h-8 px-3.5"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Novo
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Main Content Area */}
             {selectedSection === "circle" ? (
                 <CircleOfFifths />
-            ) : selectedSection === "metronome" ? (
-                <Metronome />
             ) : selectedSection === "settings" ? (
                 <SettingsView />
             ) : (

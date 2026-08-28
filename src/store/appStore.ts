@@ -45,8 +45,7 @@ export interface AppState {
             | "search"
             | "service"
             | "circle"
-            | "settings"
-            | "metronome";
+            | "settings";
         serviceId?: string;
         folderName?: string;
         searchQuery?: string;

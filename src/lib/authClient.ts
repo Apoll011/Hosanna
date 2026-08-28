@@ -5,10 +5,12 @@ import {
 } from "better-auth/client/plugins";
 import { ac, roles } from "./permissions";
 
+const base = (import.meta.env.VITE_API_URL as string | undefined)
+    ?.trim()
+    .replace(/\/api\/?$/, "");
+
 export const API_BASE_URL =
-    (import.meta.env.VITE_API_URL as string | undefined)
-        ?.trim()
-        .replace(/\/api\/?$/, "") ||
+    (base?.endsWith("/") ? base.slice(0, -1) : base) ||
     (typeof window !== "undefined"
         ? window.location.origin
         : "http://localhost:3000");

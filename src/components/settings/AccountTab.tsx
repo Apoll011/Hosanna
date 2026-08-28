@@ -1,5 +1,3 @@
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import {
     Camera,
     Info,
@@ -16,8 +14,9 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { authClient } from "../../lib/authClient";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { compressImage, getRoleBadge } from "./settingsUtils";
-import { TwoFactorSection } from "./TwoFactor";
 
 interface AccountTabProps {
     active: boolean;
@@ -634,9 +633,6 @@ export const AccountTab: React.FC<AccountTabProps> = ({
                     </p>
                 )}
             </div>
-
-            {/* Two-Factor Authentication Section */}
-            <TwoFactorSection onShowToast={showToast} />
 
             {/* Active Sessions Section */}
             <ActiveSessionsSection onShowToast={showToast} />

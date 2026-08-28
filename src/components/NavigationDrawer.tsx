@@ -8,7 +8,6 @@ import {
     LogOut,
     Music,
     Settings,
-    Timer,
     WifiOff,
     X,
 } from "lucide-react";
@@ -98,7 +97,7 @@ export default function NavigationDrawer({
                                 damping: 28,
                                 stiffness: 280,
                             }}
-                            className="fixed left-0 top-0 bottom-0 w-[300px] sm:w-80 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 flex flex-col overflow-hidden"
+                            className="fixed left-0 top-0 bottom-0 w-75 sm:w-80 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 flex flex-col overflow-hidden"
                         >
                             {/* Drawer Header with User Profile / Login CTA */}
                             <div className="pt-[calc(1rem+env(safe-area-inset-top,0px))] px-4 pb-4 border-b border-border bg-muted/40 space-y-3">
@@ -266,18 +265,6 @@ export default function NavigationDrawer({
                                 >
                                     <CircleDot className="w-4 h-4 text-emerald-500 shrink-0" />
                                     <span>Círculo da Quinta</span>
-                                </button>
-
-                                <button
-                                    onClick={() => navigateTo("metronome")}
-                                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
-                                        selectedSection === "metronome"
-                                            ? "bg-primary/10 text-primary border border-primary/20"
-                                            : "text-foreground hover:bg-accent/60"
-                                    }`}
-                                >
-                                    <Timer className="w-4 h-4 text-sky-500 shrink-0" />
-                                    <span>Metrónomo</span>
                                 </button>
 
                                 <button
