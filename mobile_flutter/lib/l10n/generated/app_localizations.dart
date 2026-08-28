@@ -634,6 +634,36 @@ abstract class AppLocalizations {
   /// **'Exportar PDF'**
   String get navExportPdf;
 
+  /// No description provided for @navLibrarySection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Biblioteca'**
+  String get navLibrarySection;
+
+  /// No description provided for @navToolsSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ferramentas'**
+  String get navToolsSection;
+
+  /// No description provided for @navAllSongs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os cânticos'**
+  String get navAllSongs;
+
+  /// No description provided for @navFavorites.
+  ///
+  /// In pt, this message translates to:
+  /// **'Favoritos'**
+  String get navFavorites;
+
+  /// No description provided for @navRecents.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recentes'**
+  String get navRecents;
+
   /// No description provided for @songsTitle.
   ///
   /// In pt, this message translates to:
@@ -849,6 +879,78 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sem itens neste culto.'**
   String get servicesNoItems;
+
+  /// No description provided for @servicesOrderTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordem do Culto'**
+  String get servicesOrderTitle;
+
+  /// No description provided for @servicesLeave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair'**
+  String get servicesLeave;
+
+  /// No description provided for @servicesLeaveMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair do Modo Culto'**
+  String get servicesLeaveMode;
+
+  /// No description provided for @servicesMoments.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 momento} other{{count} momentos}}'**
+  String servicesMoments(num count);
+
+  /// No description provided for @servicesItemOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Item {current} de {total}'**
+  String servicesItemOf(Object current, Object total);
+
+  /// No description provided for @servicesAddNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque para adicionar anotações…'**
+  String get servicesAddNotes;
+
+  /// No description provided for @servicesElementSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cântico'**
+  String get servicesElementSong;
+
+  /// No description provided for @servicesElementWelcome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Boas-vindas'**
+  String get servicesElementWelcome;
+
+  /// No description provided for @servicesElementScripture.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escritura'**
+  String get servicesElementScripture;
+
+  /// No description provided for @servicesElementMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mensagem'**
+  String get servicesElementMessage;
+
+  /// No description provided for @servicesElementAnnouncement.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avisos'**
+  String get servicesElementAnnouncement;
+
+  /// No description provided for @servicesElementDefault.
+  ///
+  /// In pt, this message translates to:
+  /// **'Elemento'**
+  String get servicesElementDefault;
 
   /// No description provided for @settingsTitle.
   ///

@@ -16,11 +16,17 @@ class AuthState {
     required this.status,
     this.session,
     this.organization,
+    this.resolvingOrganization = false,
   });
 
   final AuthStatus status;
   final AuthSession? session;
   final Organization? organization;
+
+  /// True while the active organization is being fetched after sign-in/sign-up
+  /// (or when re-resolving it), so the router can show a loading screen instead
+  /// of briefly flashing the "join an org" onboarding page.
+  final bool resolvingOrganization;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
 
@@ -28,12 +34,14 @@ class AuthState {
     AuthStatus? status,
     AuthSession? session,
     Organization? organization,
+    bool? resolvingOrganization,
     bool clearSession = false,
   }) {
     return AuthState(
       status: status ?? this.status,
       session: clearSession ? null : (session ?? this.session),
       organization: clearSession ? null : (organization ?? this.organization),
+      resolvingOrganization: resolvingOrganization ?? this.resolvingOrganization,
     );
   }
 }
@@ -207,10 +215,14 @@ class AuthController extends StateNotifier<AuthState> {
     _tokenStore.update(merged.sessionToken);
     await _store.writeToken(merged.sessionToken);
     await _store.writeSession(merged);
+    final org = merged.organization ?? state.organization;
     state = AuthState(
       status: AuthStatus.authenticated,
       session: merged,
-      organization: merged.organization ?? state.organization,
+      organization: org,
+      // If we don't know the org yet, the router shows a loading screen until
+      // `_resolveOrganization` finishes instead of flashing onboarding.
+      resolvingOrganization: org == null,
     );
   }
 
@@ -233,10 +245,17 @@ class AuthController extends StateNotifier<AuthState> {
           expiresAt: session.expiresAt,
         );
         await _store.writeSession(merged);
-        state = state.copyWith(session: merged, organization: org);
+        state = state.copyWith(
+          session: merged,
+          organization: org,
+          resolvingOrganization: false,
+        );
+      } else {
+        state = state.copyWith(resolvingOrganization: false);
       }
     } catch (_) {
       // Non-fatal: sync will surface any missing active-org as a 403.
+      state = state.copyWith(resolvingOrganization: false);
     }
   }
 

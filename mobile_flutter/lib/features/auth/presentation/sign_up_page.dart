@@ -174,7 +174,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     children: [
                       Text(l10n.authHaveAccount),
                       TextButton(
-                        onPressed: () => context.go('/sign-in'),
+                        onPressed: () => context.pop(),
                         child: Text(l10n.authSignIn),
                       ),
                     ],

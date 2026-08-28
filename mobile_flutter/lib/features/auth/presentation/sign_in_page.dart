@@ -126,7 +126,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => context.go('/forgot-password'),
+                      onPressed: () => context.push('/forgot-password'),
                       child: Text(l10n.authForgotPassword),
                     ),
                   ),
@@ -147,7 +147,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     children: [
                       Text(l10n.authNoAccount),
                       TextButton(
-                        onPressed: () => context.go('/sign-up'),
+                        onPressed: () => context.push('/sign-up'),
                         child: Text(l10n.authCreateAccount),
                       ),
                     ],

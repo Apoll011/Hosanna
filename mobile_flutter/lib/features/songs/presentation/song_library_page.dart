@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/sync_status_banner.dart';
 import '../../folders/data/folder_repository.dart';
 import '../data/song_repository.dart';
+import '../domain/library_controller.dart';
 
 enum SongSort { title, artist, updated }
 
@@ -21,7 +21,6 @@ class SongLibraryPage extends ConsumerStatefulWidget {
 class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   final _search = TextEditingController();
   SongSort _sort = SongSort.title;
-  String? _folderFilter; // null = all folders
   String? _tagFilter; // null = all tags
 
   @override
@@ -38,26 +37,21 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final l10n = AppLocalizations.of(context);
     final songsAsync = ref.watch(songsStreamProvider);
     final foldersAsync = ref.watch(foldersStreamProvider);
+    final library = ref.watch(libraryControllerProvider);
+    final libraryController = ref.read(libraryControllerProvider.notifier);
 
     final folders = foldersAsync.valueOrNull ?? const <FolderRow>[];
     final folderNames = {for (final f in folders) f.id: f.name};
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.songsTitle),
+        title: Text(_sectionTitle(l10n, library, folderNames)),
         actions: [
           _SortButton(sort: _sort, onChanged: (s) => setState(() => _sort = s)),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SyncStatusBanner(compact: true),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
@@ -75,18 +69,6 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(
               children: [
-                Expanded(
-                  child: _FilterDropdown<String?>(
-                    value: _folderFilter,
-                    hint: l10n.songsFilterByFolder,
-                    items: {
-                      null: l10n.songsAllSongs,
-                      for (final f in folders) f.id: f.name,
-                    },
-                    onChanged: (v) => setState(() => _folderFilter = v),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: _FilterDropdown<String?>(
                     value: _tagFilter,
@@ -107,8 +89,14 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     onRetry: _refresh,
                   ),
                 AsyncValue(:final value?) => _songList(
-                    songs: _applyFilters(value),
+                    songs: _applySectionAndFilters(value, library, folderNames),
                     folderNames: folderNames,
+                    favorites: library.favoriteIds,
+                    onToggleFavorite: libraryController.toggleFavorite,
+                    onOpenSong: (id) {
+                      libraryController.markPlayed(id);
+                      context.push('/songs/$id');
+                    },
                   ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -117,6 +105,20 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         ],
       ),
     );
+  }
+
+  String _sectionTitle(
+    AppLocalizations l10n,
+    LibraryState library,
+    Map<String, String> folderNames,
+  ) {
+    return switch (library.section) {
+      LibrarySection.all => l10n.navAllSongs,
+      LibrarySection.favorites => l10n.navFavorites,
+      LibrarySection.recent => l10n.navRecents,
+      LibrarySection.folder =>
+        folderNames[library.folderId] ?? l10n.navFolders,
+    };
   }
 
   Map<String?, String> _tagOptions(AsyncValue<List<SongRow>> songsAsync) {
@@ -128,17 +130,31 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     return {null: AppLocalizations.of(context).songsAllSongs, for (final t in sorted) t: t};
   }
 
-  List<SongRow> _applyFilters(List<SongRow> songs) {
+  List<SongRow> _applySectionAndFilters(
+    List<SongRow> songs,
+    LibraryState library,
+    Map<String, String> folderNames,
+  ) {
+    var filtered = switch (library.section) {
+      LibrarySection.favorites =>
+        songs.where((s) => library.favoriteIds.contains(s.id)).toList(),
+      LibrarySection.recent => _recentSongs(songs, library.recentIds),
+      LibrarySection.folder =>
+        songs.where((s) => s.folderId == library.folderId).toList(),
+      LibrarySection.all => List<SongRow>.from(songs),
+    };
+
     final q = _search.text.trim().toLowerCase();
-    var filtered = songs.where((s) {
-      if (_folderFilter != null && s.folderId != _folderFilter) return false;
-      if (_tagFilter != null && !s.tags.contains(_tagFilter)) return false;
-      if (q.isNotEmpty) {
-        final hay = '${s.title} ${s.artist}'.toLowerCase();
-        if (!hay.contains(q)) return false;
-      }
-      return true;
-    }).toList();
+    if (_tagFilter != null || q.isNotEmpty) {
+      filtered = filtered.where((s) {
+        if (_tagFilter != null && !s.tags.contains(_tagFilter)) return false;
+        if (q.isNotEmpty) {
+          final hay = '${s.title} ${s.artist}'.toLowerCase();
+          if (!hay.contains(q)) return false;
+        }
+        return true;
+      }).toList();
+    }
 
     switch (_sort) {
       case SongSort.title:
@@ -151,9 +167,21 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     return filtered;
   }
 
+  /// Preserves the stored recency order, dropping ids that no longer exist.
+  List<SongRow> _recentSongs(List<SongRow> songs, List<String> recentIds) {
+    final byId = {for (final s in songs) s.id: s};
+    return [
+      for (final id in recentIds)
+        if (byId[id] != null) byId[id]!,
+    ];
+  }
+
   Widget _songList({
     required List<SongRow> songs,
     required Map<String, String> folderNames,
+    required List<String> favorites,
+    required ValueChanged<String> onToggleFavorite,
+    required ValueChanged<String> onOpenSong,
   }) {
     final l10n = AppLocalizations.of(context);
     if (songs.isEmpty) {
@@ -167,6 +195,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         final folder = song.folderId == null
             ? null
             : folderNames[song.folderId];
+        final isFav = favorites.contains(song.id);
         return ListTile(
           leading: const Icon(Icons.music_note),
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -179,8 +208,15 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go('/songs/${song.id}'),
+          trailing: IconButton(
+            icon: Icon(
+              isFav ? Icons.favorite : Icons.favorite_border,
+              color: isFav ? Colors.pink : null,
+            ),
+            tooltip: l10n.navFavorites,
+            onPressed: () => onToggleFavorite(song.id),
+          ),
+          onTap: () => onOpenSong(song.id),
         );
       },
     );

@@ -84,7 +84,7 @@ class _ServiceList extends StatelessWidget {
                 .join(' · '),
           ),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go('/services/${service.id}'),
+          onTap: () => context.push('/services/${service.id}'),
         );
       },
     );

@@ -299,6 +299,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navExportPdf => 'Exportar PDF';
 
   @override
+  String get navLibrarySection => 'Biblioteca';
+
+  @override
+  String get navToolsSection => 'Herramientas';
+
+  @override
+  String get navAllSongs => 'Todas las canciones';
+
+  @override
+  String get navFavorites => 'Favoritos';
+
+  @override
+  String get navRecents => 'Recientes';
+
+  @override
   String get songsTitle => 'Canciones';
 
   @override
@@ -413,6 +428,52 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get servicesNoItems => 'Sin elementos en este servicio.';
+
+  @override
+  String get servicesOrderTitle => 'Orden del Servicio';
+
+  @override
+  String get servicesLeave => 'Salir';
+
+  @override
+  String get servicesLeaveMode => 'Salir del Modo Servicio';
+
+  @override
+  String servicesMoments(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count momentos',
+      one: '1 momento',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String servicesItemOf(Object current, Object total) {
+    return 'Elemento $current de $total';
+  }
+
+  @override
+  String get servicesAddNotes => 'Toca para añadir notas…';
+
+  @override
+  String get servicesElementSong => 'Canción';
+
+  @override
+  String get servicesElementWelcome => 'Bienvenida';
+
+  @override
+  String get servicesElementScripture => 'Escritura';
+
+  @override
+  String get servicesElementMessage => 'Mensaje';
+
+  @override
+  String get servicesElementAnnouncement => 'Anuncios';
+
+  @override
+  String get servicesElementDefault => 'Elemento';
 
   @override
   String get settingsTitle => 'Ajustes';

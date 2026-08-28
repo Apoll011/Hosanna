@@ -51,7 +51,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return onAuthRoute ? null : '/sign-in';
       }
 
-      // Signed in.
+      // Signed in but the active organization is still being fetched — show a
+      // loading screen rather than flashing the onboarding/join-org page.
+      if (auth.resolvingOrganization) {
+        return path == '/splash' ? null : '/splash';
+      }
+
       if (onAuthRoute) return hasOrg ? '/songs' : '/onboarding';
 
       if (!hasOrg) {
@@ -108,28 +113,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/folders',
-                builder: (_, _) => const FolderBrowserPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
                 path: '/services',
                 builder: (_, _) => const ServiceListPage(),
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/settings',
-                builder: (_, _) => const SettingsPage(),
-              ),
-            ],
-          ),
         ],
+      ),
+      GoRoute(
+        path: '/folders',
+        builder: (_, _) => const FolderBrowserPage(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (_, _) => const SettingsPage(),
       ),
       GoRoute(
         path: '/songs/:id',
