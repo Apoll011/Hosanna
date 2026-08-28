@@ -5,13 +5,27 @@ import '../../../core/config/app_config.dart';
 
 /// Renders a Cloudflare Turnstile widget in a WebView and returns the token.
 ///
-/// Turnstile's challenge is a browser-side JS widget, so a native WebView is
-/// the only reliable way to obtain a token on Android/iOS. Pops with the token
-/// on success, or `null` when the user backs out / the challenge fails.
+/// Turnstile's challenge is browser-side JS and validates the *hostname* of the
+/// page rendering the widget. Two modes are supported:
+///
+/// - **Hosted page (production):** when [AppConfig.turnstileUrl] is set, the
+///   WebView loads that URL. The page must render the Turnstile widget with the
+///   site key and call `TurnstileCallback.postMessage(token)` on success. The
+///   page's domain must be listed in Cloudflare's "Hostname Management".
+/// - **Inline HTML (dev/test):** otherwise the widget is injected here. This
+///   has no hostname (`about:blank`), so it only works with Cloudflare's
+///   *test* keys (`1x00000000000000000000AA`), which skip hostname checks.
+///
+/// Pops with the token on success, or `null` when the user backs out / fails.
 class TurnstileCaptchaPage extends StatefulWidget {
-  const TurnstileCaptchaPage({super.key, required this.siteKey});
+  const TurnstileCaptchaPage({
+    super.key,
+    required this.siteKey,
+    this.url,
+  });
 
   final String siteKey;
+  final String? url;
 
   @override
   State<TurnstileCaptchaPage> createState() => _TurnstileCaptchaPageState();
@@ -35,8 +49,14 @@ class _TurnstileCaptchaPageState extends State<TurnstileCaptchaPage> {
             Navigator.of(context).pop(token);
           }
         },
-      )
-      ..loadHtmlString(_buildHtml());
+      );
+
+    final url = widget.url;
+    if (url != null && url.isNotEmpty) {
+      _controller.loadRequest(Uri.parse(url));
+    } else {
+      _controller.loadHtmlString(_buildHtml());
+    }
   }
 
   String _buildHtml() {
@@ -94,7 +114,10 @@ Future<String?> resolveCaptchaToken(
   if (!config.isTurnstileConfigured) return null;
   final token = await Navigator.of(context).push<String>(
     MaterialPageRoute(
-      builder: (_) => TurnstileCaptchaPage(siteKey: config.turnstileSiteKey),
+      builder: (_) => TurnstileCaptchaPage(
+        siteKey: config.turnstileSiteKey,
+        url: config.turnstileUrl,
+      ),
     ),
   );
   return token;

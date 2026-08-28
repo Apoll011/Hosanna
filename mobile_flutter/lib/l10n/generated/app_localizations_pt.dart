@@ -213,6 +213,46 @@ class AppLocalizationsPt extends AppLocalizations {
       'A verificação de segurança (captcha) não está configurada.';
 
   @override
+  String get onboardingTitle => 'Bem-vindo ao Hosanna';
+
+  @override
+  String get onboardingSubtitle =>
+      'Aceite um convite para entrar na organização da sua igreja.';
+
+  @override
+  String onboardingPendingInvites(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count convites pendentes',
+      one: '1 convite pendente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardingNoInvites => 'Sem convites pendentes';
+
+  @override
+  String get onboardingNoInvitesDesc =>
+      'Peça a um administrador da sua igreja para o convidar.';
+
+  @override
+  String get onboardingAccept => 'Aceitar';
+
+  @override
+  String get onboardingReject => 'Recusar';
+
+  @override
+  String get onboardingRole => 'Função';
+
+  @override
+  String get onboardingLoadingInvites => 'A carregar convites…';
+
+  @override
+  String get onboardingSignOut => 'Terminar Sessão';
+
+  @override
   String get syncSyncing => 'A sincronizar…';
 
   @override
@@ -312,6 +352,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get songsNoContent => 'Sem conteúdo disponível.';
+
+  @override
+  String get songKey => 'Tom';
+
+  @override
+  String get songCapo => 'Capo';
+
+  @override
+  String get songChords => 'Acordes';
+
+  @override
+  String get songInstrument => 'Instrumento';
+
+  @override
+  String get songDiagrams => 'Diagramas';
 
   @override
   String get foldersTitle => 'Pastas';

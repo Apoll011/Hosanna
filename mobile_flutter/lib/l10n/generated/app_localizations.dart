@@ -484,6 +484,66 @@ abstract class AppLocalizations {
   /// **'A verificação de segurança (captcha) não está configurada.'**
   String get authCaptchaNotConfigured;
 
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bem-vindo ao Hosanna'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aceite um convite para entrar na organização da sua igreja.'**
+  String get onboardingSubtitle;
+
+  /// No description provided for @onboardingPendingInvites.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 convite pendente} other{{count} convites pendentes}}'**
+  String onboardingPendingInvites(num count);
+
+  /// No description provided for @onboardingNoInvites.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem convites pendentes'**
+  String get onboardingNoInvites;
+
+  /// No description provided for @onboardingNoInvitesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peça a um administrador da sua igreja para o convidar.'**
+  String get onboardingNoInvitesDesc;
+
+  /// No description provided for @onboardingAccept.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aceitar'**
+  String get onboardingAccept;
+
+  /// No description provided for @onboardingReject.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recusar'**
+  String get onboardingReject;
+
+  /// No description provided for @onboardingRole.
+  ///
+  /// In pt, this message translates to:
+  /// **'Função'**
+  String get onboardingRole;
+
+  /// No description provided for @onboardingLoadingInvites.
+  ///
+  /// In pt, this message translates to:
+  /// **'A carregar convites…'**
+  String get onboardingLoadingInvites;
+
+  /// No description provided for @onboardingSignOut.
+  ///
+  /// In pt, this message translates to:
+  /// **'Terminar Sessão'**
+  String get onboardingSignOut;
+
   /// No description provided for @syncSyncing.
   ///
   /// In pt, this message translates to:
@@ -681,6 +741,36 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sem conteúdo disponível.'**
   String get songsNoContent;
+
+  /// No description provided for @songKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom'**
+  String get songKey;
+
+  /// No description provided for @songCapo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo'**
+  String get songCapo;
+
+  /// No description provided for @songChords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acordes'**
+  String get songChords;
+
+  /// No description provided for @songInstrument.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instrumento'**
+  String get songInstrument;
+
+  /// No description provided for @songDiagrams.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diagramas'**
+  String get songDiagrams;
 
   /// No description provided for @foldersTitle.
   ///

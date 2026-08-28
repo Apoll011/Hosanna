@@ -13,11 +13,13 @@ import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import '../features/export/presentation/export_pdf_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
+import '../features/onboarding/presentation/onboarding_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
 import '../features/songs/presentation/song_detail_page.dart';
 import '../features/songs/presentation/song_library_page.dart';
+import '../shared/widgets/hosanna_logo.dart';
 import 'shell.dart';
 
 bool _isAuthRoute(String path) {
@@ -40,11 +42,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final path = state.uri.path;
       final loading = auth.status == AuthStatus.loading;
       final loggedIn = auth.isAuthenticated;
+      final hasOrg = auth.organization != null;
       final onAuthRoute = _isAuthRoute(path);
 
       if (loading) return path == '/splash' ? null : '/splash';
-      if (!loggedIn && !onAuthRoute) return '/sign-in';
-      if (loggedIn && onAuthRoute) return '/songs';
+
+      if (!loggedIn) {
+        return (onAuthRoute || path == '/splash') ? null : '/sign-in';
+      }
+
+      // Signed in.
+      if (onAuthRoute) return hasOrg ? '/songs' : '/onboarding';
+
+      if (!hasOrg) {
+        // Org-less users may only see onboarding until they join one.
+        return path == '/onboarding' ? null : '/onboarding';
+      }
+
+      // Has an org — no longer allow the pre-org screens.
+      if (path == '/onboarding' || path == '/splash') return '/songs';
       return null;
     },
     routes: [
@@ -72,6 +88,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/verify-email',
         builder: (_, _) => const EmailVerificationPage(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, _) => const OnboardingPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
@@ -145,8 +165,17 @@ class _SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const HosannaLogo(size: 96),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -2112,6 +2112,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SongsTable songs = $SongsTable(this);
   late final $FoldersTable folders = $FoldersTable(this);
   late final $ServicesTable services = $ServicesTable(this);
+  late final Index songsFolderIdx = Index(
+    'songs_folder_idx',
+    'CREATE INDEX songs_folder_idx ON songs (folder_id)',
+  );
+  late final Index songsUpdatedIdx = Index(
+    'songs_updated_idx',
+    'CREATE INDEX songs_updated_idx ON songs (updated_at)',
+  );
+  late final Index foldersParentIdx = Index(
+    'folders_parent_idx',
+    'CREATE INDEX folders_parent_idx ON folders (parent_id)',
+  );
+  late final Index servicesDateIdx = Index(
+    'services_date_idx',
+    'CREATE INDEX services_date_idx ON services (date)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2120,6 +2136,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     songs,
     folders,
     services,
+    songsFolderIdx,
+    songsUpdatedIdx,
+    foldersParentIdx,
+    servicesDateIdx,
   ];
 }
 

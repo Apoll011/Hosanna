@@ -104,6 +104,8 @@ mixin SyncMetadata on Table {
   TextColumn get purgeAt => text().nullable()();
 }
 
+@TableIndex(name: 'songs_folder_idx', columns: {#folderId})
+@TableIndex(name: 'songs_updated_idx', columns: {#updatedAt})
 @DataClassName('SongRow')
 class Songs extends Table with SyncMetadata {
   TextColumn get id => text()();
@@ -128,6 +130,7 @@ class Songs extends Table with SyncMetadata {
       ];
 }
 
+@TableIndex(name: 'folders_parent_idx', columns: {#parentId})
 @DataClassName('FolderRow')
 class Folders extends Table with SyncMetadata {
   TextColumn get id => text()();
@@ -144,6 +147,7 @@ class Folders extends Table with SyncMetadata {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'services_date_idx', columns: {#date})
 @DataClassName('ServiceRow')
 class Services extends Table with SyncMetadata {
   TextColumn get id => text()();

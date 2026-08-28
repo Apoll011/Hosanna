@@ -171,6 +171,22 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> sendVerificationEmail() =>
       _repository.sendVerificationEmail(email: state.session?.user.email);
 
+  Future<List<OrganizationInvitation>> listInvitations() =>
+      _repository.listUserInvitations();
+
+  Future<void> acceptInvitation(String invitationId) async {
+    await _repository.acceptInvitation(invitationId);
+    // The server sets the accepted org as active; re-resolve it locally so the
+    // app routes into the org and triggers the initial sync.
+    final session = state.session;
+    if (session != null) {
+      await _resolveOrganization(session);
+    }
+  }
+
+  Future<void> rejectInvitation(String invitationId) =>
+      _repository.rejectInvitation(invitationId);
+
   // ── Internals ────────────────────────────────────────────────────────────
 
   void _requireCaptchaIfNeeded(String? captchaToken) {

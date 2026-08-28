@@ -16,12 +16,12 @@ class HosannaLogo extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _fallback(),
+        errorBuilder: (context, error, stackTrace) => _fallback(context),
       ),
     );
   }
 
-  Widget _fallback() {
+  Widget _fallback(BuildContext context) {
     return ColoredBox(
       color: Theme.of(context).colorScheme.primary,
       child: SizedBox(

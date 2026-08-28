@@ -207,6 +207,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Security verification (captcha) is not configured.';
 
   @override
+  String get onboardingTitle => 'Welcome to Hosanna';
+
+  @override
+  String get onboardingSubtitle =>
+      'Accept an invitation to join your church\'s organization.';
+
+  @override
+  String onboardingPendingInvites(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pending invitations',
+      one: '1 pending invitation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardingNoInvites => 'No pending invitations';
+
+  @override
+  String get onboardingNoInvitesDesc =>
+      'Ask a church administrator to invite you.';
+
+  @override
+  String get onboardingAccept => 'Accept';
+
+  @override
+  String get onboardingReject => 'Reject';
+
+  @override
+  String get onboardingRole => 'Role';
+
+  @override
+  String get onboardingLoadingInvites => 'Loading invitations…';
+
+  @override
+  String get onboardingSignOut => 'Sign Out';
+
+  @override
   String get syncSyncing => 'Syncing…';
 
   @override
@@ -306,6 +346,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get songsNoContent => 'No content available.';
+
+  @override
+  String get songKey => 'Key';
+
+  @override
+  String get songCapo => 'Capo';
+
+  @override
+  String get songChords => 'Chords';
+
+  @override
+  String get songInstrument => 'Instrument';
+
+  @override
+  String get songDiagrams => 'Diagrams';
 
   @override
   String get foldersTitle => 'Folders';

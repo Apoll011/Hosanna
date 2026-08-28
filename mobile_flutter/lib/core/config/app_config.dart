@@ -13,6 +13,7 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.turnstileSiteKey,
+    required this.turnstileUrl,
   });
 
   /// Base URL of the Hosanna backend (no trailing slash, no `/api`).
@@ -27,6 +28,15 @@ class AppConfig {
   /// It is intentionally empty until provided by the project owner.
   final String turnstileSiteKey;
 
+  /// Optional URL of a hosted Turnstile page.
+  ///
+  /// Turnstile validates the hostname of the page that renders the widget, so
+  /// inline WebView HTML (`about:blank`) cannot satisfy it in production. Point
+  /// this at a page served from a domain listed in Cloudflare's "Hostname
+  /// Management", e.g. `https://studio.hosanna.live/captcha`. The hosted page
+  /// must call `TurnstileCallback.postMessage(token)` in its success callback.
+  final String turnstileUrl;
+
   /// Full API root, e.g. `https://host/api`.
   String get apiRoot => '${apiBaseUrl.replaceFirst(RegExp(r'/$'), '')}/api';
 
@@ -38,5 +48,6 @@ class AppConfig {
       defaultValue: 'https://hosanna-server-beta.vercel.app',
     ),
     turnstileSiteKey: String.fromEnvironment('HOSANNA_TURNSTILE_SITE_KEY'),
+    turnstileUrl: String.fromEnvironment('HOSANNA_TURNSTILE_URL'),
   );
 }

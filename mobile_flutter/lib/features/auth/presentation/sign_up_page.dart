@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/hosanna_logo.dart';
 import '../domain/auth_controller.dart';
 import 'auth_ui_utils.dart';
 
@@ -91,6 +92,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const HosannaLogo(size: 72),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.authSignUpTitle,
                     style: theme.textTheme.headlineMedium,

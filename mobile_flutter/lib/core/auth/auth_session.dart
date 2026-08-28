@@ -55,6 +55,48 @@ class Organization {
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'slug': slug};
 }
 
+/// A pending invitation to join an organization, as returned by Better Auth's
+/// `GET /organization/list-user-invitations`.
+class OrganizationInvitation {
+  const OrganizationInvitation({
+    required this.id,
+    required this.email,
+    required this.role,
+    required this.organizationId,
+    this.organizationName,
+    required this.inviterId,
+    this.teamId,
+    required this.status,
+    required this.expiresAt,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String email;
+  final String role;
+  final String organizationId;
+  final String? organizationName;
+  final String inviterId;
+  final String? teamId;
+  final String status;
+  final String expiresAt;
+  final String createdAt;
+
+  factory OrganizationInvitation.fromJson(Map<String, dynamic> json) =>
+      OrganizationInvitation(
+        id: json['id'] as String,
+        email: (json['email'] ?? '') as String,
+        role: (json['role'] ?? 'member') as String,
+        organizationId: (json['organizationId'] ?? '') as String,
+        organizationName: json['organizationName'] as String?,
+        inviterId: (json['inviterId'] ?? '') as String,
+        teamId: json['teamId'] as String?,
+        status: (json['status'] ?? 'pending') as String,
+        expiresAt: (json['expiresAt'] ?? '') as String,
+        createdAt: (json['createdAt'] ?? '') as String,
+      );
+}
+
 class AuthSession {
   const AuthSession({
     required this.user,

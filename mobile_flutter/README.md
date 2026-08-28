@@ -7,6 +7,8 @@ Flutter implementation and does **not** clone its UI or architecture.
 ## Toolchain & targets
 
 - **Flutter** 3.47.2 (stable) / **Dart** 3.13.2 — set at migration time.
+- **Application id:** `com.embrace.hosanna` (Android `applicationId`/`namespace`,
+  iOS `PRODUCT_BUNDLE_IDENTIFIER`).
 - **Android** `minSdk 24` (Flutter 3.47 default), `targetSdk`/`compileSdk` = Flutter defaults (SDK 36).
 - **iOS** deployment target `15.0` (Flutter 3.47 default).
 
@@ -26,18 +28,30 @@ Configuration is injected at compile time via `--dart-define`:
 | --- | --- | --- |
 | `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://hosanna-server-beta.vercel.app` |
 | `HOSANNA_TURNSTILE_SITE_KEY` | Cloudflare Turnstile **site** (public) key | *(empty)* |
+| `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL (see below) | *(empty)* |
 
 ```bash
 flutter run \
   --dart-define=HOSANNA_API_URL=https://your-api.example.com \
-  --dart-define=HOSANNA_TURNSTILE_SITE_KEY=0x4AAAA...
+  --dart-define=HOSANNA_TURNSTILE_SITE_KEY=0x4AAAAAAEd2fDA6HDsaju7K \
+  --dart-define=HOSANNA_TURNSTILE_URL=https://your-domain.example/captcha
 ```
 
 > **Turnstile is required.** The backend enforces Cloudflare Turnstile on
 > `/sign-up/email`, `/sign-in/email`, and `/request-password-reset`. Until
 > `HOSANNA_TURNSTILE_SITE_KEY` is provided, those actions surface a localized
-> "captcha not configured" message. Once set, a native WebView renders the
-> Turnstile widget and returns the token.
+> "captcha not configured" message.
+>
+> **Why "Missing CAPTCHA response"?** Turnstile validates the *hostname* of the
+> page that renders the widget. The app's WebView loads inline HTML
+> (`about:blank`, no hostname), which Cloudflare rejects — so the widget never
+> produces a token and the server reports `MISSING_RESPONSE`. Fix: host a small
+> captcha page on a domain you control, add **that domain** to the widget's
+> **Hostname Management** in the Cloudflare Turnstile dashboard, then set
+> `HOSANNA_TURNSTILE_URL` to it. The hosted page must render the widget with the
+> site key and call `TurnstileCallback.postMessage(token)` in its callback. For
+> local dev you can use Cloudflare's *test* keys (`1x00000000000000000000AA`),
+> which skip the hostname check.
 
 ## Architecture
 

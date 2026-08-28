@@ -182,6 +182,37 @@ class AuthRepository {
     );
   }
 
+  /// Pending invitations addressed to the signed-in user.
+  Future<List<OrganizationInvitation>> listUserInvitations() async {
+    final res = await _dio.get<dynamic>(
+      '/api/auth/organization/list-user-invitations',
+    );
+    final data = res.data;
+    if (data is! List) return const [];
+    return data
+        .whereType<Map>()
+        .map((e) => OrganizationInvitation.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  Future<void> acceptInvitation(String invitationId) async {
+    await _guard(
+      () => _dio.post<dynamic>(
+        '/api/auth/organization/accept-invitation',
+        data: {'invitationId': invitationId},
+      ),
+    );
+  }
+
+  Future<void> rejectInvitation(String invitationId) async {
+    await _guard(
+      () => _dio.post<dynamic>(
+        '/api/auth/organization/reject-invitation',
+        data: {'invitationId': invitationId},
+      ),
+    );
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   Options _captchaOptions(String? token) => Options(extra: {
