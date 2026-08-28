@@ -6,49 +6,113 @@ import '../l10n/generated/app_localizations.dart';
 import 'hosanna_drawer.dart';
 import 'providers.dart';
 
-/// Shell with a slide-in navigation drawer and a floating bottom bar showing
-/// only the two primary destinations (songs and services).
-class HosannaShell extends ConsumerWidget {
+/// Breakpoint (logical pixels) at which the app switches to the tablet layout
+/// (persistent sidebar instead of a drawer + floating bottom bar).
+const double kTabletBreakpoint = 840;
+
+/// Responsive shell: phones get a slide-in drawer + floating bottom bar;
+/// tablets get a persistent, retractable sidebar (mirroring the React app's
+/// tablet sidebar).
+class HosannaShell extends ConsumerStatefulWidget {
   const HosannaShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HosannaShell> createState() => _HosannaShellState();
+}
+
+class _HosannaShellState extends ConsumerState<HosannaShell> {
+  bool _sidebarCollapsed = false;
+
+  void _goBranch(int index) {
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      key: ref.watch(shellScaffoldKeyProvider),
-      body: navigationShell,
-      drawer: HosannaDrawer(
-        onNavigate: (branchIndex) {
-          // Close the drawer, then switch branch.
-          Navigator.of(context).pop();
-          navigationShell.goBranch(
-            branchIndex,
-            initialLocation: branchIndex == navigationShell.currentIndex,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTablet = constraints.maxWidth >= kTabletBreakpoint;
+
+        if (isTablet) {
+          return Scaffold(
+            key: ref.watch(shellScaffoldKeyProvider),
+            body: Row(
+              children: [
+                _TabletSidebar(
+                  collapsed: _sidebarCollapsed,
+                  onToggleCollapse: () =>
+                      setState(() => _sidebarCollapsed = !_sidebarCollapsed),
+                  onNavigate: _goBranch,
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: widget.navigationShell),
+              ],
+            ),
           );
-        },
-      ),
-      extendBody: true,
-      bottomNavigationBar: _FloatingNavBar(
-        selectedIndex: navigationShell.currentIndex,
-        onSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
+        }
+
+        return Scaffold(
+          key: ref.watch(shellScaffoldKeyProvider),
+          body: widget.navigationShell,
+          drawer: HosannaDrawer(onNavigate: _goBranch),
+          extendBody: true,
+          bottomNavigationBar: _FloatingNavBar(
+            selectedIndex: widget.navigationShell.currentIndex,
+            onSelected: _goBranch,
+            destinations: [
+              _NavItem(
+                icon: Icons.music_note_outlined,
+                selectedIcon: Icons.music_note,
+                label: l10n.navSongs,
+              ),
+              _NavItem(
+                icon: Icons.calendar_month_outlined,
+                selectedIcon: Icons.calendar_month,
+                label: l10n.navServices,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TabletSidebar extends StatelessWidget {
+  const _TabletSidebar({
+    required this.collapsed,
+    required this.onToggleCollapse,
+    required this.onNavigate,
+  });
+
+  final bool collapsed;
+  final VoidCallback onToggleCollapse;
+  final void Function(int branchIndex) onNavigate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final width = collapsed ? 76.0 : 288.0;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+      width: width,
+      color: theme.colorScheme.surfaceContainerLow,
+      child: SafeArea(
+        child: HosannaNavContent(
+          collapsed: collapsed,
+          onToggleCollapse: onToggleCollapse,
+          onNavigate: onNavigate,
+          onPushTool: (location) => context.push(location),
         ),
-        destinations: [
-          _NavItem(
-            icon: Icons.music_note_outlined,
-            selectedIcon: Icons.music_note,
-            label: l10n.navSongs,
-          ),
-          _NavItem(
-            icon: Icons.calendar_month_outlined,
-            selectedIcon: Icons.calendar_month,
-            label: l10n.navServices,
-          ),
-        ],
       ),
     );
   }
