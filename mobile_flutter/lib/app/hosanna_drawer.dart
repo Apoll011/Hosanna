@@ -103,7 +103,7 @@ class HosannaDrawer extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall,
                 ),
-                onTap: () => pushTool('/account'),
+                onTap: () => pushTool('/settings?tab=account'),
               ),
             const Divider(),
 

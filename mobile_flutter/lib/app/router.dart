@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
-import '../features/auth/presentation/account_page.dart';
 import '../features/auth/presentation/email_verification_page.dart';
 import '../features/auth/presentation/forgot_password_page.dart';
 import '../features/auth/presentation/reset_password_page.dart';
@@ -157,10 +156,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/export-pdf',
         builder: (_, _) => const ExportPdfPage(),
-      ),
-      GoRoute(
-        path: '/account',
-        builder: (_, _) => const AccountPage(),
       ),
     ],
   );
