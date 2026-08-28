@@ -5,7 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/song_repository.dart';
-import 'song_body_renderer.dart';
+import 'song_reader.dart';
 import 'song_toolbar.dart';
 
 class SongDetailPage extends ConsumerStatefulWidget {
@@ -54,7 +54,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         error: (_, _) => Center(child: Text(l10n.commonError)),
         data: (song) => song == null
             ? Center(child: Text(l10n.songsNoResults))
-            : SongBodyRenderer(content: song.content),
+            : SongReader(content: song.content),
       ),
     );
   }

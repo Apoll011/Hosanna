@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -21,7 +22,15 @@ class ServiceListPage extends ConsumerWidget {
     final servicesAsync = ref.watch(servicesStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.servicesTitle)),
+      appBar: AppBar(
+        title: Text(l10n.servicesTitle),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: l10n.commonOpenDrawer,
+          onPressed: () =>
+              ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
+        ),
+      ),
       body: Column(
         children: [
           Padding(

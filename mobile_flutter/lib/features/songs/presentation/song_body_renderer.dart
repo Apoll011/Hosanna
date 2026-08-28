@@ -10,9 +10,12 @@ import 'chordpro/song_display_settings.dart';
 /// renderer) with the current [SongDisplaySettings]. Any future parser/renderer
 /// swap happens here without touching the rest of the song feature.
 class SongBodyRenderer extends ConsumerWidget {
-  const SongBodyRenderer({super.key, required this.content});
+  const SongBodyRenderer({super.key, required this.content, this.scrollController});
 
   final String content;
+
+  /// Optional external controller for auto-scroll / programmatic scrolling.
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,6 +29,7 @@ class SongBodyRenderer extends ConsumerWidget {
       fontSize: settings.fontSize,
       instrument: settings.instrument,
       showDiagrams: settings.showDiagrams,
+      scrollController: scrollController,
     );
   }
 }

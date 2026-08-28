@@ -62,6 +62,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonUnknown => 'Desconocido';
 
   @override
+  String get commonOpenDrawer => 'Abrir menú';
+
+  @override
   String get authSignIn => 'Iniciar Sesión';
 
   @override
@@ -335,6 +338,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsFilterByTag => 'Filtrar por etiqueta';
 
   @override
+  String get songsFilter => 'Filtrar';
+
+  @override
   String get songsSortBy => 'Ordenar por';
 
   @override
@@ -381,6 +387,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songDiagrams => 'Diagramas';
+
+  @override
+  String get songControlsTitle => 'Ajustes de Lectura';
+
+  @override
+  String get songTranspose => 'Transposición';
+
+  @override
+  String get songSemitones => 'semitonos';
+
+  @override
+  String get songOriginal => 'Original';
+
+  @override
+  String get songCapoNone => 'Ninguna';
+
+  @override
+  String songCapoFret(Object fret) {
+    return 'Traste $fret';
+  }
+
+  @override
+  String get songFontSize => 'Tamaño de la Letra';
+
+  @override
+  String get songShowChords => 'Mostrar Acordes';
+
+  @override
+  String get songTwoColumn => 'Diseño en 2 Columnas';
+
+  @override
+  String get songShowDiagrams => 'Mostrar Diagramas';
+
+  @override
+  String get songGuitar => 'Guitarra';
+
+  @override
+  String get songPiano => 'Piano';
 
   @override
   String get foldersTitle => 'Carpetas';

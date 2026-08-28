@@ -92,6 +92,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     );
     _currentElementId ??= current.id;
 
+    // Song elements (in service order) for prev/next navigation.
+    final songElements =
+        elements.where((e) => e.type == 'song' && e.songId != null).toList();
+    final songIndex = songElements.indexWhere((e) => e.id == current.id);
+
     return Column(
       children: [
         _MusicianTopBar(
@@ -105,7 +110,19 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         ),
         Expanded(
           child: current.type == 'song' && current.songId != null
-              ? _SongElementView(songId: current.songId!)
+              ? _SongElementView(
+                  songId: current.songId!,
+                  canPrev: songIndex > 0,
+                  canNext: songIndex >= 0 && songIndex < songElements.length - 1,
+                  positionLabel:
+                      '${songIndex + 1} / ${songElements.length}',
+                  onPrev: () => setState(() {
+                    _currentElementId = songElements[songIndex - 1].id;
+                  }),
+                  onNext: () => setState(() {
+                    _currentElementId = songElements[songIndex + 1].id;
+                  }),
+                )
               : _NonSongElementView(element: current),
         ),
       ],

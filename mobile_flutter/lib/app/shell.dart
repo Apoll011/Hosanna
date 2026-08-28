@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import 'hosanna_drawer.dart';
+import 'providers.dart';
 
 /// Shell with a slide-in navigation drawer and a floating bottom bar showing
 /// only the two primary destinations (songs and services).
-class HosannaShell extends StatelessWidget {
+class HosannaShell extends ConsumerWidget {
   const HosannaShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
+      key: ref.watch(shellScaffoldKeyProvider),
       body: navigationShell,
       drawer: HosannaDrawer(
         onNavigate: (branchIndex) {

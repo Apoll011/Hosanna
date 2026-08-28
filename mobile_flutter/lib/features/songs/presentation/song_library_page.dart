@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -22,6 +23,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   final _search = TextEditingController();
   SongSort _sort = SongSort.title;
   String? _tagFilter; // null = all tags
+  bool _searchOpen = false;
 
   @override
   void dispose() {
@@ -45,41 +47,47 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_sectionTitle(l10n, library, folderNames)),
+        title: _searchOpen
+            ? TextField(
+                controller: _search,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: l10n.songsSearchHint,
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => setState(() {}),
+              )
+            : Text(_sectionTitle(l10n, library, folderNames)),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: l10n.commonOpenDrawer,
+          onPressed: () =>
+              ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
+        ),
         actions: [
-          _SortButton(sort: _sort, onChanged: (s) => setState(() => _sort = s)),
+          IconButton(
+            icon: Icon(_searchOpen ? Icons.close : Icons.search),
+            tooltip: l10n.commonSearch,
+            onPressed: () {
+              setState(() {
+                _searchOpen = !_searchOpen;
+                if (!_searchOpen) _search.clear();
+              });
+            },
+          ),
+          _FilterButton(
+            sort: _sort,
+            tagFilter: _tagFilter,
+            tags: _tagOptions(songsAsync).keys.whereType<String>().toList(),
+            onSortChanged: (s) => setState(() => _sort = s),
+            onTagChanged: (t) => setState(() => _tagFilter = t),
+          ),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _search,
-              decoration: InputDecoration(
-                hintText: l10n.songsSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _FilterDropdown<String?>(
-                    value: _tagFilter,
-                    hint: l10n.songsFilterByTag,
-                    items: _tagOptions(songsAsync),
-                    onChanged: (v) => setState(() => _tagFilter = v),
-                  ),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
@@ -167,7 +175,6 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     return filtered;
   }
 
-  /// Preserves the stored recency order, dropping ids that no longer exist.
   List<SongRow> _recentSongs(List<SongRow> songs, List<String> recentIds) {
     final byId = {for (final s in songs) s.id: s};
     return [
@@ -223,64 +230,122 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   }
 }
 
-class _SortButton extends StatelessWidget {
-  const _SortButton({required this.sort, required this.onChanged});
+/// Filter popup (sort + tag), opened from the AppBar action.
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({
+    required this.sort,
+    required this.tagFilter,
+    required this.tags,
+    required this.onSortChanged,
+    required this.onTagChanged,
+  });
 
   final SongSort sort;
-  final ValueChanged<SongSort> onChanged;
+  final String? tagFilter;
+  final List<String> tags;
+  final ValueChanged<SongSort> onSortChanged;
+  final ValueChanged<String?> onTagChanged;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final labels = {
-      SongSort.title: l10n.songsSortTitle,
-      SongSort.artist: l10n.songsSortArtist,
-      SongSort.updated: l10n.songsSortUpdated,
-    };
-    return PopupMenuButton<SongSort>(
-      icon: const Icon(Icons.sort),
-      tooltip: l10n.songsSortBy,
-      initialValue: sort,
-      onSelected: onChanged,
-      itemBuilder: (_) => [
-        for (final s in SongSort.values)
-          PopupMenuItem(value: s, child: Text(labels[s]!)),
-      ],
+    return IconButton(
+      icon: const Icon(Icons.filter_list),
+      tooltip: l10n.songsFilter,
+      onPressed: () => _showFilterSheet(context, l10n),
+    );
+  }
+
+  void _showFilterSheet(BuildContext context, AppLocalizations l10n) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final sortLabels = {
+          SongSort.title: l10n.songsSortTitle,
+          SongSort.artist: l10n.songsSortArtist,
+          SongSort.updated: l10n.songsSortUpdated,
+        };
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.songsSortBy,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final s in SongSort.values)
+                  RadioListTile<SongSort>(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(sortLabels[s]!),
+                    value: s,
+                    groupValue: sort,
+                    onChanged: (v) {
+                      if (v != null) onSortChanged(v);
+                    },
+                  ),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.songsFilterByTag,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _TagChip(
+                      label: l10n.songsAllSongs,
+                      selected: tagFilter == null,
+                      onTap: () => onTagChanged(null),
+                    ),
+                    for (final t in tags)
+                      _TagChip(
+                        label: t,
+                        selected: tagFilter == t,
+                        onTap: () => onTagChanged(t),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: Text(l10n.commonDone),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class _FilterDropdown<T> extends StatelessWidget {
-  const _FilterDropdown({
-    required this.value,
-    required this.hint,
-    required this.items,
-    required this.onChanged,
+class _TagChip extends StatelessWidget {
+  const _TagChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
   });
 
-  final T value;
-  final String hint;
-  final Map<T, String> items;
-  final ValueChanged<T> onChanged;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<T>(
-      initialValue: value,
-      isDense: true,
-      isExpanded: true,
-      decoration: InputDecoration(
-        hintText: hint,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      items: [
-        for (final entry in items.entries)
-          DropdownMenuItem(value: entry.key, child: Text(entry.value, overflow: TextOverflow.ellipsis)),
-      ],
-      onChanged: (v) {
-        if (v != null) onChanged(v);
-      },
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
     );
   }
 }

@@ -21,6 +21,7 @@ class ChordProRenderer extends StatefulWidget {
     this.fontSize,
     this.instrument = 'guitar',
     this.showDiagrams = false,
+    this.scrollController,
   });
 
   final String content;
@@ -31,6 +32,9 @@ class ChordProRenderer extends StatefulWidget {
   final double? fontSize;
   final String instrument;
   final bool showDiagrams;
+
+  /// Optional external controller for auto-scroll / programmatic scrolling.
+  final ScrollController? scrollController;
 
   @override
   State<ChordProRenderer> createState() => _ChordProRendererState();
@@ -91,6 +95,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     return Stack(
       children: [
         SingleChildScrollView(
+          controller: widget.scrollController,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

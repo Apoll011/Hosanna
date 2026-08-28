@@ -117,7 +117,7 @@ class SongControlsSheet extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Slider(
-                    value: settings.fontSize.clamp(10, 34),
+                    value: settings.fontSize.clamp(10, 34).toDouble(),
                     min: 10,
                     max: 34,
                     divisions: 12,

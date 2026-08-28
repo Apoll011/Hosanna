@@ -18,6 +18,7 @@
   "commonDone": "Concluir",
   "commonNext": "Seguinte",
   "commonUnknown": "Desconhecido",
+  "commonOpenDrawer": "Abrir menu",
 
   "authSignIn": "Iniciar Sessão",
   "authSignUp": "Criar Conta",
@@ -107,6 +108,7 @@
   "songsAllSongs": "Todos os cânticos",
   "songsFilterByFolder": "Filtrar por pasta",
   "songsFilterByTag": "Filtrar por etiqueta",
+  "songsFilter": "Filtrar",
   "songsSortBy": "Ordenar por",
   "songsSortTitle": "Título",
   "songsSortArtist": "Artista",

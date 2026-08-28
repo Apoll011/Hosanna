@@ -1,5 +1,6 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,3 +48,8 @@ final dioProvider = Provider<Dio>((ref) {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider));
 });
+
+/// Key of the shell's [Scaffold], letting branch pages open the navigation
+/// drawer (hamburger) via `currentState?.openDrawer()`.
+final shellScaffoldKeyProvider =
+    Provider<GlobalKey<ScaffoldState>>((ref) => GlobalKey<ScaffoldState>());

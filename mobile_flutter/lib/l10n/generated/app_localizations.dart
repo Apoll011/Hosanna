@@ -202,6 +202,12 @@ abstract class AppLocalizations {
   /// **'Desconhecido'**
   String get commonUnknown;
 
+  /// No description provided for @commonOpenDrawer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir menu'**
+  String get commonOpenDrawer;
+
   /// No description provided for @authSignIn.
   ///
   /// In pt, this message translates to:
@@ -706,6 +712,12 @@ abstract class AppLocalizations {
   /// **'Filtrar por etiqueta'**
   String get songsFilterByTag;
 
+  /// No description provided for @songsFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar'**
+  String get songsFilter;
+
   /// No description provided for @songsSortBy.
   ///
   /// In pt, this message translates to:
@@ -801,6 +813,78 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Diagramas'**
   String get songDiagrams;
+
+  /// No description provided for @songControlsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajustes de Leitura'**
+  String get songControlsTitle;
+
+  /// No description provided for @songTranspose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Transposição'**
+  String get songTranspose;
+
+  /// No description provided for @songSemitones.
+  ///
+  /// In pt, this message translates to:
+  /// **'semitons'**
+  String get songSemitones;
+
+  /// No description provided for @songOriginal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Original'**
+  String get songOriginal;
+
+  /// No description provided for @songCapoNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum'**
+  String get songCapoNone;
+
+  /// No description provided for @songCapoFret.
+  ///
+  /// In pt, this message translates to:
+  /// **'Traste {fret}'**
+  String songCapoFret(Object fret);
+
+  /// No description provided for @songFontSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho da Letra'**
+  String get songFontSize;
+
+  /// No description provided for @songShowChords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar Acordes'**
+  String get songShowChords;
+
+  /// No description provided for @songTwoColumn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Layout em 2 Colunas'**
+  String get songTwoColumn;
+
+  /// No description provided for @songShowDiagrams.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar Diagramas'**
+  String get songShowDiagrams;
+
+  /// No description provided for @songGuitar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guitarra'**
+  String get songGuitar;
+
+  /// No description provided for @songPiano.
+  ///
+  /// In pt, this message translates to:
+  /// **'Piano'**
+  String get songPiano;
 
   /// No description provided for @foldersTitle.
   ///

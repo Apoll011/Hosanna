@@ -15,6 +15,7 @@ class SongDisplaySettings {
     this.fontSize = 14,
     this.instrument = 'guitar',
     this.showDiagrams = false,
+    this.autoScrollSpeed = 5,
   });
 
   final int transpose;
@@ -24,6 +25,9 @@ class SongDisplaySettings {
   final double fontSize;
   final String instrument; // 'guitar' | 'piano'
   final bool showDiagrams;
+
+  /// Auto-scroll speed, 1..10 (transient).
+  final double autoScrollSpeed;
 
   bool get isGuitar => instrument == 'guitar';
 
@@ -35,6 +39,7 @@ class SongDisplaySettings {
     double? fontSize,
     String? instrument,
     bool? showDiagrams,
+    double? autoScrollSpeed,
   }) {
     return SongDisplaySettings(
       transpose: transpose ?? this.transpose,
@@ -44,6 +49,7 @@ class SongDisplaySettings {
       fontSize: fontSize ?? this.fontSize,
       instrument: instrument ?? this.instrument,
       showDiagrams: showDiagrams ?? this.showDiagrams,
+      autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
     );
   }
 }
@@ -105,6 +111,10 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     final v = !state.showDiagrams;
     _prefs.setBool(_diagramsKey, v);
     state = state.copyWith(showDiagrams: v);
+  }
+
+  void setAutoScrollSpeed(double value) {
+    state = state.copyWith(autoScrollSpeed: value.clamp(1, 10).toDouble());
   }
 }
 
