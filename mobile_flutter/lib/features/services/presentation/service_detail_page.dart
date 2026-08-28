@@ -7,7 +7,7 @@ import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../songs/data/song_repository.dart';
-import '../../songs/presentation/song_body_renderer.dart';
+import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
 
@@ -197,9 +197,21 @@ class _MusicianTopBar extends StatelessWidget {
 }
 
 class _SongElementView extends ConsumerWidget {
-  const _SongElementView({required this.songId});
+  const _SongElementView({
+    required this.songId,
+    required this.canPrev,
+    required this.canNext,
+    required this.positionLabel,
+    required this.onPrev,
+    required this.onNext,
+  });
 
   final String songId;
+  final bool canPrev;
+  final bool canNext;
+  final String positionLabel;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -211,7 +223,14 @@ class _SongElementView extends ConsumerWidget {
       error: (_, _) => Center(child: Text(l10n.commonError)),
       data: (song) => song == null
           ? Center(child: Text(l10n.songsNoResults))
-          : SongBodyRenderer(content: song.content),
+          : SongReader(
+              content: song.content,
+              canPrev: canPrev,
+              canNext: canNext,
+              positionLabel: positionLabel,
+              onPrev: onPrev,
+              onNext: onNext,
+            ),
     );
   }
 }

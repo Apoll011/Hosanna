@@ -427,6 +427,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get songAutoScrollStart => 'Iniciar desplazamiento automático';
+
+  @override
+  String get songAutoScrollPause => 'Pausar desplazamiento';
+
+  @override
+  String get songAutoScrollSpeed => 'Velocidad de desplazamiento';
+
+  @override
+  String get songPrevious => 'Anterior';
+
+  @override
+  String get songNext => 'Siguiente';
+
+  @override
   String get foldersTitle => 'Carpetas';
 
   @override

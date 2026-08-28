@@ -428,6 +428,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get songAutoScrollStart => 'Iniciar scroll automático';
+
+  @override
+  String get songAutoScrollPause => 'Pausar scroll';
+
+  @override
+  String get songAutoScrollSpeed => 'Velocidade do scroll';
+
+  @override
+  String get songPrevious => 'Anterior';
+
+  @override
+  String get songNext => 'Seguinte';
+
+  @override
   String get foldersTitle => 'Pastas';
 
   @override

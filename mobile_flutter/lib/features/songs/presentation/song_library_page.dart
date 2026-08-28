@@ -278,16 +278,22 @@ class _FilterButton extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                for (final s in SongSort.values)
-                  RadioListTile<SongSort>(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(sortLabels[s]!),
-                    value: s,
-                    groupValue: sort,
-                    onChanged: (v) {
-                      if (v != null) onSortChanged(v);
-                    },
+                RadioGroup<SongSort>(
+                  groupValue: sort,
+                  onChanged: (v) {
+                    if (v != null) onSortChanged(v);
+                  },
+                  child: Column(
+                    children: [
+                      for (final s in SongSort.values)
+                        RadioListTile<SongSort>(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(sortLabels[s]!),
+                          value: s,
+                        ),
+                    ],
                   ),
+                ),
                 const Divider(),
                 const SizedBox(height: 8),
                 Text(

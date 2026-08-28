@@ -886,6 +886,36 @@ abstract class AppLocalizations {
   /// **'Piano'**
   String get songPiano;
 
+  /// No description provided for @songAutoScrollStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iniciar scroll automático'**
+  String get songAutoScrollStart;
+
+  /// No description provided for @songAutoScrollPause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar scroll'**
+  String get songAutoScrollPause;
+
+  /// No description provided for @songAutoScrollSpeed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Velocidade do scroll'**
+  String get songAutoScrollSpeed;
+
+  /// No description provided for @songPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anterior'**
+  String get songPrevious;
+
+  /// No description provided for @songNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguinte'**
+  String get songNext;
+
   /// No description provided for @foldersTitle.
   ///
   /// In pt, this message translates to:

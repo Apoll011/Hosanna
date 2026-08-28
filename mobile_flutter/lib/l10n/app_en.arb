@@ -137,6 +137,11 @@
   "songShowDiagrams": "Show Diagrams",
   "songGuitar": "Guitar",
   "songPiano": "Piano",
+  "songAutoScrollStart": "Start auto-scroll",
+  "songAutoScrollPause": "Pause scroll",
+  "songAutoScrollSpeed": "Scroll speed",
+  "songPrevious": "Previous",
+  "songNext": "Next",
 
   "foldersTitle": "Folders",
   "foldersEmpty": "No folders",

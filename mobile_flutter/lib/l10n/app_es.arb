@@ -137,6 +137,11 @@
   "songShowDiagrams": "Mostrar Diagramas",
   "songGuitar": "Guitarra",
   "songPiano": "Piano",
+  "songAutoScrollStart": "Iniciar desplazamiento automático",
+  "songAutoScrollPause": "Pausar desplazamiento",
+  "songAutoScrollSpeed": "Velocidad de desplazamiento",
+  "songPrevious": "Anterior",
+  "songNext": "Siguiente",
 
   "foldersTitle": "Carpetas",
   "foldersEmpty": "Sin carpetas",

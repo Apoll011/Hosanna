@@ -133,6 +133,20 @@ class SongControlsSheet extends ConsumerWidget {
               ],
             ),
 
+            // Auto-scroll speed.
+            _SectionTitle(
+              label: l10n.songAutoScrollSpeed,
+              value: '${settings.autoScrollSpeed.toInt()}x',
+            ),
+            Slider(
+              value: settings.autoScrollSpeed.clamp(1, 10).toDouble(),
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: settings.autoScrollSpeed.toInt().toString(),
+              onChanged: controller.setAutoScrollSpeed,
+            ),
+
             const Divider(),
             const SizedBox(height: 4),
 

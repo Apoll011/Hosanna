@@ -150,6 +150,7 @@ class _ReaderNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final label = positionLabel ?? '';
 
     return Container(
@@ -170,7 +171,7 @@ class _ReaderNav extends StatelessWidget {
           IconButton(
             onPressed: canPrev ? onPrev : null,
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Prev',
+            tooltip: l10n.songPrevious,
           ),
           if (label.isNotEmpty)
             Padding(
@@ -185,7 +186,7 @@ class _ReaderNav extends StatelessWidget {
           IconButton(
             onPressed: canNext ? onNext : null,
             icon: const Icon(Icons.chevron_right),
-            tooltip: 'Next',
+            tooltip: l10n.songNext,
           ),
         ],
       ),

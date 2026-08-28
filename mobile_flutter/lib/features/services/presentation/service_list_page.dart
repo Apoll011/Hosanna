@@ -7,7 +7,6 @@ import '../../../app/providers.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/sync_status_banner.dart';
 import '../data/service_repository.dart';
 
 class ServiceListPage extends ConsumerWidget {
@@ -33,25 +32,18 @@ class ServiceListPage extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SyncStatusBanner(compact: true),
-            ),
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => _refresh(ref),
               child: switch (servicesAsync) {
                 AsyncValue(hasError: true) => _Empty(
-                    message: l10n.commonError,
-                    onRefresh: () => _refresh(ref),
-                  ),
+                  message: l10n.commonError,
+                  onRefresh: () => _refresh(ref),
+                ),
                 AsyncValue(:final value?) => _ServiceList(
-                    services: value,
-                    onRefresh: () => _refresh(ref),
-                  ),
+                  services: value,
+                  onRefresh: () => _refresh(ref),
+                ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
             ),
@@ -83,14 +75,19 @@ class _ServiceList extends StatelessWidget {
         final dateLabel = date == null
             ? ''
             : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-                .format(date);
+                  .format(date);
         return ListTile(
           leading: const Icon(Icons.calendar_month_outlined),
-          title: Text(service.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          title: Text(
+            service.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           subtitle: Text(
-            [dateLabel, if (service.archived) l10n.settingsOffline]
-                .where((e) => e.isNotEmpty)
-                .join(' · '),
+            [
+              dateLabel,
+              if (service.archived) l10n.settingsOffline,
+            ].where((e) => e.isNotEmpty).join(' · '),
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/services/${service.id}'),
