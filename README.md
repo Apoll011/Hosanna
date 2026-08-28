@@ -1,93 +1,71 @@
-# Hosanna - Music Repertory and Service Planner
+# Hosanna (Flutter)
 
-Hosanna is a full-featured, responsive web application designed for church worship bands, music directors, and musicians. It facilitates chord sheet management, real-time transposition, setlist scheduling, and collaborative synchronization across devices.
+Flutter rewrite of the Hosanna musician app (previously React + Capacitor).
+This is now the primary codebase.
 
-## Core Features
+## Toolchain & targets
 
-### 1. Song Browser and ChordPro Parser
+- **Flutter** 3.47.2 (stable) / **Dart** 3.13.2.
+- **Application id:** `com.embrace.hosanna` (Android `applicationId`/`namespace`,
+  iOS `PRODUCT_BUNDLE_IDENTIFIER`).
+- **Android** `minSdk 24`, `targetSdk`/`compileSdk` = Flutter defaults (SDK 36).
+- **iOS** deployment target `15.0`.
 
-- Full support for ChordPro formatting, enabling structured lyric-chord relationship rendering.
-- Dynamic transposition engine with instant pitch adjustments.
-- Interactive fretboard guitar and piano keyboard chord diagram visualizers.
-- Advanced organization including categorization by folders, custom tags, speed metrics (BPM), and favoriting options.
+## Running
 
-### 2. Service Setlist Planner
+```bash
+flutter pub get
+flutter gen-l10n            # regenerate if ARB files change
+dart run build_runner build # regenerate Drift code if tables change
+flutter run
+```
 
-- Comprehensive scheduling interface for managing church services and sessions.
-- Dynamic drag-and-drop song sorting within setlists.
-- Band-specific arrangement annotations per song.
-- PDF export capability:
-    - Concise Service Outline format (one-page quick-reference sheet).
-    - Complete Songbook format (including fully transposed chords and lyrics).
-    - Automatic integration of the high-resolution application branding logo.
+Configuration is injected at compile time via `--dart-define`:
 
-### 3. Integrated Metronome
+| Key | Purpose | Default |
+| --- | --- | --- |
+| `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://api.hosanna.live` |
+| `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL | `https://studio.hosanna.live/captcha` |
+| `HOSANNA_ORIGIN` | `Origin` header sent on state-changing requests | `http://localhost` |
 
-- Precise tempo controller with tap-tempo capability.
-- Visual pulse feedback paired with audio indication.
-- Time signature configuration (2/4, 3/4, 4/4, 6/8).
+```bash
+flutter run \
+  --dart-define=HOSANNA_API_URL=https://your-api.example.com \
+  --dart-define=HOSANNA_TURNSTILE_URL=https://studio.hosanna.live/captcha
+```
 
-### 4. Circle of Fifths Reference
+> **Turnstile is required.** The backend enforces Cloudflare Turnstile on
+> `/sign-up/email`, `/sign-in/email`, and `/request-password-reset`. The app
+> loads the Studio captcha page at `https://studio.hosanna.live/captcha`.
 
-- Interactive harmonic key visualizer.
-- Seamless identification of relative keys, dominant/subdominant relationships, and accidental counts.
+## Architecture
 
-### 5. Multi-Source Synchronizer
+Feature-first, layered:
 
-- Bi-directional transactional synchronization engine.
-- Instant cloud-database sync alongside automatic fallback local caches.
-- Dynamic status tracking directly integrated into the main navigation controls.
+```
+lib/
+  app/         bootstrap, routing (go_router), theming, DI/providers, settings
+  core/
+    config/    compile-time AppConfig
+    network/   dio client + interceptors (cookies, bearer, captcha, errors)
+    auth/      session model, secure session store, captcha seam
+    sync/      generic replication engine + per-resource adapters
+    db/        Drift (SQLite) tables + database
+  features/    auth, songs, folders, services, metronome, circle_of_fifths, export
+  shared/      reusable widgets
+  l10n/        ARB files (pt default, en, es) + generated AppLocalizations
+```
 
-### 6. User Interface and Navigation
+Key libraries: **Riverpod** (state/DI), **dio** (HTTP), **Drift** (SQLite,
+reactive `watch()` streams), **go_router** (navigation), **intl** +
+**flutter_localizations** (l10n), **flutter_secure_storage** (session/bearer),
+**wakelock_plus** (keep-awake), **webview_flutter** (Turnstile).
 
-- Responsive layout adhering to modern Design Systems.
-- Immersive high-contrast dark and light modes.
-- Floating iOS-style bottom pill navigation bar providing fluid transitions and micro-animations.
+## CI/CD
 
-## Technical Architecture
-
-The application is built on a modern frontend stack designed for performance, modularity, and offline capability:
-
-- **Framework:** React 18 with TypeScript.
-- **Build Tooling:** Vite for high-speed compilation and optimized dependency bundling.
-- **Styling:** Tailwind CSS utility class architecture.
-- **Animations:** Motion (motion/react) for layout transitions and modal popovers.
-- **State Management:** Zustand-based decentralized store architecture (`appStore.ts`).
-- **Icons:** Lucide React vector icon system.
-- **Document Generation:** jsPDF for programmatic server-less PDF compilation.
-
-## Development Workflow
-
-### Prerequisites
-
-- Node.js (v18.0.0 or higher)
-- npm or yarn package manager
-
-### Installation
-
-1. Install dependencies:
-
-    ```bash
-    npm install
-    ```
-
-2. Run the local development server:
-
-    ```bash
-    npm run dev
-    ```
-
-3. Build the production package:
-
-    ```bash
-    npm run build
-    ```
-
-4. Run the production build locally:
-    ```bash
-    npm run start
-    ```
-
-## License
-
-This project is proprietary and confidential. Authorized usage is restricted to designated worship team environments.
+- `.github/workflows/ci.yml` — `flutter analyze` + `flutter test` on push/PR.
+- `.github/workflows/android-release.yml` — builds a signed release APK (split
+  per ABI) and App Bundle, then publishes them to a GitHub Release on tags
+  (`v*`) or manual dispatch. Requires secrets `KEYSTORE_BASE64`,
+  `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `API_URL`,
+  `GITHUB_TOKEN`.
