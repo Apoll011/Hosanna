@@ -69,9 +69,9 @@ class _SongReaderState extends ConsumerState<SongReader>
         if (mounted) setState(() {});
         return;
       }
-      // speed 1..10 → ~12..120 px/s.
+      // speed 1..10 → ~6..60 px/s.
       _scrollController.jumpTo(
-        (_scrollController.offset + speed * 0.6).clamp(0, max),
+        (_scrollController.offset + speed * 0.3).clamp(0, max),
       );
     });
   }

@@ -117,9 +117,9 @@ class SongControlsSheet extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Slider(
-                    value: settings.fontSize.clamp(10, 34).toDouble(),
+                    value: settings.fontSize.clamp(10, 24).toDouble(),
                     min: 10,
-                    max: 34,
+                    max: 24,
                     divisions: 12,
                     label: settings.fontSize.toInt().toString(),
                     onChanged: controller.setFontSize,
@@ -280,11 +280,7 @@ class _StepperRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _StepButton(
-            icon: Icons.add,
-            onTap: onInc,
-            decoration: base,
-          ),
+          child: _StepButton(icon: Icons.add, onTap: onInc, decoration: base),
         ),
       ],
     );
