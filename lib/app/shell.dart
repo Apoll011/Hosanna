@@ -134,12 +134,13 @@ class _FloatingNavBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      minimum: const EdgeInsets.fromLTRB(90, 0, 90, 12),
       child: Container(
         height: 64,
+        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(42),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.18),
