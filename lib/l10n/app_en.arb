@@ -206,9 +206,13 @@
   "settingsKeepAwake": "Keep Screen Awake",
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSessionsOnly": "Only this device's current session is active.",
+
   "metronomeTitle": "Metronome",
   "metronomeDescription": "Tempo and time signature for rehearsals.",
-  
+  "metronomeTapTempo": "Tap Tempo",
+  "metronomeTimeSignature": "TIME SIGNATURE",
+  "metronomeAccent": "Accent",
+
   "circleOfFifthsTitle": "Circle of Fifths",
   "circleOfFifthsDescription": "Key and relative-key reference.",
   "circleOfFifthsHarmonicField": "Harmonic Field",

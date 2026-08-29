@@ -682,6 +682,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get metronomeDescription => 'Tempo e compasso para ensaios.';
 
   @override
+  String get metronomeTapTempo => 'Toque o Tempo';
+
+  @override
+  String get metronomeTimeSignature => 'COMPASSO';
+
+  @override
+  String get metronomeAccent => 'Acentuar';
+
+  @override
   String get circleOfFifthsTitle => 'Círculo de Quintas';
 
   @override

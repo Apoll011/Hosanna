@@ -218,7 +218,10 @@
 
   "metronomeTitle": "Metrónomo",
   "metronomeDescription": "Tempo y compás para ensayos.",
-
+  "metronomeTapTempo": "Marcar Tempo",
+  "metronomeTimeSignature": "COMPÁS",
+  "metronomeAccent": "Acento",
+  
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referencia de tonalidades y relativas.",
   "circleOfFifthsHarmonicField": "Campo Armónico",

@@ -675,6 +675,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metronomeDescription => 'Tempo and time signature for rehearsals.';
 
   @override
+  String get metronomeTapTempo => 'Tap Tempo';
+
+  @override
+  String get metronomeTimeSignature => 'TIME SIGNATURE';
+
+  @override
+  String get metronomeAccent => 'Accent';
+
+  @override
   String get circleOfFifthsTitle => 'Circle of Fifths';
 
   @override

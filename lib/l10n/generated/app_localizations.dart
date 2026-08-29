@@ -1348,6 +1348,24 @@ abstract class AppLocalizations {
   /// **'Tempo e compasso para ensaios.'**
   String get metronomeDescription;
 
+  /// No description provided for @metronomeTapTempo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque o Tempo'**
+  String get metronomeTapTempo;
+
+  /// No description provided for @metronomeTimeSignature.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMPASSO'**
+  String get metronomeTimeSignature;
+
+  /// No description provided for @metronomeAccent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acentuar'**
+  String get metronomeAccent;
+
   /// No description provided for @circleOfFifthsTitle.
   ///
   /// In pt, this message translates to:

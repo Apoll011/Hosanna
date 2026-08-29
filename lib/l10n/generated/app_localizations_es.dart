@@ -681,6 +681,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get metronomeDescription => 'Tempo y compás para ensayos.';
 
   @override
+  String get metronomeTapTempo => 'Marcar Tempo';
+
+  @override
+  String get metronomeTimeSignature => 'COMPÁS';
+
+  @override
+  String get metronomeAccent => 'Acento';
+
+  @override
   String get circleOfFifthsTitle => 'Círculo de Quintas';
 
   @override
