@@ -68,18 +68,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (_, _) => const _SplashPage(),
-      ),
-      GoRoute(
-        path: '/sign-in',
-        builder: (_, _) => const SignInPage(),
-      ),
-      GoRoute(
-        path: '/sign-up',
-        builder: (_, _) => const SignUpPage(),
-      ),
+      GoRoute(path: '/splash', builder: (_, _) => const _SplashPage()),
+      GoRoute(path: '/sign-in', builder: (_, _) => const SignInPage()),
+      GoRoute(path: '/sign-up', builder: (_, _) => const SignUpPage()),
       GoRoute(
         path: '/forgot-password',
         builder: (_, _) => const ForgotPasswordPage(),
@@ -93,12 +84,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/verify-email',
         builder: (_, _) => const EmailVerificationPage(),
       ),
-      GoRoute(
-        path: '/onboarding',
-        builder: (_, _) => const OnboardingPage(),
-      ),
-      // Branch order must match the kSongsBranch..kCircleOfFifthsBranch
-      // constants in nav_branches.dart (used by the shell + sidebar).
+      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
+      // Branch order must match the kSongsBranch..kSettingsBranch constants in
+      // nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
             HosannaShell(navigationShell: navigationShell),
@@ -135,38 +123,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (_, state) {
+                  final tab = state.uri.queryParameters['tab'];
+                  return SettingsPage(
+                    initialTab: switch (tab) {
+                      'workspace' => SettingsTab.workspace,
+                      'preferences' => SettingsTab.preferences,
+                      _ => SettingsTab.account,
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
-      GoRoute(
-        path: '/folders',
-        builder: (_, _) => const FolderBrowserPage(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (_, state) {
-          final tab = state.uri.queryParameters['tab'];
-          return SettingsPage(
-            initialTab: switch (tab) {
-              'workspace' => SettingsTab.workspace,
-              'preferences' => SettingsTab.preferences,
-              _ => SettingsTab.account,
-            },
-          );
-        },
-      ),
+      GoRoute(path: '/folders', builder: (_, _) => const FolderBrowserPage()),
       GoRoute(
         path: '/songs/:id',
-        builder: (_, state) => SongDetailPage(songId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            SongDetailPage(songId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/services/:id',
         builder: (_, state) =>
             ServiceDetailPage(serviceId: state.pathParameters['id']!),
       ),
-      GoRoute(
-        path: '/export-pdf',
-        builder: (_, _) => const ExportPdfPage(),
-      ),
+      GoRoute(path: '/export-pdf', builder: (_, _) => const ExportPdfPage()),
     ],
   );
 });

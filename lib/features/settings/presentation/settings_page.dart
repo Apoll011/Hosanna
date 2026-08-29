@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/settings_controller.dart';
+import '../../../app/shell_leading_button.dart';
 import '../../../app/theme.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/sync/sync_controller.dart';
@@ -38,11 +38,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: l10n.commonBack,
-          onPressed: () => context.pop(),
-        ),
+        // Settings is a shell branch (like the tools), so the leading button
+        // toggles the drawer/sidebar instead of popping.
+        leading: const ShellLeadingButton(),
       ),
       body: Column(
         children: [

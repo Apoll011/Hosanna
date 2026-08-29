@@ -29,10 +29,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     // indices, so ignore them instead of crashing.
     final shell = widget.navigationShell;
     if (index < 0 || index >= shell.route.branches.length) return;
-    shell.goBranch(
-      index,
-      initialLocation: index == shell.currentIndex,
-    );
+    shell.goBranch(index, initialLocation: index == shell.currentIndex);
   }
 
   @override
@@ -135,7 +132,6 @@ class _TabletSidebar extends StatelessWidget {
           collapsed: collapsed,
           currentBranch: currentBranch,
           onNavigate: onNavigate,
-          onPushTool: (location) => context.push(location),
         ),
       ),
     );

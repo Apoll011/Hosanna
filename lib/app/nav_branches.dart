@@ -8,3 +8,4 @@ const int kSongsBranch = 0;
 const int kServicesBranch = 1;
 const int kMetronomeBranch = 2;
 const int kCircleOfFifthsBranch = 3;
+const int kSettingsBranch = 4;

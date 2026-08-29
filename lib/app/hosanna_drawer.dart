@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
@@ -54,16 +53,12 @@ class HosannaNavContent extends ConsumerWidget {
   const HosannaNavContent({
     super.key,
     required this.onNavigate,
-    required this.onPushTool,
     this.collapsed = false,
     this.currentBranch = kSongsBranch,
   });
 
   /// Called with the target shell branch index (see [nav_branches]).
   final void Function(int branchIndex) onNavigate;
-
-  /// Called with a route location (settings / export / etc.).
-  final void Function(String location) onPushTool;
 
   /// When true, renders icon-only rows (tablet collapsed sidebar).
   final bool collapsed;
@@ -310,84 +305,93 @@ class HosannaNavContent extends ConsumerWidget {
           ),
         ),
 
-        // Footer.
+        // Footer — the user card doubles as the Settings entry point.
         if (user != null) const Divider(height: 1),
         if (collapsed) const SizedBox(height: 6),
         if (user != null)
           Center(
-            child: InkWell(
+            child: Material(
+              color: currentBranch == kSettingsBranch
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
-              onTap: () => onPushTool('/settings?tab=account'),
-              child: AnimatedPadding(
-                duration: _kAnimDuration,
-                curve: _kAnimCurve,
-                padding: EdgeInsets.symmetric(
-                  horizontal: collapsed ? 0 : 16,
-                  vertical: collapsed ? 0 : 8,
-                ),
-                child: Row(
-                  // Icon-only mode centers the avatar; expanded mode fills the
-                  // width like the ListTile it replaces.
-                  mainAxisSize: collapsed ? MainAxisSize.min : MainAxisSize.max,
-                  children: [
-                    // The avatar is the same widget in both states, so it
-                    // morphs its radius instead of popping between sizes.
-                    TweenAnimationBuilder<double>(
-                      tween: Tween<double>(end: collapsed ? 18 : 16),
-                      duration: _kAnimDuration,
-                      curve: _kAnimCurve,
-                      builder: (context, radius, _) => CircleAvatar(
-                        radius: radius,
-                        foregroundImage: imageUrl != null && imageUrl.isNotEmpty
-                            ? CachedNetworkImageProvider(imageUrl)
-                            : null,
-                        onForegroundImageError: (exception, stackTrace) {
-                          debugPrint('Failed to load avatar: $exception');
-                        },
-                        child: Text(
-                          _initials(user.name),
-                          style: theme.textTheme.titleLarge,
-                        ),
-                      ),
-                    ),
-                    Flexible(
-                      child: _RevealBlock(
-                        visible: !collapsed,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyLarge,
-                              ),
-                              Text(
-                                user.email,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => onNavigate(kSettingsBranch),
+                child: AnimatedPadding(
+                  duration: _kAnimDuration,
+                  curve: _kAnimCurve,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: collapsed ? 0 : 16,
+                    vertical: collapsed ? 0 : 8,
+                  ),
+                  child: Row(
+                    // Icon-only mode centers the avatar; expanded mode fills the
+                    // width like the ListTile it replaces.
+                    mainAxisSize: collapsed
+                        ? MainAxisSize.min
+                        : MainAxisSize.max,
+                    children: [
+                      // The avatar is the same widget in both states, so it
+                      // morphs its radius instead of popping between sizes.
+                      TweenAnimationBuilder<double>(
+                        tween: Tween<double>(end: collapsed ? 18 : 16),
+                        duration: _kAnimDuration,
+                        curve: _kAnimCurve,
+                        builder: (context, radius, _) => CircleAvatar(
+                          radius: radius,
+                          foregroundImage:
+                              imageUrl != null && imageUrl.isNotEmpty
+                              ? CachedNetworkImageProvider(imageUrl)
+                              : null,
+                          onForegroundImageError: (exception, stackTrace) {
+                            debugPrint('Failed to load avatar: $exception');
+                          },
+                          child: Text(
+                            _initials(user.name),
+                            style: theme.textTheme.titleLarge,
                           ),
                         ),
                       ),
-                    ),
-                    _RevealBlock(
-                      visible: !collapsed,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Icon(
-                          Icons.settings_outlined,
-                          size: 22,
-                          color: Colors.blueGrey,
+                      Flexible(
+                        child: _RevealBlock(
+                          visible: !collapsed,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyLarge,
+                                ),
+                                Text(
+                                  user.email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      _RevealBlock(
+                        visible: !collapsed,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Icon(
+                            Icons.settings_outlined,
+                            size: 22,
+                            color: Colors.blueGrey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -422,10 +426,6 @@ class HosannaDrawer extends StatelessWidget {
           onNavigate: (branchIndex) {
             Navigator.of(context).pop(); // close the drawer
             onNavigate(branchIndex);
-          },
-          onPushTool: (location) {
-            Navigator.of(context).pop();
-            context.push(location);
           },
         ),
       ),
