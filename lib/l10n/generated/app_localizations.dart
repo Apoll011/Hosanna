@@ -736,11 +736,107 @@ abstract class AppLocalizations {
   /// **'Artista'**
   String get songsSortArtist;
 
+  /// No description provided for @songsSortNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Número'**
+  String get songsSortNumber;
+
   /// No description provided for @songsSortUpdated.
   ///
   /// In pt, this message translates to:
   /// **'Atualização'**
   String get songsSortUpdated;
+
+  /// No description provided for @songsSortAdded.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionado recentemente'**
+  String get songsSortAdded;
+
+  /// No description provided for @songsSortAscending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ascendente'**
+  String get songsSortAscending;
+
+  /// No description provided for @songsSortDescending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descendente'**
+  String get songsSortDescending;
+
+  /// No description provided for @songsMatchAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coincidir todas'**
+  String get songsMatchAll;
+
+  /// No description provided for @songsMatchAny.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coincidir alguma'**
+  String get songsMatchAny;
+
+  /// No description provided for @songsFilterByKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar por tom'**
+  String get songsFilterByKey;
+
+  /// No description provided for @songsFilterBySongNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Número do cântico'**
+  String get songsFilterBySongNumber;
+
+  /// No description provided for @songsNumberAny.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qualquer'**
+  String get songsNumberAny;
+
+  /// No description provided for @songsNumberOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'Numerados'**
+  String get songsNumberOnly;
+
+  /// No description provided for @songsNumberNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem número'**
+  String get songsNumberNone;
+
+  /// No description provided for @songsSearchLyrics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pesquisar na letra'**
+  String get songsSearchLyrics;
+
+  /// No description provided for @songsWithChords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apenas com acordes'**
+  String get songsWithChords;
+
+  /// No description provided for @songsResetFilters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repor filtros'**
+  String get songsResetFilters;
+
+  /// No description provided for @songsClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar'**
+  String get songsClear;
+
+  /// No description provided for @songsClearFilters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar filtros'**
+  String get songsClearFilters;
 
   /// No description provided for @songsTitleLabel.
   ///

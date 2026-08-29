@@ -345,7 +345,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsSortArtist => 'Artist';
 
   @override
+  String get songsSortNumber => 'Song number';
+
+  @override
   String get songsSortUpdated => 'Updated';
+
+  @override
+  String get songsSortAdded => 'Recently added';
+
+  @override
+  String get songsSortAscending => 'Ascending';
+
+  @override
+  String get songsSortDescending => 'Descending';
+
+  @override
+  String get songsMatchAll => 'Match all';
+
+  @override
+  String get songsMatchAny => 'Match any';
+
+  @override
+  String get songsFilterByKey => 'Filter by key';
+
+  @override
+  String get songsFilterBySongNumber => 'Song number';
+
+  @override
+  String get songsNumberAny => 'Any';
+
+  @override
+  String get songsNumberOnly => 'Numbered';
+
+  @override
+  String get songsNumberNone => 'Unnumbered';
+
+  @override
+  String get songsSearchLyrics => 'Search in lyrics';
+
+  @override
+  String get songsWithChords => 'Only with chords';
+
+  @override
+  String get songsResetFilters => 'Reset filters';
+
+  @override
+  String get songsClear => 'Clear';
+
+  @override
+  String get songsClearFilters => 'Clear filters';
 
   @override
   String get songsTitleLabel => 'Title';

@@ -351,7 +351,55 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsSortArtist => 'Artista';
 
   @override
+  String get songsSortNumber => 'Número';
+
+  @override
   String get songsSortUpdated => 'Atualização';
+
+  @override
+  String get songsSortAdded => 'Adicionado recentemente';
+
+  @override
+  String get songsSortAscending => 'Ascendente';
+
+  @override
+  String get songsSortDescending => 'Descendente';
+
+  @override
+  String get songsMatchAll => 'Coincidir todas';
+
+  @override
+  String get songsMatchAny => 'Coincidir alguma';
+
+  @override
+  String get songsFilterByKey => 'Filtrar por tom';
+
+  @override
+  String get songsFilterBySongNumber => 'Número do cântico';
+
+  @override
+  String get songsNumberAny => 'Qualquer';
+
+  @override
+  String get songsNumberOnly => 'Numerados';
+
+  @override
+  String get songsNumberNone => 'Sem número';
+
+  @override
+  String get songsSearchLyrics => 'Pesquisar na letra';
+
+  @override
+  String get songsWithChords => 'Apenas com acordes';
+
+  @override
+  String get songsResetFilters => 'Repor filtros';
+
+  @override
+  String get songsClear => 'Limpar';
+
+  @override
+  String get songsClearFilters => 'Limpar filtros';
 
   @override
   String get songsTitleLabel => 'Título';
