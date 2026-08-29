@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/utils/click_synth.dart';
+import '../../../shared/utils/click_source.dart';
 
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
@@ -39,6 +40,12 @@ class _MetronomePageState extends State<MetronomePage>
   late final AudioPlayer _normalPlayer;
   bool _audioReady = false;
 
+  /// Whether the low-latency backend on this platform is Android's SoundPool,
+  /// which needs a different source type and trigger sequence than the
+  /// MediaPlayer-style backends used elsewhere.
+  static final bool _usesAndroidSoundPool =
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
   @override
   void initState() {
     super.initState();
@@ -56,28 +63,50 @@ class _MetronomePageState extends State<MetronomePage>
   }
 
   Future<void> _initAudio() async {
-    _accentPlayer = AudioPlayer(playerId: 'metronome_accent');
-    _normalPlayer = AudioPlayer(playerId: 'metronome_normal');
+    try {
+      _accentPlayer = AudioPlayer(playerId: 'metronome_accent');
+      _normalPlayer = AudioPlayer(playerId: 'metronome_normal');
 
-    // Low-latency mode is essential here — the default mode buffers/streams
-    // and adds noticeable delay, which would drift the click out of sync
-    // with the pendulum.
-    await Future.wait([
-      _accentPlayer.setPlayerMode(PlayerMode.lowLatency),
-      _normalPlayer.setPlayerMode(PlayerMode.lowLatency),
-    ]);
-    await Future.wait([
-      _accentPlayer.setSource(
-        BytesSource(ClickSynth.generate(frequency: 1500)),
-      ),
-      _normalPlayer.setSource(BytesSource(ClickSynth.generate(frequency: 900))),
-    ]);
-    await Future.wait([
-      _accentPlayer.setVolume(1.0),
-      _normalPlayer.setVolume(0.85),
-    ]);
+      // Build the sources up front so any file I/O happens before playback.
+      // On Android this writes the synthesized WAVs to temp files, because
+      // SoundPool (low-latency mode) cannot play raw byte buffers.
+      final accentSource = await createClickSource(frequency: 1500);
+      final normalSource = await createClickSource(frequency: 900);
 
-    if (mounted) setState(() => _audioReady = true);
+      // Low-latency mode is essential here — the default mode buffers/streams
+      // and adds noticeable delay, which would drift the click out of sync
+      // with the pendulum.
+      await Future.wait([
+        _accentPlayer.setPlayerMode(PlayerMode.lowLatency),
+        _normalPlayer.setPlayerMode(PlayerMode.lowLatency),
+      ]);
+      await Future.wait([
+        _accentPlayer.setSource(accentSource),
+        _normalPlayer.setSource(normalSource),
+      ]);
+
+      if (_usesAndroidSoundPool) {
+        // With SoundPool, `stop()` would otherwise unload the loaded sound,
+        // and `seek()` never completes (SoundPool emits no seek-complete
+        // event). Keep the sound loaded and retrigger each beat with
+        // stop() + resume() instead (see [_triggerClick]).
+        await Future.wait([
+          _accentPlayer.setReleaseMode(ReleaseMode.stop),
+          _normalPlayer.setReleaseMode(ReleaseMode.stop),
+        ]);
+      }
+
+      await Future.wait([
+        _accentPlayer.setVolume(1.0),
+        _normalPlayer.setVolume(0.85),
+      ]);
+
+      if (mounted) setState(() => _audioReady = true);
+    } catch (error, stackTrace) {
+      // Never crash the page because audio failed to initialize: the haptics
+      // and the pendulum still work, and _audioReady stays false.
+      debugPrint('Metronome audio init failed: $error\n$stackTrace');
+    }
   }
 
   @override
@@ -106,10 +135,30 @@ class _MetronomePageState extends State<MetronomePage>
 
     if (_audioReady) {
       final player = isAccent ? _accentPlayer : _normalPlayer;
-      player.seek(Duration.zero).then((_) => player.resume());
+      unawaited(_triggerClick(player));
     }
 
     _pulseController.forward(from: 0);
+  }
+
+  /// Starts one click on [player].
+  ///
+  /// On Android (SoundPool) each beat must start a fresh stream: `stop()`
+  /// resets the SoundPool stream id and `resume()` fires a new
+  /// `soundPool.play()`. Everywhere else a seek to zero plus resume restarts
+  /// the (very short) sample.
+  Future<void> _triggerClick(AudioPlayer player) async {
+    try {
+      if (_usesAndroidSoundPool) {
+        await player.stop();
+        await player.resume();
+      } else {
+        await player.seek(Duration.zero);
+        await player.resume();
+      }
+    } catch (error) {
+      debugPrint('Metronome click trigger failed: $error');
+    }
   }
 
   void _togglePlay() {
