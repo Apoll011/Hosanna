@@ -51,9 +51,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 /// Key of the shell's [Scaffold], letting branch pages open the navigation
 /// drawer (hamburger) via `currentState?.openDrawer()`.
-final shellScaffoldKeyProvider =
-    Provider<GlobalKey<ScaffoldState>>((ref) => GlobalKey<ScaffoldState>());
+final shellScaffoldKeyProvider = Provider<GlobalKey<ScaffoldState>>(
+  (ref) => GlobalKey<ScaffoldState>(),
+);
 
 /// Whether the tablet persistent sidebar is collapsed. Phones don't use a
 /// sidebar, so this flag is only meaningful in the tablet layout.
-final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);
+final sidebarCollapsedProvider = StateProvider<bool>((ref) => true);
