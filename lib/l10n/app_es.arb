@@ -218,8 +218,22 @@
 
   "metronomeTitle": "Metrónomo",
   "metronomeDescription": "Tempo y compás para ensayos.",
+
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referencia de tonalidades y relativas.",
+  "circleOfFifthsHarmonicField": "Campo Armónico",
+  "@circleOfFifthsHarmonicField": {
+    "description": "Section header above the chord grid on the Circle of Fifths page"
+  },
+  "circleOfFifthsTonic": "Tónica",
+  "@circleOfFifthsTonic": {
+    "description": "Label for the I degree (tonic) chord card"
+  },
+  "circleOfFifthsRelativeMinor": "Relativa Menor",
+  "@circleOfFifthsRelativeMinor": {
+    "description": "Label for the vi degree (relative minor) chord card"
+  },
+
   "exportPdfTitle": "Exportar PDF",
   "comingSoon": "Próximamente",
   "comingSoonDescription": "Esta función estará disponible en una próxima versión."

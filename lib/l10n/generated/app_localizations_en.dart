@@ -681,6 +681,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get circleOfFifthsDescription => 'Key and relative-key reference.';
 
   @override
+  String get circleOfFifthsHarmonicField => 'Harmonic Field';
+
+  @override
+  String get circleOfFifthsTonic => 'Tonic';
+
+  @override
+  String get circleOfFifthsRelativeMinor => 'Relative Minor';
+
+  @override
   String get exportPdfTitle => 'Export PDF';
 
   @override

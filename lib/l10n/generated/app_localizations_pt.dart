@@ -688,6 +688,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get circleOfFifthsDescription => 'Referência de tons e relativas.';
 
   @override
+  String get circleOfFifthsHarmonicField => 'Campo Harmónico';
+
+  @override
+  String get circleOfFifthsTonic => 'Tónica';
+
+  @override
+  String get circleOfFifthsRelativeMinor => 'Relativa Menor';
+
+  @override
   String get exportPdfTitle => 'Exportar PDF';
 
   @override

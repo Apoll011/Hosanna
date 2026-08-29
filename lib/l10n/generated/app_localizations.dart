@@ -1360,6 +1360,24 @@ abstract class AppLocalizations {
   /// **'Referência de tons e relativas.'**
   String get circleOfFifthsDescription;
 
+  /// Section header above the chord grid on the Circle of Fifths page
+  ///
+  /// In pt, this message translates to:
+  /// **'Campo Harmónico'**
+  String get circleOfFifthsHarmonicField;
+
+  /// Label for the I degree (tonic) chord card
+  ///
+  /// In pt, this message translates to:
+  /// **'Tónica'**
+  String get circleOfFifthsTonic;
+
+  /// Label for the vi degree (relative minor) chord card
+  ///
+  /// In pt, this message translates to:
+  /// **'Relativa Menor'**
+  String get circleOfFifthsRelativeMinor;
+
   /// No description provided for @exportPdfTitle.
   ///
   /// In pt, this message translates to:

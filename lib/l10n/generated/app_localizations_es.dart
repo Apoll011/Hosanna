@@ -688,6 +688,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Referencia de tonalidades y relativas.';
 
   @override
+  String get circleOfFifthsHarmonicField => 'Campo Armónico';
+
+  @override
+  String get circleOfFifthsTonic => 'Tónica';
+
+  @override
+  String get circleOfFifthsRelativeMinor => 'Relativa Menor';
+
+  @override
   String get exportPdfTitle => 'Exportar PDF';
 
   @override

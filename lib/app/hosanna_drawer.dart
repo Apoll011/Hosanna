@@ -64,7 +64,12 @@ class HosannaNavContent extends ConsumerWidget {
       children: [
         // Header.
         Padding(
-          padding: EdgeInsets.fromLTRB(collapsed ? 12 : 16, 16, collapsed ? 12 : 16, 12),
+          padding: EdgeInsets.fromLTRB(
+            collapsed ? 12 : 16,
+            16,
+            collapsed ? 12 : 16,
+            12,
+          ),
           child: Row(
             children: [
               const HosannaLogo(size: 40, borderRadius: 12),
@@ -96,43 +101,13 @@ class HosannaNavContent extends ConsumerWidget {
               ],
               if (onToggleCollapse != null)
                 IconButton(
-                  icon: Icon(collapsed
-                      ? Icons.menu_open
-                      : Icons.chevron_left),
+                  icon: Icon(collapsed ? Icons.menu_open : Icons.chevron_left),
                   tooltip: collapsed ? l10n.commonOpenDrawer : l10n.commonBack,
                   onPressed: onToggleCollapse,
                 ),
             ],
           ),
         ),
-        if (user != null)
-          collapsed
-              ? Center(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () => onPushTool('/settings?tab=account'),
-                    child: CircleAvatar(
-                      radius: 18,
-                      child: Text(_initials(user.name)),
-                    ),
-                  ),
-                )
-              : ListTile(
-                  dense: true,
-                  leading: CircleAvatar(
-                    radius: 16,
-                    child: Text(_initials(user.name)),
-                  ),
-                  title: Text(user.name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(
-                    user.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  onTap: () => onPushTool('/settings?tab=account'),
-                ),
         const Divider(),
 
         // Scrollable content.
@@ -152,7 +127,7 @@ class HosannaNavContent extends ConsumerWidget {
               ),
               _NavItem(
                 icon: Icons.favorite_outline,
-                iconColor: Colors.pink,
+                iconColor: theme.colorScheme.primary,
                 label: l10n.navFavorites,
                 count: library.favoriteIds.length,
                 selected: library.section == LibrarySection.favorites,
@@ -167,6 +142,25 @@ class HosannaNavContent extends ConsumerWidget {
                 selected: library.section == LibrarySection.recent,
                 collapsed: collapsed,
                 onTap: () => selectSection(LibrarySection.recent),
+              ),
+
+              if (!collapsed) ...[
+                const SizedBox(height: 8),
+                _SectionLabel(l10n.navToolsSection),
+              ],
+              _NavItem(
+                icon: Icons.speed,
+                iconColor: Colors.teal,
+                label: l10n.navMetronome,
+                collapsed: collapsed,
+                onTap: () => onPushTool('/metronome'),
+              ),
+              _NavItem(
+                icon: Icons.donut_large,
+                iconColor: theme.colorScheme.primary,
+                label: l10n.navCircleOfFifths,
+                collapsed: collapsed,
+                onTap: () => onPushTool('/circle-of-fifths'),
               ),
 
               if (!collapsed) ...[
@@ -193,65 +187,57 @@ class HosannaNavContent extends ConsumerWidget {
                     iconColor: theme.colorScheme.primary,
                     label: folder.name,
                     count: folder.songCount,
-                    selected: library.section == LibrarySection.folder &&
+                    selected:
+                        library.section == LibrarySection.folder &&
                         library.folderId == folder.id,
                     collapsed: collapsed,
                     onTap: () => selectSection(
-                        LibrarySection.folder, folderId: folder.id),
+                      LibrarySection.folder,
+                      folderId: folder.id,
+                    ),
                   ),
-
-              if (!collapsed) ...[
-                const SizedBox(height: 8),
-                _SectionLabel(l10n.navToolsSection),
-              ],
-              _NavItem(
-                icon: Icons.speed,
-                iconColor: Colors.teal,
-                label: l10n.navMetronome,
-                collapsed: collapsed,
-                onTap: () => onPushTool('/metronome'),
-              ),
-              _NavItem(
-                icon: Icons.donut_large,
-                iconColor: Colors.green,
-                label: l10n.navCircleOfFifths,
-                collapsed: collapsed,
-                onTap: () => onPushTool('/circle-of-fifths'),
-              ),
-              _NavItem(
-                icon: Icons.settings_outlined,
-                iconColor: Colors.blueGrey,
-                label: l10n.navSettings,
-                collapsed: collapsed,
-                onTap: () => onPushTool('/settings'),
-              ),
             ],
           ),
         ),
 
         // Footer.
-        if (auth.isAuthenticated) const Divider(height: 1),
-        if (auth.isAuthenticated)
-          Padding(
-            padding: EdgeInsets.fromLTRB(collapsed ? 8 : 16, 8, collapsed ? 8 : 16, 16),
-            child: collapsed
-                ? IconButton(
-                    icon: const Icon(Icons.logout),
-                    color: theme.colorScheme.error,
-                    tooltip: l10n.authSignOut,
-                    onPressed: () =>
-                        ref.read(authControllerProvider.notifier).signOut(),
-                  )
-                : OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error,
+        if (user != null) const Divider(height: 1),
+        if (user != null)
+          collapsed
+              ? Center(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () => onPushTool('/settings?tab=account'),
+                    child: CircleAvatar(
+                      radius: 18,
+                      child: Text(_initials(user.name)),
                     ),
-                    icon: const Icon(Icons.logout),
-                    label: Text(l10n.authSignOut),
-                    onPressed: () =>
-                        ref.read(authControllerProvider.notifier).signOut(),
                   ),
-          ),
+                )
+              : ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 16,
+                    child: Text(_initials(user.name)),
+                  ),
+                  title: Text(
+                    user.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    user.email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  trailing: Icon(
+                    Icons.settings_outlined,
+                    size: 22,
+                    color: Colors.blueGrey,
+                  ),
+                  onTap: () => onPushTool('/settings?tab=account'),
+                ),
       ],
     );
   }
@@ -373,8 +359,9 @@ class _NavItem extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: selected
                               ? theme.colorScheme.onPrimaryContainer
                               : theme.colorScheme.onSurface,
@@ -384,7 +371,9 @@ class _NavItem extends StatelessWidget {
                     if (count != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: selected
                               ? theme.colorScheme.primary
