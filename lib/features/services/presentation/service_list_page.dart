@@ -88,7 +88,16 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   List<ServiceRow> _filtered(List<ServiceRow> services) {
     final q = _search.text.trim().toLowerCase();
     if (q.isEmpty) return services.where((s) => !s.archived).toList();
-    return services.where((s) => s.name.toLowerCase().contains(q)).toList();
+    return services.where((s) {
+      final date = DateTime.tryParse(s.date);
+      final dateLabel = date == null
+          ? ''
+          : DateFormat.yMMMd(Localizations.localeOf(context).toString())
+                .format(date);
+      return s.name.toLowerCase().contains(q) ||
+          s.date.toLowerCase().contains(q) ||
+          dateLabel.toLowerCase().contains(q);
+    }).toList();
   }
 }
 
