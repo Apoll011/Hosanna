@@ -268,7 +268,10 @@ class HosannaNavContent extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 8),
-                      _SectionLabel(l10n.navFolders),
+                      Container(
+                        alignment: .centerStart,
+                        child: _SectionLabel(l10n.navFolders),
+                      ),
                       if (folders.isEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
