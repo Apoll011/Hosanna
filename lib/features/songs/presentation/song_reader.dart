@@ -146,7 +146,10 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _onScrollUpdated() {
     if (_scrollController.hasClients) {
-      _canvasController.setOffset(Offset(0, -_scrollController.offset));
+      final pos = _scrollController.position;
+      final max = pos.hasContentDimensions ? pos.maxScrollExtent : double.infinity;
+      final clamped = _scrollController.offset.clamp(0.0, math.max<double>(0.0, max));
+      _canvasController.setOffset(Offset(0, -clamped));
     }
   }
 
@@ -219,7 +222,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
     final speed = ref.read(songDisplaySettingsProvider).autoScrollSpeed;
     setState(() => _isScrolling = true);
-    _scrollTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!_scrollController.hasClients) return;
       final max = _scrollController.position.maxScrollExtent;
       if (_scrollController.offset >= max) {
@@ -228,7 +231,7 @@ class _SongReaderState extends ConsumerState<SongReader>
         return;
       }
       _scrollController.jumpTo(
-        (_scrollController.offset + speed * 0.2).clamp(0, max),
+        (_scrollController.offset + speed * (16.0 / 250.0)).clamp(0, max),
       );
     });
   }
@@ -446,10 +449,16 @@ class _SongReaderState extends ConsumerState<SongReader>
                   offset: Offset(_offset, 0),
                   child: Stack(
                     children: [
-                      SongBodyRenderer(
-                        content: widget.content,
-                        notes: widget.notes,
-                        scrollController: _scrollController,
+                      NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          _onScrollUpdated();
+                          return false;
+                        },
+                        child: SongBodyRenderer(
+                          content: widget.content,
+                          notes: widget.notes,
+                          scrollController: _scrollController,
+                        ),
                       ),
                       if (hasServiceSong)
                         Positioned.fill(
