@@ -45,10 +45,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ),
       body: Column(
         children: [
-          _TabBar(
-            selected: _tab,
-            onChanged: (t) => setState(() => _tab = t),
-          ),
+          _TabBar(selected: _tab, onChanged: (t) => setState(() => _tab = t)),
           Expanded(
             child: switch (_tab) {
               SettingsTab.account => const _AccountTab(),
@@ -75,7 +72,11 @@ class _TabBar extends StatelessWidget {
 
     final tabs = [
       (SettingsTab.account, l10n.settingsTabAccount, Icons.person_outline),
-      (SettingsTab.workspace, l10n.settingsTabWorkspace, Icons.business_outlined),
+      (
+        SettingsTab.workspace,
+        l10n.settingsTabWorkspace,
+        Icons.business_outlined,
+      ),
       (SettingsTab.preferences, l10n.settingsTabPreferences, Icons.tune),
     ];
 
@@ -229,7 +230,9 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
       _error = null;
     });
     try {
-      await ref.read(authControllerProvider.notifier).changePassword(
+      await ref
+          .read(authControllerProvider.notifier)
+          .changePassword(
             currentPassword: _oldPwdCtrl.text,
             newPassword: _newPwdCtrl.text,
           );
@@ -274,8 +277,9 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                   children: [
                     Text(
                       user?.name ?? '—',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -366,8 +370,9 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                     if (_error != null) ...[
                       Text(
                         _error!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -475,8 +480,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
 
   Future<void> _loadOrgs() async {
     try {
-      final orgs =
-          await ref.read(authControllerProvider.notifier).listOrganizations();
+      final orgs = await ref
+          .read(authControllerProvider.notifier)
+          .listOrganizations();
       if (mounted) setState(() => _orgs = orgs);
     } catch (_) {
       // Non-fatal.
@@ -512,8 +518,8 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
     final lastSync = sync.lastSyncedAt == null
         ? l10n.syncNever
         : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-            .add_Hm()
-            .format(sync.lastSyncedAt!);
+              .add_Hm()
+              .format(sync.lastSyncedAt!);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -533,8 +539,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                       children: [
                         Text(
                           org?.name ?? l10n.settingsOrganization,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         Text(
                           'Slug: ${org?.slug ?? '—'}',
@@ -548,7 +555,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                   if (org != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
@@ -579,7 +588,10 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                     title: Text(o.name),
                     subtitle: Text(o.slug),
                     trailing: o.slug == org?.slug
-                        ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+                        ? Icon(
+                            Icons.check_circle,
+                            color: theme.colorScheme.primary,
+                          )
                         : const Icon(Icons.circle_outlined),
                     enabled: !_switching && o.slug != org?.slug,
                     onTap: () => _switchOrg(o.slug),
@@ -605,8 +617,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                       children: [
                         Text(
                           l10n.settingsSyncLibrary,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         Text(
                           l10n.settingsSyncLibraryDesc,
@@ -623,7 +636,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
-                  onPressed: sync.isSyncing ? null : () => syncController.syncAll(),
+                  onPressed: sync.isSyncing
+                      ? null
+                      : () => syncController.syncAll(),
                   icon: sync.isSyncing
                       ? const SizedBox(
                           height: 16,
@@ -766,7 +781,8 @@ class _PreferencesTab extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _SectionLabel(
-                      '${l10n.songFontSize} (${display.fontSize.toInt()}px)'),
+                    '${l10n.songFontSize} (${display.fontSize.toInt()}px)',
+                  ),
                   Text(
                     'Exemplo',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -826,9 +842,15 @@ class _PreferencesTab extends ConsumerWidget {
                 trailing: SegmentedButton<String>(
                   segments: const [
                     ButtonSegment(
-                        value: 'guitar', label: Text('Guitarra'), icon: Icon(Icons.graphic_eq)),
+                      value: 'guitar',
+                      label: Text('Guitarra'),
+                      icon: Icon(Icons.graphic_eq),
+                    ),
                     ButtonSegment(
-                        value: 'piano', label: Text('Piano'), icon: Icon(Icons.piano)),
+                      value: 'piano',
+                      label: Text('Piano'),
+                      icon: Icon(Icons.piano),
+                    ),
                   ],
                   selected: {display.instrument},
                   onSelectionChanged: (s) =>
@@ -941,8 +963,9 @@ class _ReadonlyRow extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -1043,8 +1066,9 @@ class _SwitchRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 subtitle,
