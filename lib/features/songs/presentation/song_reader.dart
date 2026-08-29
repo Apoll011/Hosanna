@@ -83,6 +83,9 @@ class _SongReaderState extends ConsumerState<SongReader>
   Color _canvasColor = const Color(0xFFE53935);
   double _canvasStrokeWidth = 3.5;
   final double _canvasEraserRadius = 28.0;
+  bool _isPointerActive = false;
+  Uint8List? _initialBytes;
+  String? _loadedSongKey;
 
   // --- Swipe gesture state -------------------------------------------------
   bool _dragActive = false;
@@ -107,6 +110,38 @@ class _SongReaderState extends ConsumerState<SongReader>
     _swipeController = AnimationController(vsync: this);
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
+    _loadAnnotationForCurrentSong();
+  }
+
+  Future<void> _loadAnnotationForCurrentSong() async {
+    final serviceId = widget.serviceId;
+    final songId = widget.songId;
+    if (serviceId == null || songId == null) return;
+    final key = '${serviceId}_$songId';
+    _loadedSongKey = key;
+
+    final bytes = await ref
+        .read(serviceAnnotationRepositoryProvider)
+        .loadAnnotation(serviceId: serviceId, songId: songId);
+
+    if (!mounted || _loadedSongKey != key) return;
+
+    final canvasState = _canvasKey.currentState;
+    if (canvasState != null) {
+      if (bytes != null && bytes.isNotEmpty) {
+        try {
+          canvasState.loadFromBytes(bytes);
+        } catch (_) {
+          canvasState.clear();
+        }
+      } else {
+        canvasState.clear();
+      }
+    } else {
+      setState(() {
+        _initialBytes = bytes;
+      });
+    }
   }
 
   void _onScrollUpdated() {
@@ -122,6 +157,10 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (oldWidget.serviceId != widget.serviceId ||
         oldWidget.songId != widget.songId) {
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
+      _canvasKey.currentState?.clear();
+      _loadAnnotationForCurrentSong();
+    } else if (oldWidget.isAnnotating && !widget.isAnnotating) {
+      _saveCurrentAnnotation();
     }
 
     if (oldWidget.content != widget.content) {
@@ -345,19 +384,37 @@ class _SongReaderState extends ConsumerState<SongReader>
     );
   }
 
-  Widget _buildCanvasOverlay(Uint8List? initialBytes) {
-    return FlueraCanvas(
-      key: _canvasKey,
-      controller: _canvasController,
-      tool: _canvasTool,
-      strokeColor: _canvasColor,
-      strokeWidth: _canvasStrokeWidth,
-      eraserRadius: _canvasEraserRadius,
-      background: const CanvasBackground.solid(Colors.transparent),
-      initialBytes: initialBytes,
-      onStrokeCommitted: (_) => _saveCurrentAnnotation(),
-      onStrokesErased: (_) => _saveCurrentAnnotation(),
-      onNodesDeleted: (_) => _saveCurrentAnnotation(),
+  Widget _buildCanvasOverlay() {
+    return Listener(
+      onPointerDown: (_) {
+        if (!_isPointerActive) {
+          setState(() => _isPointerActive = true);
+        }
+      },
+      onPointerUp: (_) {
+        if (_isPointerActive) {
+          setState(() => _isPointerActive = false);
+        }
+      },
+      onPointerCancel: (_) {
+        if (_isPointerActive) {
+          setState(() => _isPointerActive = false);
+        }
+      },
+      child: FlueraCanvas(
+        key: _canvasKey,
+        controller: _canvasController,
+        tool: widget.isAnnotating ? _canvasTool : CanvasTool.draw,
+        strokeColor: _canvasColor,
+        strokeWidth: _canvasStrokeWidth,
+        eraserRadius: _canvasEraserRadius,
+        showEraserPreview: widget.isAnnotating && _isPointerActive,
+        background: const CanvasBackground.solid(Colors.transparent),
+        initialBytes: _initialBytes,
+        onStrokeCommitted: (_) => _saveCurrentAnnotation(),
+        onStrokesErased: (_) => _saveCurrentAnnotation(),
+        onNodesDeleted: (_) => _saveCurrentAnnotation(),
+      ),
     );
   }
 
@@ -367,15 +424,6 @@ class _SongReaderState extends ConsumerState<SongReader>
     final theme = Theme.of(context);
     final showNav = widget.onPrev != null || widget.onNext != null;
     final hasServiceSong = widget.serviceId != null && widget.songId != null;
-
-    final annotationAsync = hasServiceSong
-        ? ref.watch(
-            serviceAnnotationBytesProvider((
-              serviceId: widget.serviceId!,
-              songId: widget.songId!,
-            )),
-          )
-        : null;
 
     return Stack(
       children: [
@@ -396,10 +444,21 @@ class _SongReaderState extends ConsumerState<SongReader>
               children: [
                 Transform.translate(
                   offset: Offset(_offset, 0),
-                  child: SongBodyRenderer(
-                    content: widget.content,
-                    notes: widget.notes,
-                    scrollController: _scrollController,
+                  child: Stack(
+                    children: [
+                      SongBodyRenderer(
+                        content: widget.content,
+                        notes: widget.notes,
+                        scrollController: _scrollController,
+                      ),
+                      if (hasServiceSong)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            ignoring: !widget.isAnnotating,
+                            child: _buildCanvasOverlay(),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
@@ -407,21 +466,6 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
         ),
-
-        // Fluera canvas overlay for drawing annotations over the song.
-        if (hasServiceSong)
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !widget.isAnnotating,
-              child: annotationAsync == null
-                  ? _buildCanvasOverlay(null)
-                  : annotationAsync.when(
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => _buildCanvasOverlay(null),
-                      data: (bytes) => _buildCanvasOverlay(bytes),
-                    ),
-            ),
-          ),
 
         // Elegant floating annotation toolbar with all tools
         if (widget.isAnnotating)
@@ -534,7 +578,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
             onPressed: () {
               final state = canvasKey.currentState;
               if (state != null) {
-                state.loadFromJson('[]');
+                state.clear();
               }
               onClearAll();
               Navigator.of(ctx).pop();
