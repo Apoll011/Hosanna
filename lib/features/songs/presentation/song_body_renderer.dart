@@ -38,6 +38,7 @@ class SongBodyRenderer extends ConsumerWidget {
       fontSize: settings.fontSize,
       instrument: settings.instrument,
       showDiagrams: settings.showDiagrams,
+      sectionColorBackground: settings.sectionColorBackground,
       scrollController: scrollController,
     );
   }

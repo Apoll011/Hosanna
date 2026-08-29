@@ -467,6 +467,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songShowDiagrams => 'Show Diagrams';
 
   @override
+  String get songSectionBackground => 'Tint Section Backgrounds';
+
+  @override
   String get songGuitar => 'Guitar';
 
   @override

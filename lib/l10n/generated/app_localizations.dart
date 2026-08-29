@@ -976,6 +976,12 @@ abstract class AppLocalizations {
   /// **'Mostrar Diagramas'**
   String get songShowDiagrams;
 
+  /// No description provided for @songSectionBackground.
+  ///
+  /// In pt, this message translates to:
+  /// **'Destacar Seções com Cor'**
+  String get songSectionBackground;
+
   /// No description provided for @songGuitar.
   ///
   /// In pt, this message translates to:

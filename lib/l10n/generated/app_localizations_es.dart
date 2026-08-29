@@ -472,6 +472,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songShowDiagrams => 'Mostrar Diagramas';
 
   @override
+  String get songSectionBackground => 'Fondo de Color en Secciones';
+
+  @override
   String get songGuitar => 'Guitarra';
 
   @override

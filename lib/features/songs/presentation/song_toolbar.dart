@@ -169,6 +169,12 @@ class SongControlsSheet extends ConsumerWidget {
               value: settings.showDiagrams,
               onChanged: (_) => controller.toggleDiagrams(),
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.songSectionBackground),
+              value: settings.sectionColorBackground,
+              onChanged: (_) => controller.toggleSectionColorBackground(),
+            ),
 
             const SizedBox(height: 8),
             _SectionTitle(label: l10n.songInstrument, value: ''),

@@ -146,6 +146,7 @@
   "songShowChords": "Show Chords",
   "songTwoColumn": "2-Column Layout",
   "songShowDiagrams": "Show Diagrams",
+  "songSectionBackground": "Tint Section Backgrounds",
   "songGuitar": "Guitar",
   "songPiano": "Piano",
   "songAutoScrollStart": "Start auto-scroll",

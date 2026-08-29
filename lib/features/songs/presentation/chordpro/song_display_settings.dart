@@ -15,6 +15,7 @@ class SongDisplaySettings {
     this.fontSize = 14,
     this.instrument = 'guitar',
     this.showDiagrams = false,
+    this.sectionColorBackground = false,
     this.autoScrollSpeed = 5,
   });
 
@@ -25,6 +26,7 @@ class SongDisplaySettings {
   final double fontSize;
   final String instrument; // 'guitar' | 'piano'
   final bool showDiagrams;
+  final bool sectionColorBackground;
 
   /// Auto-scroll speed, 1..10 (transient).
   final double autoScrollSpeed;
@@ -39,6 +41,7 @@ class SongDisplaySettings {
     double? fontSize,
     String? instrument,
     bool? showDiagrams,
+    bool? sectionColorBackground,
     double? autoScrollSpeed,
   }) {
     return SongDisplaySettings(
@@ -49,6 +52,8 @@ class SongDisplaySettings {
       fontSize: fontSize ?? this.fontSize,
       instrument: instrument ?? this.instrument,
       showDiagrams: showDiagrams ?? this.showDiagrams,
+      sectionColorBackground:
+          sectionColorBackground ?? this.sectionColorBackground,
       autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
     );
   }
@@ -66,6 +71,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _fontSizeKey = 'songDisplay.fontSize';
   static const _instrumentKey = 'songDisplay.instrument';
   static const _diagramsKey = 'songDisplay.showDiagrams';
+  static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
 
   void _restore() {
     state = SongDisplaySettings(
@@ -74,6 +80,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       fontSize: _prefs.getDouble(_fontSizeKey) ?? 14,
       instrument: _prefs.getString(_instrumentKey) ?? 'guitar',
       showDiagrams: _prefs.getBool(_diagramsKey) ?? false,
+      sectionColorBackground:
+          _prefs.getBool(_sectionColorBackgroundKey) ?? false,
     );
   }
 
@@ -94,6 +102,12 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     final v = !state.twoColumn;
     _prefs.setBool(_twoColumnKey, v);
     state = state.copyWith(twoColumn: v);
+  }
+
+  void toggleSectionColorBackground() {
+    final v = !state.sectionColorBackground;
+    _prefs.setBool(_sectionColorBackgroundKey, v);
+    state = state.copyWith(sectionColorBackground: v);
   }
 
   void setFontSize(double value) {

@@ -22,6 +22,7 @@ class ChordProRenderer extends StatefulWidget {
     this.fontSize,
     this.instrument = 'guitar',
     this.showDiagrams = false,
+    this.sectionColorBackground = false,
     this.scrollController,
     this.notes,
   });
@@ -34,6 +35,7 @@ class ChordProRenderer extends StatefulWidget {
   final double? fontSize;
   final String instrument;
   final bool showDiagrams;
+  final bool sectionColorBackground;
 
   /// Optional musician notes, shown in a card below the metadata header and
   /// before the chord roll (when present).
@@ -341,13 +343,35 @@ class _ChordProRendererState extends State<ChordProRenderer> {
               ? const Color(0xFFD97706)
               : theme.colorScheme.outlineVariant);
 
+    final showBackground = widget.sectionColorBackground;
+    final backgroundColor = showBackground
+        ? (isChorus
+            ? theme.colorScheme.primary.withValues(alpha: 0.08)
+            : (isBridge
+                ? const Color(0xFFD97706).withValues(alpha: 0.08)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.35,
+                  )))
+        : null;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.only(left: 12),
+      padding: showBackground
+          ? const EdgeInsets.fromLTRB(12, 10, 12, 10)
+          : const EdgeInsets.only(left: 12),
       decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: accent.withValues(alpha: 0.5), width: 2),
-        ),
+        color: backgroundColor,
+        borderRadius: showBackground ? BorderRadius.circular(10) : null,
+        border: showBackground
+            ? Border(
+                left: BorderSide(color: accent, width: 3.5),
+              )
+            : Border(
+                left: BorderSide(
+                  color: accent.withValues(alpha: 0.5),
+                  width: 2,
+                ),
+              ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
