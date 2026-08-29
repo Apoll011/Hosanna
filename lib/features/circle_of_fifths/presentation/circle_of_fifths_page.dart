@@ -348,7 +348,7 @@ class _KeyButton extends StatelessWidget {
         width: size,
         height: size,
         transform: selected
-            ? (Matrix4.identity()..scale(1.1))
+            ? (Matrix4.diagonal3Values(1.1, 1.1, 1.0))
             : Matrix4.identity(),
         transformAlignment: Alignment.center,
         decoration: BoxDecoration(

@@ -1,6 +1,5 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,17 +21,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Authenticated controller with an org, so the router lands on /songs.
 class _TestAuthController extends AuthController {
   _TestAuthController()
-      : super(
-          AuthRepository(Dio()),
-          SessionStore(),
-          TokenStore(),
-          AppConfig.instance,
-        ) {
+    : super(
+        AuthRepository(Dio()),
+        SessionStore(),
+        TokenStore(),
+        AppConfig.instance,
+      ) {
     const org = Organization(id: 'o1', name: 'Test Org', slug: 'test');
     state = AuthState(
       status: AuthStatus.authenticated,
       session: AuthSession(
-        user: const AuthUser(id: 'u1', name: 'Test User', email: 't@example.com'),
+        user: const AuthUser(
+          id: 'u1',
+          name: 'Test User',
+          email: 't@example.com',
+        ),
         sessionToken: 'tok',
         organization: org,
       ),
@@ -81,8 +84,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('phone: drawer tool item navigates to its shell branch',
-      (tester) async {
+  testWidgets('phone: drawer tool item navigates to its shell branch', (
+    tester,
+  ) async {
     await pumpApp(tester);
     expect(find.byType(SongLibraryPage), findsOneWidget);
 
@@ -98,8 +102,9 @@ void main() {
     expect(find.byType(CircleOfFifthsPage), findsOneWidget);
   });
 
-  testWidgets('tablet: sidebar tool item navigates to its shell branch',
-      (tester) async {
+  testWidgets('tablet: sidebar tool item navigates to its shell branch', (
+    tester,
+  ) async {
     await pumpApp(tester, logicalSize: const Size(1280, 800));
     expect(find.byType(SongLibraryPage), findsOneWidget);
     expect(find.text('Circle of Fifths'), findsOneWidget);
