@@ -19,7 +19,7 @@
   "commonNext": "Seguinte",
   "commonUnknown": "Desconhecido",
   "commonOpenDrawer": "Abrir menu",
-
+  "commonCloseDrawer": "Fechar o Menu",
   "authSignIn": "Iniciar Sessão",
   "authSignUp": "Criar Conta",
   "authSignOut": "Terminar Sessão",

@@ -65,6 +65,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonOpenDrawer => 'Open menu';
 
   @override
+  String get commonCloseDrawer => 'Open menu';
+
+  @override
   String get authSignIn => 'Sign In';
 
   @override

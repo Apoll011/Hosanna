@@ -18,6 +18,7 @@
   "commonNext": "Next",
   "commonUnknown": "Unknown",
   "commonOpenDrawer": "Open menu",
+  "commonCloseDrawer": "Open menu",
   "authSignIn": "Sign In",
   "authSignUp": "Sign Up",
   "authSignOut": "Sign Out",

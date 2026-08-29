@@ -29,8 +29,8 @@ class ShellLeadingButton extends ConsumerWidget {
 
     final collapsed = ref.watch(sidebarCollapsedProvider);
     return IconButton(
-      icon: Icon(collapsed ? Icons.menu_open : Icons.chevron_left),
-      tooltip: collapsed ? l10n.commonOpenDrawer : l10n.commonBack,
+      icon: Icon(collapsed ? Icons.menu : Icons.menu_open),
+      tooltip: collapsed ? l10n.commonOpenDrawer : l10n.commonCloseDrawer,
       onPressed: () =>
           ref.read(sidebarCollapsedProvider.notifier).state = !collapsed,
     );

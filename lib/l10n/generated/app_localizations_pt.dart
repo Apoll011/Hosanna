@@ -65,6 +65,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonOpenDrawer => 'Abrir menu';
 
   @override
+  String get commonCloseDrawer => 'Fechar o Menu';
+
+  @override
   String get authSignIn => 'Iniciar Sessão';
 
   @override

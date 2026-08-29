@@ -208,6 +208,12 @@ abstract class AppLocalizations {
   /// **'Abrir menu'**
   String get commonOpenDrawer;
 
+  /// No description provided for @commonCloseDrawer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar o Menu'**
+  String get commonCloseDrawer;
+
   /// No description provided for @authSignIn.
   ///
   /// In pt, this message translates to:
