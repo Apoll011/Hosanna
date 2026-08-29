@@ -114,39 +114,71 @@ class HosannaNavContent extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Row(
-                children: [
-                  const HosannaLogo(size: 40, borderRadius: 12),
-                  Expanded(
-                    child: _RevealBlock(
-                      visible: !collapsed,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.appTitle,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            if (org != null)
-                              Text(
-                                org.name,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
+              // The logo is the same element in both states; when the
+              // sidebar collapses it glides from the leading edge to the
+              // center of the header.
+              SizedBox(
+                height: 40,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedAlign(
+                        alignment: collapsed
+                            ? Alignment.center
+                            : Alignment.centerLeft,
+                        duration: _kAnimDuration,
+                        curve: _kAnimCurve,
+                        // HosannaLogo centers itself internally (see
+                        // hosanna_logo.dart), so pin it to a fixed 40x40 box
+                        // here — otherwise it would fill the whole header and
+                        // ignore this alignment, staying centered in both
+                        // states.
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: HosannaLogo(size: 40, borderRadius: 12),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    // Title/org text, revealed only when expanded. Left edge
+                    // matches the logo width; the 12px gap lives in the
+                    // padding below.
+                    Positioned(
+                      left: 40,
+                      top: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _RevealBlock(
+                        visible: !collapsed,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.appTitle,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (org != null)
+                                Text(
+                                  org.name,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               _RevealBlock(
