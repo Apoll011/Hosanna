@@ -177,36 +177,37 @@ class HosannaNavContent extends ConsumerWidget {
               if (!collapsed) ...[
                 const SizedBox(height: 8),
                 _SectionLabel(l10n.navFolders),
-              ],
-              if (folders.isEmpty)
-                !collapsed
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          l10n.foldersEmpty,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
+
+                if (folders.isEmpty)
+                  !collapsed
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            l10n.foldersEmpty,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink()
-              else
-                for (final folder in folders)
-                  _NavItem(
-                    icon: Icons.folder_outlined,
-                    iconColor: theme.colorScheme.primary,
-                    label: folder.name,
-                    count: folder.songCount,
-                    selected:
-                        library.section == LibrarySection.folder &&
-                        library.folderId == folder.id,
-                    collapsed: collapsed,
-                    onTap: () => selectSection(
-                      LibrarySection.folder,
-                      folderId: folder.id,
+                        )
+                      : const SizedBox.shrink()
+                else
+                  for (final folder in folders)
+                    _NavItem(
+                      icon: Icons.folder_outlined,
+                      iconColor: theme.colorScheme.primary,
+                      label: folder.name,
+                      count: folder.songCount,
+                      selected:
+                          library.section == LibrarySection.folder &&
+                          library.folderId == folder.id,
+                      collapsed: collapsed,
+                      onTap: () => selectSection(
+                        LibrarySection.folder,
+                        folderId: folder.id,
+                      ),
                     ),
-                  ),
+              ],
             ],
           ),
         ),

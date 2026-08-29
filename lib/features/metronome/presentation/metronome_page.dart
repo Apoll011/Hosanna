@@ -443,7 +443,7 @@ class _MetronomePageState extends State<MetronomePage>
             Switch(
               value: _accentFirstBeat,
               onChanged: (v) => setState(() => _accentFirstBeat = v),
-              activeColor: colors.primary,
+              activeThumbColor: colors.primary,
             ),
           ],
         ),

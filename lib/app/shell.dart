@@ -8,7 +8,7 @@ import 'providers.dart';
 
 /// Breakpoint (logical pixels) at which the app switches to the tablet layout
 /// (persistent sidebar instead of a drawer + floating bottom bar).
-const double kTabletBreakpoint = 768;
+const double kTabletBreakpoint = 750;
 
 /// Responsive shell: phones get a slide-in drawer + floating bottom bar;
 /// tablets get a persistent, retractable sidebar (mirroring the React app's
