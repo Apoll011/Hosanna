@@ -496,6 +496,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesOrderTitle => 'Ordem do Culto';
 
   @override
+  String get servicesArchived => 'Arquivado';
+
+  @override
   String get servicesLeave => 'Sair';
 
   @override

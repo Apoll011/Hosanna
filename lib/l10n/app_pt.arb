@@ -159,6 +159,7 @@
   "servicesOrderedItems": "Itens ordenados",
   "servicesNoItems": "Sem itens neste culto.",
   "servicesOrderTitle": "Ordem do Culto",
+  "servicesArchived": "Arquivado",
   "servicesLeave": "Sair",
   "servicesLeaveMode": "Sair do Modo Culto",
   "servicesMoments": "{count, plural, =1{1 momento} other{{count} momentos}}",

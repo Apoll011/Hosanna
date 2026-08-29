@@ -490,6 +490,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesOrderTitle => 'Service Order';
 
   @override
+  String get servicesArchived => 'Arquived';
+
+  @override
   String get servicesLeave => 'Leave';
 
   @override

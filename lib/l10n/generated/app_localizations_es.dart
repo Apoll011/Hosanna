@@ -495,6 +495,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesOrderTitle => 'Orden del Servicio';
 
   @override
+  String get servicesArchived => 'Sair';
+
+  @override
   String get servicesLeave => 'Salir';
 
   @override

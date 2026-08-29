@@ -1006,6 +1006,12 @@ abstract class AppLocalizations {
   /// **'Ordem do Culto'**
   String get servicesOrderTitle;
 
+  /// No description provided for @servicesArchived.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivado'**
+  String get servicesArchived;
+
   /// No description provided for @servicesLeave.
   ///
   /// In pt, this message translates to:

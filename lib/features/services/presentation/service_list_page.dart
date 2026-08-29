@@ -74,13 +74,13 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
               onRefresh: _refresh,
               child: switch (servicesAsync) {
                 AsyncValue(hasError: true) => _Empty(
-                    message: l10n.commonError,
-                    onRefresh: _refresh,
-                  ),
+                  message: l10n.commonError,
+                  onRefresh: _refresh,
+                ),
                 AsyncValue(:final value?) => _ServiceList(
-                    services: _filtered(value),
-                    onRefresh: _refresh,
-                  ),
+                  services: _filtered(value),
+                  onRefresh: _refresh,
+                ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
             ),
@@ -92,7 +92,7 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
 
   List<ServiceRow> _filtered(List<ServiceRow> services) {
     final q = _search.text.trim().toLowerCase();
-    if (q.isEmpty) return services;
+    if (q.isEmpty) return services.where((s) => !s.archived).toList();
     return services.where((s) => s.name.toLowerCase().contains(q)).toList();
   }
 }
@@ -118,14 +118,18 @@ class _ServiceList extends StatelessWidget {
         final dateLabel = date == null
             ? ''
             : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-                .format(date);
+                  .format(date);
         return ListTile(
           leading: const Icon(Icons.calendar_month_outlined),
-          title: Text(service.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          title: Text(
+            service.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           subtitle: Text(
             [
               dateLabel,
-              if (service.archived) l10n.settingsOffline,
+              if (service.archived) l10n.servicesArchived,
             ].where((e) => e.isNotEmpty).join(' · '),
           ),
           trailing: const Icon(Icons.chevron_right),

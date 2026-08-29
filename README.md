@@ -22,16 +22,14 @@ flutter run
 
 Configuration is injected at compile time via `--dart-define`:
 
-| Key | Purpose | Default |
-| --- | --- | --- |
-| `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://api.hosanna.live` |
-| `HOSANNA_TURNSTILE_URL` | Hosted captcha page URL | `https://studio.hosanna.live/captcha` |
-| `HOSANNA_ORIGIN` | `Origin` header sent on state-changing requests | `http://localhost` |
+| Key               | Purpose                                         | Default                    |
+| ----------------- | ----------------------------------------------- | -------------------------- |
+| `HOSANNA_API_URL` | Backend origin (no trailing slash)              | `https://api.hosanna.live` |
+| `HOSANNA_ORIGIN`  | `Origin` header sent on state-changing requests | `http://localhost`         |
 
 ```bash
 flutter run \
   --dart-define=HOSANNA_API_URL=https://your-api.example.com \
-  --dart-define=HOSANNA_TURNSTILE_URL=https://studio.hosanna.live/captcha
 ```
 
 > **Turnstile is required.** The backend enforces Cloudflare Turnstile on

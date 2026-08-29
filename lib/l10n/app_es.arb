@@ -159,6 +159,7 @@
   "servicesOrderedItems": "Elementos ordenados",
   "servicesNoItems": "Sin elementos en este servicio.",
   "servicesOrderTitle": "Orden del Servicio",
+    "servicesArchived": "Sair",
   "servicesLeave": "Salir",
   "servicesLeaveMode": "Salir del Modo Servicio",
   "servicesMoments": "{count, plural, =1{1 momento} other{{count} momentos}}",
