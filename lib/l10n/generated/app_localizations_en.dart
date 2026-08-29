@@ -761,4 +761,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get comingSoonDescription =>
       'This feature will be available in a future release.';
+
+  @override
+  String get annotationModeTitle => 'Annotations';
+
+  @override
+  String get annotationPen => 'Pen';
+
+  @override
+  String get annotationEraser => 'Stroke Eraser';
+
+  @override
+  String get annotationPixelEraser => 'Partial Eraser';
+
+  @override
+  String get annotationLine => 'Line';
+
+  @override
+  String get annotationRectangle => 'Rectangle';
+
+  @override
+  String get annotationEllipse => 'Circle';
+
+  @override
+  String get annotationSelect => 'Select';
+
+  @override
+  String get annotationLasso => 'Lasso';
+
+  @override
+  String get annotationText => 'Text';
+
+  @override
+  String get annotationLayers => 'Layers';
+
+  @override
+  String get annotationUndo => 'Undo';
+
+  @override
+  String get annotationRedo => 'Redo';
+
+  @override
+  String get annotationClear => 'Clear All';
+
+  @override
+  String get annotationClearConfirm => 'Clear all annotations for this song?';
+
+  @override
+  String get annotationColorPicker => 'Custom Color';
+
+  @override
+  String get annotationClose => 'Done';
 }

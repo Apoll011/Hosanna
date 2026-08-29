@@ -11,17 +11,24 @@ import '../../services/data/service_annotation_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_body_renderer.dart';
 
-/// Tuning for the swipe-to-navigate gesture. Kept as top-level consts so
-/// they're easy to tweak without hunting through the state class.
-const double _kMaxOverscroll =
-    48.0; // resistance cap when a direction is disabled
-const double _kFlingVelocity = 700.0; // px/s to count a quick flick as a commit
+/// Tuning for the swipe-to-navigate gesture.
+const double _kMaxOverscroll = 48.0;
+const double _kFlingVelocity = 700.0;
+
+/// Default preset palette for Hosanna annotations.
+const List<Color> _kAnnotationPalette = <Color>[
+  Color(0xFFE53935), // Red
+  Color(0xFFFB8C00), // Orange
+  Color(0xFFFDD835), // Yellow
+  Color(0xFF43A047), // Green
+  Color(0xFF1E88E5), // Blue
+  Color(0xFF8E24AA), // Purple
+  Color(0xFFFFFFFF), // White
+  Color(0xFF212121), // Dark
+];
 
 /// Renders a song body with a floating auto-scroll control and, when in a
-/// service, previous/next navigation — mirroring the React `SongView` reader.
-///
-/// Also supports swiping the song body left/right to move between songs in
-/// a service, with a PowerPoint-style push transition.
+/// service, previous/next navigation and synchronized FlueraCanvas annotations.
 class SongReader extends ConsumerStatefulWidget {
   const SongReader({
     super.key,
@@ -54,8 +61,7 @@ class SongReader extends ConsumerStatefulWidget {
   final bool canPrev;
   final bool canNext;
 
-  /// e.g. "2 / 5" — shown between the prev/next buttons when navigating a
-  /// service. When null, the prev/next controls are hidden.
+  /// e.g. "2 / 5" — shown between the prev/next buttons when navigating a service.
   final String? positionLabel;
 
   @override
@@ -72,23 +78,18 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   // --- Canvas Annotation state ---------------------------------------------
   final GlobalKey<FlueraCanvasState> _canvasKey = GlobalKey<FlueraCanvasState>();
+  late final InfiniteCanvasController _canvasController;
   CanvasTool _canvasTool = CanvasTool.draw;
   Color _canvasColor = const Color(0xFFE53935);
-  double _canvasStrokeWidth = 3.0;
-  double _canvasEraserRadius = 32.0;
+  double _canvasStrokeWidth = 3.5;
+  final double _canvasEraserRadius = 28.0;
 
   // --- Swipe gesture state -------------------------------------------------
-  // A horizontal drag recognizer (via [GestureDetector] in [build]) competes
-  // in the gesture arena with the song body's vertical scroll recognizer.
-  // Once the horizontal recognizer wins, the scroll view is rejected for the
-  // rest of the gesture, so the current song can't keep scrolling vertically
-  // while the user is dragging to switch songs.
-  bool _dragActive = false; // true while a horizontal song-switch drag runs
-  double _dragTotalDx = 0; // raw horizontal distance since the drag started
-  double _offset = 0; // current horizontal translation of the song body
+  bool _dragActive = false;
+  double _dragTotalDx = 0;
+  double _offset = 0;
   bool _hapticFired = false;
-  int?
-  _pendingEnterDirection; // -1 = entering from the right, 1 = from the left
+  int? _pendingEnterDirection;
 
   bool get _swipeEnabled =>
       !widget.isAnnotating && (widget.onPrev != null || widget.onNext != null);
@@ -104,39 +105,50 @@ class _SongReaderState extends ConsumerState<SongReader>
   void initState() {
     super.initState();
     _swipeController = AnimationController(vsync: this);
+    _canvasController = InfiniteCanvasController();
+    _scrollController.addListener(_onScrollUpdated);
+  }
+
+  void _onScrollUpdated() {
+    if (_scrollController.hasClients) {
+      _canvasController.setOffset(Offset(0, -_scrollController.offset));
+    }
   }
 
   @override
   void didUpdateWidget(covariant SongReader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.content == widget.content) return;
 
-    if (_pendingEnterDirection != null) {
-      // We just navigated (via swipe or button) and the new song has
-      // arrived — slide it in from the opposite edge to finish the push.
-      final dir = _pendingEnterDirection!;
-      _pendingEnterDirection = null;
-      _offset = -dir * _viewportWidth;
-      _animateOffsetTo(0);
-    } else {
-      // Content changed for some other reason — just snap, no transition.
-      _swipeController.stop();
-      _offset = 0;
+    if (oldWidget.serviceId != widget.serviceId ||
+        oldWidget.songId != widget.songId) {
+      _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
+    }
+
+    if (oldWidget.content != widget.content) {
+      if (_pendingEnterDirection != null) {
+        final dir = _pendingEnterDirection!;
+        _pendingEnterDirection = null;
+        _offset = -dir * _viewportWidth;
+        _animateOffsetTo(0);
+      } else {
+        _swipeController.stop();
+        _offset = 0;
+      }
     }
   }
 
   @override
   void dispose() {
-    _saveCurrentAnnotation();
+    _saveAnnotation(widget.serviceId, widget.songId);
+    _scrollController.removeListener(_onScrollUpdated);
     _stopAutoScroll();
     _scrollController.dispose();
     _swipeController.dispose();
+    _canvasController.dispose();
     super.dispose();
   }
 
-  void _saveCurrentAnnotation() {
-    final serviceId = widget.serviceId;
-    final songId = widget.songId;
+  void _saveAnnotation(String? serviceId, String? songId) {
     if (serviceId == null || songId == null) return;
     final canvasState = _canvasKey.currentState;
     if (canvasState == null) return;
@@ -148,6 +160,10 @@ class _SongReaderState extends ConsumerState<SongReader>
             bytes: bytes,
           );
     } catch (_) {}
+  }
+
+  void _saveCurrentAnnotation() {
+    _saveAnnotation(widget.serviceId, widget.songId);
   }
 
   void _stopAutoScroll() {
@@ -172,7 +188,6 @@ class _SongReaderState extends ConsumerState<SongReader>
         if (mounted) setState(() {});
         return;
       }
-      // speed 1..10 → ~4..40 px/s.
       _scrollController.jumpTo(
         (_scrollController.offset + speed * 0.2).clamp(0, max),
       );
@@ -182,7 +197,6 @@ class _SongReaderState extends ConsumerState<SongReader>
   // --- Swipe gesture handling ----------------------------------------------
 
   void _onHorizontalDragStart(DragStartDetails details) {
-    // Ignore input while a push transition is animating.
     if (_swipeController.isAnimating) return;
     _dragTotalDx = 0;
     _hapticFired = false;
@@ -233,12 +247,9 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (!_dragActive) return;
     _dragActive = false;
     _dragTotalDx = 0;
-    // The system took the pointer away — never commit a song change.
     _animateOffsetTo(0);
   }
 
-  /// Programmatically triggers the same push transition as a completed
-  /// swipe — used by the prev/next buttons so both paths feel consistent.
   void _goPrev() {
     if (!widget.canPrev || _swipeController.isAnimating) return;
     _stopAutoScroll();
@@ -251,8 +262,6 @@ class _SongReaderState extends ConsumerState<SongReader>
     _completeSwipe(-1);
   }
 
-  /// dir: -1 pushes the current song out to the left (going to "next"),
-  ///       1 pushes it out to the right (going to "previous").
   void _completeSwipe(int dir) {
     final target = dir * _viewportWidth;
     _animateOffsetTo(
@@ -339,6 +348,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   Widget _buildCanvasOverlay(Uint8List? initialBytes) {
     return FlueraCanvas(
       key: _canvasKey,
+      controller: _canvasController,
       tool: _canvasTool,
       strokeColor: _canvasColor,
       strokeWidth: _canvasStrokeWidth,
@@ -372,8 +382,6 @@ class _SongReaderState extends ConsumerState<SongReader>
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            // Register the horizontal recognizer only when prev/next
-            // navigation is available and not actively annotating.
             onHorizontalDragStart: _swipeEnabled
                 ? _onHorizontalDragStart
                 : null,
@@ -415,15 +423,15 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
 
-        // Fluera canvas toolbar when annotating mode is active.
+        // Elegant floating annotation toolbar with all tools
         if (widget.isAnnotating)
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 12,
+            right: 12,
+            bottom: 20,
             child: SafeArea(
               top: false,
-              child: FlueraCanvasToolbar(
+              child: _HosannaAnnotationToolbar(
                 canvasKey: _canvasKey,
                 tool: _canvasTool,
                 onToolChanged: (t) => setState(() => _canvasTool = t),
@@ -432,26 +440,16 @@ class _SongReaderState extends ConsumerState<SongReader>
                 strokeWidth: _canvasStrokeWidth,
                 onStrokeWidthChanged: (w) =>
                     setState(() => _canvasStrokeWidth = w),
-                eraserRadius: _canvasEraserRadius,
-                onEraserRadiusChanged: (r) =>
-                    setState(() => _canvasEraserRadius = r),
-                showShapeTools: true,
-                showColorPickerButton: true,
-                showLayers: true,
-                showSelectionTool: true,
-                showLassoTool: true,
-                showTextTool: true,
-                showUndo: true,
-                showRedo: true,
-                showClear: true,
-                showTransformActions: true,
-                background: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.95),
+                onStrokeCommitted: _saveCurrentAnnotation,
+                onClearAll: () {
+                  setState(() {});
+                  _saveCurrentAnnotation();
+                },
               ),
             ),
           ),
 
-        // Floating right-side controls: auto-scroll + prev/next (hidden when annotating toolbar is shown).
+        // Floating right-side controls: auto-scroll + prev/next (hidden during annotation).
         if (!widget.isAnnotating)
           Positioned(
             right: 16,
@@ -489,6 +487,410 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Custom sleek toolbar for annotations supporting all tools.
+class _HosannaAnnotationToolbar extends StatelessWidget {
+  const _HosannaAnnotationToolbar({
+    required this.canvasKey,
+    required this.tool,
+    required this.onToolChanged,
+    required this.color,
+    required this.onColorChanged,
+    required this.strokeWidth,
+    required this.onStrokeWidthChanged,
+    required this.onStrokeCommitted,
+    required this.onClearAll,
+  });
+
+  final GlobalKey<FlueraCanvasState> canvasKey;
+  final CanvasTool tool;
+  final ValueChanged<CanvasTool> onToolChanged;
+  final Color color;
+  final ValueChanged<Color> onColorChanged;
+  final double strokeWidth;
+  final ValueChanged<double> onStrokeWidthChanged;
+  final VoidCallback onStrokeCommitted;
+  final VoidCallback onClearAll;
+
+  void _showClearConfirm(BuildContext context, AppLocalizations l10n) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.annotationClear),
+        content: Text(l10n.annotationClearConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            onPressed: () {
+              final state = canvasKey.currentState;
+              if (state != null) {
+                state.loadFromJson('[]');
+              }
+              onClearAll();
+              Navigator.of(ctx).pop();
+            },
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openLayersSheet(BuildContext context, AppLocalizations l10n) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetCtx) {
+        return FractionallySizedBox(
+          heightFactor: 0.6,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.annotationLayers,
+                  style: Theme.of(sheetCtx).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(child: FlueraLayerPanel(canvasKey: canvasKey)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildToolButton({
+    required BuildContext context,
+    required CanvasTool targetTool,
+    required IconData icon,
+    required String tooltip,
+  }) {
+    final theme = Theme.of(context);
+    final isSelected = tool == targetTool;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: isSelected
+            ? theme.colorScheme.primaryContainer
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => onToolChanged(targetTool),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? theme.colorScheme.onPrimaryContainer
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final state = canvasKey.currentState;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.97),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Row 1: All Drawing Tools (Pen, Stroke Eraser, Pixel Eraser, Shapes, Text, Select, Lasso) + Layers + History Actions
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.draw,
+                            icon: Icons.edit_outlined,
+                            tooltip: l10n.annotationPen,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.erase,
+                            icon: Icons.auto_fix_normal_outlined,
+                            tooltip: l10n.annotationEraser,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.erasePixel,
+                            icon: Icons.cleaning_services_outlined,
+                            tooltip: l10n.annotationPixelEraser,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.line,
+                            icon: Icons.horizontal_rule_rounded,
+                            tooltip: l10n.annotationLine,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.rectangle,
+                            icon: Icons.crop_square_rounded,
+                            tooltip: l10n.annotationRectangle,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.ellipse,
+                            icon: Icons.circle_outlined,
+                            tooltip: l10n.annotationEllipse,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.text,
+                            icon: Icons.text_fields_rounded,
+                            tooltip: l10n.annotationText,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.select,
+                            icon: Icons.touch_app_outlined,
+                            tooltip: l10n.annotationSelect,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildToolButton(
+                            context: context,
+                            targetTool: CanvasTool.lasso,
+                            icon: Icons.gesture_rounded,
+                            tooltip: l10n.annotationLasso,
+                          ),
+                          const SizedBox(width: 4),
+                          Container(
+                            height: 20,
+                            width: 1,
+                            color: theme.colorScheme.outlineVariant,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.layers_outlined, size: 20),
+                            tooltip: l10n.annotationLayers,
+                            onPressed: () => _openLayersSheet(context, l10n),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // History Actions
+                  if (state != null)
+                    ListenableBuilder(
+                      listenable: state.historyListenable,
+                      builder: (ctx, _) => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.undo_rounded, size: 20),
+                            tooltip: l10n.annotationUndo,
+                            onPressed: state.canUndo
+                                ? () {
+                                    state.undo();
+                                    onStrokeCommitted();
+                                  }
+                                : null,
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.redo_rounded, size: 20),
+                            tooltip: l10n.annotationRedo,
+                            onPressed: state.canRedo
+                                ? () {
+                                    state.redo();
+                                    onStrokeCommitted();
+                                  }
+                                : null,
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                            tooltip: l10n.annotationClear,
+                            onPressed: () => _showClearConfirm(context, l10n),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.undo_rounded, size: 20),
+                          tooltip: l10n.annotationUndo,
+                          onPressed: null,
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.redo_rounded, size: 20),
+                          tooltip: l10n.annotationRedo,
+                          onPressed: null,
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                          tooltip: l10n.annotationClear,
+                          onPressed: () => _showClearConfirm(context, l10n),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Row 2: Swatches, Prominent Color Picker Button & Stroke Width Slider
+              Row(
+                children: [
+                  for (final c in _kAnnotationPalette)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () {
+                          onColorChanged(c);
+                          if (tool == CanvasTool.erase ||
+                              tool == CanvasTool.erasePixel) {
+                            onToolChanged(CanvasTool.draw);
+                          }
+                        },
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: c.toARGB32() == color.toARGB32()
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outline.withValues(alpha: 0.4),
+                              width: c.toARGB32() == color.toARGB32() ? 2.5 : 1,
+                            ),
+                          ),
+                          child: c.toARGB32() == color.toARGB32()
+                              ? Center(
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: c.computeLuminance() > 0.5
+                                          ? Colors.black
+                                          : Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                  // Prominent & comfortable Color Picker button
+                  Tooltip(
+                    message: l10n.annotationColorPicker,
+                    child: Material(
+                      color: theme.colorScheme.surfaceContainer,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () async {
+                          final picked = await showFlueraColorPicker(
+                            context: context,
+                            initial: color,
+                            title: l10n.annotationColorPicker,
+                          );
+                          if (picked != null) {
+                            onColorChanged(picked);
+                            if (tool == CanvasTool.erase ||
+                                tool == CanvasTool.erasePixel) {
+                              onToolChanged(CanvasTool.draw);
+                            }
+                          }
+                        },
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.colorize_rounded,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                      ),
+                      child: Slider(
+                        value: strokeWidth,
+                        min: 1.0,
+                        max: 16.0,
+                        onChanged: onStrokeWidthChanged,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

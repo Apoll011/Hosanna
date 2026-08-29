@@ -256,5 +256,22 @@
 
   "exportPdfTitle": "Exportar PDF",
   "comingSoon": "Próximamente",
-  "comingSoonDescription": "Esta función estará disponible en una próxima versión."
+  "comingSoonDescription": "Esta función estará disponible en una próxima versión.",
+  "annotationModeTitle": "Anotaciones",
+  "annotationPen": "Pluma",
+  "annotationEraser": "Borrador de Trazo",
+  "annotationPixelEraser": "Borrador Parcial",
+  "annotationLine": "Línea",
+  "annotationRectangle": "Rectángulo",
+  "annotationEllipse": "Círculo",
+  "annotationSelect": "Seleccionar",
+  "annotationLasso": "Lazo",
+  "annotationText": "Texto",
+  "annotationLayers": "Capas",
+  "annotationUndo": "Deshacer",
+  "annotationRedo": "Rehacer",
+  "annotationClear": "Borrar Todo",
+  "annotationClearConfirm": "¿Borrar todas las anotaciones de esta canción?",
+  "annotationColorPicker": "Color Personalizado",
+  "annotationClose": "Listo"
 }

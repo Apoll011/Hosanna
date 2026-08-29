@@ -215,7 +215,7 @@ class _MusicianTopBar extends StatelessWidget {
                   isAnnotating ? Icons.edit : Icons.edit_outlined,
                   color: isAnnotating ? theme.colorScheme.primary : null,
                 ),
-                tooltip: isAnnotating ? 'Close Annotations' : 'Annotate',
+                tooltip: l10n.annotationModeTitle,
                 onPressed: onToggleAnnotation,
               ),
               const SongToolbarButton(),

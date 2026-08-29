@@ -1521,6 +1521,108 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Esta funcionalidade estará disponível numa próxima versão.'**
   String get comingSoonDescription;
+
+  /// No description provided for @annotationModeTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anotações'**
+  String get annotationModeTitle;
+
+  /// No description provided for @annotationPen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caneta'**
+  String get annotationPen;
+
+  /// No description provided for @annotationEraser.
+  ///
+  /// In pt, this message translates to:
+  /// **'Borracha de Traço'**
+  String get annotationEraser;
+
+  /// No description provided for @annotationPixelEraser.
+  ///
+  /// In pt, this message translates to:
+  /// **'Borracha Parcial'**
+  String get annotationPixelEraser;
+
+  /// No description provided for @annotationLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Linha'**
+  String get annotationLine;
+
+  /// No description provided for @annotationRectangle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Retângulo'**
+  String get annotationRectangle;
+
+  /// No description provided for @annotationEllipse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Círculo'**
+  String get annotationEllipse;
+
+  /// No description provided for @annotationSelect.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar'**
+  String get annotationSelect;
+
+  /// No description provided for @annotationLasso.
+  ///
+  /// In pt, this message translates to:
+  /// **'Laço'**
+  String get annotationLasso;
+
+  /// No description provided for @annotationText.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto'**
+  String get annotationText;
+
+  /// No description provided for @annotationLayers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Camadas'**
+  String get annotationLayers;
+
+  /// No description provided for @annotationUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get annotationUndo;
+
+  /// No description provided for @annotationRedo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refazer'**
+  String get annotationRedo;
+
+  /// No description provided for @annotationClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar Tudo'**
+  String get annotationClear;
+
+  /// No description provided for @annotationClearConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar todas as anotações deste cântico?'**
+  String get annotationClearConfirm;
+
+  /// No description provided for @annotationColorPicker.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor Personalizada'**
+  String get annotationColorPicker;
+
+  /// No description provided for @annotationClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluir'**
+  String get annotationClose;
 }
 
 class _AppLocalizationsDelegate

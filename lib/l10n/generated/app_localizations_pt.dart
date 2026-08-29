@@ -768,4 +768,56 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get comingSoonDescription =>
       'Esta funcionalidade estará disponível numa próxima versão.';
+
+  @override
+  String get annotationModeTitle => 'Anotações';
+
+  @override
+  String get annotationPen => 'Caneta';
+
+  @override
+  String get annotationEraser => 'Borracha de Traço';
+
+  @override
+  String get annotationPixelEraser => 'Borracha Parcial';
+
+  @override
+  String get annotationLine => 'Linha';
+
+  @override
+  String get annotationRectangle => 'Retângulo';
+
+  @override
+  String get annotationEllipse => 'Círculo';
+
+  @override
+  String get annotationSelect => 'Selecionar';
+
+  @override
+  String get annotationLasso => 'Laço';
+
+  @override
+  String get annotationText => 'Texto';
+
+  @override
+  String get annotationLayers => 'Camadas';
+
+  @override
+  String get annotationUndo => 'Desfazer';
+
+  @override
+  String get annotationRedo => 'Refazer';
+
+  @override
+  String get annotationClear => 'Limpar Tudo';
+
+  @override
+  String get annotationClearConfirm =>
+      'Limpar todas as anotações deste cântico?';
+
+  @override
+  String get annotationColorPicker => 'Cor Personalizada';
+
+  @override
+  String get annotationClose => 'Concluir';
 }
