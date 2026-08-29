@@ -49,7 +49,7 @@ class LibraryController extends StateNotifier<LibraryState> {
 
   static const _favoritesKey = 'library.favoriteIds';
   static const _recentsKey = 'library.recentIds';
-  static const _maxRecents = 50;
+  static const _maxRecents = 25;
 
   final SharedPreferences _prefs;
 
@@ -60,25 +60,21 @@ class LibraryController extends StateNotifier<LibraryState> {
     );
   }
 
-  void selectAll() => state = state.copyWith(
-        section: LibrarySection.all,
-        clearFolder: true,
-      );
+  void selectAll() =>
+      state = state.copyWith(section: LibrarySection.all, clearFolder: true);
 
   void selectFavorites() => state = state.copyWith(
-        section: LibrarySection.favorites,
-        clearFolder: true,
-      );
+    section: LibrarySection.favorites,
+    clearFolder: true,
+  );
 
-  void selectRecent() => state = state.copyWith(
-        section: LibrarySection.recent,
-        clearFolder: true,
-      );
+  void selectRecent() =>
+      state = state.copyWith(section: LibrarySection.recent, clearFolder: true);
 
   void selectFolder(String folderId) => state = state.copyWith(
-        section: LibrarySection.folder,
-        folderId: folderId,
-      );
+    section: LibrarySection.folder,
+    folderId: folderId,
+  );
 
   void toggleFavorite(String id) {
     final ids = List<String>.from(state.favoriteIds);
@@ -102,5 +98,5 @@ class LibraryController extends StateNotifier<LibraryState> {
 
 final libraryControllerProvider =
     StateNotifierProvider<LibraryController, LibraryState>((ref) {
-  return LibraryController(ref.watch(sharedPreferencesProvider));
-});
+      return LibraryController(ref.watch(sharedPreferencesProvider));
+    });
