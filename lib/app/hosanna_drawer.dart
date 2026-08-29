@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/folders/data/folder_repository.dart';
 import '../features/songs/data/song_repository.dart';
@@ -68,43 +69,53 @@ class HosannaNavContent extends ConsumerWidget {
             collapsed ? 12 : 16,
             16,
             collapsed ? 12 : 16,
-            12,
+            2,
           ),
-          child: Row(
+          child: Column(
             children: [
-              const HosannaLogo(size: 40, borderRadius: 12),
-              if (!collapsed) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.appTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      if (org != null)
-                        Text(
-                          org.name,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+              Row(
+                children: [
+                  const HosannaLogo(size: 40, borderRadius: 12),
+                  if (!collapsed) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.appTitle,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-              if (onToggleCollapse != null)
-                IconButton(
-                  icon: Icon(collapsed ? Icons.menu_open : Icons.chevron_left),
-                  tooltip: collapsed ? l10n.commonOpenDrawer : l10n.commonBack,
-                  onPressed: onToggleCollapse,
-                ),
+                          if (org != null)
+                            Text(
+                              org.name,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (onToggleCollapse != null)
+                    IconButton(
+                      icon: Icon(
+                        collapsed ? Icons.menu_open : Icons.chevron_left,
+                      ),
+                      tooltip: collapsed
+                          ? l10n.commonOpenDrawer
+                          : l10n.commonBack,
+                      onPressed: onToggleCollapse,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SyncStatusBanner(compact: false),
             ],
           ),
         ),
