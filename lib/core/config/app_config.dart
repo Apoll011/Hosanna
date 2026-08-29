@@ -54,7 +54,7 @@ class AppConfig {
     ),
     origin: String.fromEnvironment(
       'HOSANNA_ORIGIN',
-      defaultValue: 'http://localhost',
+      defaultValue: 'hosanna://localhost',
     ),
   );
 }
