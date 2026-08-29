@@ -9,6 +9,26 @@ import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/service_repository.dart';
 
+/// Common date formats used for search, so queries like `dd/MM/yyyy`,
+/// `MM-dd-yyyy`, `yyyy.MM.dd`, etc. match however the user types the date.
+final _dateSearchFormats = [
+  DateFormat('dd/MM/yyyy'),
+  DateFormat('MM/dd/yyyy'),
+  DateFormat('yyyy/MM/dd'),
+  DateFormat('dd-MM-yyyy'),
+  DateFormat('MM-dd-yyyy'),
+  DateFormat('yyyy-MM-dd'),
+  DateFormat('dd.MM.yyyy'),
+  DateFormat('MM.dd.yyyy'),
+  DateFormat('yyyy.MM.dd'),
+  DateFormat('d/M/yyyy'),
+  DateFormat('M/d/yyyy'),
+  DateFormat('yyyy/M/d'),
+  DateFormat('ddMMyyyy'),
+  DateFormat('MMddyyyy'),
+  DateFormat('yyyyMMdd'),
+];
+
 class ServiceListPage extends ConsumerStatefulWidget {
   const ServiceListPage({super.key});
 
@@ -88,15 +108,18 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   List<ServiceRow> _filtered(List<ServiceRow> services) {
     final q = _search.text.trim().toLowerCase();
     if (q.isEmpty) return services.where((s) => !s.archived).toList();
+    final locale = Localizations.localeOf(context).toString();
+    final localizedDateFormat = DateFormat.yMMMd(locale);
     return services.where((s) {
+      if (s.name.toLowerCase().contains(q)) return true;
       final date = DateTime.tryParse(s.date);
-      final dateLabel = date == null
-          ? ''
-          : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-                .format(date);
-      return s.name.toLowerCase().contains(q) ||
-          s.date.toLowerCase().contains(q) ||
-          dateLabel.toLowerCase().contains(q);
+      if (date == null) return s.date.toLowerCase().contains(q);
+      if (localizedDateFormat.format(date).toLowerCase().contains(q)) {
+        return true;
+      }
+      return _dateSearchFormats.any(
+        (f) => f.format(date).toLowerCase().contains(q),
+      );
     }).toList();
   }
 }
