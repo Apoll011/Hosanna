@@ -101,7 +101,7 @@ class HosannaNavContent extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              SyncStatusBanner(compact: false),
+              if (!collapsed) SyncStatusBanner(compact: false),
             ],
           ),
         ),
@@ -200,6 +200,7 @@ class HosannaNavContent extends ConsumerWidget {
 
         // Footer.
         if (user != null) const Divider(height: 1),
+        if (collapsed) const SizedBox(height: 6),
         if (user != null)
           collapsed
               ? Center(
