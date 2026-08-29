@@ -97,6 +97,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (_, _) => const OnboardingPage(),
       ),
+      // Branch order must match the kSongsBranch..kCircleOfFifthsBranch
+      // constants in nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
             HosannaShell(navigationShell: navigationShell),
@@ -114,6 +116,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/services',
                 builder: (_, _) => const ServiceListPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/metronome',
+                builder: (_, _) => const MetronomePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/circle-of-fifths',
+                builder: (_, _) => const CircleOfFifthsPage(),
               ),
             ],
           ),
@@ -144,14 +162,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/services/:id',
         builder: (_, state) =>
             ServiceDetailPage(serviceId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/metronome',
-        builder: (_, _) => const MetronomePage(),
-      ),
-      GoRoute(
-        path: '/circle-of-fifths',
-        builder: (_, _) => const CircleOfFifthsPage(),
       ),
       GoRoute(
         path: '/export-pdf',

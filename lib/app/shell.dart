@@ -34,6 +34,9 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sidebarCollapsed = ref.watch(sidebarCollapsedProvider);
+    // Order must match the shell branches in router.dart (see nav_branches.dart).
+    // Note: only songs/services appear in the Floating Nav Bar; the tools
+    // (metronome, circle of fifths) live in the sidebar/drawer only.
     final destinations = [
       _NavItem(
         icon: Icons.music_note_outlined,
@@ -58,6 +61,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
               children: [
                 _TabletSidebar(
                   collapsed: sidebarCollapsed,
+                  currentBranch: widget.navigationShell.currentIndex,
                   onNavigate: _goBranch,
                 ),
                 const VerticalDivider(width: 1),
@@ -84,7 +88,10 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
         return Scaffold(
           key: ref.watch(shellScaffoldKeyProvider),
           body: widget.navigationShell,
-          drawer: HosannaDrawer(onNavigate: _goBranch),
+          drawer: HosannaDrawer(
+            currentBranch: widget.navigationShell.currentIndex,
+            onNavigate: _goBranch,
+          ),
           extendBody: true,
           bottomNavigationBar: _FloatingNavBar(
             selectedIndex: widget.navigationShell.currentIndex,
@@ -100,10 +107,12 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
 class _TabletSidebar extends StatelessWidget {
   const _TabletSidebar({
     required this.collapsed,
+    required this.currentBranch,
     required this.onNavigate,
   });
 
   final bool collapsed;
+  final int currentBranch;
   final void Function(int branchIndex) onNavigate;
 
   @override
@@ -119,6 +128,7 @@ class _TabletSidebar extends StatelessWidget {
       child: SafeArea(
         child: HosannaNavContent(
           collapsed: collapsed,
+          currentBranch: currentBranch,
           onNavigate: onNavigate,
           onPushTool: (location) => context.push(location),
         ),
@@ -143,7 +153,7 @@ class _FloatingNavBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(90, 0, 90, 12),
+      minimum: const EdgeInsets.fromLTRB(56, 0, 56, 12),
       child: Container(
         height: 64,
         padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
@@ -203,6 +213,8 @@ class _NavButton extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             item.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelSmall?.copyWith(
               color: color,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,

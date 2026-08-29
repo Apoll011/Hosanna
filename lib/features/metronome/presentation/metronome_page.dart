@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/utils/click_synth.dart';
 
@@ -179,7 +180,11 @@ class _MetronomePageState extends State<MetronomePage>
 
     return Scaffold(
       backgroundColor: colors.surface,
-      appBar: AppBar(title: Text(l10n.metronomeTitle), centerTitle: true),
+      appBar: AppBar(
+        title: Text(l10n.metronomeTitle),
+        centerTitle: true,
+        leading: const ShellLeadingButton(),
+      ),
       body: SafeArea(
         child: Stack(
           children: [

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class CircleOfFifthsPage extends StatefulWidget {
@@ -46,7 +47,10 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
     final selectedData = _circleData[_selectedIndex];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.circleOfFifthsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.circleOfFifthsTitle),
+        leading: const ShellLeadingButton(),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
