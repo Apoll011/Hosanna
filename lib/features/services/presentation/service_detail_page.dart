@@ -118,6 +118,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           child: current.type == 'song' && current.songId != null
               ? _SongElementView(
                   songId: current.songId!,
+                  notes: current.notes,
                   canPrev: songIndex > 0,
                   canNext:
                       songIndex >= 0 && songIndex < songElements.length - 1,
@@ -207,6 +208,7 @@ class _MusicianTopBar extends StatelessWidget {
 class _SongElementView extends ConsumerWidget {
   const _SongElementView({
     required this.songId,
+    required this.notes,
     required this.canPrev,
     required this.canNext,
     required this.positionLabel,
@@ -215,6 +217,11 @@ class _SongElementView extends ConsumerWidget {
   });
 
   final String songId;
+
+  /// Musician notes attached to this song element in the service order,
+  /// shown in a card below the song metadata.
+  final String? notes;
+
   final bool canPrev;
   final bool canNext;
   final String positionLabel;
@@ -233,6 +240,7 @@ class _SongElementView extends ConsumerWidget {
           ? Center(child: Text(l10n.songsNoResults))
           : SongReader(
               content: song.content,
+              notes: notes,
               canPrev: canPrev,
               canNext: canNext,
               positionLabel: positionLabel,

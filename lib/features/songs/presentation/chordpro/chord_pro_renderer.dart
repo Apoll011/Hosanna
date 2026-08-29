@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/chordpro/chord_dictionary.dart';
 import '../../domain/chordpro/parser.dart';
 import '../../domain/chordpro/transpose.dart';
@@ -22,6 +23,7 @@ class ChordProRenderer extends StatefulWidget {
     this.instrument = 'guitar',
     this.showDiagrams = false,
     this.scrollController,
+    this.notes,
   });
 
   final String content;
@@ -32,6 +34,10 @@ class ChordProRenderer extends StatefulWidget {
   final double? fontSize;
   final String instrument;
   final bool showDiagrams;
+
+  /// Optional musician notes, shown in a card below the metadata header and
+  /// before the chord roll (when present).
+  final String? notes;
 
   /// Optional external controller for auto-scroll / programmatic scrolling.
   final ScrollController? scrollController;
@@ -113,6 +119,8 @@ class _ChordProRendererState extends State<ChordProRenderer> {
                 effectiveCapo: _effectiveCapo,
                 transposeVal: widget.transpose,
               ),
+              if (widget.notes != null && widget.notes!.trim().isNotEmpty)
+                _NotesCard(notes: widget.notes!),
               if (widget.showDiagrams &&
                   widget.showChords &&
                   _uniqueChords.isNotEmpty)
@@ -391,6 +399,48 @@ class _ChordProRendererState extends State<ChordProRenderer> {
 }
 
 // ── Metadata header ────────────────────────────────────────────────────────
+
+class _NotesCard extends StatelessWidget {
+  const _NotesCard({required this.notes});
+
+  final String notes;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.servicesNotes.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            notes,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _MetadataHeader extends StatelessWidget {
   const _MetadataHeader({
