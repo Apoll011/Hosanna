@@ -125,7 +125,12 @@ class HosannaNavContent extends ConsumerWidget {
                 iconColor: theme.colorScheme.primary,
                 label: l10n.navAllSongs,
                 count: songs.length,
-                selected: library.section == LibrarySection.all,
+                // Library rows only highlight while the Songs branch is
+                // active; on the tools/services branches the current branch
+                // highlight belongs to that row alone.
+                selected:
+                    currentBranch == kSongsBranch &&
+                    library.section == LibrarySection.all,
                 collapsed: collapsed,
                 onTap: () => selectSection(LibrarySection.all),
               ),
@@ -134,7 +139,9 @@ class HosannaNavContent extends ConsumerWidget {
                 iconColor: theme.colorScheme.primary,
                 label: l10n.navFavorites,
                 count: library.favoriteIds.length,
-                selected: library.section == LibrarySection.favorites,
+                selected:
+                    currentBranch == kSongsBranch &&
+                    library.section == LibrarySection.favorites,
                 collapsed: collapsed,
                 onTap: () => selectSection(LibrarySection.favorites),
               ),
@@ -143,7 +150,9 @@ class HosannaNavContent extends ConsumerWidget {
                 iconColor: Colors.amber,
                 label: l10n.navRecents,
                 count: library.recentIds.length,
-                selected: library.section == LibrarySection.recent,
+                selected:
+                    currentBranch == kSongsBranch &&
+                    library.section == LibrarySection.recent,
                 collapsed: collapsed,
                 onTap: () => selectSection(LibrarySection.recent),
               ),
@@ -194,6 +203,7 @@ class HosannaNavContent extends ConsumerWidget {
                       label: folder.name,
                       count: folder.songCount,
                       selected:
+                          currentBranch == kSongsBranch &&
                           library.section == LibrarySection.folder &&
                           library.folderId == folder.id,
                       collapsed: collapsed,

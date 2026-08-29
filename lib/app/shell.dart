@@ -24,9 +24,14 @@ class HosannaShell extends ConsumerStatefulWidget {
 
 class _HosannaShellState extends ConsumerState<HosannaShell> {
   void _goBranch(int index) {
-    widget.navigationShell.goBranch(
+    // Guard against a stale route table (e.g. hot reload keeping the old
+    // GoRouter with fewer branches) — goBranch asserts on out-of-range
+    // indices, so ignore them instead of crashing.
+    final shell = widget.navigationShell;
+    if (index < 0 || index >= shell.route.branches.length) return;
+    shell.goBranch(
       index,
-      initialLocation: index == widget.navigationShell.currentIndex,
+      initialLocation: index == shell.currentIndex,
     );
   }
 
