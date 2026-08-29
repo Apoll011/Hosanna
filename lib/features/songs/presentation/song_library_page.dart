@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/providers.dart';
+import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -177,12 +177,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                 onSubmitted: (_) => setState(() {}),
               )
             : Text(_sectionTitle(l10n, library, folderNames)),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          tooltip: l10n.commonOpenDrawer,
-          onPressed: () =>
-              ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
-        ),
+        leading: const ShellLeadingButton(),
         actions: [
           IconButton(
             icon: Icon(_searchOpen ? Icons.close : Icons.search),

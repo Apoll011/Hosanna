@@ -23,8 +23,6 @@ class HosannaShell extends ConsumerStatefulWidget {
 }
 
 class _HosannaShellState extends ConsumerState<HosannaShell> {
-  bool _sidebarCollapsed = false;
-
   void _goBranch(int index) {
     widget.navigationShell.goBranch(
       index,
@@ -35,6 +33,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final sidebarCollapsed = ref.watch(sidebarCollapsedProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -46,9 +45,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
             body: Row(
               children: [
                 _TabletSidebar(
-                  collapsed: _sidebarCollapsed,
-                  onToggleCollapse: () =>
-                      setState(() => _sidebarCollapsed = !_sidebarCollapsed),
+                  collapsed: sidebarCollapsed,
                   onNavigate: _goBranch,
                 ),
                 const VerticalDivider(width: 1),
@@ -88,12 +85,10 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
 class _TabletSidebar extends StatelessWidget {
   const _TabletSidebar({
     required this.collapsed,
-    required this.onToggleCollapse,
     required this.onNavigate,
   });
 
   final bool collapsed;
-  final VoidCallback onToggleCollapse;
   final void Function(int branchIndex) onNavigate;
 
   @override
@@ -109,7 +104,6 @@ class _TabletSidebar extends StatelessWidget {
       child: SafeArea(
         child: HosannaNavContent(
           collapsed: collapsed,
-          onToggleCollapse: onToggleCollapse,
           onNavigate: onNavigate,
           onPushTool: (location) => context.push(location),
         ),

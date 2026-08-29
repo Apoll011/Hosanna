@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../app/providers.dart';
+import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -48,12 +48,7 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
                 onChanged: (_) => setState(() {}),
               )
             : Text(l10n.servicesTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          tooltip: l10n.commonOpenDrawer,
-          onPressed: () =>
-              ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
-        ),
+        leading: const ShellLeadingButton(),
         actions: [
           IconButton(
             icon: Icon(_searchOpen ? Icons.close : Icons.search),

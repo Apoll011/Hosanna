@@ -53,3 +53,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// drawer (hamburger) via `currentState?.openDrawer()`.
 final shellScaffoldKeyProvider =
     Provider<GlobalKey<ScaffoldState>>((ref) => GlobalKey<ScaffoldState>());
+
+/// Whether the tablet persistent sidebar is collapsed. Phones don't use a
+/// sidebar, so this flag is only meaningful in the tablet layout.
+final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);

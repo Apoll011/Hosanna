@@ -18,7 +18,6 @@ class HosannaNavContent extends ConsumerWidget {
     required this.onNavigate,
     required this.onPushTool,
     this.collapsed = false,
-    this.onToggleCollapse,
   });
 
   /// Called with the target shell branch index (0 = songs, 1 = services).
@@ -29,9 +28,6 @@ class HosannaNavContent extends ConsumerWidget {
 
   /// When true, renders icon-only rows (tablet collapsed sidebar).
   final bool collapsed;
-
-  /// Optional callback shown as a collapse/expand affordance (tablet only).
-  final VoidCallback? onToggleCollapse;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,16 +98,6 @@ class HosannaNavContent extends ConsumerWidget {
                       ),
                     ),
                   ],
-                  if (onToggleCollapse != null)
-                    IconButton(
-                      icon: Icon(
-                        collapsed ? Icons.menu_open : Icons.chevron_left,
-                      ),
-                      tooltip: collapsed
-                          ? l10n.commonOpenDrawer
-                          : l10n.commonBack,
-                      onPressed: onToggleCollapse,
-                    ),
                 ],
               ),
               const SizedBox(height: 12),
