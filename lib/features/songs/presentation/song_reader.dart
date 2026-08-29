@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,9 +11,6 @@ import 'song_body_renderer.dart';
 
 /// Tuning for the swipe-to-navigate gesture. Kept as top-level consts so
 /// they're easy to tweak without hunting through the state class.
-const double _kAxisLockDeadzone = 10.0;
-const double _kHorizontalDominance =
-    2.0; // dx must be >= 2x dy to lock horizontal
 const double _kMaxOverscroll =
     48.0; // resistance cap when a direction is disabled
 const double _kFlingVelocity = 700.0; // px/s to count a quick flick as a commit
@@ -63,11 +59,14 @@ class _SongReaderState extends ConsumerState<SongReader>
   late final AnimationController _swipeController;
 
   // --- Swipe gesture state -------------------------------------------------
-  Offset? _dragStart;
-  bool?
-  _horizontalLock; // null = undecided, true = horizontal, false = vertical
+  // A horizontal drag recognizer (via [GestureDetector] in [build]) competes
+  // in the gesture arena with the song body's vertical scroll recognizer.
+  // Once the horizontal recognizer wins, the scroll view is rejected for the
+  // rest of the gesture, so the current song can't keep scrolling vertically
+  // while the user is dragging to switch songs.
+  bool _dragActive = false; // true while a horizontal song-switch drag runs
+  double _dragTotalDx = 0; // raw horizontal distance since the drag started
   double _offset = 0; // current horizontal translation of the song body
-  VelocityTracker? _velocityTracker;
   bool _hapticFired = false;
   int?
   _pendingEnterDirection; // -1 = entering from the right, 1 = from the left
@@ -145,38 +144,25 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   // --- Swipe gesture handling ----------------------------------------------
 
-  void _onPointerDown(PointerDownEvent event) {
-    if (!_swipeEnabled || _swipeController.isAnimating) return;
-    _dragStart = event.position;
-    _horizontalLock = null;
+  void _onHorizontalDragStart(DragStartDetails details) {
+    // Ignore input while a push transition is animating.
+    if (_swipeController.isAnimating) return;
+    _dragTotalDx = 0;
     _hapticFired = false;
-    _velocityTracker = VelocityTracker.withKind(event.kind)
-      ..addPosition(event.timeStamp, event.position);
+    _stopAutoScroll();
+    setState(() => _dragActive = true);
   }
 
-  void _onPointerMove(PointerMoveEvent event) {
-    if (_dragStart == null) return;
-    _velocityTracker?.addPosition(event.timeStamp, event.position);
-    final delta = event.position - _dragStart!;
-
-    if (_horizontalLock == null) {
-      if (delta.dx.abs() < _kAxisLockDeadzone &&
-          delta.dy.abs() < _kAxisLockDeadzone) {
-        return; // too small to tell intent yet
-      }
-      final isHorizontal =
-          delta.dx.abs() > delta.dy.abs() * _kHorizontalDominance;
-      setState(() => _horizontalLock = isHorizontal);
-      if (isHorizontal) _stopAutoScroll();
-    }
-
-    if (_horizontalLock != true) return; // vertical drag: let the list scroll
-
-    var dx = delta.dx;
-    final wantsNext = dx < 0;
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (!_dragActive) return;
+    _dragTotalDx += details.delta.dx;
+    final wantsNext = _dragTotalDx < 0;
     final allowed = wantsNext ? widget.canNext : widget.canPrev;
-    if (!allowed) {
-      dx = (dx / 3.5).clamp(-_kMaxOverscroll, _kMaxOverscroll);
+    final double dx;
+    if (allowed) {
+      dx = _dragTotalDx;
+    } else {
+      dx = (_dragTotalDx / 3.5).clamp(-_kMaxOverscroll, _kMaxOverscroll);
     }
 
     if (!_hapticFired && allowed && dx.abs() >= _swipeThreshold) {
@@ -187,24 +173,15 @@ class _SongReaderState extends ConsumerState<SongReader>
     setState(() => _offset = dx);
   }
 
-  void _onPointerUp(PointerUpEvent event) => _finishDrag();
-  void _onPointerCancel(PointerCancelEvent event) => _finishDrag();
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    if (!_dragActive) return;
+    _dragActive = false;
+    _dragTotalDx = 0;
 
-  void _finishDrag() {
-    if (_dragStart == null) return;
-    final wasHorizontal = _horizontalLock == true;
     final finalOffset = _offset;
-    final tracker = _velocityTracker;
-
-    _dragStart = null;
-    _horizontalLock = null;
-    _velocityTracker = null;
-
-    if (!wasHorizontal) return;
-
     final wantsNext = finalOffset < 0;
     final allowed = wantsNext ? widget.canNext : widget.canPrev;
-    final velocityDx = tracker?.getVelocity().pixelsPerSecond.dx ?? 0;
+    final velocityDx = details.primaryVelocity ?? 0;
     final isFling =
         velocityDx.abs() > _kFlingVelocity && (velocityDx < 0) == wantsNext;
 
@@ -213,6 +190,14 @@ class _SongReaderState extends ConsumerState<SongReader>
     } else {
       _animateOffsetTo(0);
     }
+  }
+
+  void _onHorizontalDragCancel() {
+    if (!_dragActive) return;
+    _dragActive = false;
+    _dragTotalDx = 0;
+    // The system took the pointer away — never commit a song change.
+    _animateOffsetTo(0);
   }
 
   /// Programmatically triggers the same push transition as a completed
@@ -323,30 +308,34 @@ class _SongReaderState extends ConsumerState<SongReader>
     return Stack(
       children: [
         Positioned.fill(
-          child: Listener(
+          child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onPointerDown: _onPointerDown,
-            onPointerMove: _onPointerMove,
-            onPointerUp: _onPointerUp,
-            onPointerCancel: _onPointerCancel,
+            // Register the horizontal recognizer only when prev/next
+            // navigation is available. It competes in the gesture arena with
+            // the song body's vertical scroll recognizer: once it wins, the
+            // scroll view is rejected for the whole gesture, blocking any
+            // vertical scrolling while the user drags to switch songs.
+            onHorizontalDragStart: _swipeEnabled
+                ? _onHorizontalDragStart
+                : null,
+            onHorizontalDragUpdate: _swipeEnabled
+                ? _onHorizontalDragUpdate
+                : null,
+            onHorizontalDragEnd: _swipeEnabled ? _onHorizontalDragEnd : null,
+            onHorizontalDragCancel: _swipeEnabled
+                ? _onHorizontalDragCancel
+                : null,
             child: Stack(
               children: [
                 Transform.translate(
                   offset: Offset(_offset, 0),
-                  child: IgnorePointer(
-                    // Disable the song body's own scroll gesture while a
-                    // horizontal swipe is locked in, so it can't also try
-                    // to scroll vertically at the same time.
-                    ignoring: _horizontalLock == true,
-                    child: SongBodyRenderer(
-                      content: widget.content,
-                      notes: widget.notes,
-                      scrollController: _scrollController,
-                    ),
+                  child: SongBodyRenderer(
+                    content: widget.content,
+                    notes: widget.notes,
+                    scrollController: _scrollController,
                   ),
                 ),
-                if (_dragStart != null && _horizontalLock == true)
-                  _buildSwipeEdgeIndicator(theme, l10n),
+                if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
               ],
             ),
           ),
