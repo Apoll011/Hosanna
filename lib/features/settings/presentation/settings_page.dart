@@ -259,8 +259,6 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
 
     final imageUrl = user?.image;
 
-    debugPrint('User image: $imageUrl');
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [

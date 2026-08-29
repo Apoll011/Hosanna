@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import '../features/songs/data/song_repository.dart';
 import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/hosanna_logo.dart';
+import 'nav_branches.dart';
 
 /// The reusable navigation body (header + user card + sections + footer),
 /// shared by the mobile [HosannaDrawer] and the tablet persistent sidebar.
@@ -18,16 +20,20 @@ class HosannaNavContent extends ConsumerWidget {
     required this.onNavigate,
     required this.onPushTool,
     this.collapsed = false,
+    this.currentBranch = kSongsBranch,
   });
 
-  /// Called with the target shell branch index (0 = songs, 1 = services).
+  /// Called with the target shell branch index (see [nav_branches]).
   final void Function(int branchIndex) onNavigate;
 
-  /// Called with a route location (metronome / circle / settings / etc.).
+  /// Called with a route location (settings / export / etc.).
   final void Function(String location) onPushTool;
 
   /// When true, renders icon-only rows (tablet collapsed sidebar).
   final bool collapsed;
+
+  /// The currently active shell branch, used to highlight the matching row.
+  final int currentBranch;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,6 +47,7 @@ class HosannaNavContent extends ConsumerWidget {
 
     final user = auth.session?.user;
     final org = auth.organization;
+    final imageUrl = user?.image;
 
     void selectSection(LibrarySection section, {String? folderId}) {
       switch (section) {
@@ -149,15 +156,17 @@ class HosannaNavContent extends ConsumerWidget {
                 icon: Icons.speed,
                 iconColor: Colors.teal,
                 label: l10n.navMetronome,
+                selected: currentBranch == kMetronomeBranch,
                 collapsed: collapsed,
-                onTap: () => onPushTool('/metronome'),
+                onTap: () => onNavigate(kMetronomeBranch),
               ),
               _NavItem(
                 icon: Icons.donut_large,
                 iconColor: theme.colorScheme.primary,
                 label: l10n.navCircleOfFifths,
+                selected: currentBranch == kCircleOfFifthsBranch,
                 collapsed: collapsed,
-                onTap: () => onPushTool('/circle-of-fifths'),
+                onTap: () => onNavigate(kCircleOfFifthsBranch),
               ),
 
               if (!collapsed) ...[
@@ -209,7 +218,16 @@ class HosannaNavContent extends ConsumerWidget {
                     onTap: () => onPushTool('/settings?tab=account'),
                     child: CircleAvatar(
                       radius: 18,
-                      child: Text(_initials(user.name)),
+                      foregroundImage: imageUrl != null && imageUrl.isNotEmpty
+                          ? CachedNetworkImageProvider(imageUrl)
+                          : null,
+                      onForegroundImageError: (exception, stackTrace) {
+                        debugPrint('Failed to load avatar: $exception');
+                      },
+                      child: Text(
+                        _initials(user.name),
+                        style: theme.textTheme.titleLarge,
+                      ),
                     ),
                   ),
                 )
@@ -217,7 +235,16 @@ class HosannaNavContent extends ConsumerWidget {
                   dense: true,
                   leading: CircleAvatar(
                     radius: 16,
-                    child: Text(_initials(user.name)),
+                    foregroundImage: imageUrl != null && imageUrl.isNotEmpty
+                        ? CachedNetworkImageProvider(imageUrl)
+                        : null,
+                    onForegroundImageError: (exception, stackTrace) {
+                      debugPrint('Failed to load avatar: $exception');
+                    },
+                    child: Text(
+                      _initials(user.name),
+                      style: theme.textTheme.titleLarge,
+                    ),
                   ),
                   title: Text(
                     user.name,
@@ -249,15 +276,21 @@ class HosannaNavContent extends ConsumerWidget {
 
 /// Slide-in navigation drawer for phones.
 class HosannaDrawer extends StatelessWidget {
-  const HosannaDrawer({super.key, required this.onNavigate});
+  const HosannaDrawer({
+    super.key,
+    required this.onNavigate,
+    this.currentBranch = kSongsBranch,
+  });
 
   final void Function(int branchIndex) onNavigate;
+  final int currentBranch;
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: SafeArea(
         child: HosannaNavContent(
+          currentBranch: currentBranch,
           onNavigate: (branchIndex) {
             Navigator.of(context).pop(); // close the drawer
             onNavigate(branchIndex);
