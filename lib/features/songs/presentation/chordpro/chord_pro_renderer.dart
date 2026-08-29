@@ -346,32 +346,23 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     final showBackground = widget.sectionColorBackground;
     final backgroundColor = showBackground
         ? (isChorus
-            ? theme.colorScheme.primary.withValues(alpha: 0.08)
-            : (isBridge
-                ? const Color(0xFFD97706).withValues(alpha: 0.08)
-                : theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.35,
-                  )))
+              ? theme.colorScheme.primary.withValues(alpha: 0.04)
+              : (isBridge
+                    ? const Color(0xFFD97706).withValues(alpha: 0.04)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.04)))
         : null;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: showBackground
-          ? const EdgeInsets.fromLTRB(12, 10, 12, 10)
+          ? const EdgeInsets.fromLTRB(12, 4, 8, 4)
           : const EdgeInsets.only(left: 12),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: showBackground ? BorderRadius.circular(10) : null,
-        border: showBackground
-            ? Border(
-                left: BorderSide(color: accent, width: 3.5),
-              )
-            : Border(
-                left: BorderSide(
-                  color: accent.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-              ),
+        borderRadius: showBackground ? BorderRadius.circular(4) : null,
+        border: Border(
+          left: BorderSide(color: accent.withValues(alpha: 0.5), width: 2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
