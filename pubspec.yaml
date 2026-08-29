@@ -51,6 +51,7 @@ dependencies:
   shared_preferences: ^2.5.5
   intl: ^0.20.3
   flutter_launcher_icons: ^0.14.4
+  cached_network_image: ^4.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -256,55 +257,78 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
     final user = auth.session?.user;
     final org = auth.organization;
 
+    final imageUrl = user?.image;
+
+    debugPrint('User image: $imageUrl');
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Profile card.
         _Card(
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                child: Text(
-                  _initials(user?.name ?? ''),
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user?.name ?? '—',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow =
+                  constraints.maxWidth < 360; // tweak breakpoint as needed
+
+              final avatarAndInfo = Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    foregroundImage: imageUrl != null && imageUrl.isNotEmpty
+                        ? CachedNetworkImageProvider(imageUrl)
+                        : null,
+                    onForegroundImageError: (exception, stackTrace) {
+                      debugPrint('Failed to load avatar: $exception');
+                    },
+                    child: Text(
+                      _initials(user?.name ?? ''),
+                      style: theme.textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user?.email ?? '—',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.name ?? '—',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          user?.email ?? '—',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
+                  ),
+                  if (!isNarrow) ...[
+                    const SizedBox(width: 16),
+                    _signOutButton(theme, l10n),
                   ],
-                ),
-              ),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-                icon: const Icon(Icons.logout, size: 16),
-                label: Text(l10n.authSignOut),
-                onPressed: () =>
-                    ref.read(authControllerProvider.notifier).signOut(),
-              ),
-            ],
+                ],
+              );
+
+              if (!isNarrow) return avatarAndInfo;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  avatarAndInfo,
+                  const SizedBox(height: 12),
+                  _signOutButton(theme, l10n),
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),
@@ -449,6 +473,15 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _signOutButton(ThemeData theme, AppLocalizations l10n) {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+      icon: const Icon(Icons.logout, size: 16),
+      label: Text(l10n.authSignOut),
+      onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
     );
   }
 
@@ -634,7 +667,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
               ),
               const SizedBox(height: 12),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.center,
                 child: FilledButton.icon(
                   onPressed: sync.isSyncing
                       ? null
