@@ -59,7 +59,14 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                 setState(() => _currentElementId = id);
                 _scaffoldKey.currentState?.closeDrawer();
               },
-              onLeave: () => context.pop(),
+              onLeave: () {
+                // While open, the drawer holds a local history entry on this
+                // page's route, so a bare pop would only dismiss the drawer.
+                // Close it first (removing that entry synchronously), then
+                // leave the service.
+                _scaffoldKey.currentState?.closeDrawer();
+                context.pop();
+              },
             ),
       body: serviceAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
