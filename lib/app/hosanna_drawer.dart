@@ -12,6 +12,42 @@ import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/hosanna_logo.dart';
 import 'nav_branches.dart';
 
+/// Duration for every collapse/expand transition in the nav content. Kept in
+/// sync with the sidebar's own width animation (see shell.dart) so the drawer
+/// frame and its contents move together.
+const Duration _kAnimDuration = Duration(milliseconds: 250);
+
+/// Curve for every collapse/expand transition in the nav content.
+const Curve _kAnimCurve = Curves.easeOutCubic;
+
+/// Cross-fades and size-animates [child] in/out when [visible] flips, so
+/// blocks like section labels and the sync banner collapse/expand smoothly
+/// instead of popping in and out of existence.
+class _RevealBlock extends StatelessWidget {
+  const _RevealBlock({required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedCrossFade(
+        duration: _kAnimDuration,
+        reverseDuration: _kAnimDuration,
+        sizeCurve: _kAnimCurve,
+        firstCurve: _kAnimCurve,
+        secondCurve: _kAnimCurve,
+        firstChild: child,
+        secondChild: const SizedBox.shrink(),
+        crossFadeState: visible
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
+      ),
+    );
+  }
+}
+
 /// The reusable navigation body (header + user card + sections + footer),
 /// shared by the mobile [HosannaDrawer] and the tablet persistent sidebar.
 class HosannaNavContent extends ConsumerWidget {
@@ -67,7 +103,9 @@ class HosannaNavContent extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Header.
-        Padding(
+        AnimatedPadding(
+          duration: _kAnimDuration,
+          curve: _kAnimCurve,
           padding: EdgeInsets.fromLTRB(
             collapsed ? 12 : 16,
             16,
@@ -79,36 +117,42 @@ class HosannaNavContent extends ConsumerWidget {
               Row(
                 children: [
                   const HosannaLogo(size: 40, borderRadius: 12),
-                  if (!collapsed) ...[
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.appTitle,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          if (org != null)
+                  Expanded(
+                    child: _RevealBlock(
+                      visible: !collapsed,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              org.name,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                              l10n.appTitle,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w800,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                        ],
+                            if (org != null)
+                              Text(
+                                org.name,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              if (!collapsed) SyncStatusBanner(compact: false),
+              _RevealBlock(
+                visible: !collapsed,
+                child: SyncStatusBanner(compact: false),
+              ),
             ],
           ),
         ),
@@ -116,75 +160,90 @@ class HosannaNavContent extends ConsumerWidget {
 
         // Scrollable content.
         Expanded(
-          child: ListView(
+          child: AnimatedPadding(
+            duration: _kAnimDuration,
+            curve: _kAnimCurve,
             padding: EdgeInsets.symmetric(horizontal: collapsed ? 8 : 12),
-            children: [
-              if (!collapsed) _SectionLabel(l10n.navLibrarySection),
-              _NavItem(
-                icon: Icons.music_note_outlined,
-                iconColor: theme.colorScheme.primary,
-                label: l10n.navAllSongs,
-                count: songs.length,
-                // Library rows only highlight while the Songs branch is
-                // active; on the tools/services branches the current branch
-                // highlight belongs to that row alone.
-                selected:
-                    currentBranch == kSongsBranch &&
-                    library.section == LibrarySection.all,
-                collapsed: collapsed,
-                onTap: () => selectSection(LibrarySection.all),
-              ),
-              _NavItem(
-                icon: Icons.favorite_outline,
-                iconColor: theme.colorScheme.primary,
-                label: l10n.navFavorites,
-                count: library.favoriteIds.length,
-                selected:
-                    currentBranch == kSongsBranch &&
-                    library.section == LibrarySection.favorites,
-                collapsed: collapsed,
-                onTap: () => selectSection(LibrarySection.favorites),
-              ),
-              _NavItem(
-                icon: Icons.history,
-                iconColor: Colors.amber,
-                label: l10n.navRecents,
-                count: library.recentIds.length,
-                selected:
-                    currentBranch == kSongsBranch &&
-                    library.section == LibrarySection.recent,
-                collapsed: collapsed,
-                onTap: () => selectSection(LibrarySection.recent),
-              ),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _RevealBlock(
+                  visible: !collapsed,
+                  child: _SectionLabel(l10n.navLibrarySection),
+                ),
+                _NavItem(
+                  icon: Icons.music_note_outlined,
+                  iconColor: theme.colorScheme.primary,
+                  label: l10n.navAllSongs,
+                  count: songs.length,
+                  // Library rows only highlight while the Songs branch is
+                  // active; on the tools/services branches the current branch
+                  // highlight belongs to that row alone.
+                  selected:
+                      currentBranch == kSongsBranch &&
+                      library.section == LibrarySection.all,
+                  collapsed: collapsed,
+                  onTap: () => selectSection(LibrarySection.all),
+                ),
+                _NavItem(
+                  icon: Icons.favorite_outline,
+                  iconColor: theme.colorScheme.primary,
+                  label: l10n.navFavorites,
+                  count: library.favoriteIds.length,
+                  selected:
+                      currentBranch == kSongsBranch &&
+                      library.section == LibrarySection.favorites,
+                  collapsed: collapsed,
+                  onTap: () => selectSection(LibrarySection.favorites),
+                ),
+                _NavItem(
+                  icon: Icons.history,
+                  iconColor: Colors.amber,
+                  label: l10n.navRecents,
+                  count: library.recentIds.length,
+                  selected:
+                      currentBranch == kSongsBranch &&
+                      library.section == LibrarySection.recent,
+                  collapsed: collapsed,
+                  onTap: () => selectSection(LibrarySection.recent),
+                ),
 
-              if (!collapsed) ...[
-                const SizedBox(height: 8),
-                _SectionLabel(l10n.navToolsSection),
-              ],
-              _NavItem(
-                icon: Icons.speed,
-                iconColor: Colors.teal,
-                label: l10n.navMetronome,
-                selected: currentBranch == kMetronomeBranch,
-                collapsed: collapsed,
-                onTap: () => onNavigate(kMetronomeBranch),
-              ),
-              _NavItem(
-                icon: Icons.donut_large,
-                iconColor: theme.colorScheme.primary,
-                label: l10n.navCircleOfFifths,
-                selected: currentBranch == kCircleOfFifthsBranch,
-                collapsed: collapsed,
-                onTap: () => onNavigate(kCircleOfFifthsBranch),
-              ),
+                _RevealBlock(
+                  visible: !collapsed,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+                      _SectionLabel(l10n.navToolsSection),
+                    ],
+                  ),
+                ),
+                _NavItem(
+                  icon: Icons.speed,
+                  iconColor: Colors.teal,
+                  label: l10n.navMetronome,
+                  selected: currentBranch == kMetronomeBranch,
+                  collapsed: collapsed,
+                  onTap: () => onNavigate(kMetronomeBranch),
+                ),
+                _NavItem(
+                  icon: Icons.donut_large,
+                  iconColor: theme.colorScheme.primary,
+                  label: l10n.navCircleOfFifths,
+                  selected: currentBranch == kCircleOfFifthsBranch,
+                  collapsed: collapsed,
+                  onTap: () => onNavigate(kCircleOfFifthsBranch),
+                ),
 
-              if (!collapsed) ...[
-                const SizedBox(height: 8),
-                _SectionLabel(l10n.navFolders),
-
-                if (folders.isEmpty)
-                  !collapsed
-                      ? Padding(
+                _RevealBlock(
+                  visible: !collapsed,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+                      _SectionLabel(l10n.navFolders),
+                      if (folders.isEmpty)
+                        Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             l10n.foldersEmpty,
@@ -194,26 +253,28 @@ class HosannaNavContent extends ConsumerWidget {
                             ),
                           ),
                         )
-                      : const SizedBox.shrink()
-                else
-                  for (final folder in folders)
-                    _NavItem(
-                      icon: Icons.folder_outlined,
-                      iconColor: theme.colorScheme.primary,
-                      label: folder.name,
-                      count: folder.songCount,
-                      selected:
-                          currentBranch == kSongsBranch &&
-                          library.section == LibrarySection.folder &&
-                          library.folderId == folder.id,
-                      collapsed: collapsed,
-                      onTap: () => selectSection(
-                        LibrarySection.folder,
-                        folderId: folder.id,
-                      ),
-                    ),
+                      else
+                        for (final folder in folders)
+                          _NavItem(
+                            icon: Icons.folder_outlined,
+                            iconColor: theme.colorScheme.primary,
+                            label: folder.name,
+                            count: folder.songCount,
+                            selected:
+                                currentBranch == kSongsBranch &&
+                                library.section == LibrarySection.folder &&
+                                library.folderId == folder.id,
+                            collapsed: collapsed,
+                            onTap: () => selectSection(
+                              LibrarySection.folder,
+                              folderId: folder.id,
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
               ],
-            ],
+            ),
           ),
         ),
 
@@ -221,59 +282,84 @@ class HosannaNavContent extends ConsumerWidget {
         if (user != null) const Divider(height: 1),
         if (collapsed) const SizedBox(height: 6),
         if (user != null)
-          collapsed
-              ? Center(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () => onPushTool('/settings?tab=account'),
-                    child: CircleAvatar(
-                      radius: 18,
-                      foregroundImage: imageUrl != null && imageUrl.isNotEmpty
-                          ? CachedNetworkImageProvider(imageUrl)
-                          : null,
-                      onForegroundImageError: (exception, stackTrace) {
-                        debugPrint('Failed to load avatar: $exception');
-                      },
-                      child: Text(
-                        _initials(user.name),
-                        style: theme.textTheme.titleLarge,
+          Center(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () => onPushTool('/settings?tab=account'),
+              child: AnimatedPadding(
+                duration: _kAnimDuration,
+                curve: _kAnimCurve,
+                padding: EdgeInsets.symmetric(
+                  horizontal: collapsed ? 0 : 16,
+                  vertical: collapsed ? 0 : 8,
+                ),
+                child: Row(
+                  // Icon-only mode centers the avatar; expanded mode fills the
+                  // width like the ListTile it replaces.
+                  mainAxisSize: collapsed ? MainAxisSize.min : MainAxisSize.max,
+                  children: [
+                    // The avatar is the same widget in both states, so it
+                    // morphs its radius instead of popping between sizes.
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(end: collapsed ? 18 : 16),
+                      duration: _kAnimDuration,
+                      curve: _kAnimCurve,
+                      builder: (context, radius, _) => CircleAvatar(
+                        radius: radius,
+                        foregroundImage: imageUrl != null && imageUrl.isNotEmpty
+                            ? CachedNetworkImageProvider(imageUrl)
+                            : null,
+                        onForegroundImageError: (exception, stackTrace) {
+                          debugPrint('Failed to load avatar: $exception');
+                        },
+                        child: Text(
+                          _initials(user.name),
+                          style: theme.textTheme.titleLarge,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              : ListTile(
-                  dense: true,
-                  leading: CircleAvatar(
-                    radius: 16,
-                    foregroundImage: imageUrl != null && imageUrl.isNotEmpty
-                        ? CachedNetworkImageProvider(imageUrl)
-                        : null,
-                    onForegroundImageError: (exception, stackTrace) {
-                      debugPrint('Failed to load avatar: $exception');
-                    },
-                    child: Text(
-                      _initials(user.name),
-                      style: theme.textTheme.titleLarge,
+                    Flexible(
+                      child: _RevealBlock(
+                        visible: !collapsed,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyLarge,
+                              ),
+                              Text(
+                                user.email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    user.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    user.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  trailing: Icon(
-                    Icons.settings_outlined,
-                    size: 22,
-                    color: Colors.blueGrey,
-                  ),
-                  onTap: () => onPushTool('/settings?tab=account'),
+                    _RevealBlock(
+                      visible: !collapsed,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Icon(
+                          Icons.settings_outlined,
+                          size: 22,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -369,49 +455,55 @@ class _NavItem extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Padding(
+        child: AnimatedPadding(
+          duration: _kAnimDuration,
+          curve: _kAnimCurve,
           padding: EdgeInsets.symmetric(
             horizontal: collapsed ? 0 : 12,
             vertical: collapsed ? 12 : 10,
           ),
-          child: collapsed
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 22, color: iconColor),
-                    if (count != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                // Icon-only rows stay centered; expanded rows fill the width.
+                mainAxisSize: collapsed ? MainAxisSize.min : MainAxisSize.max,
+                children: [
+                  // The icon is the same widget in both states, so it morphs
+                  // its size instead of popping between 20 and 22.
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(end: collapsed ? 22 : 20),
+                    duration: _kAnimDuration,
+                    curve: _kAnimCurve,
+                    builder: (context, size, _) =>
+                        Icon(icon, size: size, color: iconColor),
+                  ),
+                  Flexible(
+                    child: _RevealBlock(
+                      visible: !collapsed,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12),
                         child: Text(
-                          '$count',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: selected
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    Icon(icon, size: 20, color: iconColor),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: selected
-                              ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
                     ),
-                    if (count != null)
-                      Container(
+                  ),
+                  _RevealBlock(
+                    visible: !collapsed && count != null,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 7,
                           vertical: 2,
@@ -431,8 +523,25 @@ class _NavItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                  ],
+                    ),
+                  ),
+                ],
+              ),
+              // Icon-only rows put the count underneath the icon.
+              _RevealBlock(
+                visible: collapsed && count != null,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '$count',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
+              ),
+            ],
+          ),
         ),
       ),
     );
