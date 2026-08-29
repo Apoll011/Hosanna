@@ -34,6 +34,18 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sidebarCollapsed = ref.watch(sidebarCollapsedProvider);
+    final destinations = [
+      _NavItem(
+        icon: Icons.music_note_outlined,
+        selectedIcon: Icons.music_note,
+        label: l10n.navSongs,
+      ),
+      _NavItem(
+        icon: Icons.calendar_month_outlined,
+        selectedIcon: Icons.calendar_month,
+        label: l10n.navServices,
+      ),
+    ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -49,7 +61,21 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
                   onNavigate: _goBranch,
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: widget.navigationShell),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: widget.navigationShell),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: _FloatingNavBar(
+                          selectedIndex: widget.navigationShell.currentIndex,
+                          onSelected: _goBranch,
+                          destinations: destinations,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -63,18 +89,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
           bottomNavigationBar: _FloatingNavBar(
             selectedIndex: widget.navigationShell.currentIndex,
             onSelected: _goBranch,
-            destinations: [
-              _NavItem(
-                icon: Icons.music_note_outlined,
-                selectedIcon: Icons.music_note,
-                label: l10n.navSongs,
-              ),
-              _NavItem(
-                icon: Icons.calendar_month_outlined,
-                selectedIcon: Icons.calendar_month,
-                label: l10n.navServices,
-              ),
-            ],
+            destinations: destinations,
           ),
         );
       },
