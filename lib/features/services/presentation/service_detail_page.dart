@@ -27,6 +27,7 @@ class ServiceDetailPage extends ConsumerStatefulWidget {
 class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _currentElementId;
+  bool _isAnnotating = false;
 
   @override
   void initState() {
@@ -120,12 +121,20 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
           onLeave: () => context.pop(),
           isSong: current.type == 'song',
+          isAnnotating: _isAnnotating,
+          onToggleAnnotation: () {
+            setState(() {
+              _isAnnotating = !_isAnnotating;
+            });
+          },
         ),
         Expanded(
           child: current.type == 'song' && current.songId != null
               ? _SongElementView(
+                  serviceId: widget.serviceId,
                   songId: current.songId!,
                   notes: current.notes,
+                  isAnnotating: _isAnnotating,
                   canPrev: songIndex > 0,
                   canNext:
                       songIndex >= 0 && songIndex < songElements.length - 1,
@@ -151,6 +160,8 @@ class _MusicianTopBar extends StatelessWidget {
     required this.onOpenOrder,
     required this.onLeave,
     required this.isSong,
+    this.isAnnotating = false,
+    this.onToggleAnnotation,
   });
 
   final String serviceName;
@@ -158,6 +169,8 @@ class _MusicianTopBar extends StatelessWidget {
   final VoidCallback onOpenOrder;
   final VoidCallback onLeave;
   final bool isSong;
+  final bool isAnnotating;
+  final VoidCallback? onToggleAnnotation;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +209,17 @@ class _MusicianTopBar extends StatelessWidget {
                 ],
               ),
             ),
-            if (isSong) const SongToolbarButton(),
+            if (isSong) ...[
+              IconButton(
+                icon: Icon(
+                  isAnnotating ? Icons.edit : Icons.edit_outlined,
+                  color: isAnnotating ? theme.colorScheme.primary : null,
+                ),
+                tooltip: isAnnotating ? 'Close Annotations' : 'Annotate',
+                onPressed: onToggleAnnotation,
+              ),
+              const SongToolbarButton(),
+            ],
             TextButton.icon(
               onPressed: onLeave,
               style: TextButton.styleFrom(
@@ -214,8 +237,10 @@ class _MusicianTopBar extends StatelessWidget {
 
 class _SongElementView extends ConsumerWidget {
   const _SongElementView({
+    required this.serviceId,
     required this.songId,
     required this.notes,
+    required this.isAnnotating,
     required this.canPrev,
     required this.canNext,
     required this.positionLabel,
@@ -223,12 +248,14 @@ class _SongElementView extends ConsumerWidget {
     required this.onNext,
   });
 
+  final String serviceId;
   final String songId;
 
   /// Musician notes attached to this song element in the service order,
   /// shown in a card below the song metadata.
   final String? notes;
 
+  final bool isAnnotating;
   final bool canPrev;
   final bool canNext;
   final String positionLabel;
@@ -248,6 +275,9 @@ class _SongElementView extends ConsumerWidget {
           : SongReader(
               content: song.content,
               notes: notes,
+              serviceId: serviceId,
+              songId: songId,
+              isAnnotating: isAnnotating,
               canPrev: canPrev,
               canNext: canNext,
               positionLabel: positionLabel,

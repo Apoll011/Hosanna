@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:fluera_canvas/fluera_canvas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../services/data/service_annotation_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_body_renderer.dart';
 
@@ -25,6 +27,9 @@ class SongReader extends ConsumerStatefulWidget {
     super.key,
     required this.content,
     this.notes,
+    this.serviceId,
+    this.songId,
+    this.isAnnotating = false,
     this.onPrev,
     this.onNext,
     this.canPrev = false,
@@ -36,6 +41,13 @@ class SongReader extends ConsumerStatefulWidget {
 
   /// Optional musician notes shown in a card below the song metadata header.
   final String? notes;
+
+  /// Identifiers for saving/loading per-song, per-service annotations.
+  final String? serviceId;
+  final String? songId;
+
+  /// Whether annotation mode is currently active.
+  final bool isAnnotating;
 
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
@@ -58,6 +70,13 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   late final AnimationController _swipeController;
 
+  // --- Canvas Annotation state ---------------------------------------------
+  final GlobalKey<FlueraCanvasState> _canvasKey = GlobalKey<FlueraCanvasState>();
+  CanvasTool _canvasTool = CanvasTool.draw;
+  Color _canvasColor = const Color(0xFFE53935);
+  double _canvasStrokeWidth = 3.0;
+  double _canvasEraserRadius = 32.0;
+
   // --- Swipe gesture state -------------------------------------------------
   // A horizontal drag recognizer (via [GestureDetector] in [build]) competes
   // in the gesture arena with the song body's vertical scroll recognizer.
@@ -71,7 +90,8 @@ class _SongReaderState extends ConsumerState<SongReader>
   int?
   _pendingEnterDirection; // -1 = entering from the right, 1 = from the left
 
-  bool get _swipeEnabled => widget.onPrev != null || widget.onNext != null;
+  bool get _swipeEnabled =>
+      !widget.isAnnotating && (widget.onPrev != null || widget.onNext != null);
 
   double get _viewportWidth {
     final width = MediaQuery.sizeOf(context).width;
@@ -107,10 +127,27 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   void dispose() {
+    _saveCurrentAnnotation();
     _stopAutoScroll();
     _scrollController.dispose();
     _swipeController.dispose();
     super.dispose();
+  }
+
+  void _saveCurrentAnnotation() {
+    final serviceId = widget.serviceId;
+    final songId = widget.songId;
+    if (serviceId == null || songId == null) return;
+    final canvasState = _canvasKey.currentState;
+    if (canvasState == null) return;
+    try {
+      final bytes = canvasState.toBytes();
+      ref.read(serviceAnnotationRepositoryProvider).saveAnnotation(
+            serviceId: serviceId,
+            songId: songId,
+            bytes: bytes,
+          );
+    } catch (_) {}
   }
 
   void _stopAutoScroll() {
@@ -299,11 +336,36 @@ class _SongReaderState extends ConsumerState<SongReader>
     );
   }
 
+  Widget _buildCanvasOverlay(Uint8List? initialBytes) {
+    return FlueraCanvas(
+      key: _canvasKey,
+      tool: _canvasTool,
+      strokeColor: _canvasColor,
+      strokeWidth: _canvasStrokeWidth,
+      eraserRadius: _canvasEraserRadius,
+      background: const CanvasBackground.solid(Colors.transparent),
+      initialBytes: initialBytes,
+      onStrokeCommitted: (_) => _saveCurrentAnnotation(),
+      onStrokesErased: (_) => _saveCurrentAnnotation(),
+      onNodesDeleted: (_) => _saveCurrentAnnotation(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final showNav = widget.onPrev != null || widget.onNext != null;
+    final hasServiceSong = widget.serviceId != null && widget.songId != null;
+
+    final annotationAsync = hasServiceSong
+        ? ref.watch(
+            serviceAnnotationBytesProvider((
+              serviceId: widget.serviceId!,
+              songId: widget.songId!,
+            )),
+          )
+        : null;
 
     return Stack(
       children: [
@@ -311,10 +373,7 @@ class _SongReaderState extends ConsumerState<SongReader>
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             // Register the horizontal recognizer only when prev/next
-            // navigation is available. It competes in the gesture arena with
-            // the song body's vertical scroll recognizer: once it wins, the
-            // scroll view is rejected for the whole gesture, blocking any
-            // vertical scrolling while the user drags to switch songs.
+            // navigation is available and not actively annotating.
             onHorizontalDragStart: _swipeEnabled
                 ? _onHorizontalDragStart
                 : null,
@@ -341,42 +400,94 @@ class _SongReaderState extends ConsumerState<SongReader>
           ),
         ),
 
-        // Floating right-side controls: auto-scroll + prev/next.
-        Positioned(
-          right: 16,
-          bottom: 20,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton.small(
-                heroTag: null,
-                onPressed: _toggleAutoScroll,
-                backgroundColor: _isScrolling
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.primary,
-                foregroundColor: _isScrolling
-                    ? theme.colorScheme.surface
-                    : theme.colorScheme.onPrimary,
-                tooltip: _isScrolling
-                    ? l10n.songAutoScrollPause
-                    : l10n.songAutoScrollStart,
-                child: Icon(
-                  _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
-                ),
-              ),
-              if (showNav) const SizedBox(height: 12),
-              if (showNav)
-                _ReaderNav(
-                  positionLabel: widget.positionLabel,
-                  canPrev: widget.canPrev,
-                  canNext: widget.canNext,
-                  onPrev: _goPrev,
-                  onNext: _goNext,
-                ),
-            ],
+        // Fluera canvas overlay for drawing annotations over the song.
+        if (hasServiceSong)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !widget.isAnnotating,
+              child: annotationAsync == null
+                  ? _buildCanvasOverlay(null)
+                  : annotationAsync.when(
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => _buildCanvasOverlay(null),
+                      data: (bytes) => _buildCanvasOverlay(bytes),
+                    ),
+            ),
           ),
-        ),
+
+        // Fluera canvas toolbar when annotating mode is active.
+        if (widget.isAnnotating)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: FlueraCanvasToolbar(
+                canvasKey: _canvasKey,
+                tool: _canvasTool,
+                onToolChanged: (t) => setState(() => _canvasTool = t),
+                color: _canvasColor,
+                onColorChanged: (c) => setState(() => _canvasColor = c),
+                strokeWidth: _canvasStrokeWidth,
+                onStrokeWidthChanged: (w) =>
+                    setState(() => _canvasStrokeWidth = w),
+                eraserRadius: _canvasEraserRadius,
+                onEraserRadiusChanged: (r) =>
+                    setState(() => _canvasEraserRadius = r),
+                showShapeTools: true,
+                showColorPickerButton: true,
+                showLayers: true,
+                showSelectionTool: true,
+                showLassoTool: true,
+                showTextTool: true,
+                showUndo: true,
+                showRedo: true,
+                showClear: true,
+                showTransformActions: true,
+                background: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.95),
+              ),
+            ),
+          ),
+
+        // Floating right-side controls: auto-scroll + prev/next (hidden when annotating toolbar is shown).
+        if (!widget.isAnnotating)
+          Positioned(
+            right: 16,
+            bottom: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: null,
+                  onPressed: _toggleAutoScroll,
+                  backgroundColor: _isScrolling
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary,
+                  foregroundColor: _isScrolling
+                      ? theme.colorScheme.surface
+                      : theme.colorScheme.onPrimary,
+                  tooltip: _isScrolling
+                      ? l10n.songAutoScrollPause
+                      : l10n.songAutoScrollStart,
+                  child: Icon(
+                    _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+                  ),
+                ),
+                if (showNav) const SizedBox(height: 12),
+                if (showNav)
+                  _ReaderNav(
+                    positionLabel: widget.positionLabel,
+                    canPrev: widget.canPrev,
+                    canNext: widget.canNext,
+                    onPrev: _goPrev,
+                    onNext: _goNext,
+                  ),
+              ],
+            ),
+          ),
       ],
     );
   }

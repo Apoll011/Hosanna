@@ -52,6 +52,7 @@ dependencies:
   intl: ^0.20.3
   flutter_launcher_icons: ^0.14.4
   cached_network_image: ^4.0.0
+  fluera_canvas: ^0.10.4
 
 dev_dependencies:
   flutter_test:
