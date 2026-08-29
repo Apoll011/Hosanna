@@ -204,7 +204,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             : folderNames[song.folderId];
         final isFav = favorites.contains(song.id);
         return ListTile(
-          leading: const Icon(Icons.music_note),
+          leading: _SongBadge(songNumber: song.songNumber),
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(
             [
@@ -226,6 +226,43 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           onTap: () => onOpenSong(song.id),
         );
       },
+    );
+  }
+}
+
+/// Leading badge for a song row: shows the song number when present,
+/// otherwise falls back to a music note icon.
+class _SongBadge extends StatelessWidget {
+  const _SongBadge({required this.songNumber});
+
+  final int? songNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+      ),
+      alignment: Alignment.center,
+      child: songNumber != null
+          ? Text(
+              '#$songNumber',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: colorScheme.primary,
+              ),
+            )
+          : Icon(
+              Icons.music_note,
+              size: 18,
+              color: colorScheme.secondary,
+            ),
     );
   }
 }
