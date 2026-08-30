@@ -223,6 +223,8 @@
   "settingsMusicianModeDesc": "Opens the service directly on the first song with continuous side navigation.",
   "settingsKeepAwake": "Keep Screen Awake",
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
+  "settingsSyncAnnotations": "Sync annotations",
+  "settingsSyncAnnotationsDesc": "Shares annotations live between all users",
   "settingsSessionsOnly": "Only this device's current session is active.",
 
   "metronomeTitle": "Metronome",

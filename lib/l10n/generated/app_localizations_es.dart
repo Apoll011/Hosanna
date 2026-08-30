@@ -725,6 +725,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Evita que la pantalla se suspenda al ver canciones.';
 
   @override
+  String get settingsSyncAnnotations => 'Sincronizar anotaciones';
+
+  @override
+  String get settingsSyncAnnotationsDesc =>
+      'Permite que las anotaciones se compartan en vivo entre todos los usuarios';
+
+  @override
   String get settingsSessionsOnly =>
       'Solo está activa la sesión actual de este dispositivo.';
 
