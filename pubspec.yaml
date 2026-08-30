@@ -48,6 +48,8 @@ dependencies:
   go_router: ^18.0.0
   wakelock_plus: ^1.7.0
   webview_flutter: ^4.14.1
+  # Turnstile captcha on Linux/Windows, where webview_flutter is not supported.
+  desktop_webview_window: ^0.3.0
   shared_preferences: ^2.5.5
   intl: ^0.20.3
   flutter_launcher_icons: ^0.14.4

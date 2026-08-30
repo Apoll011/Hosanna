@@ -67,6 +67,9 @@
   "authEmailVerified": "E-mail verificado",
   "authEmailNotVerified": "E-mail por verificar",
   "authCaptchaNotConfigured": "A verificação de segurança (captcha) não está configurada.",
+  "authCaptchaWindowTitle": "Verificação de segurança (captcha)",
+  "authCaptchaWaitingMessage": "Conclua a verificação de segurança na janela de captcha que acabou de abrir.",
+  "authCaptchaOpenFailed": "Não foi possível abrir a janela de captcha.",
 
   "onboardingTitle": "Bem-vindo ao Hosanna",
   "onboardingSubtitle": "Aceite um convite para entrar na organização da sua igreja.",
