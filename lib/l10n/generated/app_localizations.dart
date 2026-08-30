@@ -1438,6 +1438,18 @@ abstract class AppLocalizations {
   /// **'Impede o ecrã de suspender durante a visualização de cânticos.'**
   String get settingsKeepAwakeDesc;
 
+  /// No description provided for @settingsSyncAnnotations.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sincronizar anotações'**
+  String get settingsSyncAnnotations;
+
+  /// No description provided for @settingsSyncAnnotationsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores'**
+  String get settingsSyncAnnotationsDesc;
+
   /// No description provided for @settingsSessionsOnly.
   ///
   /// In pt, this message translates to:

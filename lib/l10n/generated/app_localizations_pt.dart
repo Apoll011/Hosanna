@@ -726,6 +726,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Impede o ecrã de suspender durante a visualização de cânticos.';
 
   @override
+  String get settingsSyncAnnotations => 'Sincronizar anotações';
+
+  @override
+  String get settingsSyncAnnotationsDesc =>
+      'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores';
+
+  @override
   String get settingsSessionsOnly =>
       'Apenas a sessão atual deste dispositivo está ativa.';
 

@@ -719,6 +719,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prevents the screen from sleeping while viewing songs.';
 
   @override
+  String get settingsSyncAnnotations => 'Sync annotations';
+
+  @override
+  String get settingsSyncAnnotationsDesc =>
+      'Shares annotations live between all users';
+
+  @override
   String get settingsSessionsOnly =>
       'Only this device\'s current session is active.';
 

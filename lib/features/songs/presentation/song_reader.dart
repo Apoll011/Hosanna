@@ -5,7 +5,10 @@ import 'package:fluera_canvas/fluera_canvas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hosanna/features/auth/domain/auth_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
 
+import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../services/data/service_annotation_repository.dart';
 import 'chordpro/song_display_settings.dart';
@@ -77,7 +80,13 @@ class _SongReaderState extends ConsumerState<SongReader>
   late final AnimationController _swipeController;
 
   // --- Canvas Annotation state ---------------------------------------------
-  final GlobalKey<FlueraCanvasState> _canvasKey = GlobalKey<FlueraCanvasState>();
+  RealtimeChannel? _annotationChannel;
+  int _remoteVersion = 0;
+  bool _hasPendingRemoteUpdate = false;
+  Uint8List? _pendingRemoteBytes;
+
+  final GlobalKey<FlueraCanvasState> _canvasKey =
+      GlobalKey<FlueraCanvasState>();
   late final InfiniteCanvasController _canvasController;
   CanvasTool _canvasTool = CanvasTool.draw;
   Color _canvasColor = const Color(0xFFE53935);
@@ -120,12 +129,43 @@ class _SongReaderState extends ConsumerState<SongReader>
     final key = '${serviceId}_$songId';
     _loadedSongKey = key;
 
-    final bytes = await ref
-        .read(serviceAnnotationRepositoryProvider)
-        .loadAnnotation(serviceId: serviceId, songId: songId);
+    final repo = ref.read(serviceAnnotationRepositoryProvider);
+    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
+
+    final auth = ref.read(authControllerProvider);
+    final org = auth.organization;
+    final workspaceId = org?.id;
+
+    Uint8List? bytes;
+    _remoteVersion = 0;
+
+    if (syncEnabled && workspaceId != null) {
+      final remote = await repo.fetchRemoteAnnotation(
+        workspaceId: workspaceId,
+        serviceId: serviceId,
+        songId: songId,
+      );
+      if (remote != null) {
+        bytes = remote.bytes;
+        _remoteVersion = remote.version;
+      }
+    }
+
+    // No remote row, sync is off, or we're offline — fall back to cache.
+    bytes ??= await repo.loadAnnotation(serviceId: serviceId, songId: songId);
 
     if (!mounted || _loadedSongKey != key) return;
 
+    _applyLoadedBytes(bytes);
+    _subscribeIfNeeded(
+      serviceId: serviceId,
+      songId: songId,
+      workspaceId: workspaceId,
+      syncEnabled: syncEnabled,
+    );
+  }
+
+  void _applyLoadedBytes(Uint8List? bytes) {
     final canvasState = _canvasKey.currentState;
     if (canvasState != null) {
       if (bytes != null && bytes.isNotEmpty) {
@@ -144,11 +184,72 @@ class _SongReaderState extends ConsumerState<SongReader>
     }
   }
 
+  void _subscribeIfNeeded({
+    required String serviceId,
+    required String songId,
+    required String? workspaceId,
+    required bool syncEnabled,
+  }) {
+    _unsubscribeAnnotations();
+    if (!syncEnabled || workspaceId == null) return;
+
+    final repo = ref.read(serviceAnnotationRepositoryProvider);
+    _annotationChannel = repo.subscribeToAnnotationUpdates(
+      workspaceId: workspaceId,
+      serviceId: serviceId,
+      songId: songId,
+      onRemoteUpdate: (bytes, version) {
+        if (!mounted) return;
+        if (version <= _remoteVersion) return; // stale or our own echo
+        _remoteVersion = version;
+
+        if (widget.isAnnotating) {
+          // Don't clobber in-progress edits — surface a banner instead.
+          setState(() {
+            _hasPendingRemoteUpdate = true;
+            _pendingRemoteBytes = bytes;
+          });
+        } else {
+          _applyLoadedBytes(bytes);
+        }
+      },
+    );
+  }
+
+  void _unsubscribeAnnotations() {
+    final channel = _annotationChannel;
+    _annotationChannel = null;
+    if (channel != null) {
+      ref.read(serviceAnnotationRepositoryProvider).unsubscribe(channel);
+    }
+  }
+
+  void _acceptPendingRemoteUpdate() {
+    final bytes = _pendingRemoteBytes;
+    setState(() {
+      _hasPendingRemoteUpdate = false;
+      _pendingRemoteBytes = null;
+    });
+    if (bytes != null) _applyLoadedBytes(bytes);
+  }
+
+  void _dismissPendingRemoteUpdate() {
+    setState(() {
+      _hasPendingRemoteUpdate = false;
+      _pendingRemoteBytes = null;
+    });
+  }
+
   void _onScrollUpdated() {
     if (_scrollController.hasClients) {
       final pos = _scrollController.position;
-      final max = pos.hasContentDimensions ? pos.maxScrollExtent : double.infinity;
-      final clamped = _scrollController.offset.clamp(0.0, math.max<double>(0.0, max));
+      final max = pos.hasContentDimensions
+          ? pos.maxScrollExtent
+          : double.infinity;
+      final clamped = _scrollController.offset.clamp(
+        0.0,
+        math.max<double>(0.0, max),
+      );
       _canvasController.setOffset(Offset(0, -clamped));
     }
   }
@@ -164,8 +265,13 @@ class _SongReaderState extends ConsumerState<SongReader>
       _loadAnnotationForCurrentSong();
     } else if (oldWidget.isAnnotating && !widget.isAnnotating) {
       _saveCurrentAnnotation();
+      if (_hasPendingRemoteUpdate) {
+        setState(() {
+          _hasPendingRemoteUpdate = false;
+          _pendingRemoteBytes = null;
+        });
+      }
     }
-
     if (oldWidget.content != widget.content) {
       if (_pendingEnterDirection != null) {
         final dir = _pendingEnterDirection!;
@@ -182,6 +288,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   @override
   void dispose() {
     _saveAnnotation(widget.serviceId, widget.songId);
+    _unsubscribeAnnotations();
     _scrollController.removeListener(_onScrollUpdated);
     _stopAutoScroll();
     _scrollController.dispose();
@@ -194,14 +301,46 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (serviceId == null || songId == null) return;
     final canvasState = _canvasKey.currentState;
     if (canvasState == null) return;
+
+    final Uint8List bytes;
     try {
-      final bytes = canvasState.toBytes();
-      ref.read(serviceAnnotationRepositoryProvider).saveAnnotation(
-            serviceId: serviceId,
-            songId: songId,
-            bytes: bytes,
-          );
-    } catch (_) {}
+      bytes = canvasState.toBytes();
+    } catch (_) {
+      return;
+    }
+
+    final auth = ref.read(authControllerProvider);
+    final org = auth.organization;
+    final user = auth.session?.user;
+
+    final repo = ref.read(serviceAnnotationRepositoryProvider);
+
+    // Always write the local cache first — instant, and works offline.
+    repo.saveAnnotation(serviceId: serviceId, songId: songId, bytes: bytes);
+
+    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
+    if (!syncEnabled) return;
+
+    final workspaceId = org?.id;
+    if (workspaceId == null) return;
+
+    final userId = user?.id;
+    if (userId == null) return;
+
+    repo
+        .pushAnnotation(
+          workspaceId: workspaceId,
+          serviceId: serviceId,
+          songId: songId,
+          bytes: bytes,
+          updatedBy: userId,
+          baseVersion: _remoteVersion,
+        )
+        .then((newVersion) => _remoteVersion = newVersion)
+        .catchError((_) {
+          // Offline or push failed — local cache already has the latest
+          // bytes; the next successful save will retry the sync.
+        });
   }
 
   void _saveCurrentAnnotation() {
@@ -423,6 +562,21 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(
+      settingsControllerProvider.select((s) => s.syncAnnotations),
+      (previous, next) {
+        if (previous == next) return;
+        final serviceId = widget.serviceId;
+        final songId = widget.songId;
+        if (serviceId == null || songId == null) return;
+        if (next) {
+          _loadAnnotationForCurrentSong(); // pulls remote + resubscribes
+        } else {
+          _unsubscribeAnnotations();
+        }
+      },
+    );
+
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final showNav = widget.onPrev != null || widget.onNext != null;
@@ -476,6 +630,43 @@ class _SongReaderState extends ConsumerState<SongReader>
           ),
         ),
 
+        if (widget.isAnnotating && _hasPendingRemoteUpdate)
+          Positioned(
+            left: 12,
+            right: 12,
+            top: 12,
+            child: SafeArea(
+              bottom: false,
+              child: Material(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sync_rounded, size: 18),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text('New changes from another device'),
+                      ),
+                      TextButton(
+                        onPressed: _dismissPendingRemoteUpdate,
+                        child: const Text('Keep mine'),
+                      ),
+                      FilledButton(
+                        onPressed: _acceptPendingRemoteUpdate,
+                        child: const Text('Reload'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         // Elegant floating annotation toolbar with all tools
         if (widget.isAnnotating)
           Positioned(
@@ -524,7 +715,9 @@ class _SongReaderState extends ConsumerState<SongReader>
                       ? l10n.songAutoScrollPause
                       : l10n.songAutoScrollStart,
                   child: Icon(
-                    _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+                    _isScrolling
+                        ? Icons.pause
+                        : Icons.keyboard_double_arrow_down,
                   ),
                 ),
                 if (showNav) const SizedBox(height: 12),
@@ -614,9 +807,8 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
               children: [
                 Text(
                   l10n.annotationLayers,
-                  style: Theme.of(sheetCtx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(sheetCtx).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Expanded(child: FlueraLayerPanel(canvasKey: canvasKey)),
@@ -674,7 +866,9 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.97),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.97,
+            ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
@@ -809,7 +1003,10 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                           ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                            icon: const Icon(
+                              Icons.delete_sweep_outlined,
+                              size: 20,
+                            ),
                             tooltip: l10n.annotationClear,
                             onPressed: () => _showClearConfirm(context, l10n),
                           ),
@@ -834,7 +1031,10 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                          icon: const Icon(
+                            Icons.delete_sweep_outlined,
+                            size: 20,
+                          ),
                           tooltip: l10n.annotationClear,
                           onPressed: () => _showClearConfirm(context, l10n),
                         ),
@@ -866,7 +1066,9 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                             border: Border.all(
                               color: c.toARGB32() == color.toARGB32()
                                   ? theme.colorScheme.primary
-                                  : theme.colorScheme.outline.withValues(alpha: 0.4),
+                                  : theme.colorScheme.outline.withValues(
+                                      alpha: 0.4,
+                                    ),
                               width: c.toARGB32() == color.toARGB32() ? 2.5 : 1,
                             ),
                           ),
@@ -927,8 +1129,12 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 3,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 6,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 14,
+                        ),
                       ),
                       child: Slider(
                         value: strokeWidth,

@@ -13,6 +13,7 @@ class AppSettings {
     this.localeCode,
     this.keepScreenAwake = false,
     this.musicianMode = true,
+    this.syncAnnotations = false,
   });
 
   final AppThemeMode themeMode;
@@ -28,6 +29,9 @@ class AppSettings {
   /// Whether services open directly in musician view (first song + order nav).
   final bool musicianMode;
 
+  ///Wheather the user will sync with the other userver service song anotations
+  final bool syncAnnotations;
+
   Locale? get locale => localeCode == null ? null : Locale(localeCode!);
 
   AppSettings copyWith({
@@ -37,6 +41,7 @@ class AppSettings {
     bool clearLocale = false,
     bool? keepScreenAwake,
     bool? musicianMode,
+    bool? syncAnnotations,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -44,6 +49,7 @@ class AppSettings {
       localeCode: clearLocale ? null : (localeCode ?? this.localeCode),
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       musicianMode: musicianMode ?? this.musicianMode,
+      syncAnnotations: syncAnnotations ?? this.syncAnnotations,
     );
   }
 }
@@ -58,6 +64,7 @@ class SettingsController extends StateNotifier<AppSettings> {
   static const _localeKey = 'settings.locale';
   static const _keepAwakeKey = 'settings.keepScreenAwake';
   static const _musicianModeKey = 'settings.musicianMode';
+  static const _syncAnnotation = 'settings.syncAnnotation';
 
   final SharedPreferences _prefs;
 
@@ -68,6 +75,7 @@ class SettingsController extends StateNotifier<AppSettings> {
       localeCode: _prefs.getString(_localeKey),
       keepScreenAwake: _prefs.getBool(_keepAwakeKey) ?? false,
       musicianMode: _prefs.getBool(_musicianModeKey) ?? true,
+      syncAnnotations: _prefs.getBool(_syncAnnotation) ?? true,
     );
   }
 
@@ -82,7 +90,9 @@ class SettingsController extends StateNotifier<AppSettings> {
   }
 
   void setLocale(String? code) {
-    state = code == null ? state.copyWith(clearLocale: true) : state.copyWith(localeCode: code);
+    state = code == null
+        ? state.copyWith(clearLocale: true)
+        : state.copyWith(localeCode: code);
     if (code == null) {
       _prefs.remove(_localeKey);
     } else {
@@ -106,9 +116,14 @@ class SettingsController extends StateNotifier<AppSettings> {
       orElse: () => AppThemeMode.system,
     );
   }
+
+  void setSyncAnnotations(bool value) {
+    state = state.copyWith(syncAnnotations: value);
+    _prefs.setBool(_syncAnnotation, value);
+  }
 }
 
 final settingsControllerProvider =
     StateNotifierProvider<SettingsController, AppSettings>((ref) {
-  return SettingsController(ref.watch(sharedPreferencesProvider));
-});
+      return SettingsController(ref.watch(sharedPreferencesProvider));
+    });

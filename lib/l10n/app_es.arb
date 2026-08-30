@@ -231,6 +231,8 @@
   "settingsMusicianModeDesc": "Abre el servicio directamente en la primera canción con navegación lateral continua.",
   "settingsKeepAwake": "Mantener Pantalla Encendida",
   "settingsKeepAwakeDesc": "Evita que la pantalla se suspenda al ver canciones.",
+  "settingsSyncAnnotations": "Sincronizar anotaciones",
+  "settingsSyncAnnotationsDesc": "Permite que las anotaciones se compartan en vivo entre todos los usuarios",
   "settingsSessionsOnly": "Solo está activa la sesión actual de este dispositivo.",
 
   "metronomeTitle": "Metrónomo",

@@ -231,6 +231,8 @@
   "settingsMusicianModeDesc": "Abre o culto diretamente no primeiro cântico com navegação lateral contínua.",
   "settingsKeepAwake": "Manter Ecrã Ligado",
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
+  "settingsSyncAnnotations": "Sincronizar anotações",
+  "settingsSyncAnnotationsDesc": "Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores",
   "settingsSessionsOnly": "Apenas a sessão atual deste dispositivo está ativa.",
 
   "metronomeTitle": "Metrónomo",

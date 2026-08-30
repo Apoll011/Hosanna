@@ -863,6 +863,13 @@ class _PreferencesTab extends ConsumerWidget {
                 value: settings.keepScreenAwake,
                 onChanged: settingsController.setKeepScreenAwake,
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsSyncAnnotations),
+                subtitle: Text(l10n.settingsSyncAnnotationsDesc),
+                value: settings.syncAnnotations,
+                onChanged: settingsController.setSyncAnnotations,
+              ),
               const Divider(),
               ListTile(
                 contentPadding: EdgeInsets.zero,
