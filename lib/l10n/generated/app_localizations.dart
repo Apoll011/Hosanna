@@ -496,6 +496,24 @@ abstract class AppLocalizations {
   /// **'A verificação de segurança (captcha) não está configurada.'**
   String get authCaptchaNotConfigured;
 
+  /// No description provided for @authCaptchaWindowTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificação de segurança (captcha)'**
+  String get authCaptchaWindowTitle;
+
+  /// No description provided for @authCaptchaWaitingMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conclua a verificação de segurança na janela de captcha que acabou de abrir.'**
+  String get authCaptchaWaitingMessage;
+
+  /// No description provided for @authCaptchaOpenFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível abrir a janela de captcha.'**
+  String get authCaptchaOpenFailed;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In pt, this message translates to:

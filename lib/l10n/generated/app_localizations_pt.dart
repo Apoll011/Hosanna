@@ -219,6 +219,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'A verificação de segurança (captcha) não está configurada.';
 
   @override
+  String get authCaptchaWindowTitle => 'Verificação de segurança (captcha)';
+
+  @override
+  String get authCaptchaWaitingMessage =>
+      'Conclua a verificação de segurança na janela de captcha que acabou de abrir.';
+
+  @override
+  String get authCaptchaOpenFailed =>
+      'Não foi possível abrir a janela de captcha.';
+
+  @override
   String get onboardingTitle => 'Bem-vindo ao Hosanna';
 
   @override
