@@ -327,20 +327,38 @@ class _SongReaderState extends ConsumerState<SongReader>
     final userId = user?.id;
     if (userId == null) return;
 
-    repo
-        .pushAnnotation(
-          workspaceId: workspaceId,
-          serviceId: serviceId,
-          songId: songId,
-          bytes: bytes,
-          updatedBy: userId,
-          baseVersion: _remoteVersion,
-        )
-        .then((newVersion) => _remoteVersion = newVersion)
-        .catchError((_) {
-          // Offline or push failed — local cache already has the latest
-          // bytes; the next successful save will retry the sync.
-        });
+    _pushAnnotationSafely(
+      repo: repo,
+      workspaceId: workspaceId,
+      serviceId: serviceId,
+      songId: songId,
+      bytes: bytes,
+      userId: userId,
+    );
+  }
+
+  Future<void> _pushAnnotationSafely({
+    required ServiceAnnotationRepository repo,
+    required String workspaceId,
+    required String serviceId,
+    required String songId,
+    required Uint8List bytes,
+    required String userId,
+  }) async {
+    try {
+      final newVersion = await repo.pushAnnotation(
+        workspaceId: workspaceId,
+        serviceId: serviceId,
+        songId: songId,
+        bytes: bytes,
+        updatedBy: userId,
+        baseVersion: _remoteVersion,
+      );
+      _remoteVersion = newVersion;
+    } catch (_) {
+      // Offline or push failed — local cache already has the latest
+      // bytes; the next successful save will retry the sync.
+    }
   }
 
   void _saveCurrentAnnotation() {
