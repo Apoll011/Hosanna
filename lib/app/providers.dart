@@ -4,6 +4,8 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hosanna/features/services/data/service_annotation_repository.dart';
+import 'package:hosanna/features/supabase/supabase_client_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth/session_store.dart';
@@ -73,3 +75,11 @@ final shellScaffoldKeyProvider = Provider<GlobalKey<ScaffoldState>>(
 /// Whether the tablet persistent sidebar is collapsed. Phones don't use a
 /// sidebar, so this flag is only meaningful in the tablet layout.
 final sidebarCollapsedProvider = StateProvider<bool>((ref) => true);
+
+final serviceAnnotationRepositoryProvider =
+    Provider<ServiceAnnotationRepository>((ref) {
+      return ServiceAnnotationRepository(
+        ref.watch(supabaseClientProvider),
+        ref.watch(dioProvider),
+      );
+    });

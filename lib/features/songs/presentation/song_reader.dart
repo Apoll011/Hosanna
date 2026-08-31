@@ -5,6 +5,7 @@ import 'package:fluera_canvas/fluera_canvas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hosanna/app/providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
 
 import '../../../app/settings_controller.dart';
@@ -200,7 +201,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       songId: songId,
     );
     if (remote == null || !mounted) return;
-
+    debugPrint("$_remoteUpdatedAt");
     // Stale event (arrived out of order) or our own echo — ignore.
     if (_remoteUpdatedAt != null &&
         !remote.updatedAt.isAfter(_remoteUpdatedAt!)) {
