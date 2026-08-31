@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,7 @@ import '../core/auth/session_store.dart';
 import '../core/config/app_config.dart';
 import '../core/db/database.dart';
 import '../core/network/api_client.dart';
+import '../core/network/user_agent.dart';
 import '../features/auth/data/auth_repository.dart';
 
 /// Compile-time configuration (API URL, hosted Turnstile page URL).
@@ -36,12 +39,24 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
       throw UnimplementedError('sharedPreferencesProvider must be overridden'),
 );
 
-/// Shared Dio instance (cookies + bearer + captcha + error normalization).
+/// Shared Dio instance (cookies + bearer + captcha + user-agent + error
+/// normalization). A stable random install id is generated once, persisted in
+/// [sharedPreferencesProvider], and baked into the User-Agent so server logs
+/// can tell installs apart.
 final dioProvider = Provider<Dio>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  var installId = prefs.getString(kInstallIdPrefsKey);
+  if (installId == null || installId.isEmpty) {
+    installId = generateInstallId();
+    // Fire-and-forget: the id only needs to survive restarts; a lost write
+    // just means the next launch mints a new one.
+    unawaited(prefs.setString(kInstallIdPrefsKey, installId));
+  }
   return buildDio(
     config: ref.watch(appConfigProvider),
     tokenStore: ref.watch(tokenStoreProvider),
     cookieJar: ref.watch(cookieJarProvider),
+    installId: installId,
   );
 });
 

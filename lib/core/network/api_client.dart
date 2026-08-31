@@ -6,6 +6,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 
 import '../config/app_config.dart';
 import 'api_exception.dart';
+import 'user_agent.dart';
 
 /// Key used in `Options.extra` to carry a one-shot Turnstile captcha token
 /// that the captcha interceptor injects as the `x-captcha-response` header.
@@ -22,15 +23,24 @@ class TokenStore {
 
 /// Builds the shared [Dio] instance used for both auth and replication.
 ///
+/// - A detailed `User-Agent` (app version, platform, OS, device model,
+///   Flutter version and a stable per-install `id=…`) is attached lazily by
+///   the first interceptor, so server logs can tell sessions and installs
+///   apart.
 /// - Cookies (Better Auth's `hosanna` session cookie) are persisted via a
 ///   [CookieJar] on the platform documents directory.
 /// - A bearer token, when present in [tokenStore], is attached as
 ///   `Authorization: Bearer …`.
 /// - `x-captcha-response` is injected per-request via `Options.extra`.
+///
+/// [installId] is the stable random identifier persisted by the app (see
+/// [kInstallIdPrefsKey]); it is baked into the User-Agent for log
+/// correlation. When null, no `id=…` segment is added.
 Dio buildDio({
   required AppConfig config,
   required TokenStore tokenStore,
   required CookieJar cookieJar,
+  String? installId,
 }) {
   final dio = Dio(
     BaseOptions(
@@ -46,6 +56,7 @@ Dio buildDio({
 
   //_LoggingInterceptor(),
   dio.interceptors.addAll([
+    _UserAgentInterceptor(installId: installId),
     CookieManager(cookieJar),
     _OriginInterceptor(config.origin),
     _AuthInterceptor(tokenStore),
@@ -54,6 +65,33 @@ Dio buildDio({
   ]);
 
   return dio;
+}
+
+/// Attaches a detailed `User-Agent` to every request.
+///
+/// The header value is resolved asynchronously (it needs `package_info_plus`
+/// / `device_info_plus` platform channels) and cached after the first
+/// request, so the per-request cost is a map lookup. A caller-supplied header
+/// always wins, and [installId] is included as `id=…` for log correlation.
+class _UserAgentInterceptor extends Interceptor {
+  _UserAgentInterceptor({this.installId});
+
+  /// Stable per-install identifier; see [kInstallIdPrefsKey].
+  final String? installId;
+
+  Future<String>? _cachedUserAgent;
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final alreadySet = options.headers.keys.any(
+      (key) => key.toLowerCase() == 'user-agent',
+    );
+    if (!alreadySet) {
+      options.headers['User-Agent'] =
+          await (_cachedUserAgent ??= buildUserAgent(installId: installId));
+    }
+    handler.next(options);
+  }
 }
 
 /// Logs every request and response to the console (debug builds only).
