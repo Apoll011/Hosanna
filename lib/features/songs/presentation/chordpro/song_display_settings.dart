@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/providers.dart';
+import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
 /// props (transpose, capo, show chords, two-column, font size, instrument,
@@ -17,6 +18,7 @@ class SongDisplaySettings {
     this.showDiagrams = false,
     this.sectionColorBackground = false,
     this.autoScrollSpeed = 5,
+    this.variantId = 'default',
   });
 
   final int transpose;
@@ -31,6 +33,9 @@ class SongDisplaySettings {
   /// Auto-scroll speed, 1..10 (transient).
   final double autoScrollSpeed;
 
+  /// Active variant id (transient — not persisted).
+  final String variantId;
+
   bool get isGuitar => instrument == 'guitar';
 
   SongDisplaySettings copyWith({
@@ -43,6 +48,7 @@ class SongDisplaySettings {
     bool? showDiagrams,
     bool? sectionColorBackground,
     double? autoScrollSpeed,
+    String? variantId,
   }) {
     return SongDisplaySettings(
       transpose: transpose ?? this.transpose,
@@ -55,6 +61,7 @@ class SongDisplaySettings {
       sectionColorBackground:
           sectionColorBackground ?? this.sectionColorBackground,
       autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
+      variantId: variantId ?? this.variantId,
     );
   }
 }
@@ -91,6 +98,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
 
   void resetTransposition() =>
       state = state.copyWith(transpose: 0, capo: 0);
+
+  void setVariantId(String id) => state = state.copyWith(variantId: id);
 
   void toggleShowChords() {
     final v = !state.showChords;
@@ -138,3 +147,10 @@ final songDisplaySettingsProvider = StateNotifierProvider<
     ref.watch(sharedPreferencesProvider),
   );
 });
+
+/// Holds the [ChordProDocument] for the song that is currently on-screen.
+///
+/// Updated by [SongBodyRenderer] every time the content changes. The toolbar
+/// reads this to build the variant switcher directly on the toolbar without prop-drilling.
+final songCurrentDocumentProvider = StateProvider<ChordProDocument?>((ref) => null);
+
