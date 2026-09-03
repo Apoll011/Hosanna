@@ -25,6 +25,7 @@ class ChordProRenderer extends StatefulWidget {
     this.sectionColorBackground = false,
     this.scrollController,
     this.notes,
+    this.variantId = 'default',
   });
 
   final String content;
@@ -36,6 +37,10 @@ class ChordProRenderer extends StatefulWidget {
   final String instrument;
   final bool showDiagrams;
   final bool sectionColorBackground;
+
+  /// Active variant id — delegates variant selection to the caller.
+  /// Defaults to `'default'` (the main song body).
+  final String variantId;
 
   /// Optional musician notes, shown in a card below the metadata header and
   /// before the chord roll (when present).
@@ -51,12 +56,11 @@ class ChordProRenderer extends StatefulWidget {
 class _ChordProRendererState extends State<ChordProRenderer> {
   late ChordProDocument _document;
   late SongAst _ast;
-  String _selectedVariantId = 'default';
   String? _selectedChord;
   String _dialogInstrument = 'guitar';
 
   void _rebuildAst() {
-    final version = selectVersion(_document, _selectedVariantId);
+    final version = selectVersion(_document, widget.variantId);
     _ast = SongAst(
       metadata: version.metadata,
       sections: version.body,
@@ -76,12 +80,12 @@ class _ChordProRendererState extends State<ChordProRenderer> {
   @override
   void didUpdateWidget(covariant ChordProRenderer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.content != widget.content) {
+    final contentChanged = oldWidget.content != widget.content;
+    final variantChanged = oldWidget.variantId != widget.variantId;
+    if (contentChanged) {
       _document = parseChordProDocument(widget.content);
-      // Keep selected variant if its id still exists, otherwise fall back
-      final stillExists =
-          _document.variants.any((v) => v.id == _selectedVariantId);
-      if (!stillExists) _selectedVariantId = 'default';
+    }
+    if (contentChanged || variantChanged) {
       _rebuildAst();
     }
   }
@@ -140,18 +144,6 @@ class _ChordProRendererState extends State<ChordProRenderer> {
                 effectiveCapo: _effectiveCapo,
                 transposeVal: widget.transpose,
               ),
-              if (_document.variants.isNotEmpty)
-                _VariantSwitcher(
-                  defaultVersion: _document.defaultVersion,
-                  variants: _document.variants,
-                  selectedId: _selectedVariantId,
-                  onVariantSelected: (id) {
-                    setState(() {
-                      _selectedVariantId = id;
-                      _rebuildAst();
-                    });
-                  },
-                ),
               if (widget.notes != null && widget.notes!.trim().isNotEmpty)
                 _NotesCard(notes: widget.notes!),
               if (widget.showDiagrams &&
@@ -441,116 +433,6 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       'bridge' => 'Ponte',
       _ => '',
     };
-  }
-}
-
-// ── Variant switcher ────────────────────────────────────────────────────────
-
-/// Shows a horizontal row of selectable chips (or a dropdown when there are
-/// many variants) so the user can switch between song versions.
-///
-/// Rendered only when the document contains at least one named variant.
-class _VariantSwitcher extends StatelessWidget {
-  const _VariantSwitcher({
-    required this.defaultVersion,
-    required this.variants,
-    required this.selectedId,
-    required this.onVariantSelected,
-  });
-
-  final ChordProVersion defaultVersion;
-  final List<ChordProVersion> variants;
-  final String selectedId;
-  final void Function(String id) onVariantSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // All available versions: default + named variants
-    final all = [defaultVersion, ...variants];
-
-    // Use chips for ≤6 total versions, dropdown for more
-    if (all.length <= 6) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'VERSÃO',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final version in all)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(version.name),
-                        selected: selectedId == version.id,
-                        onSelected: (_) => onVariantSelected(version.id),
-                        showCheckmark: false,
-                        selectedColor:
-                            theme.colorScheme.primaryContainer,
-                        labelStyle: theme.textTheme.labelMedium?.copyWith(
-                          color: selectedId == version.id
-                              ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: selectedId == version.id
-                              ? FontWeight.w700
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Dropdown fallback for many variants
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Text(
-            'Versão:',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: selectedId,
-              underline: const SizedBox.shrink(),
-              icon: const Icon(Icons.expand_more),
-              items: [
-                for (final version in all)
-                  DropdownMenuItem(
-                    value: version.id,
-                    child: Text(version.name),
-                  ),
-              ],
-              onChanged: (id) {
-                if (id != null) onVariantSelected(id);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

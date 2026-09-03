@@ -2,20 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../domain/chordpro/parser.dart';
 import 'chordpro/song_display_settings.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
 /// React `SongView` "Ajustes de Leitura" popover.
-class SongToolbarButton extends StatelessWidget {
+/// Also displays a variant switcher directly on the toolbar when variants exist.
+class SongToolbarButton extends ConsumerWidget {
   const SongToolbarButton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return IconButton(
-      icon: const Icon(Icons.tune),
-      tooltip: l10n.songControlsTitle,
-      onPressed: () => showSongControlsSheet(context),
+    final doc = ref.watch(songCurrentDocumentProvider);
+    final settings = ref.watch(songDisplaySettingsProvider);
+    final controller = ref.read(songDisplaySettingsProvider.notifier);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (doc != null && doc.variants.isNotEmpty)
+          _ToolbarVariantButton(
+            versions: [doc.defaultVersion, ...doc.variants],
+            selectedId: settings.variantId,
+            onSelected: controller.setVariantId,
+          ),
+        IconButton(
+          icon: const Icon(Icons.tune),
+          tooltip: l10n.songControlsTitle,
+          onPressed: () => showSongControlsSheet(context),
+        ),
+      ],
     );
   }
 }
@@ -193,6 +210,29 @@ class SongControlsSheet extends ConsumerWidget {
               ],
               selected: {settings.instrument},
               onSelectionChanged: (s) => controller.setInstrument(s.first),
+            ),
+
+            // Variant switcher — shown inside the sheet as well.
+            Builder(
+              builder: (context) {
+                final doc = ref.watch(songCurrentDocumentProvider);
+                if (doc == null || doc.variants.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final all = [doc.defaultVersion, ...doc.variants];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Divider(height: 24),
+                    _SectionTitle(label: 'Versão', value: ''),
+                    _VariantSelector(
+                      versions: all,
+                      selectedId: settings.variantId,
+                      onSelected: controller.setVariantId,
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -385,6 +425,160 @@ class _CapoChip extends StatelessWidget {
             color: selected
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Variant selector ─────────────────────────────────────────────────────────
+
+/// Chip-based (or dropdown) selector for ChordPro song variants.
+/// Shown inside [SongControlsSheet] when the current document has variants.
+class _VariantSelector extends StatelessWidget {
+  const _VariantSelector({
+    required this.versions,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<ChordProVersion> versions;
+  final String selectedId;
+  final void Function(String id) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Use chips for ≤6 versions, dropdown for larger sets
+    if (versions.length <= 6) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final version in versions)
+            _CapoChip(
+              label: version.name,
+              selected: selectedId == version.id,
+              onTap: () => onSelected(version.id),
+              theme: theme,
+            ),
+        ],
+      );
+    }
+
+    return DropdownButtonFormField<String>(
+      initialValue: selectedId,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+      ),
+      items: [
+        for (final version in versions)
+          DropdownMenuItem(value: version.id, child: Text(version.name)),
+      ],
+      onChanged: (id) {
+        if (id != null) onSelected(id);
+      },
+    );
+  }
+}
+
+/// Compact variant selector button that appears directly on the app bar / toolbar.
+class _ToolbarVariantButton extends StatelessWidget {
+  const _ToolbarVariantButton({
+    required this.versions,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<ChordProVersion> versions;
+  final String selectedId;
+  final void Function(String id) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final current = versions.firstWhere(
+      (v) => v.id == selectedId,
+      orElse: () => versions.first,
+    );
+
+    return PopupMenuButton<String>(
+      tooltip: 'Versão: ${current.name}',
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final version in versions)
+          PopupMenuItem<String>(
+            value: version.id,
+            child: Row(
+              children: [
+                if (version.id == selectedId)
+                  Icon(
+                    Icons.check,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  )
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 8),
+                Text(
+                  version.name,
+                  style: TextStyle(
+                    fontWeight: version.id == selectedId
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: version.id == selectedId
+                        ? theme.colorScheme.primary
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.alt_route_rounded,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 100),
+                child: Text(
+                  current.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.arrow_drop_down,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
           ),
         ),
       ),
