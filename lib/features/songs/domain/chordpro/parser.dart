@@ -3,6 +3,10 @@
 /// Produces a [SongAst] that the renderer consumes. Section labels are stored
 /// as-authored (empty when the directive carried no value); the renderer is
 /// responsible for localizing the default labels.
+///
+/// Also exposes [parseChordProDocument] / [selectVersion] for the song-variants
+/// system: one `.pro` file can contain a default song plus unlimited alternative
+/// versions wrapped in `{start_of_version: Name}` … `{end_of_version}` blocks.
 library;
 
 class SegmentAst {
@@ -29,7 +33,8 @@ class LineAst {
     this.startBarline,
   });
 
-  final String type; // lyrics | comment | comment_box | tab | empty | chord-section
+  final String
+  type; // lyrics | comment | comment_box | tab | empty | chord-section
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
@@ -44,17 +49,75 @@ class SectionAst {
     this.repeat,
   }) : lines = lines ?? [];
 
-  final String type; // verse | chorus | bridge | tab | comment | grid | new_song
+  final String
+  type; // verse | chorus | bridge | tab | comment | grid | new_song
   final String? label;
   final List<LineAst> lines;
   String? repeat;
 }
 
+/// One version of the song (either the default or a named variant).
+class ChordProVersion {
+  const ChordProVersion({
+    required this.id,
+    required this.name,
+    required this.metadata,
+    required this.body,
+  });
+
+  /// Stable slug identifier (e.g., "versao-de-estudio").
+  final String id;
+
+  /// Human-readable name as authored (e.g., "Versão de Estúdio").
+  final String name;
+
+  /// Fully resolved (inherited + overridden) metadata map.
+  final Map<String, String> metadata;
+
+  /// The song body sections for this version.
+  final List<SectionAst> body;
+}
+
+/// A parsed ChordPro document that may contain the default version and
+/// zero or more named variant versions.
+class ChordProDocument {
+  const ChordProDocument({
+    required this.defaultVersion,
+    required this.variants,
+    required this.errors,
+  });
+
+  /// The default version (everything outside of `{start_of_version}` blocks).
+  final ChordProVersion defaultVersion;
+
+  /// Named variant versions in order of appearance.
+  final List<ChordProVersion> variants;
+
+  /// Non-fatal parse errors (e.g., nested/unclosed/duplicate blocks).
+  final List<String> errors;
+}
+
+/// Backward-compatible flat AST used by existing code.
 class SongAst {
-  const SongAst({required this.metadata, required this.sections});
+  const SongAst({
+    required this.metadata,
+    required this.sections,
+    this.defaultVersion,
+    this.variants,
+    this.errors,
+  });
 
   final Map<String, String> metadata;
   final List<SectionAst> sections;
+
+  /// The full document default version (same data as above, typed).
+  final ChordProVersion? defaultVersion;
+
+  /// Named variants, if any.
+  final List<ChordProVersion>? variants;
+
+  /// Parse errors.
+  final List<String>? errors;
 }
 
 final RegExp _timingRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
@@ -63,10 +126,7 @@ final RegExp _chordRegex = RegExp(r'\[([^\]]+)\]');
 ({String chord, double? timing}) _parseChordTiming(String rawChord) {
   final match = _timingRegex.firstMatch(rawChord);
   if (match != null) {
-    return (
-      chord: match.group(1)!,
-      timing: double.tryParse(match.group(2)!),
-    );
+    return (chord: match.group(1)!, timing: double.tryParse(match.group(2)!));
   }
   return (chord: rawChord, timing: null);
 }
@@ -89,7 +149,11 @@ List<SegmentAst> parseLineSegments(String lineText) {
       currentTiming = timing;
     } else {
       segments.add(
-        SegmentAst(chord: currentChord, text: textBefore, timing: currentTiming),
+        SegmentAst(
+          chord: currentChord,
+          text: textBefore,
+          timing: currentTiming,
+        ),
       );
       currentChord = chord;
       currentTiming = timing;
@@ -133,6 +197,11 @@ const Map<String, String> _aliasMap = {
   'time signature': 'time',
   'original_key': 'original_key',
   'original key': 'original_key',
+  // variant directives
+  'start_of_version': 'start_of_version',
+  'end_of_version': 'end_of_version',
+  'sov_ver': 'start_of_version',
+  'eov_ver': 'end_of_version',
 };
 
 String _camelCaseMetaKey(String name) {
@@ -144,29 +213,87 @@ String _camelCaseMetaKey(String name) {
       .replaceAll(RegExp(r'\s+'), '');
 }
 
-SongAst parseChordPro(String content) {
-  final lines = content.split(RegExp(r'\r?\n'));
-  final metadata = <String, String>{};
-  final sections = <SectionAst>[];
+/// Converts an accented/special-character variant name into a stable ASCII slug.
+///
+/// Examples:
+/// - "Simplificada"      → "simplificada"
+/// - "Versão de Estúdio" → "versao-de-estudio"
+/// - "  Ao Vivo (2024)!" → "ao-vivo-2024"
+String slugifyVariantName(String name) {
+  // Remove combining diacritical marks by filtering code units in the NFD range
+  final withoutDiacritics = String.fromCharCodes(
+    name.runes.where((r) => !(r >= 0x0300 && r <= 0x036F)),
+  );
+  return withoutDiacritics
+      .toLowerCase()
+      .trim()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+}
 
+// ── Version parsing context ─────────────────────────────────────────────────
+
+class _VersionContext {
+  _VersionContext({
+    required this.id,
+    required this.name,
+    required this.metadata,
+    required this.startLineNumber,
+  });
+
+  final String id;
+  final String name;
+  final Map<String, String> metadata;
+  final int startLineNumber;
+
+  final List<SectionAst> sections = [];
   SectionAst? currentSection;
-  var isTab = false;
-  var isGrid = false;
-  var lastChorusLines = <LineAst>[];
+  bool isTab = false;
+  bool isGrid = false;
+  List<LineAst> lastChorusLines = [];
 
   void commitSection() {
-    final section = currentSection;
-    if (section == null) return;
-    sections.add(section);
-    if (section.type == 'chorus') {
-      lastChorusLines = List.of(section.lines);
-    }
+    final s = currentSection;
+    if (s == null) return;
+    sections.add(s);
+    if (s.type == 'chorus') lastChorusLines = List.of(s.lines);
     currentSection = null;
   }
+}
 
-  for (final rawLine in lines) {
-    final line = rawLine;
-    final trimmed = line.trim();
+// ── Main document parser ────────────────────────────────────────────────────
+
+/// Parses a ChordPro string into a [ChordProDocument] that separates the
+/// default version from any named variant versions.
+///
+/// Variants are defined with:
+/// ```
+/// {start_of_version: Name}
+/// ...
+/// {end_of_version}
+/// ```
+///
+/// Metadata is cumulative: each variant inherits the fully resolved metadata
+/// of the previous version.
+ChordProDocument parseChordProDocument(String content) {
+  final lines = content.split(RegExp(r'\r?\n'));
+  final errors = <String>[];
+
+  final defaultCtx = _VersionContext(
+    id: 'default',
+    name: 'Padrão',
+    metadata: {},
+    startLineNumber: 1,
+  );
+
+  final variants = <ChordProVersion>[];
+  final seenIds = <String>{};
+  _VersionContext? activeVariant;
+
+  for (var i = 0; i < lines.length; i++) {
+    final lineNumber = i + 1;
+    final rawLine = lines[i];
+    final trimmed = rawLine.trim();
 
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
       final directive = trimmed.substring(1, trimmed.length - 1).trim();
@@ -182,75 +309,148 @@ SongAst parseChordPro(String content) {
       final lowerName = rawName.toLowerCase();
       final name = _aliasMap[lowerName] ?? lowerName;
 
+      // ── Version block directives ────────────────────────────────────────
+      if (name == 'start_of_version') {
+        if (activeVariant != null) {
+          errors.add(
+            'Line $lineNumber: Nested version block detected. '
+            '"{start_of_version}" cannot be inside another version block.',
+          );
+          continue;
+        }
+
+        final versionName = value.trim();
+        if (versionName.isEmpty) {
+          errors.add(
+            'Line $lineNumber: Empty version name in "{start_of_version}".',
+          );
+          continue;
+        }
+
+        final variantId = slugifyVariantName(versionName);
+        if (variantId.isEmpty ||
+            variantId == 'default' ||
+            seenIds.contains(variantId)) {
+          errors.add(
+            'Line $lineNumber: Duplicate or invalid variant identifier '
+            '"${variantId.isEmpty ? versionName : variantId}".',
+          );
+          continue;
+        }
+
+        defaultCtx.commitSection();
+        seenIds.add(variantId);
+
+        // Cumulative metadata: inherit from the previous variant or default
+        final previousMeta = variants.isNotEmpty
+            ? Map<String, String>.of(variants.last.metadata)
+            : Map<String, String>.of(defaultCtx.metadata);
+
+        activeVariant = _VersionContext(
+          id: variantId,
+          name: versionName,
+          metadata: previousMeta,
+          startLineNumber: lineNumber,
+        );
+        continue;
+      }
+
+      if (name == 'end_of_version') {
+        if (activeVariant == null) {
+          errors.add(
+            'Line $lineNumber: Unexpected "{end_of_version}" '
+            'without an active version block.',
+          );
+          continue;
+        }
+
+        activeVariant.commitSection();
+        final meta = activeVariant.metadata;
+        if (!meta.containsKey('title') || meta['title']!.isEmpty) {
+          meta['title'] = defaultCtx.metadata['title'] ?? 'Sem Título';
+        }
+
+        variants.add(
+          ChordProVersion(
+            id: activeVariant.id,
+            name: activeVariant.name,
+            metadata: Map.of(meta),
+            body: List.of(activeVariant.sections),
+          ),
+        );
+        activeVariant = null;
+        continue;
+      }
+
+      // ── Normal directive — dispatch to the active context ───────────────
+      final ctx = activeVariant ?? defaultCtx;
+
       switch (name) {
         case 'start_of_chorus':
-          commitSection();
-          currentSection =
-              SectionAst(type: 'chorus', label: value);
+          ctx.commitSection();
+          ctx.currentSection = SectionAst(type: 'chorus', label: value);
         case 'start_of_verse':
-          commitSection();
-          currentSection =
-              SectionAst(type: 'verse', label: value);
+          ctx.commitSection();
+          ctx.currentSection = SectionAst(type: 'verse', label: value);
         case 'start_of_bridge':
-          commitSection();
-          currentSection =
-              SectionAst(type: 'bridge', label: value);
+          ctx.commitSection();
+          ctx.currentSection = SectionAst(type: 'bridge', label: value);
         case 'start_of_tab':
-          commitSection();
-          isTab = true;
-          currentSection =
-              SectionAst(type: 'tab', label: value);
+          ctx.commitSection();
+          ctx.isTab = true;
+          ctx.currentSection = SectionAst(type: 'tab', label: value);
         case 'start_of_grid':
-          commitSection();
-          isGrid = true;
-          currentSection =
-              SectionAst(type: 'grid', label: value);
+          ctx.commitSection();
+          ctx.isGrid = true;
+          ctx.currentSection = SectionAst(type: 'grid', label: value);
         case 'end_of_chorus':
-          if (currentSection?.type == 'chorus') commitSection();
+          if (ctx.currentSection?.type == 'chorus') ctx.commitSection();
         case 'end_of_verse':
-          if (currentSection?.type == 'verse') commitSection();
+          if (ctx.currentSection?.type == 'verse') ctx.commitSection();
         case 'end_of_bridge':
-          if (currentSection?.type == 'bridge') commitSection();
+          if (ctx.currentSection?.type == 'bridge') ctx.commitSection();
         case 'end_of_tab':
-          isTab = false;
-          if (currentSection?.type == 'tab') commitSection();
+          ctx.isTab = false;
+          if (ctx.currentSection?.type == 'tab') ctx.commitSection();
         case 'end_of_grid':
-          isGrid = false;
-          if (currentSection?.type == 'grid') commitSection();
+          ctx.isGrid = false;
+          if (ctx.currentSection?.type == 'grid') ctx.commitSection();
         case 'chorus':
-          commitSection();
-          sections.add(
-            SectionAst(type: 'chorus', label: value, lines: [...lastChorusLines]),
+          ctx.commitSection();
+          ctx.sections.add(
+            SectionAst(
+              type: 'chorus',
+              label: value,
+              lines: [...ctx.lastChorusLines],
+            ),
           );
         case 'verse':
-          commitSection();
-          currentSection =
-              SectionAst(type: 'verse', label: value);
+          ctx.commitSection();
+          ctx.currentSection = SectionAst(type: 'verse', label: value);
         case 'bridge':
-          commitSection();
-          currentSection =
-              SectionAst(type: 'bridge', label: value);
+          ctx.commitSection();
+          ctx.currentSection = SectionAst(type: 'bridge', label: value);
         case 'comment':
         case 'comment_italic':
           final commentLine = LineAst(type: 'comment', text: value);
-          if (currentSection != null) {
-            currentSection!.lines.add(commentLine);
+          if (ctx.currentSection != null) {
+            ctx.currentSection!.lines.add(commentLine);
           } else {
-            sections.add(SectionAst(type: 'comment', lines: [commentLine]));
+            ctx.sections.add(SectionAst(type: 'comment', lines: [commentLine]));
           }
         case 'comment_box':
           final cbLine = LineAst(type: 'comment_box', text: value);
-          if (currentSection != null) {
-            currentSection!.lines.add(cbLine);
+          if (ctx.currentSection != null) {
+            ctx.currentSection!.lines.add(cbLine);
           } else {
-            sections.add(SectionAst(type: 'comment', lines: [cbLine]));
+            ctx.sections.add(SectionAst(type: 'comment', lines: [cbLine]));
           }
         case 'repeat':
           final repeat = value.isEmpty ? '2' : value;
-          if (currentSection != null) {
-            currentSection!.repeat = repeat;
+          if (ctx.currentSection != null) {
+            ctx.currentSection!.repeat = repeat;
           } else {
-            sections.add(
+            ctx.sections.add(
               SectionAst(
                 type: 'comment',
                 lines: [LineAst(type: 'comment_box', text: 'Repetir: $repeat')],
@@ -258,56 +458,59 @@ SongAst parseChordPro(String content) {
             );
           }
         case 'new_song':
-          commitSection();
-          sections.add(SectionAst(type: 'new_song', lines: []));
+          ctx.commitSection();
+          ctx.sections.add(SectionAst(type: 'new_song', lines: []));
         case 'duration':
           if (RegExp(r'^\d{1,2}:\d{2}$').hasMatch(value)) {
             final parts = value.split(':').map(int.parse).toList();
-            metadata['duration'] = '${parts[0] * 60 + parts[1]}';
+            ctx.metadata['duration'] = '${parts[0] * 60 + parts[1]}';
           } else {
-            metadata['duration'] = value;
+            ctx.metadata['duration'] = value;
           }
         default:
           if (value.isNotEmpty) {
-            final metaKey = _camelCaseMetaKey(name);
-            metadata[metaKey] = value;
+            ctx.metadata[_camelCaseMetaKey(name)] = value;
           }
       }
       continue;
     }
 
+    // ── Non-directive line ───────────────────────────────────────────────────
+    final ctx = activeVariant ?? defaultCtx;
+
     if (trimmed.isEmpty) {
-      if (currentSection != null) {
-        currentSection!.lines.add(const LineAst(type: 'empty'));
+      if (ctx.currentSection != null) {
+        ctx.currentSection!.lines.add(const LineAst(type: 'empty'));
       }
       continue;
     }
 
-    if (trimmed.startsWith('#') && !isTab) continue;
+    if (trimmed.startsWith('#') && !ctx.isTab) continue;
 
     var lineType = 'lyrics';
     var parsedSegments = <SegmentAst>[];
 
-    if (isTab) {
+    if (ctx.isTab) {
       lineType = 'tab';
     } else {
-      parsedSegments = parseLineSegments(line);
+      parsedSegments = parseLineSegments(rawLine);
       final textContent = parsedSegments.map((s) => s.text).join();
       final onlyBarsAndSpaces = RegExp(r'^[\s|:\-.%]*$').hasMatch(textContent);
       final hasBars = textContent.contains('|');
 
-      if (isGrid || (onlyBarsAndSpaces && hasBars)) {
+      if (ctx.isGrid || (onlyBarsAndSpaces && hasBars)) {
         lineType = 'chord-section';
       }
     }
 
-    var parsedLine = LineAst(type: lineType);
+    LineAst parsedLine;
 
     if (lineType == 'tab') {
-      parsedLine = LineAst(type: 'tab', text: line);
+      parsedLine = LineAst(type: 'tab', text: rawLine);
     } else if (lineType == 'lyrics') {
       parsedLine = LineAst(type: 'lyrics', segments: parsedSegments);
-    } else if (lineType == 'chord-section') {
+    } else {
+      // chord-section
       final measures = <MeasureAst>[];
       var currentChords = <SegmentAst>[];
       var startBarline = '';
@@ -316,11 +519,13 @@ SongAst parseChordPro(String content) {
 
       for (final seg in parsedSegments) {
         if (seg.chord.isNotEmpty) {
-          currentChords.add(SegmentAst(chord: seg.chord, text: '', timing: seg.timing));
+          currentChords.add(
+            SegmentAst(chord: seg.chord, text: '', timing: seg.timing),
+          );
           hasSeenChord = true;
         }
 
-        final barlineMatches = RegExp(r'\|\||:\||\|:|\|').allMatches(seg.text);
+        final barlineMatches = RegExp(r'\|\||:\||:\||\\|').allMatches(seg.text);
         for (final m in barlineMatches) {
           final b = m.group(0)!;
           if (!hasSeenChord && !startBarlineFound) {
@@ -345,12 +550,81 @@ SongAst parseChordPro(String content) {
       );
     }
 
-    currentSection ??= SectionAst(type: 'verse', lines: []);
-    currentSection!.lines.add(parsedLine);
+    ctx.currentSection ??= SectionAst(type: 'verse', lines: []);
+    ctx.currentSection!.lines.add(parsedLine);
   }
 
-  commitSection();
-  if (!metadata.containsKey('title')) metadata['title'] = 'Sem Título';
+  // EOF while a variant is still open
+  if (activeVariant != null) {
+    errors.add(
+      'File ended while variant "${activeVariant.name}" '
+      '(started at line ${activeVariant.startLineNumber}) was still open. '
+      'Missing "{end_of_version}".',
+    );
+    activeVariant.commitSection();
+    final meta = activeVariant.metadata;
+    if (!meta.containsKey('title') || meta['title']!.isEmpty) {
+      meta['title'] = defaultCtx.metadata['title'] ?? 'Sem Título';
+    }
+    variants.add(
+      ChordProVersion(
+        id: activeVariant.id,
+        name: activeVariant.name,
+        metadata: Map.of(meta),
+        body: List.of(activeVariant.sections),
+      ),
+    );
+  }
 
-  return SongAst(metadata: metadata, sections: sections);
+  defaultCtx.commitSection();
+  if (!defaultCtx.metadata.containsKey('title') ||
+      defaultCtx.metadata['title']!.isEmpty) {
+    defaultCtx.metadata['title'] = 'Sem Título';
+  }
+
+  final defaultVersion = ChordProVersion(
+    id: 'default',
+    name: 'Padrão',
+    metadata: Map.of(defaultCtx.metadata),
+    body: List.of(defaultCtx.sections),
+  );
+
+  return ChordProDocument(
+    defaultVersion: defaultVersion,
+    variants: List.of(variants),
+    errors: List.of(errors),
+  );
+}
+
+// ── Version selection ───────────────────────────────────────────────────────
+
+/// Selects a [ChordProVersion] by its [versionId].
+///
+/// Falls back to [document.defaultVersion] when [versionId] is null,
+/// `"default"`, or not found among the variants.
+ChordProVersion selectVersion(ChordProDocument document, [String? versionId]) {
+  if (versionId == null || versionId == 'default') {
+    return document.defaultVersion;
+  }
+  for (final v in document.variants) {
+    if (v.id == versionId) return v;
+  }
+  return document.defaultVersion;
+}
+
+// ── Backward-compatible flat API ────────────────────────────────────────────
+
+/// Parses a ChordPro string and returns a flat [SongAst].
+///
+/// This is the legacy entry point. The full document (including variants) is
+/// also available as [SongAst.defaultVersion] / [SongAst.variants].
+SongAst parseChordPro(String content) {
+  final doc = parseChordProDocument(content);
+  return SongAst(
+    metadata: doc.defaultVersion.metadata,
+    sections: doc.defaultVersion.body,
+    defaultVersion: doc.defaultVersion,
+    variants: doc.variants,
+    errors: doc.errors,
+  );
 }
