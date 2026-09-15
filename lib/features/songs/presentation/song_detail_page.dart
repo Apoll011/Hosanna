@@ -37,11 +37,9 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final songAsync = ref.watch(songByIdProvider(widget.songId));
-    final song = songAsync.valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(song?.title ?? l10n.songsTitle),
         actions: [
           const SongToolbarButton(),
           IconButton(
