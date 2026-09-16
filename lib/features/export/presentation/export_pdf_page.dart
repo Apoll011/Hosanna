@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,12 +55,7 @@ class _ExportPdfPageState extends ConsumerState<ExportPdfPage> {
       final fileName = '${_sanitizeFileName(song.title)}.pdf';
       await SharePlus.instance.share(
         ShareParams(
-          files: [
-            XFile.fromData(
-              pdfBytes,
-              mimeType: 'application/pdf',
-            ),
-          ],
+          files: [XFile.fromData(pdfBytes, mimeType: 'application/pdf')],
           fileNameOverrides: [fileName],
           subject: song.title,
           text: song.title,
