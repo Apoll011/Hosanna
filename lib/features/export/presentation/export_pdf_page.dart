@@ -60,9 +60,9 @@ class _ExportPdfPageState extends ConsumerState<ExportPdfPage> {
             XFile.fromData(
               pdfBytes,
               mimeType: 'application/pdf',
-              name: fileName,
             ),
           ],
+          fileNameOverrides: [fileName],
           subject: song.title,
           text: song.title,
         ),
