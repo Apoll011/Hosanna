@@ -153,7 +153,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             ServiceDetailPage(serviceId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/export-pdf', builder: (_, _) => const ExportPdfPage()),
+      GoRoute(
+        path: '/export-pdf/:songId',
+        builder: (_, state) =>
+            ExportPdfPage(songId: state.pathParameters['songId']!),
+      ),
     ],
   );
 });

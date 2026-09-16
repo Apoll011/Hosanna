@@ -45,7 +45,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           IconButton(
             icon: const Icon(Icons.ios_share),
             tooltip: l10n.navExportPdf,
-            onPressed: () => context.push('/export-pdf'),
+            onPressed: () => context.push('/export-pdf/${widget.songId}'),
           ),
         ],
       ),
