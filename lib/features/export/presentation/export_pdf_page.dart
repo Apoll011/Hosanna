@@ -40,7 +40,10 @@ class _ExportPdfPageState extends ConsumerState<ExportPdfPage> {
     final l10n = AppLocalizations.of(context);
 
     try {
-      final song = await ref.read(songRepositoryProvider).watchSong(widget.songId).first;
+      final song = await ref
+          .read(songRepositoryProvider)
+          .watchSong(widget.songId)
+          .first;
       if (song == null) {
         setState(() {
           _isExporting = false;
