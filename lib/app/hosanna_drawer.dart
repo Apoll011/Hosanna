@@ -234,6 +234,17 @@ class HosannaNavContent extends ConsumerWidget {
                   collapsed: collapsed,
                   onTap: () => selectSection(LibrarySection.recent),
                 ),
+                _NavItem(
+                  icon: Icons.folder,
+                  iconColor: Colors.red,
+                  label: l10n.navRecents,
+                  count: 0,
+                  selected:
+                      currentBranch == kSongsBranch &&
+                      library.section == LibrarySection.recent,
+                  collapsed: collapsed,
+                  onTap: () => selectSection(LibrarySection.recent),
+                ),
 
                 _RevealBlock(
                   visible: !collapsed,

@@ -126,6 +126,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/folders',
+                builder: (_, _) => const FolderBrowserPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/settings',
                 builder: (_, state) {
                   final tab = state.uri.queryParameters['tab'];
@@ -142,7 +150,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(path: '/folders', builder: (_, _) => const FolderBrowserPage()),
       GoRoute(
         path: '/songs/:id',
         builder: (_, state) =>
