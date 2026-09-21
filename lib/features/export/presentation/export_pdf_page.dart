@@ -1,16 +1,22 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../songs/data/song_repository.dart';
+import '../../songs/domain/chordpro/parser.dart';
+import '../../songs/presentation/chordpro/song_display_settings.dart';
+import '../../songs/presentation/song_reader.dart';
+import '../../songs/presentation/song_toolbar.dart';
+import '../domain/song_pdf_builder.dart';
 
+/// Exports a song as a PDF.
+///
+/// The page mirrors [SongDetailPage]: it previews the song through the reader
+/// and exposes the same reading-settings toolbar (transpose, capo, chords,
+/// two-column, font size, instrument, diagrams and variant). Tapping the share
+/// action builds the PDF with those exact settings.
 class ExportPdfPage extends ConsumerStatefulWidget {
   const ExportPdfPage({super.key, required this.songId});
 
@@ -21,80 +27,72 @@ class ExportPdfPage extends ConsumerStatefulWidget {
 }
 
 class _ExportPdfPageState extends ConsumerState<ExportPdfPage> {
-  bool _isExporting = true;
-  String? _errorMessage;
+  bool _isExporting = false;
+
+  /// Last previewed content, used to restore the shared document provider when
+  /// this preview is popped (its nested renderer clears it on dispose).
+  String? _lastContent;
+  ProviderContainer? _container;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _exportAndShare());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _container = ProviderScope.containerOf(context);
   }
 
-  Future<void> _exportAndShare() async {
-    setState(() {
-      _isExporting = true;
-      _errorMessage = null;
-    });
+  @override
+  void dispose() {
+    final content = _lastContent;
+    if (content != null) {
+      _container?.read(songCurrentDocumentProvider.notifier).state =
+          parseChordProDocument(content);
+    }
+    super.dispose();
+  }
 
+  Future<void> _exportAndShare(SongRow song) async {
     final l10n = AppLocalizations.of(context);
+    setState(() => _isExporting = true);
 
     try {
-      final song = await ref
-          .read(songRepositoryProvider)
-          .watchSong(widget.songId)
-          .first;
-      if (song == null) {
-        setState(() {
-          _isExporting = false;
-          _errorMessage = l10n.songsNoResults;
-        });
-        return;
-      }
+      final settings = ref.read(songDisplaySettingsProvider);
+      final bytes = await buildSongPdf(
+        content: song.content,
+        fallbackTitle: song.title,
+        fallbackArtist: song.artist,
+        songNumber: song.songNumber,
+        options: SongPdfOptions(
+          transpose: settings.transpose,
+          capo: settings.capo,
+          showChords: settings.showChords,
+          twoColumn: settings.twoColumn,
+          fontSize: settings.fontSize,
+          instrument: settings.instrument,
+          showDiagrams: settings.showDiagrams,
+          sectionColorBackground: settings.sectionColorBackground,
+          variantId: settings.variantId,
+        ),
+      );
 
-      final pdfBytes = await _buildPdf(song);
       final fileName = '${_sanitizeFileName(song.title)}.pdf';
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile.fromData(pdfBytes, mimeType: 'application/pdf')],
+          files: [XFile.fromData(bytes, mimeType: 'application/pdf')],
           fileNameOverrides: [fileName],
           subject: song.title,
           text: song.title,
         ),
       );
-
-      if (!mounted) return;
-      if (context.canPop()) {
-        context.pop();
-      }
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _isExporting = false;
-        _errorMessage = l10n.commonError;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.commonError)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
     }
-  }
-
-  Future<Uint8List> _buildPdf(SongRow song) async {
-    final pdf = pw.Document();
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        build: (_) => [
-          pw.Text(
-            song.title,
-            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
-          ),
-          if (song.artist.trim().isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(song.artist, style: const pw.TextStyle(fontSize: 14)),
-          ],
-          pw.SizedBox(height: 16),
-          pw.Text(song.content),
-        ],
-      ),
-    );
-    return pdf.save();
   }
 
   String _sanitizeFileName(String input) {
@@ -105,22 +103,38 @@ class _ExportPdfPageState extends ConsumerState<ExportPdfPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final songAsync = ref.watch(songByIdProvider(widget.songId));
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.exportPdfTitle)),
-      body: Center(
-        child: _isExporting
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_errorMessage ?? l10n.commonError),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _exportAndShare,
-                    child: Text(l10n.commonRetry),
-                  ),
-                ],
-              ),
+      appBar: AppBar(
+        title: Text(l10n.exportPdfTitle),
+        actions: [
+          const SongToolbarButton(),
+          IconButton(
+            tooltip: l10n.navExportPdf,
+            onPressed: (_isExporting || songAsync.value == null)
+                ? null
+                : () => _exportAndShare(songAsync.value!),
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.ios_share),
+          ),
+        ],
+      ),
+      body: songAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => Center(child: Text(l10n.commonError)),
+        data: (song) {
+          if (song == null) {
+            return Center(child: Text(l10n.songsNoResults));
+          }
+          _lastContent = song.content;
+          return SongReader(content: song.content);
+        },
       ),
     );
   }
