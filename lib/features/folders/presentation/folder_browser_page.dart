@@ -6,7 +6,6 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/sync_status_banner.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/domain/library_controller.dart';
 import '../data/folder_repository.dart';
@@ -49,13 +48,9 @@ class FolderBrowserPage extends ConsumerWidget {
     }
 
     final childFolders = folders.where((f) => f.parentId == activeId).toList()
-      ..sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     final childSongs = songs.where((s) => s.folderId == activeId).toList()
-      ..sort(
-        (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-      );
+      ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
 
     final explorer = ref.read(folderExplorerProvider.notifier);
     final isEmpty = childFolders.isEmpty && childSongs.isEmpty;
@@ -85,13 +80,6 @@ class FolderBrowserPage extends ConsumerWidget {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: SyncStatusBanner(compact: true),
-              ),
-            ),
             if (path.isNotEmpty) _Breadcrumbs(path: path),
             Expanded(
               child: RefreshIndicator(
@@ -154,20 +142,14 @@ class _Breadcrumbs extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Row(
           children: [
-            _Crumb(
-              label: l10n.foldersRoot,
-              onTap: () => explorer.open(null),
-            ),
+            _Crumb(label: l10n.foldersRoot, onTap: () => explorer.open(null)),
             for (final folder in path) ...[
               Icon(
                 Icons.chevron_right,
                 size: 16,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-              _Crumb(
-                label: folder.name,
-                onTap: () => explorer.open(folder.id),
-              ),
+              _Crumb(label: folder.name, onTap: () => explorer.open(folder.id)),
             ],
           ],
         ),
@@ -219,11 +201,7 @@ class _FolderTile extends StatelessWidget {
 
     return ListTile(
       leading: Icon(Icons.folder, color: theme.colorScheme.primary),
-      title: Text(
-        folder.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right),
       onTap: onOpen,
@@ -243,11 +221,7 @@ class _SongTile extends StatelessWidget {
     return ListTile(
       leading: _SongBadge(songNumber: song.songNumber),
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        song.artist,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: Text(song.artist, maxLines: 1, overflow: TextOverflow.ellipsis),
       onTap: onOpen,
     );
   }
