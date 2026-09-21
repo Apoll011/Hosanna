@@ -48,7 +48,9 @@ class SyncController extends StateNotifier<SyncState> {
   void restore() {
     final millis = _prefs.getInt(_lastSyncedKey);
     if (millis != null) {
-      state = state.copyWith(lastSyncedAt: DateTime.fromMillisecondsSinceEpoch(millis));
+      state = state.copyWith(
+        lastSyncedAt: DateTime.fromMillisecondsSinceEpoch(millis),
+      );
     }
   }
 
@@ -96,10 +98,11 @@ final replicationEngineProvider = Provider<ReplicationEngine>((ref) {
   );
 });
 
-final syncControllerProvider =
-    StateNotifierProvider<SyncController, SyncState>((ref) {
-  return SyncController(
-    ref.watch(replicationEngineProvider),
-    ref.watch(sharedPreferencesProvider),
-  );
-});
+final syncControllerProvider = StateNotifierProvider<SyncController, SyncState>(
+  (ref) {
+    return SyncController(
+      ref.watch(replicationEngineProvider),
+      ref.watch(sharedPreferencesProvider),
+    );
+  },
+);
