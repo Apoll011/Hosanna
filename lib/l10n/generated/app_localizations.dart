@@ -640,6 +640,12 @@ abstract class AppLocalizations {
   /// **'Pastas'**
   String get navFolders;
 
+  /// No description provided for @navCollections.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coleções'**
+  String get navCollections;
+
   /// No description provided for @navSettings.
   ///
   /// In pt, this message translates to:
@@ -1053,6 +1059,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sem pastas'**
   String get foldersEmpty;
+
+  /// No description provided for @collectionsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem coleções'**
+  String get collectionsEmpty;
 
   /// No description provided for @foldersSubfolders.
   ///

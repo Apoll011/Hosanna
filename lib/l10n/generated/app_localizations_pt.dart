@@ -305,6 +305,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navFolders => 'Pastas';
 
   @override
+  String get navCollections => 'Coleções';
+
+  @override
   String get navSettings => 'Definições';
 
   @override
@@ -512,6 +515,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get foldersEmpty => 'Sem pastas';
+
+  @override
+  String get collectionsEmpty => 'Sem coleções';
 
   @override
   String get foldersSubfolders => 'Subpastas';

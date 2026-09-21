@@ -189,6 +189,86 @@ class FolderReplicationAdapter extends ReplicationAdapter {
   }
 }
 
+// ── Collections ─────────────────────────────────────────────────────────────
+
+class CollectionReplicationAdapter extends ReplicationAdapter {
+  CollectionReplicationAdapter(this._db);
+
+  final AppDatabase _db;
+
+  @override
+  String get resourceName => 'collections';
+
+  @override
+  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
+    await _db.batch((b) {
+      b.insertAllOnConflictUpdate(
+        _db.collections,
+        docs.map(_collectionCompanion).toList(),
+      );
+    });
+  }
+
+  CollectionsCompanion _collectionCompanion(Map<String, dynamic> d) {
+    return CollectionsCompanion.insert(
+      id: _str(d['id']),
+      name: _str(d['name']),
+      description: Value(_nullableStr(d['description'])),
+      color: Value(_str(d['color'], 'default')),
+      icon: Value(_str(d['icon'], 'default')),
+      image: Value(_nullableStr(d['image'])),
+      songIds: Value(_tags(d['songIds'])),
+      createdAt: _str(d['createdAt']),
+      updatedAt: _str(d['updatedAt']),
+      isDeleted: Value(_bool(d['isDeleted'])),
+      dirty: const Value(false),
+      purgeAt: Value(_nullableStr(d['purgeAt'])),
+    );
+  }
+
+  @override
+  Future<List<ChangeRow>> collectChanges() async {
+    final query = _db.select(_db.collections)
+      ..where((t) => t.dirty.equals(true));
+    final rows = await query.get();
+    return rows.map((r) {
+      final wire = _collectionToWire(r);
+      return ChangeRow(
+        id: r.id,
+        newDocumentState: wire,
+        assumedMasterState: wire,
+      );
+    }).toList();
+  }
+
+  Map<String, dynamic> _collectionToWire(CollectionRow r) => {
+        'id': r.id,
+        'name': r.name,
+        'description': r.description,
+        'color': r.color,
+        'icon': r.icon,
+        'image': r.image,
+        'songIds': r.songIds,
+        'createdAt': r.createdAt,
+        'updatedAt': r.updatedAt,
+        'isDeleted': r.isDeleted,
+        'purgeAt': r.purgeAt,
+        '_deleted': r.isDeleted,
+      };
+
+  @override
+  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
+      upsertFromWire(serverDocs);
+
+  @override
+  Future<void> markPushed(Iterable<String> ids) async {
+    final list = ids.toList();
+    if (list.isEmpty) return;
+    final stmt = _db.update(_db.collections)..where((t) => t.id.isIn(list));
+    await stmt.write(const CollectionsCompanion(dirty: Value(false)));
+  }
+}
+
 // ── Services ───────────────────────────────────────────────────────────────
 
 class ServiceReplicationAdapter extends ReplicationAdapter {

@@ -6,6 +6,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
 import '../data/song_repository.dart';
 import '../domain/chordpro/parser.dart';
@@ -148,6 +149,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final l10n = AppLocalizations.of(context);
     final songsAsync = ref.watch(songsStreamProvider);
     final foldersAsync = ref.watch(foldersStreamProvider);
+    final collectionsAsync = ref.watch(collectionsStreamProvider);
     final library = ref.watch(libraryControllerProvider);
     final libraryController = ref.read(libraryControllerProvider.notifier);
 
@@ -161,6 +163,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
 
     final folders = foldersAsync.valueOrNull ?? const <FolderRow>[];
     final folderNames = {for (final f in folders) f.id: f.name};
+    final collections =
+        collectionsAsync.valueOrNull ?? const <CollectionRow>[];
+    final collectionNames = {for (final c in collections) c.id: c.name};
+    final collectionSongIds = {
+      for (final c in collections) c.id: c.songIds,
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -176,7 +184,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => setState(() {}),
               )
-            : Text(_sectionTitle(l10n, library, folderNames)),
+            : Text(
+                _sectionTitle(l10n, library, folderNames, collectionNames),
+              ),
         leading: const ShellLeadingButton(),
         actions: [
           IconButton(
@@ -211,6 +221,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                       value,
                       library,
                       folderNames,
+                      collectionSongIds,
                     ),
                     folderNames: folderNames,
                     favorites: library.favoriteIds,
@@ -233,6 +244,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     AppLocalizations l10n,
     LibraryState library,
     Map<String, String> folderNames,
+    Map<String, String> collectionNames,
   ) {
     return switch (library.section) {
       LibrarySection.all => l10n.navAllSongs,
@@ -240,6 +252,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       LibrarySection.recent => l10n.navRecents,
       LibrarySection.folder =>
         folderNames[library.folderId] ?? l10n.navFolders,
+      LibrarySection.collection =>
+        collectionNames[library.collectionId] ?? l10n.navCollections,
     };
   }
 
@@ -296,6 +310,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     List<SongRow> songs,
     LibraryState library,
     Map<String, String> folderNames,
+    Map<String, List<String>> collectionSongIds,
   ) {
     var filtered = switch (library.section) {
       LibrarySection.favorites =>
@@ -303,6 +318,10 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       LibrarySection.recent => _recentSongs(songs, library.recentIds),
       LibrarySection.folder =>
         songs.where((s) => s.folderId == library.folderId).toList(),
+      LibrarySection.collection => _collectionSongs(
+        songs,
+        collectionSongIds[library.collectionId] ?? const [],
+      ),
       LibrarySection.all => List<SongRow>.from(songs),
     };
 
@@ -398,6 +417,16 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       hay.write(s.content.toLowerCase());
     }
     return hay.toString().contains(q);
+  }
+
+  /// Songs belonging to a collection, ordered exactly as the collection lists
+  /// its `songIds` (missing ids are skipped, e.g. after a song was removed).
+  List<SongRow> _collectionSongs(List<SongRow> songs, List<String> songIds) {
+    final byId = {for (final s in songs) s.id: s};
+    return [
+      for (final id in songIds)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   List<SongRow> _recentSongs(List<SongRow> songs, List<String> recentIds) {

@@ -42,7 +42,7 @@ class ChangeRow {
 /// local Drift table. The engine owns the loop + checkpoints; adapters own the
 /// mapping.
 abstract class ReplicationAdapter {
-  /// `songs` | `folders` | `services`.
+  /// `songs` | `folders` | `collections` | `services`.
   String get resourceName;
 
   /// Upsert a batch of pulled wire documents into the local table.
@@ -59,8 +59,8 @@ abstract class ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids);
 }
 
-/// Generic, resource-agnostic pull/push engine for the three replicated
-/// collections. Mirrors the exact `/api/replication/{resource}/{pull|push}`
+/// Generic, resource-agnostic pull/push engine for every replicated
+/// collection. Mirrors the exact `/api/replication/{resource}/{pull|push}`
 /// contract confirmed in the Hosanna server (`replication.service.ts`).
 class ReplicationEngine {
   ReplicationEngine({

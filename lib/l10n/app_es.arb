@@ -94,6 +94,7 @@
   "navSongs": "Canciones",
   "navServices": "Servicios",
   "navFolders": "Carpetas",
+  "navCollections": "Colecciones",
   "navSettings": "Ajustes",
   "navCircleOfFifths": "Círculo de Quintas",
   "navMetronome": "Metrónomo",
@@ -165,6 +166,7 @@
 
   "foldersTitle": "Carpetas",
   "foldersEmpty": "Sin carpetas",
+  "collectionsEmpty": "Sin colecciones",
   "foldersSubfolders": "Subcarpetas",
   "foldersSongsCount": "{count, plural, =1{1 canción} other{{count} canciones}}",
   "foldersRoot": "Raíz",

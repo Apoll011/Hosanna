@@ -303,6 +303,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navFolders => 'Carpetas';
 
   @override
+  String get navCollections => 'Colecciones';
+
+  @override
   String get navSettings => 'Ajustes';
 
   @override
@@ -510,6 +513,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get foldersEmpty => 'Sin carpetas';
+
+  @override
+  String get collectionsEmpty => 'Sin colecciones';
 
   @override
   String get foldersSubfolders => 'Subcarpetas';

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/collections/data/collection_repository.dart';
 import '../features/folders/data/folder_repository.dart';
 import '../features/folders/domain/folder_explorer_controller.dart';
 import '../features/songs/data/song_repository.dart';
@@ -76,12 +77,18 @@ class HosannaNavContent extends ConsumerWidget {
     final libraryController = ref.read(libraryControllerProvider.notifier);
     final songs = ref.watch(songsStreamProvider).valueOrNull ?? const [];
     final folders = ref.watch(foldersStreamProvider).valueOrNull ?? const [];
+    final collections =
+        ref.watch(collectionsStreamProvider).valueOrNull ?? const [];
 
     final user = auth.session?.user;
     final org = auth.organization;
     final imageUrl = user?.image;
 
-    void selectSection(LibrarySection section, {String? folderId}) {
+    void selectSection(
+      LibrarySection section, {
+      String? folderId,
+      String? collectionId,
+    }) {
       switch (section) {
         case LibrarySection.all:
           libraryController.selectAll();
@@ -91,6 +98,8 @@ class HosannaNavContent extends ConsumerWidget {
           libraryController.selectRecent();
         case LibrarySection.folder:
           libraryController.selectFolder(folderId!);
+        case LibrarySection.collection:
+          libraryController.selectCollection(collectionId!);
       }
       onNavigate(0);
     }
@@ -248,6 +257,48 @@ class HosannaNavContent extends ConsumerWidget {
                     ref.read(folderExplorerProvider.notifier).open(null);
                     onNavigate(kFoldersBranch);
                   },
+                ),
+
+                _RevealBlock(
+                  visible: !collapsed,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        child: _SectionLabel(l10n.navCollections),
+                      ),
+                      if (collections.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            l10n.collectionsEmpty,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        )
+                      else
+                        for (final collection in collections)
+                          _NavItem(
+                            icon: Icons.collections_bookmark_outlined,
+                            iconColor: theme.colorScheme.primary,
+                            label: collection.name,
+                            count: collection.songIds.length,
+                            selected:
+                                currentBranch == kSongsBranch &&
+                                library.section == LibrarySection.collection &&
+                                library.collectionId == collection.id,
+                            collapsed: collapsed,
+                            onTap: () => selectSection(
+                              LibrarySection.collection,
+                              collectionId: collection.id,
+                            ),
+                          ),
+                    ],
+                  ),
                 ),
 
                 _RevealBlock(

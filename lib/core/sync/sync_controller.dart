@@ -52,7 +52,7 @@ class SyncController extends StateNotifier<SyncState> {
     }
   }
 
-  /// Full pull + push cycle for all three resources.
+  /// Full pull + push cycle for every replicated resource.
   Future<void> syncAll() async {
     if (state.isSyncing) return;
     state = state.copyWith(status: SyncStatus.syncing, clearError: true);
@@ -83,6 +83,7 @@ final replicationAdaptersProvider = Provider<List<ReplicationAdapter>>((ref) {
   return [
     SongReplicationAdapter(db),
     FolderReplicationAdapter(db),
+    CollectionReplicationAdapter(db),
     ServiceReplicationAdapter(db),
   ];
 });

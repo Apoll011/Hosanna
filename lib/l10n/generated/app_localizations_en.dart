@@ -298,6 +298,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navFolders => 'Folders';
 
   @override
+  String get navCollections => 'Collections';
+
+  @override
   String get navSettings => 'Settings';
 
   @override
@@ -505,6 +508,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get foldersEmpty => 'No folders';
+
+  @override
+  String get collectionsEmpty => 'No collections';
 
   @override
   String get foldersSubfolders => 'Subfolders';

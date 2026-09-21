@@ -94,6 +94,7 @@
   "navSongs": "Cânticos",
   "navServices": "Cultos",
   "navFolders": "Pastas",
+  "navCollections": "Coleções",
   "navSettings": "Definições",
   "navCircleOfFifths": "Círculo de Quintas",
   "navMetronome": "Metrónomo",
@@ -165,6 +166,7 @@
 
   "foldersTitle": "Pastas",
   "foldersEmpty": "Sem pastas",
+  "collectionsEmpty": "Sem coleções",
   "foldersSubfolders": "Subpastas",
   "foldersSongsCount": "{count, plural, =1{1 cântico} other{{count} cânticos}}",
   "foldersRoot": "Raiz",

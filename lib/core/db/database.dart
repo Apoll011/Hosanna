@@ -5,7 +5,7 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Songs, Folders, Services])
+@DriftDatabase(tables: [Songs, Folders, Services, Collections])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -19,5 +19,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      // v2 adds the replicated `collections` table.
+      if (from < 2) {
+        await m.createTable(collections);
+      }
+    },
+  );
 }

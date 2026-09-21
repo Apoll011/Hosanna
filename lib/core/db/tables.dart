@@ -147,6 +147,28 @@ class Folders extends Table with SyncMetadata {
   Set<Column> get primaryKey => {id};
 }
 
+/// A user-curated grouping of songs (set list, theme, service prep, …).
+///
+/// Mirrors `CollectionDocType` from `@hosanna/shared`. `songIds` is stored as a
+/// JSON-encoded text column, reusing [StringListConverter] like song tags.
+@DataClassName('CollectionRow')
+class Collections extends Table with SyncMetadata {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get color => text().withDefault(const Constant('default'))();
+  TextColumn get icon => text().withDefault(const Constant('default'))();
+  TextColumn get image => text().nullable()();
+  TextColumn get songIds => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @TableIndex(name: 'services_date_idx', columns: {#date})
 @DataClassName('ServiceRow')
 class Services extends Table with SyncMetadata {

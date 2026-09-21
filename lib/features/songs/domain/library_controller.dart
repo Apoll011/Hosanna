@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/providers.dart';
 
 /// Which slice of the song library the browser is showing.
-enum LibrarySection { all, favorites, recent, folder }
+enum LibrarySection { all, favorites, recent, folder, collection }
 
 /// Library-level, non-replicated user state: favorite songs, recently played
 /// songs, and the currently selected browse section (mirrors the React app's
@@ -13,12 +13,14 @@ class LibraryState {
   const LibraryState({
     this.section = LibrarySection.all,
     this.folderId,
+    this.collectionId,
     this.favoriteIds = const [],
     this.recentIds = const [],
   });
 
   final LibrarySection section;
   final String? folderId;
+  final String? collectionId;
   final List<String> favoriteIds;
 
   /// Most-recent-first list of song ids.
@@ -30,12 +32,17 @@ class LibraryState {
     LibrarySection? section,
     String? folderId,
     bool clearFolder = false,
+    String? collectionId,
+    bool clearCollection = false,
     List<String>? favoriteIds,
     List<String>? recentIds,
   }) {
     return LibraryState(
       section: section ?? this.section,
       folderId: clearFolder ? null : (folderId ?? this.folderId),
+      collectionId: clearCollection
+          ? null
+          : (collectionId ?? this.collectionId),
       favoriteIds: favoriteIds ?? this.favoriteIds,
       recentIds: recentIds ?? this.recentIds,
     );
@@ -60,20 +67,34 @@ class LibraryController extends StateNotifier<LibraryState> {
     );
   }
 
-  void selectAll() =>
-      state = state.copyWith(section: LibrarySection.all, clearFolder: true);
+  void selectAll() => state = state.copyWith(
+    section: LibrarySection.all,
+    clearFolder: true,
+    clearCollection: true,
+  );
 
   void selectFavorites() => state = state.copyWith(
     section: LibrarySection.favorites,
     clearFolder: true,
+    clearCollection: true,
   );
 
-  void selectRecent() =>
-      state = state.copyWith(section: LibrarySection.recent, clearFolder: true);
+  void selectRecent() => state = state.copyWith(
+    section: LibrarySection.recent,
+    clearFolder: true,
+    clearCollection: true,
+  );
 
   void selectFolder(String folderId) => state = state.copyWith(
     section: LibrarySection.folder,
     folderId: folderId,
+    clearCollection: true,
+  );
+
+  void selectCollection(String collectionId) => state = state.copyWith(
+    section: LibrarySection.collection,
+    collectionId: collectionId,
+    clearFolder: true,
   );
 
   void toggleFavorite(String id) {
