@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/folders/data/folder_repository.dart';
+import '../features/folders/domain/folder_explorer_controller.dart';
 import '../features/songs/data/song_repository.dart';
 import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -235,15 +236,18 @@ class HosannaNavContent extends ConsumerWidget {
                   onTap: () => selectSection(LibrarySection.recent),
                 ),
                 _NavItem(
-                  icon: Icons.folder,
-                  iconColor: Colors.red,
-                  label: l10n.navRecents,
-                  count: 0,
-                  selected:
-                      currentBranch == kSongsBranch &&
-                      library.section == LibrarySection.recent,
+                  icon: Icons.folder_outlined,
+                  iconColor: Colors.amber,
+                  label: l10n.navFolders,
+                  count: folders.length,
+                  // The folders row belongs to its own branch and opens the
+                  // folder explorer at the root level.
+                  selected: currentBranch == kFoldersBranch,
                   collapsed: collapsed,
-                  onTap: () => selectSection(LibrarySection.recent),
+                  onTap: () {
+                    ref.read(folderExplorerProvider.notifier).open(null);
+                    onNavigate(kFoldersBranch);
+                  },
                 ),
 
                 _RevealBlock(
@@ -271,48 +275,6 @@ class HosannaNavContent extends ConsumerWidget {
                   selected: currentBranch == kCircleOfFifthsBranch,
                   collapsed: collapsed,
                   onTap: () => onNavigate(kCircleOfFifthsBranch),
-                ),
-
-                _RevealBlock(
-                  visible: !collapsed,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 8),
-                      Container(
-                        alignment: .centerStart,
-                        child: _SectionLabel(l10n.navFolders),
-                      ),
-                      if (folders.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            l10n.foldersEmpty,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        )
-                      else
-                        for (final folder in folders)
-                          _NavItem(
-                            icon: Icons.folder_outlined,
-                            iconColor: theme.colorScheme.primary,
-                            label: folder.name,
-                            count: folder.songCount,
-                            selected:
-                                currentBranch == kSongsBranch &&
-                                library.section == LibrarySection.folder &&
-                                library.folderId == folder.id,
-                            collapsed: collapsed,
-                            onTap: () => selectSection(
-                              LibrarySection.folder,
-                              folderId: folder.id,
-                            ),
-                          ),
-                    ],
-                  ),
                 ),
               ],
             ),
