@@ -138,7 +138,11 @@ class Folders extends Table with SyncMetadata {
   TextColumn get color => text().withDefault(const Constant('default'))();
   TextColumn get icon => text().withDefault(const Constant('default'))();
   TextColumn get parentId => text().nullable()();
+
+  /// Derived locally from the songs/folders tables (never sent or received).
   IntColumn get songCount => integer().withDefault(const Constant(0))();
+
+  /// Derived locally from the child folders (never sent or received).
   IntColumn get folderCount => integer().withDefault(const Constant(0))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
@@ -162,6 +166,9 @@ class Collections extends Table with SyncMetadata {
   TextColumn get songIds => text()
       .map(const StringListConverter())
       .withDefault(const Constant('[]'))();
+
+  /// Derived locally from [songIds] (never sent or received).
+  IntColumn get songCount => integer().withDefault(const Constant(0))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
 

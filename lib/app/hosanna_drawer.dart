@@ -286,7 +286,7 @@ class HosannaNavContent extends ConsumerWidget {
                             icon: Icons.collections_bookmark_outlined,
                             iconColor: theme.colorScheme.primary,
                             label: collection.name,
-                            count: collection.songIds.length,
+                            count: collection.songCount,
                             selected:
                                 currentBranch == kSongsBranch &&
                                 library.section == LibrarySection.collection &&

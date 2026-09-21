@@ -57,6 +57,11 @@ abstract class ReplicationAdapter {
 
   /// Clear the dirty flag for rows the server has accepted.
   Future<void> markPushed(Iterable<String> ids);
+
+  /// Recompute locally-derived values that are never replicated (e.g. folder
+  /// and collection song counts). Defaults to a no-op for resources without
+  /// any such values.
+  Future<void> refreshLocalCounts() async {}
 }
 
 /// Generic, resource-agnostic pull/push engine for every replicated
@@ -80,6 +85,11 @@ class ReplicationEngine {
   Future<void> pullAll() async {
     for (final adapter in _adapters) {
       await pullOne(adapter);
+    }
+    // Counts are derived from the other tables, so resolve them only once the
+    // full pull (songs included) has landed.
+    for (final adapter in _adapters) {
+      await adapter.refreshLocalCounts();
     }
   }
 

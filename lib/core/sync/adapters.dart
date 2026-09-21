@@ -136,8 +136,6 @@ class FolderReplicationAdapter extends ReplicationAdapter {
       color: Value(_str(d['color'], 'default')),
       icon: Value(_str(d['icon'], 'default')),
       parentId: Value(_nullableStr(d['parentId'])),
-      songCount: Value(_int(d['songCount']) ?? 0),
-      folderCount: Value(_int(d['folderCount']) ?? 0),
       createdAt: _str(d['createdAt']),
       updatedAt: _str(d['updatedAt']),
       isDeleted: Value(_bool(d['isDeleted'])),
@@ -167,8 +165,6 @@ class FolderReplicationAdapter extends ReplicationAdapter {
         'color': r.color,
         'icon': r.icon,
         'parentId': r.parentId,
-        'songCount': r.songCount,
-        'folderCount': r.folderCount,
         'createdAt': r.createdAt,
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
@@ -186,6 +182,52 @@ class FolderReplicationAdapter extends ReplicationAdapter {
     if (list.isEmpty) return;
     final stmt = _db.update(_db.folders)..where((t) => t.id.isIn(list));
     await stmt.write(const FoldersCompanion(dirty: Value(false)));
+  }
+
+  /// `songCount`/`folderCount` are local-only, so recompute them from the rows
+  /// that actually exist locally instead of trusting the server.
+  @override
+  Future<void> refreshLocalCounts() async {
+    final songs = await (_db.select(_db.songs)
+          ..where((t) => t.isDeleted.equals(false)))
+        .get();
+    final songsPerFolder = <String, int>{};
+    for (final song in songs) {
+      final folderId = song.folderId;
+      if (folderId != null) {
+        songsPerFolder[folderId] = (songsPerFolder[folderId] ?? 0) + 1;
+      }
+    }
+
+    final folders = await (_db.select(_db.folders)
+          ..where((t) => t.isDeleted.equals(false)))
+        .get();
+    final childFoldersPerFolder = <String, int>{};
+    for (final folder in folders) {
+      final parentId = folder.parentId;
+      if (parentId != null) {
+        childFoldersPerFolder[parentId] =
+            (childFoldersPerFolder[parentId] ?? 0) + 1;
+      }
+    }
+
+    await _db.batch((b) {
+      for (final folder in folders) {
+        final songCount = songsPerFolder[folder.id] ?? 0;
+        final folderCount = childFoldersPerFolder[folder.id] ?? 0;
+        if (songCount == folder.songCount && folderCount == folder.folderCount) {
+          continue;
+        }
+        b.update(
+          _db.folders,
+          FoldersCompanion(
+            songCount: Value(songCount),
+            folderCount: Value(folderCount),
+          ),
+          where: (t) => t.id.equals(folder.id),
+        );
+      }
+    });
   }
 }
 
@@ -266,6 +308,31 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
     if (list.isEmpty) return;
     final stmt = _db.update(_db.collections)..where((t) => t.id.isIn(list));
     await stmt.write(const CollectionsCompanion(dirty: Value(false)));
+  }
+
+  /// `songCount` is local-only, so recompute it from the songs that actually
+  /// exist locally rather than trusting the server.
+  @override
+  Future<void> refreshLocalCounts() async {
+    final collections = await (_db.select(_db.collections)
+          ..where((t) => t.isDeleted.equals(false)))
+        .get();
+    final songs = await (_db.select(_db.songs)
+          ..where((t) => t.isDeleted.equals(false)))
+        .get();
+    final songIds = songs.map((s) => s.id).toSet();
+
+    await _db.batch((b) {
+      for (final collection in collections) {
+        final songCount = collection.songIds.where(songIds.contains).length;
+        if (songCount == collection.songCount) continue;
+        b.update(
+          _db.collections,
+          CollectionsCompanion(songCount: Value(songCount)),
+          where: (t) => t.id.equals(collection.id),
+        );
+      }
+    });
   }
 }
 

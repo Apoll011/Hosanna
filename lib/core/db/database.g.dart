@@ -1077,7 +1077,11 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
   final String color;
   final String icon;
   final String? parentId;
+
+  /// Derived locally from the songs/folders tables (never sent or received).
   final int songCount;
+
+  /// Derived locally from the child folders (never sent or received).
   final int folderCount;
   final String createdAt;
   final String updatedAt;
@@ -2219,6 +2223,18 @@ class $CollectionsTable extends Collections
         requiredDuringInsert: false,
         defaultValue: const Constant('[]'),
       ).withConverter<List<String>>($CollectionsTable.$convertersongIds);
+  static const VerificationMeta _songCountMeta = const VerificationMeta(
+    'songCount',
+  );
+  @override
+  late final GeneratedColumn<int> songCount = GeneratedColumn<int>(
+    'song_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2253,6 +2269,7 @@ class $CollectionsTable extends Collections
     icon,
     image,
     songIds,
+    songCount,
     createdAt,
     updatedAt,
   ];
@@ -2326,6 +2343,12 @@ class $CollectionsTable extends Collections
         image.isAcceptableOrUnknown(data['image']!, _imageMeta),
       );
     }
+    if (data.containsKey('song_count')) {
+      context.handle(
+        _songCountMeta,
+        songCount.isAcceptableOrUnknown(data['song_count']!, _songCountMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2393,6 +2416,10 @@ class $CollectionsTable extends Collections
           data['${effectivePrefix}song_ids'],
         )!,
       ),
+      songCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}song_count'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -2424,6 +2451,9 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
   final String icon;
   final String? image;
   final List<String> songIds;
+
+  /// Derived locally from [songIds] (never sent or received).
+  final int songCount;
   final String createdAt;
   final String updatedAt;
   const CollectionRow({
@@ -2437,6 +2467,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     required this.icon,
     this.image,
     required this.songIds,
+    required this.songCount,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2463,6 +2494,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
         $CollectionsTable.$convertersongIds.toSql(songIds),
       );
     }
+    map['song_count'] = Variable<int>(songCount);
     map['created_at'] = Variable<String>(createdAt);
     map['updated_at'] = Variable<String>(updatedAt);
     return map;
@@ -2486,6 +2518,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
           ? const Value.absent()
           : Value(image),
       songIds: Value(songIds),
+      songCount: Value(songCount),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2507,6 +2540,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       icon: serializer.fromJson<String>(json['icon']),
       image: serializer.fromJson<String?>(json['image']),
       songIds: serializer.fromJson<List<String>>(json['songIds']),
+      songCount: serializer.fromJson<int>(json['songCount']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
     );
@@ -2525,6 +2559,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       'icon': serializer.toJson<String>(icon),
       'image': serializer.toJson<String?>(image),
       'songIds': serializer.toJson<List<String>>(songIds),
+      'songCount': serializer.toJson<int>(songCount),
       'createdAt': serializer.toJson<String>(createdAt),
       'updatedAt': serializer.toJson<String>(updatedAt),
     };
@@ -2541,6 +2576,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     String? icon,
     Value<String?> image = const Value.absent(),
     List<String>? songIds,
+    int? songCount,
     String? createdAt,
     String? updatedAt,
   }) => CollectionRow(
@@ -2554,6 +2590,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     icon: icon ?? this.icon,
     image: image.present ? image.value : this.image,
     songIds: songIds ?? this.songIds,
+    songCount: songCount ?? this.songCount,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2571,6 +2608,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       icon: data.icon.present ? data.icon.value : this.icon,
       image: data.image.present ? data.image.value : this.image,
       songIds: data.songIds.present ? data.songIds.value : this.songIds,
+      songCount: data.songCount.present ? data.songCount.value : this.songCount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2589,6 +2627,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
           ..write('icon: $icon, ')
           ..write('image: $image, ')
           ..write('songIds: $songIds, ')
+          ..write('songCount: $songCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2607,6 +2646,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     icon,
     image,
     songIds,
+    songCount,
     createdAt,
     updatedAt,
   );
@@ -2624,6 +2664,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
           other.icon == this.icon &&
           other.image == this.image &&
           other.songIds == this.songIds &&
+          other.songCount == this.songCount &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2639,6 +2680,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
   final Value<String> icon;
   final Value<String?> image;
   final Value<List<String>> songIds;
+  final Value<int> songCount;
   final Value<String> createdAt;
   final Value<String> updatedAt;
   final Value<int> rowid;
@@ -2653,6 +2695,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     this.icon = const Value.absent(),
     this.image = const Value.absent(),
     this.songIds = const Value.absent(),
+    this.songCount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2668,6 +2711,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     this.icon = const Value.absent(),
     this.image = const Value.absent(),
     this.songIds = const Value.absent(),
+    this.songCount = const Value.absent(),
     required String createdAt,
     required String updatedAt,
     this.rowid = const Value.absent(),
@@ -2686,6 +2730,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     Expression<String>? icon,
     Expression<String>? image,
     Expression<String>? songIds,
+    Expression<int>? songCount,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<int>? rowid,
@@ -2701,6 +2746,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
       if (icon != null) 'icon': icon,
       if (image != null) 'image': image,
       if (songIds != null) 'song_ids': songIds,
+      if (songCount != null) 'song_count': songCount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2718,6 +2764,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     Value<String>? icon,
     Value<String?>? image,
     Value<List<String>>? songIds,
+    Value<int>? songCount,
     Value<String>? createdAt,
     Value<String>? updatedAt,
     Value<int>? rowid,
@@ -2733,6 +2780,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
       icon: icon ?? this.icon,
       image: image ?? this.image,
       songIds: songIds ?? this.songIds,
+      songCount: songCount ?? this.songCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2774,6 +2822,9 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
         $CollectionsTable.$convertersongIds.toSql(songIds.value),
       );
     }
+    if (songCount.present) {
+      map['song_count'] = Variable<int>(songCount.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -2799,6 +2850,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
           ..write('icon: $icon, ')
           ..write('image: $image, ')
           ..write('songIds: $songIds, ')
+          ..write('songCount: $songCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3845,6 +3897,7 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<String> icon,
       Value<String?> image,
       Value<List<String>> songIds,
+      Value<int> songCount,
       required String createdAt,
       required String updatedAt,
       Value<int> rowid,
@@ -3861,6 +3914,7 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<String> icon,
       Value<String?> image,
       Value<List<String>> songIds,
+      Value<int> songCount,
       Value<String> createdAt,
       Value<String> updatedAt,
       Value<int> rowid,
@@ -3924,6 +3978,11 @@ class $$CollectionsTableFilterComposer
   get songIds => $composableBuilder(
     column: $table.songIds,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get songCount => $composableBuilder(
+    column: $table.songCount,
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get createdAt => $composableBuilder(
@@ -3996,6 +4055,11 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get songCount => $composableBuilder(
+    column: $table.songCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4048,6 +4112,9 @@ class $$CollectionsTableAnnotationComposer
   GeneratedColumnWithTypeConverter<List<String>, String> get songIds =>
       $composableBuilder(column: $table.songIds, builder: (column) => column);
 
+  GeneratedColumn<int> get songCount =>
+      $composableBuilder(column: $table.songCount, builder: (column) => column);
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -4096,6 +4163,7 @@ class $$CollectionsTableTableManager
                 Value<String> icon = const Value.absent(),
                 Value<String?> image = const Value.absent(),
                 Value<List<String>> songIds = const Value.absent(),
+                Value<int> songCount = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4110,6 +4178,7 @@ class $$CollectionsTableTableManager
                 icon: icon,
                 image: image,
                 songIds: songIds,
+                songCount: songCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -4126,6 +4195,7 @@ class $$CollectionsTableTableManager
                 Value<String> icon = const Value.absent(),
                 Value<String?> image = const Value.absent(),
                 Value<List<String>> songIds = const Value.absent(),
+                Value<int> songCount = const Value.absent(),
                 required String createdAt,
                 required String updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -4140,6 +4210,7 @@ class $$CollectionsTableTableManager
                 icon: icon,
                 image: image,
                 songIds: songIds,
+                songCount: songCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
