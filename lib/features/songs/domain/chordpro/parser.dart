@@ -34,7 +34,7 @@ class LineAst {
   });
 
   final String
-  type; // lyrics | comment | comment_box | tab | empty | chord-section
+  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
@@ -432,7 +432,7 @@ ChordProDocument parseChordProDocument(String content) {
           ctx.currentSection = SectionAst(type: 'bridge', label: value);
         case 'comment':
         case 'comment_italic':
-          final commentLine = LineAst(type: 'comment', text: value);
+          final commentLine = LineAst(type: name, text: value);
           if (ctx.currentSection != null) {
             ctx.currentSection!.lines.add(commentLine);
           } else {

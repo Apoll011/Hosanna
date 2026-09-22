@@ -622,7 +622,7 @@ pw.Widget _sectionWidget(
     'new_song' => _newSongDivider(fonts),
     'grid' => _gridSection(section, options, transpose, fonts),
     'tab' => _tabSection(section, fonts),
-    'comment' => _commentSection(section, fonts),
+    'comment' => _commentSection(section, options, transpose, fonts),
     _ => _standardSection(section, options, transpose, fonts),
   };
 }
@@ -753,16 +753,20 @@ pw.Widget _tabSection(SectionAst section, _Fonts fonts) {
   );
 }
 
-pw.Widget _commentSection(SectionAst section, _Fonts fonts) {
+pw.Widget _commentSection(
+  SectionAst section,
+  SongPdfOptions options,
+  int transpose,
+  _Fonts fonts,
+) {
   return pw.Padding(
     padding: const pw.EdgeInsets.symmetric(vertical: 4),
-    child: pw.Text(
-      _sanitize(section.lines.map((l) => l.text ?? '').join(', ')),
-      style: pw.TextStyle(
-        font: fonts.italic,
-        fontSize: 10,
-        color: _onSurfaceVariant,
-      ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        for (final line in section.lines)
+          _lineWidget(line, options, transpose, fonts),
+      ],
     ),
   );
 }
@@ -811,11 +815,13 @@ pw.Widget _lineWidget(
       return pw.Text(
         _sanitize(line.text ?? ''),
         style: pw.TextStyle(
-          font: fonts.italic,
+          font: fonts.base,
           fontSize: 10,
           color: _onSurfaceVariant,
         ),
       );
+    case 'comment_italic':
+      return _commentItalicWidget(line, fonts);
     case 'comment_box':
       return _commentBoxWidget(line, fonts);
     case 'chord-section':
@@ -828,6 +834,27 @@ pw.Widget _lineWidget(
     default:
       return _lyricsWidget(line, options, transpose, fonts);
   }
+}
+
+pw.Widget _commentItalicWidget(LineAst line, _Fonts fonts) {
+  return pw.Container(
+    width: double.infinity,
+    margin: const pw.EdgeInsets.symmetric(vertical: 4),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: pw.BoxDecoration(
+      color: _surfaceContainer,
+      borderRadius: pw.BorderRadius.circular(8),
+    ),
+    child: pw.Text(
+      _sanitize(line.text ?? ''),
+      textAlign: pw.TextAlign.center,
+      style: pw.TextStyle(
+        font: fonts.italic,
+        fontSize: 10,
+        color: _onSurfaceVariant,
+      ),
+    ),
+  );
 }
 
 pw.Widget _commentBoxWidget(LineAst line, _Fonts fonts) {

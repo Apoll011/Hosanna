@@ -346,12 +346,17 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     if (section.type == 'comment') {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Text(
-          section.lines.map((l) => l.text ?? '').join(', '),
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final line in section.lines)
+              _LineRenderer(
+                line: line,
+                showChords: widget.showChords,
+                transpose: _effectiveTranspose,
+                onChordTap: _openChord,
+              ),
+          ],
         ),
       );
     }
@@ -629,13 +634,9 @@ class _LineRenderer extends StatelessWidget {
       case 'empty':
         return const SizedBox(height: 8);
       case 'comment':
-        return Text(
-          line.text ?? '',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        );
+        return _CommentRenderer(line: line);
+      case 'comment_italic':
+        return _CommentItalicRenderer(line: line);
       case 'comment_box':
         return _CommentBoxRenderer(line: line);
       case 'chord-section':
@@ -654,6 +655,72 @@ class _LineRenderer extends StatelessWidget {
           onChordTap: onChordTap,
         );
     }
+  }
+}
+
+/// Plain inline comment (`{c: ...}`): quiet, upright note text.
+class _CommentRenderer extends StatelessWidget {
+  const _CommentRenderer({required this.line});
+
+  final LineAst line;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.notes,
+              size: 13,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              line.text ?? '',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Emphasised italic comment (`{ci: ...}`): centred and set apart.
+class _CommentItalicRenderer extends StatelessWidget {
+  const _CommentItalicRenderer({required this.line});
+
+  final LineAst line;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        line.text ?? '',
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontStyle: FontStyle.italic,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
   }
 }
 
