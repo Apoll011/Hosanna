@@ -1012,6 +1012,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get songGuitar;
 
+  /// No description provided for @songUkulele.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ukelele'**
+  String get songUkulele;
+
   /// No description provided for @songPiano.
   ///
   /// In pt, this message translates to:

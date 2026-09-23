@@ -486,6 +486,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songGuitar => 'Guitar';
 
   @override
+  String get songUkulele => 'Ukulele';
+
+  @override
   String get songPiano => 'Piano';
 
   @override

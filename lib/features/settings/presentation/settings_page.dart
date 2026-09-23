@@ -12,6 +12,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../services/data/service_repository.dart';
 import '../../songs/data/song_repository.dart';
+import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 
 enum SettingsTab { account, workspace, preferences }
@@ -871,26 +872,30 @@ class _PreferencesTab extends ConsumerWidget {
                 onChanged: settingsController.setSyncAnnotations,
               ),
               const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.music_note),
-                title: Text(l10n.songInstrument),
-                trailing: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'guitar',
-                      label: Text('Guitarra'),
-                      icon: Icon(Icons.graphic_eq),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.music_note, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.songInstrument,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                    ButtonSegment(
-                      value: 'piano',
-                      label: Text('Piano'),
-                      icon: Icon(Icons.piano),
+                    const SizedBox(height: 8),
+                    InstrumentSelector(
+                      selected: display.instrument,
+                      onChanged: displayController.setInstrument,
                     ),
                   ],
-                  selected: {display.instrument},
-                  onSelectionChanged: (s) =>
-                      displayController.setInstrument(s.first),
                 ),
               ),
             ],

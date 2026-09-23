@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/chordpro/chord_dictionary.dart';
+import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/parser.dart';
 import '../../domain/chordpro/transpose.dart';
 import 'chord_diagrams.dart';
+import 'instrument_selector.dart';
 
 /// Full ChordPro renderer, ported from `@hosanna/shared`'s ChordProRenderer.
 ///
@@ -90,7 +92,9 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     }
   }
 
-  int get _effectiveCapo => widget.instrument == 'guitar' ? widget.capo : 0;
+  Instrument get _instrument => instrumentRegistry.resolve(widget.instrument);
+
+  int get _effectiveCapo => _instrument.supportsCapo ? widget.capo : 0;
 
   int get _effectiveTranspose => widget.transpose - _effectiveCapo;
 
@@ -961,7 +965,7 @@ class _ChordRoll extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (instrument == 'guitar' && capo > 0)
+          if (instrumentRegistry.resolve(instrument).supportsCapo && capo > 0)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
@@ -1008,7 +1012,9 @@ class _ChordRollItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final fingering = chordDictionary.getFingering(transposed);
+    final voicing = chordDictionary.getFingering(transposed)?.forInstrument(
+      instrument,
+    );
 
     return InkWell(
       onTap: () => onTap(transposed),
@@ -1028,13 +1034,13 @@ class _ChordRollItem extends StatelessWidget {
             const SizedBox(height: 4),
             SizedBox(
               height: 116,
-              child: _DiagramBody(fingering: fingering, instrument: instrument),
+              child: InstrumentDiagram(fingering: voicing),
             ),
-            if (fingering != null)
+            if (voicing != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  fingering.piano.notes.join(' - '),
+                  voicing.notes.join(' - '),
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontFamily: 'monospace',
                   ),
@@ -1043,80 +1049,6 @@ class _ChordRollItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _DiagramBody extends StatelessWidget {
-  const _DiagramBody({required this.fingering, required this.instrument});
-
-  final ChordFingering? fingering;
-  final String instrument;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (fingering == null) {
-      return const Center(
-        child: Text('—', style: TextStyle(color: Colors.grey)),
-      );
-    }
-
-    final colors = _DiagramColors.of(context);
-    if (instrument == 'piano') {
-      return PianoDiagram(
-        highlightKeys: fingering!.piano.highlightKeys,
-        highlightColor: colors.primary,
-        whiteColor: colors.white,
-        blackColor: colors.black,
-        keyLineColor: colors.line,
-        dotColor: colors.primary,
-      );
-    }
-
-    final guitar = fingering!.guitar;
-    if (guitar == null) {
-      return const Center(
-        child: Text('Sem visual', style: TextStyle(color: Colors.grey)),
-      );
-    }
-    return GuitarDiagram(
-      frets: guitar.frets,
-      fingers: guitar.fingers,
-      barre: guitar.barre,
-      dotColor: colors.primary,
-      lineColor: colors.line,
-      textColor: colors.text,
-      muteColor: theme.colorScheme.error,
-      openColor: const Color(0xFF10B981),
-    );
-  }
-}
-
-class _DiagramColors {
-  const _DiagramColors({
-    required this.primary,
-    required this.line,
-    required this.text,
-    required this.white,
-    required this.black,
-  });
-
-  final Color primary;
-  final Color line;
-  final Color text;
-  final Color white;
-  final Color black;
-
-  static _DiagramColors of(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return _DiagramColors(
-      primary: theme.colorScheme.primary,
-      line: isDark ? const Color(0xFF52525B) : const Color(0xFFA1A1AA),
-      text: theme.colorScheme.onSurface,
-      white: isDark ? const Color(0xFF27272A) : Colors.white,
-      black: isDark ? const Color(0xFF09090B) : const Color(0xFF27272A),
     );
   }
 }
@@ -1138,6 +1070,7 @@ class _ChordDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final fingering = chordDictionary.getFingering(chord);
+    final voicing = fingering?.forInstrument(instrument);
 
     return Positioned.fill(
       child: GestureDetector(
@@ -1171,17 +1104,13 @@ class _ChordDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'guitar', label: Text('Guitarra')),
-                      ButtonSegment(value: 'piano', label: Text('Piano')),
-                    ],
-                    selected: {instrument},
-                    onSelectionChanged: (s) => onInstrumentChange(s.first),
+                  InstrumentSelector(
+                    selected: instrument,
+                    onChanged: onInstrumentChange,
                   ),
                   const SizedBox(height: 16),
                   if (fingering != null)
-                    _DiagramBody(fingering: fingering, instrument: instrument)
+                    InstrumentDiagram(fingering: voicing)
                   else
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -1192,11 +1121,11 @@ class _ChordDialog extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (fingering != null)
+                  if (voicing != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
-                        'Notas: ${fingering.piano.notes.join(' - ')}',
+                        'Notas: ${voicing.notes.join(' - ')}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontFamily: 'monospace',
                         ),
