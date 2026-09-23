@@ -13,6 +13,7 @@ class FilterSettings {
     this.selectedTags = const {},
     this.tagMatchAll = true,
     this.selectedFolders = const {},
+    this.selectedCollections = const {},
     this.selectedKeys = const {},
     this.songNumberFilter = SongNumberFilter.any,
     this.searchLyrics = false,
@@ -27,6 +28,9 @@ class FilterSettings {
   final Set<String> selectedTags;
   final bool tagMatchAll;
   final Set<String> selectedFolders;
+
+  /// Selected collections; a song matches when it belongs to any of them.
+  final Set<String> selectedCollections;
   final Set<String> selectedKeys;
   final SongNumberFilter songNumberFilter;
 
@@ -41,6 +45,7 @@ class FilterSettings {
   int get activeFilterCount =>
       (selectedTags.isNotEmpty ? 1 : 0) +
       (selectedFolders.isNotEmpty ? 1 : 0) +
+      (selectedCollections.isNotEmpty ? 1 : 0) +
       (selectedKeys.isNotEmpty ? 1 : 0) +
       (songNumberFilter != SongNumberFilter.any ? 1 : 0) +
       (searchLyrics ? 1 : 0) +
@@ -53,6 +58,7 @@ class FilterSettings {
     Set<String>? selectedTags,
     bool? tagMatchAll,
     Set<String>? selectedFolders,
+    Set<String>? selectedCollections,
     Set<String>? selectedKeys,
     SongNumberFilter? songNumberFilter,
     bool? searchLyrics,
@@ -64,6 +70,7 @@ class FilterSettings {
       selectedTags: selectedTags ?? this.selectedTags,
       tagMatchAll: tagMatchAll ?? this.tagMatchAll,
       selectedFolders: selectedFolders ?? this.selectedFolders,
+      selectedCollections: selectedCollections ?? this.selectedCollections,
       selectedKeys: selectedKeys ?? this.selectedKeys,
       songNumberFilter: songNumberFilter ?? this.songNumberFilter,
       searchLyrics: searchLyrics ?? this.searchLyrics,
@@ -113,6 +120,20 @@ List<String> tagOptionsFrom(Iterable<SongRow> songs) {
   return tags.toList()..sort();
 }
 
+/// Maps each song id to the ids of the collections that contain it, backing
+/// the collection filter.
+Map<String, Set<String>> collectionIdsBySongIdFrom(
+  Iterable<CollectionRow> collections,
+) {
+  final bySongId = <String, Set<String>>{};
+  for (final collection in collections) {
+    for (final songId in collection.songIds) {
+      (bySongId[songId] ??= <String>{}).add(collection.id);
+    }
+  }
+  return bySongId;
+}
+
 /// Song keys present in [metaBySongId] (from parsed `{key: ...}` metadata),
 /// sorted alphabetically.
 List<String> keyOptionsFrom(Map<String, SongMeta> metaBySongId) {
@@ -132,6 +153,7 @@ bool songMatchesFilters(
   required String query,
   SongMeta? meta,
   Map<String, String> folderNames = const {},
+  Map<String, Set<String>> collectionIdsBySongId = const {},
 }) {
   final q = query.trim().toLowerCase();
   if (q.isNotEmpty &&
@@ -148,6 +170,10 @@ bool songMatchesFilters(
       (song.folderId == null ||
           !settings.selectedFolders.contains(song.folderId))) {
     return false;
+  }
+  if (settings.selectedCollections.isNotEmpty) {
+    final collectionIds = collectionIdsBySongId[song.id] ?? const <String>{};
+    if (!settings.selectedCollections.any(collectionIds.contains)) return false;
   }
   if (settings.selectedKeys.isNotEmpty) {
     final key = meta?.key;
@@ -180,11 +206,13 @@ List<SongRow> applySongFilters(
   String query = '',
   Map<String, SongMeta> metaBySongId = const {},
   Map<String, String> folderNames = const {},
+  Map<String, Set<String>> collectionIdsBySongId = const {},
 }) {
   final q = query.trim().toLowerCase();
   final hasFilters = q.isNotEmpty ||
       settings.selectedTags.isNotEmpty ||
       settings.selectedFolders.isNotEmpty ||
+      settings.selectedCollections.isNotEmpty ||
       settings.selectedKeys.isNotEmpty ||
       settings.songNumberFilter != SongNumberFilter.any ||
       settings.searchLyrics ||
@@ -200,6 +228,7 @@ List<SongRow> applySongFilters(
             query: q,
             meta: metaBySongId[s.id],
             folderNames: folderNames,
+            collectionIdsBySongId: collectionIdsBySongId,
           ),
         )
         .toList();

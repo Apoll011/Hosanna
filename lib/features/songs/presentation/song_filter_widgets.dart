@@ -85,9 +85,11 @@ Future<void> showSongFilterSheet(
   required FilterSettings initial,
   required List<String> tagOptions,
   required List<({String id, String name})> folderOptions,
+  required List<({String id, String name})> collectionOptions,
   required List<String> keyOptions,
   required ValueChanged<FilterSettings> onChanged,
   bool showFolderFilter = true,
+  bool showCollectionFilter = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -101,9 +103,11 @@ Future<void> showSongFilterSheet(
         initial: initial,
         tagOptions: tagOptions,
         folderOptions: folderOptions,
+        collectionOptions: collectionOptions,
         keyOptions: keyOptions,
         onChanged: onChanged,
         showFolderFilter: showFolderFilter,
+        showCollectionFilter: showCollectionFilter,
       ),
     ),
   );
@@ -120,20 +124,27 @@ class SongFilterSheet extends StatefulWidget {
     required this.initial,
     required this.tagOptions,
     required this.folderOptions,
+    required this.collectionOptions,
     required this.keyOptions,
     required this.onChanged,
     this.showFolderFilter = true,
+    this.showCollectionFilter = true,
   });
 
   final FilterSettings initial;
   final List<String> tagOptions;
   final List<({String id, String name})> folderOptions;
+  final List<({String id, String name})> collectionOptions;
   final List<String> keyOptions;
   final ValueChanged<FilterSettings> onChanged;
 
   /// Hidden where the surrounding page is already scoped to a folder tree
   /// (e.g. the folder browser).
   final bool showFolderFilter;
+
+  /// Hidden where the surrounding page is already scoped to a collection
+  /// (e.g. the collection view in the song library).
+  final bool showCollectionFilter;
 
   @override
   State<SongFilterSheet> createState() => _SongFilterSheetState();
@@ -251,6 +262,40 @@ class _SongFilterSheetState extends State<SongFilterSheet> {
               ),
               const Divider(height: 32),
             ],
+            if (widget.showCollectionFilter &&
+                widget.collectionOptions.isNotEmpty) ...[
+              _sectionHeader(
+                l10n.songsFilterByCollection,
+                clear: _draft.selectedCollections.isEmpty
+                    ? null
+                    : () => _apply(_draft.copyWith(selectedCollections: const {})),
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final collection in widget.collectionOptions)
+                    FilterChip(
+                      label: Text(collection.name),
+                      selected: _draft.selectedCollections.contains(
+                        collection.id,
+                      ),
+                      onSelected: (selected) {
+                        final collections = Set<String>.of(
+                          _draft.selectedCollections,
+                        );
+                        selected
+                            ? collections.add(collection.id)
+                            : collections.remove(collection.id);
+                        _apply(
+                          _draft.copyWith(selectedCollections: collections),
+                        );
+                      },
+                    ),
+                ],
+              ),
+              const Divider(height: 32),
+            ],
             if (widget.keyOptions.isNotEmpty) ...[
               _sectionHeader(
                 l10n.songsFilterByKey,
@@ -356,9 +401,11 @@ class ActiveFilterChips extends StatelessWidget {
     super.key,
     required this.settings,
     required this.folderNames,
+    required this.collectionNames,
     required this.onOpenFilters,
     required this.onRemoveTag,
     required this.onRemoveFolder,
+    required this.onRemoveCollection,
     required this.onRemoveKey,
     required this.onSongNumberAny,
     required this.onLyricsOff,
@@ -368,9 +415,11 @@ class ActiveFilterChips extends StatelessWidget {
 
   final FilterSettings settings;
   final Map<String, String> folderNames;
+  final Map<String, String> collectionNames;
   final VoidCallback onOpenFilters;
   final ValueChanged<String> onRemoveTag;
   final ValueChanged<String> onRemoveFolder;
+  final ValueChanged<String> onRemoveCollection;
   final ValueChanged<String> onRemoveKey;
   final VoidCallback onSongNumberAny;
   final VoidCallback onLyricsOff;
@@ -408,6 +457,15 @@ class ActiveFilterChips extends StatelessWidget {
         InputChip(
           label: Text(folderNames[folderId] ?? folderId),
           onDeleted: () => onRemoveFolder(folderId),
+          deleteButtonTooltipMessage: l10n.commonDelete,
+        ),
+      );
+    }
+    for (final collectionId in settings.selectedCollections) {
+      chips.add(
+        InputChip(
+          label: Text(collectionNames[collectionId] ?? collectionId),
+          onDeleted: () => onRemoveCollection(collectionId),
           deleteButtonTooltipMessage: l10n.commonDelete,
         ),
       );
