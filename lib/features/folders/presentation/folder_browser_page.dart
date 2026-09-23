@@ -160,8 +160,16 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
         ),
         body: Column(
           children: [
-            if (path.isNotEmpty) _Breadcrumbs(path: path),
-            if (!_settings.isDefault) _buildActiveFilterChips(folderNames),
+            if (path.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _Breadcrumbs(path: path),
+              ),
+            if (!_settings.isDefault)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _buildActiveFilterChips(folderNames),
+              ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refresh,
