@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts: shown by long-pressing the app icon.
+     Each one deep-links into the app with the `hosanna://` scheme, which
+     `lib/app/launcher_links.dart` maps to a go_router location. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Song library. -->
+    <shortcut
+        android:shortcutId="library"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/shortcut_library_short"
+        android:shortcutLongLabel="@string/shortcut_library_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.embrace.hosanna"
+            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:data="hosanna://songs" />
+    </shortcut>
+
+    <!-- Services (service plans). -->
+    <shortcut
+        android:shortcutId="services"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/shortcut_services_short"
+        android:shortcutLongLabel="@string/shortcut_services_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.embrace.hosanna"
+            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:data="hosanna://services" />
+    </shortcut>
+
+    <!-- The next upcoming service, resolved once the app is running. -->
+    <shortcut
+        android:shortcutId="next_service"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/shortcut_next_service_short"
+        android:shortcutLongLabel="@string/shortcut_next_service_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.embrace.hosanna"
+            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:data="hosanna://services/next" />
+    </shortcut>
+</shortcuts>

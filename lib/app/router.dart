@@ -13,6 +13,7 @@ import '../features/export/presentation/export_pdf_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
@@ -154,6 +155,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/songs/:id',
         builder: (_, state) =>
             SongDetailPage(songId: state.pathParameters['id']!),
+      ),
+      // Declared before `/services/:id` so the launcher shortcut
+      // (`hosanna://services/next`) isn't swallowed by the id route; the page
+      // replaces itself with the resolved service.
+      GoRoute(
+        path: '/services/next',
+        builder: (_, _) => const NextServicePage(),
       ),
       GoRoute(
         path: '/services/:id',

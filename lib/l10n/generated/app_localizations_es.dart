@@ -417,6 +417,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsClearFilters => 'Limpiar filtros';
 
   @override
+  String get songsClearSearch => 'Limpiar búsqueda';
+
+  @override
   String get songsTitleLabel => 'Título';
 
   @override
@@ -538,6 +541,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get foldersRoot => 'Raíz';
 
   @override
+  String get foldersViewGrid => 'Vista de cuadrícula';
+
+  @override
+  String get foldersViewList => 'Vista de lista';
+
+  @override
   String get servicesTitle => 'Servicios';
 
   @override
@@ -545,6 +554,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get servicesSearchHint => 'Buscar servicios…';
+
+  @override
+  String get servicesNextService => 'Próximo servicio';
+
+  @override
+  String get servicesNoUpcoming => 'Sin servicios próximos';
 
   @override
   String get servicesItems => 'Elementos';

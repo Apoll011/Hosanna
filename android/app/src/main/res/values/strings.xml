@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher shortcuts (long-press on the app icon). -->
+    <string name="shortcut_library_short">Library</string>
+    <string name="shortcut_library_long">Open the song library</string>
+    <string name="shortcut_services_short">Services</string>
+    <string name="shortcut_services_long">Open the service plans</string>
+    <string name="shortcut_next_service_short">Next service</string>
+    <string name="shortcut_next_service_long">Open the next upcoming service</string>
+</resources>

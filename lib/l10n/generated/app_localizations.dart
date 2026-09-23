@@ -868,6 +868,12 @@ abstract class AppLocalizations {
   /// **'Limpar filtros'**
   String get songsClearFilters;
 
+  /// No description provided for @songsClearSearch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar pesquisa'**
+  String get songsClearSearch;
+
   /// No description provided for @songsTitleLabel.
   ///
   /// In pt, this message translates to:
@@ -1090,6 +1096,18 @@ abstract class AppLocalizations {
   /// **'Raiz'**
   String get foldersRoot;
 
+  /// No description provided for @foldersViewGrid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver em grelha'**
+  String get foldersViewGrid;
+
+  /// No description provided for @foldersViewList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver em lista'**
+  String get foldersViewList;
+
   /// No description provided for @servicesTitle.
   ///
   /// In pt, this message translates to:
@@ -1107,6 +1125,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Pesquisar cultos…'**
   String get servicesSearchHint;
+
+  /// No description provided for @servicesNextService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo culto'**
+  String get servicesNextService;
+
+  /// No description provided for @servicesNoUpcoming.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cultos futuros'**
+  String get servicesNoUpcoming;
 
   /// No description provided for @servicesItems.
   ///

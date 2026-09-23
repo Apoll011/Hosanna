@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'launcher_links.dart';
 import 'router.dart';
 import 'settings_controller.dart';
 import 'theme.dart';
@@ -18,7 +21,11 @@ class HosannaApp extends ConsumerStatefulWidget {
 class _HosannaAppState extends ConsumerState<HosannaApp>
     with WidgetsBindingObserver {
   ProviderSubscription<AuthState>? _authSubscription;
+  StreamSubscription<Uri>? _launcherLinks;
   ProviderContainer? _container;
+
+  /// Launcher shortcut target waiting for the session/organization to resolve.
+  String? _pendingLocation;
 
   @override
   void didChangeDependencies() {
@@ -51,16 +58,48 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       ref.read(authControllerProvider.notifier).checkSession();
       ref.read(syncControllerProvider.notifier).restore();
     });
+
+    // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
+    // The stream also replays the link the app was cold-started with.
+    _launcherLinks = listenToLauncherLinks(_openLocation);
+  }
+
+  /// Navigates to a launcher link's location once the app is ready for it.
+  ///
+  /// Deferred to the next frame because on a cold start the link can be
+  /// delivered before the router has built, and `go` during the build phase
+  /// trips a framework assertion. While the session is still loading the router
+  /// redirects everything to `/splash`, so the target is kept until the auth
+  /// state settles (see [_onAuthChanged]).
+  void _openLocation(String location) {
+    _pendingLocation = location;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPendingLocation());
+  }
+
+  void _openPendingLocation() {
+    final location = _pendingLocation;
+    if (location == null || !mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth.status == AuthStatus.loading || auth.resolvingOrganization) return;
+    _pendingLocation = null;
+    ref.read(goRouterProvider).go(location);
   }
 
   @override
   void dispose() {
+    _launcherLinks?.cancel();
     _authSubscription?.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _onAuthChanged(AuthState? previous, AuthState next) {
+    if (_pendingLocation != null) {
+      // Same deferral as the sync below: never navigate from inside a provider
+      // notification.
+      Future.microtask(_openPendingLocation);
+    }
+
     final prevOrg = previous?.organization?.id;
     final nextOrg = next.organization?.id;
     if (!next.isAuthenticated || nextOrg == null || nextOrg == prevOrg) return;

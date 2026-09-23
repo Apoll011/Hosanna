@@ -22,6 +22,23 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Launcher shortcuts (long-press on the app icon). -->
+            <meta-data
+              android:name="android.app.shortcuts"
+              android:resource="@xml/shortcuts" />
+            <!-- Deep links are handled by app_links in Dart (see
+                 lib/app/launcher_links.dart), not by Flutter's own deep
+                 linking, so the shortcut URIs reach go_router intact. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
+            <!-- `hosanna://songs`, `hosanna://services`, ... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="hosanna"/>
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

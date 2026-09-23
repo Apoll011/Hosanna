@@ -419,6 +419,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsClearFilters => 'Limpar filtros';
 
   @override
+  String get songsClearSearch => 'Limpar pesquisa';
+
+  @override
   String get songsTitleLabel => 'Título';
 
   @override
@@ -540,6 +543,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get foldersRoot => 'Raiz';
 
   @override
+  String get foldersViewGrid => 'Ver em grelha';
+
+  @override
+  String get foldersViewList => 'Ver em lista';
+
+  @override
   String get servicesTitle => 'Cultos';
 
   @override
@@ -547,6 +556,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get servicesSearchHint => 'Pesquisar cultos…';
+
+  @override
+  String get servicesNextService => 'Próximo culto';
+
+  @override
+  String get servicesNoUpcoming => 'Sem cultos futuros';
 
   @override
   String get servicesItems => 'Itens';
