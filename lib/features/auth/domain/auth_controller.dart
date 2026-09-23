@@ -4,6 +4,8 @@ import '../../../app/providers.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/auth/captcha_required_exception.dart';
 import '../../../core/auth/session_store.dart';
+import '../../../core/auth/social_auth_exception.dart';
+import '../../../core/auth/social_auth_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
@@ -126,6 +128,26 @@ class AuthController extends StateNotifier<AuthState> {
     );
     await _applySession(session, token: session.sessionToken);
     await _resolveOrganization(session);
+  }
+
+  /// Signs in — or signs up — with a native social provider.
+  ///
+  /// Both auth screens call this same method: the provider only supplies a
+  /// credential, and Better Auth decides whether it belongs to an existing
+  /// account or a new one. No captcha is required on the social endpoint, and
+  /// the resulting session is applied through the same path as email sign-in.
+  Future<void> signInWithSocial(SocialAuthProvider provider) async {
+    final credential = await provider.authenticate();
+    try {
+      final session = await _repository.signInWithSocial(
+        providerId: provider.id,
+        credential: credential,
+      );
+      await _applySession(session, token: session.sessionToken);
+      await _resolveOrganization(session);
+    } on ApiException catch (e) {
+      throw _socialFailure(e);
+    }
   }
 
   Future<void> signOut() async {
@@ -281,6 +303,41 @@ class AuthController extends StateNotifier<AuthState> {
   bool _isAuthRejection(ApiException e) {
     final s = e.statusCode;
     return s == 401 || s == 403 || s == 404;
+  }
+
+  /// Folds a Better Auth failure into the social error model so the UI only
+  /// has to understand [SocialAuthException].
+  SocialAuthException _socialFailure(ApiException e) {
+    if (e.isNetworkError) {
+      return SocialAuthException(
+        SocialAuthErrorCode.network,
+        message: e.message,
+        cause: e,
+      );
+    }
+    final status = e.statusCode;
+    if (status == 401 ||
+        status == 403 ||
+        e.code == 'INVALID_TOKEN' ||
+        e.code == 'OAUTH_LINK_ERROR') {
+      return SocialAuthException(
+        SocialAuthErrorCode.rejected,
+        message: e.message,
+        cause: e,
+      );
+    }
+    if (status != null && status >= 500) {
+      return SocialAuthException(
+        SocialAuthErrorCode.server,
+        message: e.message,
+        cause: e,
+      );
+    }
+    return SocialAuthException(
+      SocialAuthErrorCode.unknown,
+      message: e.message,
+      cause: e,
+    );
   }
 }
 

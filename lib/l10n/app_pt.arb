@@ -70,6 +70,23 @@
   "authCaptchaWindowTitle": "Verificação de segurança (captcha)",
   "authCaptchaWaitingMessage": "Conclua a verificação de segurança na janela de captcha que acabou de abrir.",
   "authCaptchaOpenFailed": "Não foi possível abrir a janela de captcha.",
+  "authOr": "ou",
+  "authContinueWith": "Continuar com {provider}",
+  "@authContinueWith": {
+    "description": "Social sign-in button label; {provider} is the provider's display name, e.g. Google",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSocialNoAccount": "Nenhuma conta disponível para iniciar sessão neste dispositivo.",
+  "authSocialUnavailable": "Este dispositivo não suporta este método de início de sessão.",
+  "authSocialNotConfigured": "O início de sessão social não está configurado nesta versão.",
+  "authSocialRejected": "Não foi possível verificar a sua conta. Tente novamente.",
+  "authSocialNetworkError": "Sem ligação ao servidor. Verifique a sua Internet.",
+  "authSocialServerError": "O servidor não conseguiu concluir o início de sessão. Tente novamente.",
+  "authSocialError": "Não foi possível iniciar sessão.",
 
   "onboardingTitle": "Bem-vindo ao Hosanna",
   "onboardingSubtitle": "Aceite um convite para entrar na organização da sua igreja.",

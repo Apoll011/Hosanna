@@ -223,6 +223,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCaptchaOpenFailed => 'Could not open the captcha window.';
 
   @override
+  String get authOr => 'or';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continue with $provider';
+  }
+
+  @override
+  String get authSocialNoAccount =>
+      'No account available to sign in on this device.';
+
+  @override
+  String get authSocialUnavailable =>
+      'This device doesn\'t support this sign-in method.';
+
+  @override
+  String get authSocialNotConfigured =>
+      'Social sign-in isn\'t configured in this build.';
+
+  @override
+  String get authSocialRejected =>
+      'We couldn\'t verify your account. Please try again.';
+
+  @override
+  String get authSocialNetworkError =>
+      'Couldn\'t reach the server. Check your connection.';
+
+  @override
+  String get authSocialServerError =>
+      'The server couldn\'t complete the sign-in. Please try again.';
+
+  @override
+  String get authSocialError => 'Couldn\'t sign in.';
+
+  @override
   String get onboardingTitle => 'Welcome to Hosanna';
 
   @override

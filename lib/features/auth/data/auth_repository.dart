@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/auth/auth_session.dart';
+import '../../../core/auth/social_auth_provider.dart';
 import '../../../core/network/api_client.dart';
 
 /// Thin client over Better Auth's `/api/auth/*` REST surface.
@@ -59,6 +60,27 @@ class AuthRepository {
         '/api/auth/sign-up/email',
         data: {'name': name, 'email': email, 'password': password},
         options: _captchaOptions(captchaToken),
+      ),
+    );
+  }
+
+  /// Signs in (or signs up) with a native provider credential.
+  ///
+  /// POSTs Better Auth's `/api/auth/sign-in/social` with the provider id and
+  /// the credential the native provider produced (the `signIn.social({idToken})`
+  /// shape). When an ID token is sent, Better Auth skips the OAuth redirect:
+  /// it verifies the token itself, then finds or creates the user, so the
+  /// response is the same `{user, token}` payload as email sign-in and is
+  /// stored through the exact same session path. The server decides whether
+  /// this is a sign-in or a sign-up; no captcha is involved on this endpoint.
+  Future<AuthSession> signInWithSocial({
+    required String providerId,
+    required SocialAuthCredential credential,
+  }) async {
+    return _authRequest(
+      () => _dio.post<dynamic>(
+        '/api/auth/sign-in/social',
+        data: {'provider': providerId, 'idToken': credential.toJson()},
       ),
     );
   }

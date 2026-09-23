@@ -228,6 +228,41 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authCaptchaOpenFailed => 'No se pudo abrir la ventana de captcha.';
 
   @override
+  String get authOr => 'o';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continuar con $provider';
+  }
+
+  @override
+  String get authSocialNoAccount =>
+      'No hay ninguna cuenta disponible para iniciar sesión en este dispositivo.';
+
+  @override
+  String get authSocialUnavailable =>
+      'Este dispositivo no admite este método de inicio de sesión.';
+
+  @override
+  String get authSocialNotConfigured =>
+      'El inicio de sesión social no está configurado en esta compilación.';
+
+  @override
+  String get authSocialRejected =>
+      'No pudimos verificar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get authSocialNetworkError =>
+      'No se pudo conectar con el servidor. Comprueba tu conexión.';
+
+  @override
+  String get authSocialServerError =>
+      'El servidor no pudo completar el inicio de sesión. Inténtalo de nuevo.';
+
+  @override
+  String get authSocialError => 'No se pudo iniciar sesión.';
+
+  @override
   String get onboardingTitle => 'Bienvenido a Hosanna';
 
   @override

@@ -5,6 +5,7 @@
 ///
 ///   flutter run --dart-define=HOSANNA_API_URL=https://api.example.com
 ///   flutter run --dart-define=HOSANNA_TURNSTILE_URL=https://studio.hosanna.live/captcha
+///   flutter run --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=1234.apps.googleusercontent.com
 ///
 /// The API URL defaults to the Hosanna production API.
 library;
@@ -14,6 +15,8 @@ class AppConfig {
     required this.apiBaseUrl,
     required this.turnstileUrl,
     required this.origin,
+    this.googleServerClientId = '',
+    this.googleNonceEnabled = false,
   });
 
   /// Base URL of the Hosanna backend (no trailing slash, no `/api`).
@@ -37,11 +40,32 @@ class AppConfig {
   /// `https://*.hosanna.live`.
   final String origin;
 
+  /// Google OAuth **web/server** client ID (`…apps.googleusercontent.com`).
+  ///
+  /// Native sign-in passes it to Google as the ID token's audience
+  /// (`serverClientId` on Android), and the Better Auth server must list the
+  /// same client ID under `socialProviders.google.clientId` so it accepts the
+  /// token. Public by design — the Google *client secret* never leaves the
+  /// server. Empty when the build was not configured for Google sign-in.
+  final String googleServerClientId;
+
+  /// Whether Google ID tokens are minted with a nonce that Better Auth must
+  /// validate (`idToken.nonce` on `/sign-in/social`).
+  ///
+  /// Off by default: with the one-shot `GoogleSignIn.initialize()` API the
+  /// nonce is fixed for the whole app run, so it must match between whatever
+  /// Credential Manager has cached and the current run. Only enable it once
+  /// the server-side flow is confirmed to expect a nonce.
+  final bool googleNonceEnabled;
+
   /// Full API root, e.g. `https://host/api`.
   String get apiRoot => '${apiBaseUrl.replaceFirst(RegExp(r'/$'), '')}/api';
 
   /// Captcha is available when a hosted Turnstile page URL is configured.
   bool get isTurnstileConfigured => turnstileUrl.trim().isNotEmpty;
+
+  /// Google sign-in is available when the web/server client ID is configured.
+  bool get isGoogleSignInConfigured => googleServerClientId.trim().isNotEmpty;
 
   static const AppConfig instance = AppConfig(
     apiBaseUrl: String.fromEnvironment(
@@ -56,5 +80,9 @@ class AppConfig {
       'HOSANNA_ORIGIN',
       defaultValue: 'hosanna://localhost',
     ),
+    googleServerClientId: String.fromEnvironment(
+      'HOSANNA_GOOGLE_SERVER_CLIENT_ID',
+    ),
+    googleNonceEnabled: bool.fromEnvironment('HOSANNA_GOOGLE_NONCE'),
   );
 }

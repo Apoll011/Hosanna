@@ -514,6 +514,60 @@ abstract class AppLocalizations {
   /// **'Não foi possível abrir a janela de captcha.'**
   String get authCaptchaOpenFailed;
 
+  /// No description provided for @authOr.
+  ///
+  /// In pt, this message translates to:
+  /// **'ou'**
+  String get authOr;
+
+  /// Social sign-in button label; {provider} is the provider's display name, e.g. Google
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar com {provider}'**
+  String authContinueWith(String provider);
+
+  /// No description provided for @authSocialNoAccount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma conta disponível para iniciar sessão neste dispositivo.'**
+  String get authSocialNoAccount;
+
+  /// No description provided for @authSocialUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este dispositivo não suporta este método de início de sessão.'**
+  String get authSocialUnavailable;
+
+  /// No description provided for @authSocialNotConfigured.
+  ///
+  /// In pt, this message translates to:
+  /// **'O início de sessão social não está configurado nesta versão.'**
+  String get authSocialNotConfigured;
+
+  /// No description provided for @authSocialRejected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível verificar a sua conta. Tente novamente.'**
+  String get authSocialRejected;
+
+  /// No description provided for @authSocialNetworkError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem ligação ao servidor. Verifique a sua Internet.'**
+  String get authSocialNetworkError;
+
+  /// No description provided for @authSocialServerError.
+  ///
+  /// In pt, this message translates to:
+  /// **'O servidor não conseguiu concluir o início de sessão. Tente novamente.'**
+  String get authSocialServerError;
+
+  /// No description provided for @authSocialError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível iniciar sessão.'**
+  String get authSocialError;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In pt, this message translates to:
