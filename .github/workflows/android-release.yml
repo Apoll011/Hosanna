@@ -39,6 +39,17 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
 
+      - name: Print release keystore fingerprints
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list -v \
+            -keystore android/app/release.keystore \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            | grep -E "SHA1:|SHA256:"
+
       - name: Build APK (split per ABI)
         env:
           HOSANNA_API_URL: ${{ secrets.API_URL }}
@@ -49,7 +60,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          flutter build apk --release
+          flutter build apk --release \
+            --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: Build App Bundle
         env:
@@ -61,7 +73,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          flutter build appbundle --release
+          flutter build appbundle --release \
+            --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: Verify artifacts
         run: |
