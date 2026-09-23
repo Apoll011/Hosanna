@@ -392,6 +392,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsFilterByKey => 'Filtrar por tom';
 
   @override
+  String get songsFilterByCollection => 'Filtrar por coleção';
+
+  @override
   String get songsFilterBySongNumber => 'Número do cântico';
 
   @override

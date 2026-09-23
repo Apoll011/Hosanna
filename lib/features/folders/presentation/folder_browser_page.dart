@@ -6,6 +6,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../collections/data/collection_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/domain/library_controller.dart';
 import '../../songs/presentation/song_filter_widgets.dart';
@@ -57,6 +58,9 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
         ref.watch(foldersStreamProvider).valueOrNull ?? const <FolderRow>[];
     final songs =
         ref.watch(songsStreamProvider).valueOrNull ?? const <SongRow>[];
+    final collections =
+        ref.watch(collectionsStreamProvider).valueOrNull ??
+        const <CollectionRow>[];
     final currentId = ref.watch(folderExplorerProvider);
 
     if (!identical(_metaCacheSongs, songs)) {
@@ -80,6 +84,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
     }
 
     final folderNames = {for (final f in folders) f.id: f.name};
+    final collectionNames = {for (final c in collections) c.id: c.name};
+    final collectionIdsBySongId = collectionIdsBySongIdFrom(collections);
     final query = _search.text.trim().toLowerCase();
     final childFolders = folders.where((f) => f.parentId == activeId).toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -94,6 +100,7 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
       query: _search.text,
       metaBySongId: _metaBySongId,
       folderNames: folderNames,
+      collectionIdsBySongId: collectionIdsBySongId,
     );
 
     final explorer = ref.read(folderExplorerProvider.notifier);
@@ -168,7 +175,7 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
             if (!_settings.isDefault)
               Align(
                 alignment: Alignment.centerLeft,
-                child: _buildActiveFilterChips(folderNames),
+                child: _buildActiveFilterChips(folderNames, collectionNames),
               ),
             Expanded(
               child: RefreshIndicator(
@@ -256,6 +263,11 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
     final folderOptions = <({String id, String name})>[
       for (final f in folders) (id: f.id, name: f.name),
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final collectionOptions = <({String id, String name})>[
+      for (final c in ref.read(collectionsStreamProvider).valueOrNull ??
+          const <CollectionRow>[])
+        (id: c.id, name: c.name),
+    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     // The folder filter is left out: this page is already scoped to the folder
     // you drilled into.
@@ -264,16 +276,21 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
       initial: _settings,
       tagOptions: tagOptionsFrom(songs),
       folderOptions: folderOptions,
+      collectionOptions: collectionOptions,
       keyOptions: keyOptionsFrom(_metaBySongId),
       onChanged: (next) => setState(() => _settings = next),
       showFolderFilter: false,
     );
   }
 
-  Widget _buildActiveFilterChips(Map<String, String> folderNames) {
+  Widget _buildActiveFilterChips(
+    Map<String, String> folderNames,
+    Map<String, String> collectionNames,
+  ) {
     return ActiveFilterChips(
       settings: _settings,
       folderNames: folderNames,
+      collectionNames: collectionNames,
       onOpenFilters: _openFilterSheet,
       onRemoveTag: (tag) => setState(() {
         _settings = _settings.copyWith(
@@ -283,6 +300,12 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
       onRemoveFolder: (folderId) => setState(() {
         _settings = _settings.copyWith(
           selectedFolders: {..._settings.selectedFolders}..remove(folderId),
+        );
+      }),
+      onRemoveCollection: (collectionId) => setState(() {
+        _settings = _settings.copyWith(
+          selectedCollections: {..._settings.selectedCollections}
+            ..remove(collectionId),
         );
       }),
       onRemoveKey: (key) => setState(() {

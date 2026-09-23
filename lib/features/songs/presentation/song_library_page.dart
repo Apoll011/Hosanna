@@ -62,6 +62,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final collectionSongIds = {
       for (final c in collections) c.id: c.songIds,
     };
+    final collectionIdsBySongId = collectionIdsBySongIdFrom(collections);
 
     return Scaffold(
       appBar: AppBar(
@@ -100,7 +101,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       ),
       body: Column(
         children: [
-          if (!_settings.isDefault) _buildActiveFilterChips(folderNames),
+          if (!_settings.isDefault)
+            _buildActiveFilterChips(folderNames, collectionNames),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
@@ -115,6 +117,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                       library,
                       folderNames,
                       collectionSongIds,
+                      collectionIdsBySongId,
                     ),
                     folderNames: folderNames,
                     favorites: library.favoriteIds,
@@ -158,14 +161,25 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final folderOptions = <({String id, String name})>[
       for (final f in folders) (id: f.id, name: f.name),
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final collectionOptions = <({String id, String name})>[
+      for (final c in ref.read(collectionsStreamProvider).valueOrNull ??
+          const <CollectionRow>[])
+        (id: c.id, name: c.name),
+    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
+    // The collection filter is left out when the page is already scoped to a
+    // single collection.
     showSongFilterSheet(
       context,
       initial: _settings,
       tagOptions: tagOptionsFrom(songs),
       folderOptions: folderOptions,
+      collectionOptions: collectionOptions,
       keyOptions: keyOptionsFrom(_metaBySongId),
       onChanged: (next) => setState(() => _settings = next),
+      showCollectionFilter:
+          ref.read(libraryControllerProvider).section !=
+              LibrarySection.collection,
     );
   }
 
@@ -174,6 +188,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     LibraryState library,
     Map<String, String> folderNames,
     Map<String, List<String>> collectionSongIds,
+    Map<String, Set<String>> collectionIdsBySongId,
   ) {
     final sectionSongs = switch (library.section) {
       LibrarySection.favorites =>
@@ -194,6 +209,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       query: _search.text,
       metaBySongId: _metaBySongId,
       folderNames: folderNames,
+      collectionIdsBySongId: collectionIdsBySongId,
     );
   }
 
@@ -215,10 +231,14 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     ];
   }
 
-  Widget _buildActiveFilterChips(Map<String, String> folderNames) {
+  Widget _buildActiveFilterChips(
+    Map<String, String> folderNames,
+    Map<String, String> collectionNames,
+  ) {
     return ActiveFilterChips(
       settings: _settings,
       folderNames: folderNames,
+      collectionNames: collectionNames,
       onOpenFilters: _openFilterSheet,
       onRemoveTag: (tag) => setState(() {
         _settings = _settings.copyWith(
@@ -228,6 +248,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       onRemoveFolder: (folderId) => setState(() {
         _settings = _settings.copyWith(
           selectedFolders: {..._settings.selectedFolders}..remove(folderId),
+        );
+      }),
+      onRemoveCollection: (collectionId) => setState(() {
+        _settings = _settings.copyWith(
+          selectedCollections: {..._settings.selectedCollections}
+            ..remove(collectionId),
         );
       }),
       onRemoveKey: (key) => setState(() {

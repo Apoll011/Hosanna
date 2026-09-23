@@ -119,6 +119,7 @@
   "songsMatchAll": "Match all",
   "songsMatchAny": "Match any",
   "songsFilterByKey": "Filter by key",
+  "songsFilterByCollection": "Filter by collection",
   "songsFilterBySongNumber": "Song number",
   "songsNumberAny": "Any",
   "songsNumberOnly": "Numbered",

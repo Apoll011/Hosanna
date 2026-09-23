@@ -124,6 +124,7 @@
   "songsMatchAll": "Coincidir todas",
   "songsMatchAny": "Coincidir alguna",
   "songsFilterByKey": "Filtrar por tonalidad",
+  "songsFilterByCollection": "Filtrar por colección",
   "songsFilterBySongNumber": "Número de canción",
   "songsNumberAny": "Cualquiera",
   "songsNumberOnly": "Numeradas",

@@ -814,6 +814,12 @@ abstract class AppLocalizations {
   /// **'Filtrar por tom'**
   String get songsFilterByKey;
 
+  /// No description provided for @songsFilterByCollection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar por coleção'**
+  String get songsFilterByCollection;
+
   /// No description provided for @songsFilterBySongNumber.
   ///
   /// In pt, this message translates to:
