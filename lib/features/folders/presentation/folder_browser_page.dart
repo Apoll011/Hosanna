@@ -421,7 +421,7 @@ class _ExplorerTileState extends State<_ExplorerTile> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 46, child: Center(child: widget.icon)),
+                SizedBox(height: 58, child: Center(child: widget.icon)),
                 const SizedBox(height: 8),
                 Text(
                   widget.label,
@@ -474,10 +474,10 @@ class _BrowserGrid extends StatelessWidget {
   final ValueChanged<SongRow> onOpenSong;
 
   static const _gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
-    maxCrossAxisExtent: 108,
-    mainAxisExtent: 128,
-    crossAxisSpacing: 4,
-    mainAxisSpacing: 8,
+    maxCrossAxisExtent: 140, // was 108 — fewer, bigger columns
+    mainAxisExtent: 156, // was 128 — taller tiles
+    crossAxisSpacing: 6, // was 4
+    mainAxisSpacing: 8, // was 8
   );
 
   @override
@@ -545,7 +545,7 @@ class _FolderCard extends StatelessWidget {
       icon: _ExplorerIcon(
         icon: hasContents ? Icons.folder_rounded : Icons.folder_outlined,
         color: theme.colorScheme.primary,
-        size: 46,
+        size: 58,
         iconScale: 0.6,
         badgeCount: folder.songCount,
       ),
@@ -573,7 +573,7 @@ class _SongCard extends StatelessWidget {
           _ExplorerIcon(
             icon: Icons.description_rounded,
             color: theme.colorScheme.onSurfaceVariant,
-            size: 46,
+            size: 58,
             iconScale: 0.55,
           ),
           Positioned(
@@ -661,14 +661,8 @@ class _FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final hasContents = folder.songCount > 0 || subfolderCount > 0;
-    final subtitle = [
-      l10n.foldersSongsCount(folder.songCount),
-      if (subfolderCount > 0) l10n.foldersSubfolders,
-    ].join(' · ');
-
     return ListTile(
       leading: _ExplorerIcon(
         icon: hasContents ? Icons.folder_rounded : Icons.folder_outlined,
@@ -676,7 +670,6 @@ class _FolderTile extends StatelessWidget {
         badgeCount: folder.songCount,
       ),
       title: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right),
       onTap: onOpen,
     );
