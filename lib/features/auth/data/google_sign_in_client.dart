@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -50,7 +51,7 @@ class GoogleSignInClient {
       if (attempt == null) return null;
       return (await attempt)?.authentication.idToken;
     } catch (error) {
-      throw _toSocialAuthException(error);
+      throw toSocialAuthException(error);
     }
   }
 
@@ -61,7 +62,7 @@ class GoogleSignInClient {
       final account = await _plugin.authenticate();
       return account.authentication.idToken;
     } catch (error) {
-      throw _toSocialAuthException(error);
+      throw toSocialAuthException(error);
     }
   }
 
@@ -69,9 +70,20 @@ class GoogleSignInClient {
   ///
   /// `description` is plugin-provided (e.g. `"No credential available: …"`) and
   /// carries no token material; `details` is never propagated.
-  SocialAuthException _toSocialAuthException(Object error) {
+  @visibleForTesting
+  SocialAuthException toSocialAuthException(Object error) {
     if (error is GoogleSignInException) {
       final code = switch (error.code) {
+        // Google Play services reports OAuth/account failures — most notably
+        // "[16] Account reauth failed" from a signing-fingerprint or OAuth
+        // client mismatch — through `CommonStatusCodes.CANCELED`, so the
+        // plugin surfaces them as [GoogleSignInExceptionCode.canceled]. Mapping
+        // that straight to a cancellation would hide a hard failure behind
+        // "the user dismissed the picker" and the UI would stay silent, so the
+        // message is used to tell the two apart.
+        GoogleSignInExceptionCode.canceled
+            when _looksLikeReauthFailure(error.description) =>
+          SocialAuthErrorCode.notConfigured,
         GoogleSignInExceptionCode.canceled => SocialAuthErrorCode.canceled,
         GoogleSignInExceptionCode.clientConfigurationError =>
           SocialAuthErrorCode.notConfigured,
@@ -97,10 +109,26 @@ class GoogleSignInClient {
         cause: error,
       );
     }
+
     return SocialAuthException(
       SocialAuthErrorCode.unknown,
       message: 'Unexpected ${error.runtimeType} from the Google sign-in plugin.',
       cause: error,
     );
+  }
+
+  /// Whether a `canceled` exception actually describes a Google-side
+  /// re-authentication failure rather than a user dismissal.
+  ///
+  /// Google Play services reports these as `CommonStatusCodes.CANCELED` (16)
+  /// with messages such as `"[16] Account reauth failed."`, which the plugin
+  /// surfaces as [GoogleSignInExceptionCode.canceled]. The message is therefore
+  /// the only signal available.
+  static bool _looksLikeReauthFailure(String? description) {
+    if (description == null) return false;
+    final normalized = description.toLowerCase();
+    return normalized.contains('reauth') ||
+        normalized.contains('re-auth') ||
+        normalized.contains('reauthentication');
   }
 }
