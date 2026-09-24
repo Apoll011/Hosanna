@@ -76,7 +76,7 @@ class AuthRepository {
   Future<AuthSession> signInWithSocial({
     required String providerId,
     required SocialAuthCredential credential,
-  }) async {
+  }) {
     return _authRequest(
       () => _dio.post<dynamic>(
         '/api/auth/sign-in/social',

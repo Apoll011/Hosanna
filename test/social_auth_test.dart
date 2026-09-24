@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hosanna/core/auth/session_store.dart';
 import 'package:hosanna/core/auth/social_auth_exception.dart';
 import 'package:hosanna/core/auth/social_auth_provider.dart';
@@ -94,12 +95,17 @@ class _FakeGoogleSignInClient extends GoogleSignInClient {
     this.restoredIdToken,
     this.interactiveIdToken,
     this.interactiveError,
+    this.restoreError,
     this.supported = true,
   });
 
   final String? restoredIdToken;
   final String? interactiveIdToken;
   final SocialAuthException? interactiveError;
+
+  /// When set, the lightweight restore fails the way the real client does on a
+  /// configuration error (it throws rather than returning null).
+  final SocialAuthException? restoreError;
   final bool supported;
 
   int initializeCalls = 0;
@@ -117,7 +123,10 @@ class _FakeGoogleSignInClient extends GoogleSignInClient {
   }
 
   @override
-  Future<String?> restoreIdToken() async => restoredIdToken;
+  Future<String?> restoreIdToken() async {
+    if (restoreError != null) throw restoreError!;
+    return restoredIdToken;
+  }
 
   @override
   Future<String?> signInIdToken() async {
@@ -214,6 +223,38 @@ void main() {
     });
   });
 
+  group('GoogleSignInClient error mapping', () {
+    final client = GoogleSignInClient();
+
+    test('treats a plain canceled exception as a cancellation', () {
+      final failure = client.toSocialAuthException(
+        const GoogleSignInException(
+          code: GoogleSignInExceptionCode.canceled,
+          description: 'User canceled the sign-in flow.',
+        ),
+      );
+
+      expect(failure.code, SocialAuthErrorCode.canceled);
+      expect(failure.isCancellation, isTrue);
+    });
+
+    test('does not hide "[16] Account reauth failed" behind a cancellation',
+        () {
+      // Play services reports fingerprint / OAuth-client mismatches through
+      // CommonStatusCodes.CANCELED, so this must not be swallowed as a
+      // user dismissal (the UI shows nothing for cancellations).
+      final failure = client.toSocialAuthException(
+        const GoogleSignInException(
+          code: GoogleSignInExceptionCode.canceled,
+          description: '[16] Account reauth failed.',
+        ),
+      );
+
+      expect(failure.code, SocialAuthErrorCode.notConfigured);
+      expect(failure.isCancellation, isFalse);
+    });
+  });
+
   group('generateSocialAuthNonce', () {
     test('is URL-safe, non-empty and unique per call', () {
       final first = generateSocialAuthNonce();
@@ -289,6 +330,49 @@ void main() {
           await GoogleAuthProvider(_config(), client: client).authenticate();
 
       expect(credential.idToken, 'fresh-id-token');
+    });
+
+    test('falls back to the interactive flow when the lightweight restore fails',
+        () async {
+      // A "[28444] Developer console is not set up correctly" failure comes out
+      // of the lightweight path; it must not stop the account picker from
+      // opening, so the real error is visible instead of a silent no-op.
+      final client = _FakeGoogleSignInClient(
+        restoreError: const SocialAuthException(
+          SocialAuthErrorCode.notConfigured,
+          message: '[28444] Developer console is not set up correctly.',
+        ),
+        interactiveIdToken: 'fresh-id-token',
+      );
+
+      final credential =
+          await GoogleAuthProvider(_config(), client: client).authenticate();
+
+      expect(credential.idToken, 'fresh-id-token');
+    });
+
+    test('still surfaces a failure from the interactive flow', () async {
+      final client = _FakeGoogleSignInClient(
+        restoreError: const SocialAuthException(
+          SocialAuthErrorCode.notConfigured,
+          message: '[28444] Developer console is not set up correctly.',
+        ),
+        interactiveError: const SocialAuthException(
+          SocialAuthErrorCode.notConfigured,
+          message: '[16] Account reauth failed.',
+        ),
+      );
+
+      await expectLater(
+        GoogleAuthProvider(_config(), client: client).authenticate(),
+        throwsA(
+          isA<SocialAuthException>().having(
+            (e) => e.message,
+            'message',
+            contains('reauth'),
+          ),
+        ),
+      );
     });
 
     test('reports "no account" when neither flow yields a token', () async {

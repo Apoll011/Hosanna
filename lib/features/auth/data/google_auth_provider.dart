@@ -12,8 +12,8 @@ import 'google_sign_in_client.dart';
 ///
 /// 1. `initialize` once per process with the **web/server** client ID, so the
 ///    ID token's audience is the one the Better Auth server recognises.
-/// 2. Try a previously authorised account (minimal UI), then the native sign-in
-///    flow that lets the user pick or add an account.
+/// 2. Try a previously authorised account (little or no UI), then the native
+///    sign-in flow that lets the user pick or add an account.
 /// 3. Hand the token to the Better Auth client, which posts it to
 ///    `/api/auth/sign-in/social` — the server verifies it, finds or creates the
 ///    user and issues the session.
@@ -61,8 +61,21 @@ class GoogleAuthProvider implements SocialAuthProvider {
 
     await _ensureInitialized(serverClientId: serverClientId);
 
-    final idToken =
-        await _client.restoreIdToken() ?? await _client.signInIdToken();
+    // The lightweight restore is a best-effort optimisation: it reuses a
+    // previously authorised account with little or no UI. It must never be able
+    // to abort the sign-in, because Google reports some *configuration*
+    // failures (e.g. "[28444] Developer console is not set up correctly") from
+    // that path before the interactive flow has a chance to run. Swallowing the
+    // failure here lets the native account chooser open and surface the real,
+    // actionable error instead of dying silently.
+    String? idToken;
+    try {
+      idToken = await _client.restoreIdToken();
+    } catch (_) {
+      // A restore failure is not fatal: fall through to the interactive flow
+      // below, which surfaces the real error and lets the user pick an account.
+    }
+    idToken ??= await _client.signInIdToken();
     if (idToken == null || idToken.isEmpty) {
       throw const SocialAuthException(
         SocialAuthErrorCode.noAccount,
