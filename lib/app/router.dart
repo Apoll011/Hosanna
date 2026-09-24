@@ -9,10 +9,10 @@ import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
 import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
-import '../features/export/presentation/export_pdf_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
@@ -155,15 +155,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             SongDetailPage(songId: state.pathParameters['id']!),
       ),
+      // Declared before `/services/:id` so the launcher shortcut
+      // (`hosanna://services/next`) isn't swallowed by the id route; the page
+      // replaces itself with the resolved service.
+      GoRoute(
+        path: '/services/next',
+        builder: (_, _) => const NextServicePage(),
+      ),
       GoRoute(
         path: '/services/:id',
         builder: (_, state) =>
             ServiceDetailPage(serviceId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/export-pdf/:songId',
-        builder: (_, state) =>
-            ExportPdfPage(songId: state.pathParameters['songId']!),
       ),
     ],
   );

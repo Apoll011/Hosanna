@@ -12,9 +12,11 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  app_links: ^7.2.1
   audioplayers: ^6.1.0
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
+  google_sign_in: ^7.2.0
   dio: ^5.11.0
   dio_cookie_manager: ^3.5.0
   cookie_jar: ^4.0.9

@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/hosanna_logo.dart';
 import '../domain/auth_controller.dart';
 import 'auth_ui_utils.dart';
+import 'social_sign_in_button.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -20,8 +21,12 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
   bool _loading = false;
+  bool _socialBusy = false;
   String? _error;
   bool _obscure = true;
+
+  /// True while any account creation (email or social) is running.
+  bool get _busy => _loading || _socialBusy;
 
   @override
   void dispose() {
@@ -159,7 +164,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: _loading ? null : _submit,
+                    onPressed: _busy ? null : _submit,
                     child: _loading
                         ? const SizedBox(
                             height: 20,
@@ -168,11 +173,22 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           )
                         : Text(l10n.authSignUpButton),
                   ),
+                  // Same widget — and therefore the same Better Auth flow — as
+                  // the sign-in screen: the server decides whether the Google
+                  // identity is a new or an existing account.
+                  SocialSignInSection(
+                    enabled: !_loading,
+                    onBusyChanged: (busy) =>
+                        setState(() => _socialBusy = busy),
+                    onError: (message) => setState(() => _error = message),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(l10n.authHaveAccount),
+                      // Flexible so a long label or a large text scale wraps
+                      // instead of overflowing the row.
+                      Flexible(child: Text(l10n.authHaveAccount)),
                       TextButton(
                         onPressed: () => context.pop(),
                         child: Text(l10n.authSignIn),

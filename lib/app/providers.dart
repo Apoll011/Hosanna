@@ -9,11 +9,13 @@ import 'package:hosanna/features/supabase/supabase_client_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth/session_store.dart';
+import '../core/auth/social_auth_provider.dart';
 import '../core/config/app_config.dart';
 import '../core/db/database.dart';
 import '../core/network/api_client.dart';
 import '../core/network/user_agent.dart';
 import '../features/auth/data/auth_repository.dart';
+import '../features/auth/data/google_auth_provider.dart';
 
 /// Compile-time configuration (API URL, hosted Turnstile page URL).
 final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.instance);
@@ -64,6 +66,19 @@ final dioProvider = Provider<Dio>((ref) {
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider));
+});
+
+/// Native social sign-in providers offered by this build.
+///
+/// The auth screens iterate this list and depend only on [SocialAuthProvider],
+/// so registering Apple/GitHub/Microsoft later is a one-line change here. A
+/// provider is kept in the list even when its configuration is missing, so the
+/// app reports a clear configuration error instead of silently hiding the
+/// button.
+final socialAuthProvidersProvider = Provider<List<SocialAuthProvider>>((ref) {
+  return [
+    GoogleAuthProvider(ref.watch(appConfigProvider)),
+  ];
 });
 
 /// Key of the shell's [Scaffold], letting branch pages open the navigation

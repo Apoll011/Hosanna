@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher shortcuts (long-press on the app icon). -->
+    <string name="shortcut_library_short">Biblioteca</string>
+    <string name="shortcut_library_long">Abrir a biblioteca de cânticos</string>
+    <string name="shortcut_services_short">Cultos</string>
+    <string name="shortcut_services_long">Abrir os planos de culto</string>
+    <string name="shortcut_next_service_short">Próximo culto</string>
+    <string name="shortcut_next_service_long">Abrir o próximo culto</string>
+</resources>

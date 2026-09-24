@@ -4,11 +4,24 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import 'hosanna_drawer.dart';
+import 'nav_branches.dart';
 import 'providers.dart';
 
 /// Breakpoint (logical pixels) at which the app switches to the tablet layout
 /// (persistent sidebar instead of a drawer + floating bottom bar).
 const double kTabletBreakpoint = 750;
+
+/// Branches that hide the floating bottom nav bar.
+///
+/// The bar only ever links to the Songs and Services branches, so on the tools
+/// (metronome, circle of fifths) and Settings it would just cover content
+/// without showing a selected destination. Those branches are reached through
+/// the drawer/sidebar instead.
+const Set<int> kBranchesWithoutNavBar = {
+  kMetronomeBranch,
+  kCircleOfFifthsBranch,
+  kSettingsBranch,
+};
 
 /// Responsive shell: phones get a slide-in drawer + floating bottom bar;
 /// tablets get a persistent, retractable sidebar (mirroring the React app's
@@ -36,21 +49,28 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sidebarCollapsed = ref.watch(sidebarCollapsedProvider);
+    final currentBranch = widget.navigationShell.currentIndex;
     // Order must match the shell branches in router.dart (see nav_branches.dart).
     // Note: only songs/services appear in the Floating Nav Bar; the tools
     // (metronome, circle of fifths) live in the sidebar/drawer only.
     final destinations = [
       _NavItem(
+        branch: kSongsBranch,
         icon: Icons.music_note_outlined,
         selectedIcon: Icons.music_note,
         label: l10n.navSongs,
       ),
       _NavItem(
+        branch: kServicesBranch,
         icon: Icons.calendar_month_outlined,
         selectedIcon: Icons.calendar_month,
         label: l10n.navServices,
       ),
     ];
+    final selectedDestination = destinations.indexWhere(
+      (d) => d.branch == currentBranch,
+    );
+    final showNavBar = !kBranchesWithoutNavBar.contains(currentBranch);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -71,14 +91,16 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
                   child: Stack(
                     children: [
                       Positioned.fill(child: widget.navigationShell),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: _FloatingNavBar(
-                          selectedIndex: widget.navigationShell.currentIndex,
-                          onSelected: _goBranch,
-                          destinations: destinations,
+                      if (showNavBar)
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: _FloatingNavBar(
+                            selectedIndex: selectedDestination,
+                            onSelected: (index) =>
+                                _goBranch(destinations[index].branch),
+                            destinations: destinations,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -95,11 +117,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
             onNavigate: _goBranch,
           ),
           extendBody: true,
-          bottomNavigationBar: _FloatingNavBar(
-            selectedIndex: widget.navigationShell.currentIndex,
-            onSelected: _goBranch,
-            destinations: destinations,
-          ),
+          bottomNavigationBar: showNavBar
+              ? _FloatingNavBar(
+                  selectedIndex: selectedDestination,
+                  onSelected: (index) =>
+                      _goBranch(destinations[index].branch),
+                  destinations: destinations,
+                )
+              : null,
         );
       },
     );
@@ -229,10 +254,14 @@ class _NavButton extends StatelessWidget {
 
 class _NavItem {
   const _NavItem({
+    required this.branch,
     required this.icon,
     required this.selectedIcon,
     required this.label,
   });
+
+  /// Shell branch this destination navigates to (see [nav_branches]).
+  final int branch;
 
   final IconData icon;
   final IconData selectedIcon;

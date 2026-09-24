@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/providers.dart';
+import '../../domain/chordpro/instruments/instruments.dart';
 import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
@@ -26,7 +27,7 @@ class SongDisplaySettings {
   final bool showChords;
   final bool twoColumn;
   final double fontSize;
-  final String instrument; // 'guitar' | 'piano'
+  final String instrument; // any registered instrument id (see instrumentRegistry)
   final bool showDiagrams;
   final bool sectionColorBackground;
 
@@ -36,7 +37,11 @@ class SongDisplaySettings {
   /// Active variant id (transient — not persisted).
   final String variantId;
 
-  bool get isGuitar => instrument == 'guitar';
+  /// The instrument selected for the current song.
+  Instrument get instrumentInfo => instrumentRegistry.resolve(instrument);
+
+  /// Whether a capo changes the sounding pitch for the selected instrument.
+  bool get instrumentSupportsCapo => instrumentInfo.supportsCapo;
 
   SongDisplaySettings copyWith({
     int? transpose,
@@ -77,6 +82,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _twoColumnKey = 'songDisplay.twoColumn';
   static const _fontSizeKey = 'songDisplay.fontSize';
   static const _instrumentKey = 'songDisplay.instrument';
+  static const _defaultInstrument = 'guitar';
   static const _diagramsKey = 'songDisplay.showDiagrams';
   static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
 
@@ -85,7 +91,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       showChords: _prefs.getBool(_showChordsKey) ?? true,
       twoColumn: _prefs.getBool(_twoColumnKey) ?? false,
       fontSize: _prefs.getDouble(_fontSizeKey) ?? 14,
-      instrument: _prefs.getString(_instrumentKey) ?? 'guitar',
+      instrument: instrumentRegistry
+          .resolve(_prefs.getString(_instrumentKey) ?? _defaultInstrument)
+          .id,
       showDiagrams: _prefs.getBool(_diagramsKey) ?? false,
       sectionColorBackground:
           _prefs.getBool(_sectionColorBackgroundKey) ?? false,
@@ -126,8 +134,11 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void setInstrument(String value) {
-    _prefs.setString(_instrumentKey, value);
-    state = state.copyWith(instrument: value);
+    // Persist only ids the registry knows, so stale values can never leave the
+    // UI showing an instrument that no longer exists.
+    final id = instrumentRegistry.resolve(value).id;
+    _prefs.setString(_instrumentKey, id);
+    state = state.copyWith(instrument: id);
   }
 
   void toggleDiagrams() {

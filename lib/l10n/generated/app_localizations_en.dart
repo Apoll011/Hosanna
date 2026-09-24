@@ -223,6 +223,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCaptchaOpenFailed => 'Could not open the captcha window.';
 
   @override
+  String get authOr => 'or';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continue with $provider';
+  }
+
+  @override
+  String get authSocialNoAccount =>
+      'No account available to sign in on this device.';
+
+  @override
+  String get authSocialUnavailable =>
+      'This device doesn\'t support this sign-in method.';
+
+  @override
+  String get authSocialNotConfigured =>
+      'Social sign-in isn\'t configured in this build.';
+
+  @override
+  String get authSocialRejected =>
+      'We couldn\'t verify your account. Please try again.';
+
+  @override
+  String get authSocialNetworkError =>
+      'Couldn\'t reach the server. Check your connection.';
+
+  @override
+  String get authSocialServerError =>
+      'The server couldn\'t complete the sign-in. Please try again.';
+
+  @override
+  String get authSocialError => 'Couldn\'t sign in.';
+
+  @override
   String get onboardingTitle => 'Welcome to Hosanna';
 
   @override
@@ -385,6 +420,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsFilterByKey => 'Filter by key';
 
   @override
+  String get songsFilterByCollection => 'Filter by collection';
+
+  @override
   String get songsFilterBySongNumber => 'Song number';
 
   @override
@@ -410,6 +448,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get songsClearFilters => 'Clear filters';
+
+  @override
+  String get songsClearSearch => 'Clear search';
 
   @override
   String get songsTitleLabel => 'Title';
@@ -486,6 +527,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songGuitar => 'Guitar';
 
   @override
+  String get songUkulele => 'Ukulele';
+
+  @override
   String get songPiano => 'Piano';
 
   @override
@@ -530,6 +574,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get foldersRoot => 'Root';
 
   @override
+  String get foldersViewGrid => 'Grid view';
+
+  @override
+  String get foldersViewList => 'List view';
+
+  @override
   String get servicesTitle => 'Services';
 
   @override
@@ -537,6 +587,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get servicesSearchHint => 'Search services…';
+
+  @override
+  String get servicesNextService => 'Next service';
+
+  @override
+  String get servicesNoUpcoming => 'No upcoming services';
 
   @override
   String get servicesItems => 'Items';

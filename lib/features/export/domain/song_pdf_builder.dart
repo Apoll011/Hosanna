@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../songs/domain/chordpro/chord_dictionary.dart';
+import '../../songs/domain/chordpro/instruments/instruments.dart';
 import '../../songs/domain/chordpro/parser.dart';
 import '../../songs/domain/chordpro/transpose.dart';
 
@@ -33,7 +34,9 @@ class SongPdfOptions {
   final bool sectionColorBackground;
   final String variantId;
 
-  bool get isGuitar => instrument == 'guitar';
+  /// Whether a capo changes the sounding pitch for the selected instrument.
+  bool get instrumentSupportsCapo =>
+      instrumentRegistry.resolve(instrument).supportsCapo;
 }
 
 // ── Palette (light theme, derived from the app seed color #0284C7) ──────────
@@ -72,7 +75,7 @@ Future<Uint8List> buildSongPdf({
   final document = parseChordProDocument(content);
   final version = selectVersion(document, options.variantId);
   final metadata = version.metadata;
-  final effectiveCapo = options.isGuitar ? options.capo : 0;
+  final effectiveCapo = options.instrumentSupportsCapo ? options.capo : 0;
   final effectiveTranspose = options.transpose - effectiveCapo;
 
   final title = _resolveTitle(metadata, fallbackTitle);
@@ -294,7 +297,7 @@ pw.Widget _chordRoll({
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        if (options.isGuitar && capo > 0)
+        if (options.instrumentSupportsCapo && capo > 0)
           pw.Padding(
             padding: const pw.EdgeInsets.only(bottom: 6),
             child: pw.Text(
@@ -327,7 +330,9 @@ pw.Widget _chordRollItem({
   required String instrument,
   required _Fonts fonts,
 }) {
-  final fingering = chordDictionary.getFingering(transposed);
+  final voicing = chordDictionary
+      .getFingering(transposed)
+      ?.forInstrument(instrument);
 
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -341,35 +346,15 @@ pw.Widget _chordRollItem({
         ),
       ),
       pw.SizedBox(height: 4),
-      if (fingering == null)
-        pw.SizedBox(
-          height: 40,
-          child: pw.Center(
-            child: pw.Text(
-              '-',
-              style: pw.TextStyle(fontSize: 12, color: _onSurfaceVariant),
-            ),
-          ),
-        )
-      else if (instrument == 'piano')
-        _pianoDiagram(fingering.piano)
-      else if (fingering.guitar != null)
-        _guitarDiagram(fingering.guitar!, fonts)
+      if (voicing == null)
+        _emptyDiagram()
       else
-        pw.SizedBox(
-          height: 40,
-          child: pw.Center(
-            child: pw.Text(
-              '-',
-              style: pw.TextStyle(fontSize: 12, color: _onSurfaceVariant),
-            ),
-          ),
-        ),
-      if (fingering != null)
+        _fingeringDiagram(voicing, fonts),
+      if (voicing != null)
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 4),
           child: pw.Text(
-            _sanitize(fingering.piano.notes.join(' - ')),
+            _sanitize(voicing.notes.join(' - ')),
             style: pw.TextStyle(
               font: fonts.mono,
               fontSize: 7,
@@ -381,27 +366,58 @@ pw.Widget _chordRollItem({
   );
 }
 
-/// Guitar fretboard diagram drawn directly onto the PDF canvas.
-pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
-  const double width = 100;
-  const double height = 110;
+/// Placeholder shown when an instrument has no voicing for a chord.
+pw.Widget _emptyDiagram() {
+  return pw.SizedBox(
+    height: 40,
+    child: pw.Center(
+      child: pw.Text(
+        '-',
+        style: pw.TextStyle(fontSize: 12, color: _onSurfaceVariant),
+      ),
+    ),
+  );
+}
 
-  double stringX(int index) => 14 + index * 14;
-  double fretY(int index) => 22 + index * 20;
+/// Picks the PDF diagram that matches the fingering's type.
+pw.Widget _fingeringDiagram(InstrumentFingering fingering, _Fonts fonts) {
+  return switch (fingering) {
+    FrettedFingering fretted => _frettedDiagram(fretted, fonts),
+    KeyboardFingering keyboard => _keyboardDiagram(keyboard),
+  };
+}
+
+/// Fretboard diagram drawn directly onto the PDF canvas.
+///
+/// Works for any fretted instrument: the string count is taken from
+/// [voicing], so ukulele (4 strings) and guitar (6) share this painter.
+pw.Widget _frettedDiagram(FrettedFingering voicing, _Fonts fonts) {
+  const double leftMargin = 18;
+  const double stringSpacing = 14;
+  const double rightMargin = 16;
+  const double topMargin = 22;
+  const double fretSpacing = 20;
+  const int maxFrets = 4;
+
+  final frets = voicing.frets;
+  final fingers = voicing.fingers;
+  final barre = voicing.barre;
+  final lastString = frets.length - 1;
+  final width = leftMargin + lastString * stringSpacing + rightMargin;
+  final height = topMargin + maxFrets * fretSpacing + 8;
+
+  double stringX(int index) => leftMargin + index * stringSpacing;
+  double fretY(int index) => topMargin + index * fretSpacing;
 
   return pw.CustomPaint(
     size: PdfPoint(width, height),
     painter: (canvas, size) {
-      final frets = guitar.frets;
-      final fingers = guitar.fingers;
-      final barre = guitar.barre;
-
       // The PDF canvas origin sits at the bottom-left; flip to top-down.
       double ty(double y) => height - y;
 
       final maxFret = frets.fold<int>(0, (a, b) => b > a ? b : a);
       var startFret = 1;
-      if (maxFret > 4) {
+      if (maxFret > maxFrets) {
         final positive = frets.where((f) => f > 0).toList();
         if (positive.isNotEmpty) {
           startFret = positive.reduce((a, b) => a < b ? a : b);
@@ -412,7 +428,7 @@ pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
       final nutY = ty(fretY(0) - (startFret == 1 ? 3 : 0));
       canvas.setStrokeColor(_diagramLine);
       canvas.setLineWidth(startFret == 1 ? 3.5 : 1.5);
-      canvas.drawLine(stringX(0), nutY, stringX(5), nutY);
+      canvas.drawLine(stringX(0), nutY, stringX(lastString), nutY);
       canvas.strokePath();
 
       if (startFret > 1) {
@@ -431,16 +447,26 @@ pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
       // Strings.
       canvas.setStrokeColor(_diagramLine);
       canvas.setLineWidth(1.2);
-      for (var i = 0; i < 6; i++) {
-        canvas.drawLine(stringX(i), ty(fretY(0)), stringX(i), ty(fretY(4)));
+      for (var i = 0; i < frets.length; i++) {
+        canvas.drawLine(
+          stringX(i),
+          ty(fretY(0)),
+          stringX(i),
+          ty(fretY(maxFrets)),
+        );
       }
       canvas.strokePath();
 
       // Frets.
       canvas.setStrokeColor(_diagramLine);
       canvas.setLineWidth(1);
-      for (var i = 0; i <= 4; i++) {
-        canvas.drawLine(stringX(0), ty(fretY(i)), stringX(5), ty(fretY(i)));
+      for (var i = 0; i <= maxFrets; i++) {
+        canvas.drawLine(
+          stringX(0),
+          ty(fretY(i)),
+          stringX(lastString),
+          ty(fretY(i)),
+        );
       }
       canvas.strokePath();
 
@@ -448,11 +474,18 @@ pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
       if (barre != null) {
         final inWindow = barre - startFret;
         final startStr = frets.indexOf(barre);
-        if (inWindow >= 0 && inWindow < 4 && startStr != -1) {
+        if (inWindow >= 0 && inWindow < maxFrets && startStr != -1) {
           final cy = ty(fretY(inWindow) + 10);
           final x1 = stringX(startStr);
           canvas.setFillColor(_primary);
-          canvas.drawRRect(x1 - 4, cy - 4, stringX(5) - x1 + 8, 8, 4, 4);
+          canvas.drawRRect(
+            x1 - 4,
+            cy - 4,
+            stringX(lastString) - x1 + 8,
+            8,
+            4,
+            4,
+          );
           canvas.fillPath();
         }
       }
@@ -483,7 +516,7 @@ pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
         }
 
         final inWindow = fret - startFret;
-        if (inWindow >= 0 && inWindow < 4) {
+        if (inWindow >= 0 && inWindow < maxFrets) {
           final cx = stringX(i);
           final cy = ty(fretY(inWindow) + 10);
           final isBarred =
@@ -514,7 +547,7 @@ pw.Widget _guitarDiagram(GuitarFingering guitar, _Fonts fonts) {
 }
 
 /// Piano keyboard diagram drawn directly onto the PDF canvas.
-pw.Widget _pianoDiagram(PianoFingering piano) {
+pw.Widget _keyboardDiagram(KeyboardFingering keyboard) {
   const int whiteKeyCount = 14;
   const double keyWidth = 14;
   const double keyHeight = 56;
@@ -552,7 +585,7 @@ pw.Widget _pianoDiagram(PianoFingering piano) {
       // White keys.
       for (var idx = 0; idx < whiteSemitones.length; idx++) {
         final semitone = whiteSemitones[idx];
-        final highlighted = piano.highlightKeys.contains(semitone);
+        final highlighted = keyboard.highlightKeys.contains(semitone);
         final x = idx * keyWidth + 1;
         canvas.setFillColor(highlighted ? _primary : PdfColors.white);
         canvas.drawRect(x, ty(2 + keyHeight), keyWidth - 1, keyHeight);
@@ -577,7 +610,7 @@ pw.Widget _pianoDiagram(PianoFingering piano) {
 
       // Black keys.
       for (final semitone in blackSemitones) {
-        final highlighted = piano.highlightKeys.contains(semitone);
+        final highlighted = keyboard.highlightKeys.contains(semitone);
         final x = blackKeyX(semitone) + 1;
         canvas.setFillColor(highlighted ? _primary : PdfColors.black);
         canvas.drawRect(x, ty(2 + blackHeight), blackWidth, blackHeight);
@@ -622,7 +655,7 @@ pw.Widget _sectionWidget(
     'new_song' => _newSongDivider(fonts),
     'grid' => _gridSection(section, options, transpose, fonts),
     'tab' => _tabSection(section, fonts),
-    'comment' => _commentSection(section, fonts),
+    'comment' => _commentSection(section, options, transpose, fonts),
     _ => _standardSection(section, options, transpose, fonts),
   };
 }
@@ -753,16 +786,20 @@ pw.Widget _tabSection(SectionAst section, _Fonts fonts) {
   );
 }
 
-pw.Widget _commentSection(SectionAst section, _Fonts fonts) {
+pw.Widget _commentSection(
+  SectionAst section,
+  SongPdfOptions options,
+  int transpose,
+  _Fonts fonts,
+) {
   return pw.Padding(
     padding: const pw.EdgeInsets.symmetric(vertical: 4),
-    child: pw.Text(
-      _sanitize(section.lines.map((l) => l.text ?? '').join(', ')),
-      style: pw.TextStyle(
-        font: fonts.italic,
-        fontSize: 10,
-        color: _onSurfaceVariant,
-      ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        for (final line in section.lines)
+          _lineWidget(line, options, transpose, fonts),
+      ],
     ),
   );
 }
@@ -811,11 +848,13 @@ pw.Widget _lineWidget(
       return pw.Text(
         _sanitize(line.text ?? ''),
         style: pw.TextStyle(
-          font: fonts.italic,
+          font: fonts.base,
           fontSize: 10,
           color: _onSurfaceVariant,
         ),
       );
+    case 'comment_italic':
+      return _commentItalicWidget(line, fonts);
     case 'comment_box':
       return _commentBoxWidget(line, fonts);
     case 'chord-section':
@@ -828,6 +867,27 @@ pw.Widget _lineWidget(
     default:
       return _lyricsWidget(line, options, transpose, fonts);
   }
+}
+
+pw.Widget _commentItalicWidget(LineAst line, _Fonts fonts) {
+  return pw.Container(
+    width: double.infinity,
+    margin: const pw.EdgeInsets.symmetric(vertical: 4),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: pw.BoxDecoration(
+      color: _surfaceContainer,
+      borderRadius: pw.BorderRadius.circular(8),
+    ),
+    child: pw.Text(
+      _sanitize(line.text ?? ''),
+      textAlign: pw.TextAlign.center,
+      style: pw.TextStyle(
+        font: fonts.italic,
+        fontSize: 10,
+        color: _onSurfaceVariant,
+      ),
+    ),
+  );
 }
 
 pw.Widget _commentBoxWidget(LineAst line, _Fonts fonts) {

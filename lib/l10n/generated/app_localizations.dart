@@ -514,6 +514,60 @@ abstract class AppLocalizations {
   /// **'Não foi possível abrir a janela de captcha.'**
   String get authCaptchaOpenFailed;
 
+  /// No description provided for @authOr.
+  ///
+  /// In pt, this message translates to:
+  /// **'ou'**
+  String get authOr;
+
+  /// Social sign-in button label; {provider} is the provider's display name, e.g. Google
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar com {provider}'**
+  String authContinueWith(String provider);
+
+  /// No description provided for @authSocialNoAccount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma conta disponível para iniciar sessão neste dispositivo.'**
+  String get authSocialNoAccount;
+
+  /// No description provided for @authSocialUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este dispositivo não suporta este método de início de sessão.'**
+  String get authSocialUnavailable;
+
+  /// No description provided for @authSocialNotConfigured.
+  ///
+  /// In pt, this message translates to:
+  /// **'O início de sessão social não está configurado nesta versão.'**
+  String get authSocialNotConfigured;
+
+  /// No description provided for @authSocialRejected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível verificar a sua conta. Tente novamente.'**
+  String get authSocialRejected;
+
+  /// No description provided for @authSocialNetworkError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem ligação ao servidor. Verifique a sua Internet.'**
+  String get authSocialNetworkError;
+
+  /// No description provided for @authSocialServerError.
+  ///
+  /// In pt, this message translates to:
+  /// **'O servidor não conseguiu concluir o início de sessão. Tente novamente.'**
+  String get authSocialServerError;
+
+  /// No description provided for @authSocialError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível iniciar sessão.'**
+  String get authSocialError;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In pt, this message translates to:
@@ -814,6 +868,12 @@ abstract class AppLocalizations {
   /// **'Filtrar por tom'**
   String get songsFilterByKey;
 
+  /// No description provided for @songsFilterByCollection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar por coleção'**
+  String get songsFilterByCollection;
+
   /// No description provided for @songsFilterBySongNumber.
   ///
   /// In pt, this message translates to:
@@ -867,6 +927,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Limpar filtros'**
   String get songsClearFilters;
+
+  /// No description provided for @songsClearSearch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar pesquisa'**
+  String get songsClearSearch;
 
   /// No description provided for @songsTitleLabel.
   ///
@@ -1012,6 +1078,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get songGuitar;
 
+  /// No description provided for @songUkulele.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ukelele'**
+  String get songUkulele;
+
   /// No description provided for @songPiano.
   ///
   /// In pt, this message translates to:
@@ -1084,6 +1156,18 @@ abstract class AppLocalizations {
   /// **'Raiz'**
   String get foldersRoot;
 
+  /// No description provided for @foldersViewGrid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver em grelha'**
+  String get foldersViewGrid;
+
+  /// No description provided for @foldersViewList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver em lista'**
+  String get foldersViewList;
+
   /// No description provided for @servicesTitle.
   ///
   /// In pt, this message translates to:
@@ -1101,6 +1185,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Pesquisar cultos…'**
   String get servicesSearchHint;
+
+  /// No description provided for @servicesNextService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo culto'**
+  String get servicesNextService;
+
+  /// No description provided for @servicesNoUpcoming.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cultos futuros'**
+  String get servicesNoUpcoming;
 
   /// No description provided for @servicesItems.
   ///

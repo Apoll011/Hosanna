@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/hosanna_logo.dart';
 import '../domain/auth_controller.dart';
 import 'auth_ui_utils.dart';
+import 'social_sign_in_button.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -18,8 +19,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
+  bool _socialBusy = false;
   String? _error;
   bool _obscure = true;
+
+  /// True while any sign-in (email or social) is running.
+  bool get _busy => _loading || _socialBusy;
 
   @override
   void dispose() {
@@ -132,7 +137,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
-                    onPressed: _loading ? null : _submit,
+                    onPressed: _busy ? null : _submit,
                     child: _loading
                         ? const SizedBox(
                             height: 20,
@@ -141,11 +146,19 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           )
                         : Text(l10n.authSignInButton),
                   ),
+                  SocialSignInSection(
+                    enabled: !_loading,
+                    onBusyChanged: (busy) =>
+                        setState(() => _socialBusy = busy),
+                    onError: (message) => setState(() => _error = message),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(l10n.authNoAccount),
+                      // Flexible so a long label or a large text scale wraps
+                      // instead of overflowing the row.
+                      Flexible(child: Text(l10n.authNoAccount)),
                       TextButton(
                         onPressed: () => context.push('/sign-up'),
                         child: Text(l10n.authCreateAccount),

@@ -70,6 +70,23 @@
   "authCaptchaWindowTitle": "Verificação de segurança (captcha)",
   "authCaptchaWaitingMessage": "Conclua a verificação de segurança na janela de captcha que acabou de abrir.",
   "authCaptchaOpenFailed": "Não foi possível abrir a janela de captcha.",
+  "authOr": "ou",
+  "authContinueWith": "Continuar com {provider}",
+  "@authContinueWith": {
+    "description": "Social sign-in button label; {provider} is the provider's display name, e.g. Google",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSocialNoAccount": "Nenhuma conta disponível para iniciar sessão neste dispositivo.",
+  "authSocialUnavailable": "Este dispositivo não suporta este método de início de sessão.",
+  "authSocialNotConfigured": "O início de sessão social não está configurado nesta versão.",
+  "authSocialRejected": "Não foi possível verificar a sua conta. Tente novamente.",
+  "authSocialNetworkError": "Sem ligação ao servidor. Verifique a sua Internet.",
+  "authSocialServerError": "O servidor não conseguiu concluir o início de sessão. Tente novamente.",
+  "authSocialError": "Não foi possível iniciar sessão.",
 
   "onboardingTitle": "Bem-vindo ao Hosanna",
   "onboardingSubtitle": "Aceite um convite para entrar na organização da sua igreja.",
@@ -124,6 +141,7 @@
   "songsMatchAll": "Coincidir todas",
   "songsMatchAny": "Coincidir alguma",
   "songsFilterByKey": "Filtrar por tom",
+  "songsFilterByCollection": "Filtrar por coleção",
   "songsFilterBySongNumber": "Número do cântico",
   "songsNumberAny": "Qualquer",
   "songsNumberOnly": "Numerados",
@@ -133,6 +151,7 @@
   "songsResetFilters": "Repor filtros",
   "songsClear": "Limpar",
   "songsClearFilters": "Limpar filtros",
+  "songsClearSearch": "Limpar pesquisa",
   "songsTitleLabel": "Título",
   "songsArtistLabel": "Artista",
   "songsFolderLabel": "Pasta",
@@ -157,6 +176,7 @@
   "songShowDiagrams": "Mostrar Diagramas",
   "songSectionBackground": "Destacar Seções com Cor",
   "songGuitar": "Guitarra",
+  "songUkulele": "Ukelele",
   "songPiano": "Piano",
   "songAutoScrollStart": "Iniciar scroll automático",
   "songAutoScrollPause": "Pausar scroll",
@@ -170,10 +190,14 @@
   "foldersSubfolders": "Subpastas",
   "foldersSongsCount": "{count, plural, =1{1 cântico} other{{count} cânticos}}",
   "foldersRoot": "Raiz",
+  "foldersViewGrid": "Ver em grelha",
+  "foldersViewList": "Ver em lista",
 
   "servicesTitle": "Cultos",
   "servicesEmpty": "Sem cultos",
   "servicesSearchHint": "Pesquisar cultos…",
+  "servicesNextService": "Próximo culto",
+  "servicesNoUpcoming": "Sem cultos futuros",
   "servicesItems": "Itens",
   "servicesNotes": "Notas",
   "servicesGeneralNotes": "Notas gerais",

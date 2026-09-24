@@ -228,6 +228,41 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authCaptchaOpenFailed => 'No se pudo abrir la ventana de captcha.';
 
   @override
+  String get authOr => 'o';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continuar con $provider';
+  }
+
+  @override
+  String get authSocialNoAccount =>
+      'No hay ninguna cuenta disponible para iniciar sesión en este dispositivo.';
+
+  @override
+  String get authSocialUnavailable =>
+      'Este dispositivo no admite este método de inicio de sesión.';
+
+  @override
+  String get authSocialNotConfigured =>
+      'El inicio de sesión social no está configurado en esta compilación.';
+
+  @override
+  String get authSocialRejected =>
+      'No pudimos verificar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get authSocialNetworkError =>
+      'No se pudo conectar con el servidor. Comprueba tu conexión.';
+
+  @override
+  String get authSocialServerError =>
+      'El servidor no pudo completar el inicio de sesión. Inténtalo de nuevo.';
+
+  @override
+  String get authSocialError => 'No se pudo iniciar sesión.';
+
+  @override
   String get onboardingTitle => 'Bienvenido a Hosanna';
 
   @override
@@ -390,6 +425,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsFilterByKey => 'Filtrar por tonalidad';
 
   @override
+  String get songsFilterByCollection => 'Filtrar por colección';
+
+  @override
   String get songsFilterBySongNumber => 'Número de canción';
 
   @override
@@ -415,6 +453,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songsClearFilters => 'Limpiar filtros';
+
+  @override
+  String get songsClearSearch => 'Limpiar búsqueda';
 
   @override
   String get songsTitleLabel => 'Título';
@@ -491,6 +532,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songGuitar => 'Guitarra';
 
   @override
+  String get songUkulele => 'Ukelele';
+
+  @override
   String get songPiano => 'Piano';
 
   @override
@@ -535,6 +579,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get foldersRoot => 'Raíz';
 
   @override
+  String get foldersViewGrid => 'Vista de cuadrícula';
+
+  @override
+  String get foldersViewList => 'Vista de lista';
+
+  @override
   String get servicesTitle => 'Servicios';
 
   @override
@@ -542,6 +592,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get servicesSearchHint => 'Buscar servicios…';
+
+  @override
+  String get servicesNextService => 'Próximo servicio';
+
+  @override
+  String get servicesNoUpcoming => 'Sin servicios próximos';
 
   @override
   String get servicesItems => 'Elementos';

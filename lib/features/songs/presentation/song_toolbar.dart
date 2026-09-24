@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/chordpro/parser.dart';
+import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
@@ -105,8 +106,8 @@ class SongControlsSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // Capo (guitar only).
-            if (settings.isGuitar) ...[
+            // Capo (only for instruments where it changes the pitch).
+            if (settings.instrumentSupportsCapo) ...[
               _SectionTitle(
                 label: l10n.songCapo,
                 value: settings.capo == 0
@@ -195,21 +196,9 @@ class SongControlsSheet extends ConsumerWidget {
 
             const SizedBox(height: 8),
             _SectionTitle(label: l10n.songInstrument, value: ''),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(
-                  value: 'guitar',
-                  label: Text(l10n.songGuitar),
-                  icon: const Icon(Icons.graphic_eq),
-                ),
-                ButtonSegment(
-                  value: 'piano',
-                  label: Text(l10n.songPiano),
-                  icon: const Icon(Icons.piano),
-                ),
-              ],
-              selected: {settings.instrument},
-              onSelectionChanged: (s) => controller.setInstrument(s.first),
+            InstrumentSelector(
+              selected: settings.instrument,
+              onChanged: controller.setInstrument,
             ),
 
             // Variant switcher — shown inside the sheet as well.

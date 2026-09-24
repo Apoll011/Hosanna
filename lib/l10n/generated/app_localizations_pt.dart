@@ -230,6 +230,41 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível abrir a janela de captcha.';
 
   @override
+  String get authOr => 'ou';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continuar com $provider';
+  }
+
+  @override
+  String get authSocialNoAccount =>
+      'Nenhuma conta disponível para iniciar sessão neste dispositivo.';
+
+  @override
+  String get authSocialUnavailable =>
+      'Este dispositivo não suporta este método de início de sessão.';
+
+  @override
+  String get authSocialNotConfigured =>
+      'O início de sessão social não está configurado nesta versão.';
+
+  @override
+  String get authSocialRejected =>
+      'Não foi possível verificar a sua conta. Tente novamente.';
+
+  @override
+  String get authSocialNetworkError =>
+      'Sem ligação ao servidor. Verifique a sua Internet.';
+
+  @override
+  String get authSocialServerError =>
+      'O servidor não conseguiu concluir o início de sessão. Tente novamente.';
+
+  @override
+  String get authSocialError => 'Não foi possível iniciar sessão.';
+
+  @override
   String get onboardingTitle => 'Bem-vindo ao Hosanna';
 
   @override
@@ -392,6 +427,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsFilterByKey => 'Filtrar por tom';
 
   @override
+  String get songsFilterByCollection => 'Filtrar por coleção';
+
+  @override
   String get songsFilterBySongNumber => 'Número do cântico';
 
   @override
@@ -417,6 +455,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get songsClearFilters => 'Limpar filtros';
+
+  @override
+  String get songsClearSearch => 'Limpar pesquisa';
 
   @override
   String get songsTitleLabel => 'Título';
@@ -493,6 +534,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songGuitar => 'Guitarra';
 
   @override
+  String get songUkulele => 'Ukelele';
+
+  @override
   String get songPiano => 'Piano';
 
   @override
@@ -537,6 +581,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get foldersRoot => 'Raiz';
 
   @override
+  String get foldersViewGrid => 'Ver em grelha';
+
+  @override
+  String get foldersViewList => 'Ver em lista';
+
+  @override
   String get servicesTitle => 'Cultos';
 
   @override
@@ -544,6 +594,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get servicesSearchHint => 'Pesquisar cultos…';
+
+  @override
+  String get servicesNextService => 'Próximo culto';
+
+  @override
+  String get servicesNoUpcoming => 'Sem cultos futuros';
 
   @override
   String get servicesItems => 'Itens';
