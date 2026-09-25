@@ -64,6 +64,16 @@ class FcmService {
     return FirebaseMessaging.instance.onTokenRefresh;
   }
 
+  /// Messages received while the app is in the foreground.
+  ///
+  /// A foreground message is **not** shown by the OS, so the app presents it
+  /// itself (see `ForegroundNotificationListener`). Yields nothing while FCM
+  /// is unavailable.
+  Stream<RemoteMessage> get onMessage {
+    if (!_available) return const Stream<RemoteMessage>.empty();
+    return FirebaseMessaging.onMessage;
+  }
+
   /// Asks the OS for notification permission (independent of Better Auth's
   /// `session.notify`). Returns true when permission was granted (or when the
   /// platform does not require an explicit prompt).

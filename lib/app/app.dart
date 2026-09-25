@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/notifications/presentation/foreground_notification_listener.dart';
 import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
+import 'providers.dart';
 import 'router.dart';
 import 'settings_controller.dart';
 import 'theme.dart';
@@ -24,6 +26,9 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   ProviderSubscription<AuthState>? _authSubscription;
   StreamSubscription<Uri>? _launcherLinks;
   ProviderContainer? _container;
+
+  /// Root messenger used to surface foreground FCM messages in-app.
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Launcher shortcut target waiting for the session/organization to resolve.
   String? _pendingLocation;
@@ -58,6 +63,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       if (!mounted) return;
       ref.read(authControllerProvider.notifier).checkSession();
       ref.read(syncControllerProvider.notifier).restore();
+      _ensureNotificationPermission();
     });
 
     // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
@@ -84,6 +90,19 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     if (auth.status == AuthStatus.loading || auth.resolvingOrganization) return;
     _pendingLocation = null;
     ref.read(goRouterProvider).go(location);
+  }
+
+  /// Re-asserts the OS notification permission on startup.
+  ///
+  /// Consent-aware on purpose: the OS prompt is only shown here for users who
+  /// have already opted in. First-time consent is handled by
+  /// [NotificationConsentGate], whose "Allow" action requests the OS permission
+  /// as well — so requesting it here unconditionally would double-prompt.
+  Future<void> _ensureNotificationPermission() async {
+    final consented =
+        await ref.read(notificationConsentStoreProvider).read();
+    if (consented != true) return;
+    await ref.read(fcmServiceProvider).requestPermission();
   }
 
   @override
@@ -154,10 +173,16 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      // Sits above the Navigator so it can overlay the first-run notification
-      // consent prompt over whatever route is showing.
-      builder: (context, child) =>
-          NotificationConsentGate(child: child ?? const SizedBox.shrink()),
+      // Lets the app present foreground FCM messages from above the Navigator.
+      scaffoldMessengerKey: _messengerKey,
+      // Both sit above the Navigator: the listener surfaces foreground pushes,
+      // and the gate overlays the first-run notification consent prompt.
+      builder: (context, child) => ForegroundNotificationListener(
+        messengerKey: _messengerKey,
+        child: NotificationConsentGate(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
     );
   }
 }
