@@ -1576,6 +1576,18 @@ abstract class AppLocalizations {
   /// **'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores'**
   String get settingsSyncAnnotationsDesc;
 
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir notificações neste dispositivo'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permite que o servidor envie notificações para esta sessão. É independente da permissão de notificações do sistema.'**
+  String get settingsNotificationsDesc;
+
   /// No description provided for @settingsSessionsOnly.
   ///
   /// In pt, this message translates to:

@@ -798,6 +798,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Shares annotations live between all users';
 
   @override
+  String get settingsNotifications => 'Allow notifications on this device';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Lets the server send notifications to this session. Separate from the system notification permission.';
+
+  @override
   String get settingsSessionsOnly =>
       'Only this device\'s current session is active.';
 

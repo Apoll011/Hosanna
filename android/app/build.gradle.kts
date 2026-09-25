@@ -4,6 +4,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Apply the Google Services plugin only when `google-services.json` is present,
+// so builds (and CI) without Firebase credentials still succeed — push
+// notifications are simply unavailable until the file is added.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.embrace.hosanna"
     compileSdk = flutter.compileSdkVersion

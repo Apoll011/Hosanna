@@ -804,6 +804,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permite que las anotaciones se compartan en vivo entre todos los usuarios';
 
   @override
+  String get settingsNotifications =>
+      'Permitir notificaciones en este dispositivo';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Permite que el servidor envíe notificaciones a esta sesión. Es independiente del permiso de notificaciones del sistema.';
+
+  @override
   String get settingsSessionsOnly =>
       'Solo está activa la sesión actual de este dispositivo.';
 

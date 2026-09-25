@@ -246,6 +246,8 @@
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSyncAnnotations": "Sync annotations",
   "settingsSyncAnnotationsDesc": "Shares annotations live between all users",
+  "settingsNotifications": "Allow notifications on this device",
+  "settingsNotificationsDesc": "Lets the server send notifications to this session. Separate from the system notification permission.",
   "settingsSessionsOnly": "Only this device's current session is active.",
 
   "metronomeTitle": "Metronome",

@@ -40,6 +40,8 @@ dependencies:
   pdf: ^3.11.3
   share_plus: ^13.0.0
   cross_file: ^0.3.4+2
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:

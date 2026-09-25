@@ -262,6 +262,8 @@
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
   "settingsSyncAnnotations": "Sincronizar anotações",
   "settingsSyncAnnotationsDesc": "Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores",
+  "settingsNotifications": "Permitir notificações neste dispositivo",
+  "settingsNotificationsDesc": "Permite que o servidor envie notificações para esta sessão. É independente da permissão de notificações do sistema.",
   "settingsSessionsOnly": "Apenas a sessão atual deste dispositivo está ativa.",
 
   "metronomeTitle": "Metrónomo",
