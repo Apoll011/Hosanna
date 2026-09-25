@@ -254,6 +254,13 @@
   "settingsKeepAwakeDesc": "Evita que la pantalla se suspenda al ver canciones.",
   "settingsSyncAnnotations": "Sincronizar anotaciones",
   "settingsSyncAnnotationsDesc": "Permite que las anotaciones se compartan en vivo entre todos los usuarios",
+  "settingsNotifications": "Permitir notificaciones en este dispositivo",
+  "settingsNotificationsDesc": "Permite que el servidor envíe notificaciones a esta sesión. Es independiente del permiso de notificaciones del sistema.",
+  "notificationConsentTitle": "¿Permitir notificaciones en este dispositivo?",
+  "notificationConsentMessage": "Si lo permites, el servidor podrá enviarte avisos de servicios y novedades de la biblioteca en este dispositivo. Puedes cambiarlo en Ajustes.",
+  "notificationConsentAllow": "Permitir",
+  "notificationConsentNotNow": "Ahora no",
+  "notificationOpenAction": "Abrir",
   "settingsSessionsOnly": "Solo está activa la sesión actual de este dispositivo.",
 
   "metronomeTitle": "Metrónomo",

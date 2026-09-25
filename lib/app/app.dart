@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/notifications/presentation/foreground_notification_listener.dart';
+import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
+import 'providers.dart';
 import 'router.dart';
 import 'settings_controller.dart';
 import 'theme.dart';
@@ -22,7 +25,11 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     with WidgetsBindingObserver {
   ProviderSubscription<AuthState>? _authSubscription;
   StreamSubscription<Uri>? _launcherLinks;
+  StreamSubscription<String>? _notificationTaps;
   ProviderContainer? _container;
+
+  /// Root messenger used to surface foreground FCM messages in-app.
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Launcher shortcut target waiting for the session/organization to resolve.
   String? _pendingLocation;
@@ -57,11 +64,23 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       if (!mounted) return;
       ref.read(authControllerProvider.notifier).checkSession();
       ref.read(syncControllerProvider.notifier).restore();
+      _ensureNotificationPermission();
     });
 
     // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
     // The stream also replays the link the app was cold-started with.
     _launcherLinks = listenToLauncherLinks(_openLocation);
+
+    // Notification taps. Routed through the same deferred `_openLocation` as
+    // launcher links, so cold starts wait for the session/organization to
+    // resolve before navigating.
+    final fcm = ref.read(fcmServiceProvider);
+    _notificationTaps = fcm.onNotificationTap.listen(_openLocation);
+    unawaited(
+      fcm.initialNotificationLocation().then((location) {
+        if (location != null) _openLocation(location);
+      }),
+    );
   }
 
   /// Navigates to a launcher link's location once the app is ready for it.
@@ -85,9 +104,23 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     ref.read(goRouterProvider).go(location);
   }
 
+  /// Re-asserts the OS notification permission on startup.
+  ///
+  /// Consent-aware on purpose: the OS prompt is only shown here for users who
+  /// have already opted in. First-time consent is handled by
+  /// [NotificationConsentGate], whose "Allow" action requests the OS permission
+  /// as well — so requesting it here unconditionally would double-prompt.
+  Future<void> _ensureNotificationPermission() async {
+    final consented =
+        await ref.read(notificationConsentStoreProvider).read();
+    if (consented != true) return;
+    await ref.read(fcmServiceProvider).requestPermission();
+  }
+
   @override
   void dispose() {
     _launcherLinks?.cancel();
+    _notificationTaps?.cancel();
     _authSubscription?.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -153,6 +186,17 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
+      // Lets the app present foreground FCM messages from above the Navigator.
+      scaffoldMessengerKey: _messengerKey,
+      // Both sit above the Navigator: the listener surfaces foreground pushes,
+      // and the gate overlays the first-run notification consent prompt.
+      builder: (context, child) => ForegroundNotificationListener(
+        messengerKey: _messengerKey,
+        onOpen: _openLocation,
+        child: NotificationConsentGate(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
     );
   }
 }

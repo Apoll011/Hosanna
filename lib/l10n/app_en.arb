@@ -246,6 +246,13 @@
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSyncAnnotations": "Sync annotations",
   "settingsSyncAnnotationsDesc": "Shares annotations live between all users",
+  "settingsNotifications": "Allow notifications on this device",
+  "settingsNotificationsDesc": "Lets the server send notifications to this session. Separate from the system notification permission.",
+  "notificationConsentTitle": "Allow notifications on this device?",
+  "notificationConsentMessage": "If allowed, the server can send you service and library updates on this device. You can change this later in Settings.",
+  "notificationConsentAllow": "Allow",
+  "notificationConsentNotNow": "Not now",
+  "notificationOpenAction": "Open",
   "settingsSessionsOnly": "Only this device's current session is active.",
 
   "metronomeTitle": "Metronome",

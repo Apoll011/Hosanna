@@ -104,6 +104,8 @@ class AuthSession {
     this.activeOrganizationId,
     this.organization,
     this.expiresAt,
+    this.fcm,
+    this.notify = true,
   });
 
   final AuthUser user;
@@ -116,6 +118,21 @@ class AuthSession {
   final Organization? organization;
   final DateTime? expiresAt;
 
+  /// FCM registration token for the device this session belongs to.
+  ///
+  /// Stored per Better Auth session (not on the user), because one account can
+  /// be signed in on several devices, each with its own token. `null` when the
+  /// session predates FCM support or the device has not registered a token
+  /// yet, so callers must handle its absence.
+  final String? fcm;
+
+  /// Whether the server is allowed to push notifications to **this** session.
+  ///
+  /// This is independent of the OS notification permission. Defaults to `true`
+  /// (Better Auth's `defaultValue`) and is forced to `true` when the server
+  /// omits the field, since older sessions may not carry it.
+  final bool notify;
+
   factory AuthSession.fromJson(Map<String, dynamic> json) {
     final session = json['session'];
     final sessionMap = session is Map<String, dynamic> ? session : <String, dynamic>{};
@@ -123,6 +140,12 @@ class AuthSession {
     final user = userMap is Map<String, dynamic>
         ? AuthUser.fromJson(userMap)
         : AuthUser(id: '', name: '', email: '');
+
+    // `fcm`/`notify` are session additional fields. Read them from the nested
+    // `session` object as well as the top level so a session round-tripped
+    // through [toJson] keeps them.
+    final fcm = sessionMap['fcm'] as String? ?? json['fcm'] as String?;
+    final notify = sessionMap['notify'] as bool? ?? json['notify'] as bool?;
 
     return AuthSession(
       user: user,
@@ -135,8 +158,21 @@ class AuthSession {
       expiresAt: sessionMap['expiresAt'] is String
           ? DateTime.tryParse(sessionMap['expiresAt'] as String)
           : null,
+      fcm: (fcm == null || fcm.isEmpty) ? null : fcm,
+      notify: notify ?? true,
     );
   }
+
+  /// Copies this session, replacing the per-session FCM fields.
+  AuthSession copyWithFcm({String? fcm, bool? notify}) => AuthSession(
+        user: user,
+        sessionToken: sessionToken,
+        activeOrganizationId: activeOrganizationId,
+        organization: organization,
+        expiresAt: expiresAt,
+        fcm: fcm ?? this.fcm,
+        notify: notify ?? this.notify,
+      );
 
   Map<String, dynamic> toJson() => {
         'user': user.toJson(),
@@ -144,5 +180,7 @@ class AuthSession {
         if (activeOrganizationId != null)
           'activeOrganizationId': activeOrganizationId,
         if (organization != null) 'organization': organization!.toJson(),
+        if (fcm != null) 'fcm': fcm,
+        'notify': notify,
       };
 }

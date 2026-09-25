@@ -39,11 +39,15 @@ class AuthRepository {
     required String email,
     required String password,
     String? captchaToken,
+    String? fcm,
+    bool? notify,
   }) async {
     return _authRequest(
       () => _dio.post<dynamic>(
         '/api/auth/sign-in/email',
-        data: {'email': email, 'password': password},
+        // The `fcm`/`notify` session additional fields are written onto the
+        // session this call creates, so they belong to the new device session.
+        data: {'email': email, 'password': password, 'fcm': ?fcm, 'notify': ?notify},
         options: _captchaOptions(captchaToken),
       ),
     );
@@ -54,12 +58,37 @@ class AuthRepository {
     required String email,
     required String password,
     String? captchaToken,
+    String? fcm,
+    bool? notify,
   }) async {
     return _authRequest(
       () => _dio.post<dynamic>(
         '/api/auth/sign-up/email',
-        data: {'name': name, 'email': email, 'password': password},
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'fcm': ?fcm,
+          'notify': ?notify,
+        },
         options: _captchaOptions(captchaToken),
+      ),
+    );
+  }
+
+  /// POST /api/auth/update-session
+  ///
+  /// Updates **only** the current session's additional fields. Only the values
+  /// actually supplied are sent, so `updateSession(notify: false)` produces
+  /// `{"notify": false}` and never touches `fcm` (or the user record).
+  Future<AuthSession> updateSession({String? fcm, bool? notify}) async {
+    return _authRequest(
+      () => _dio.post<dynamic>(
+        '/api/auth/update-session',
+        data: {
+          'fcm': ?fcm,
+          'notify': ?notify,
+        },
       ),
     );
   }
@@ -258,6 +287,8 @@ class AuthRepository {
             activeOrganizationId: session.activeOrganizationId,
             organization: session.organization,
             expiresAt: session.expiresAt,
+            fcm: session.fcm,
+            notify: session.notify,
           );
         }
         return session;

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028680689073",
+    "project_id": "hosanna-songbook",
+    "storage_bucket": "hosanna-songbook.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028680689073:android:5aaadced473f6fa84e4990",
+        "android_client_info": {
+          "package_name": "com.embrace.hosanna"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLUZNh4vVa8yAe7UWuWK4inaclONhEoUI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

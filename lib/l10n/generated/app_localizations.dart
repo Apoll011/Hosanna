@@ -1576,6 +1576,48 @@ abstract class AppLocalizations {
   /// **'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores'**
   String get settingsSyncAnnotationsDesc;
 
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir notificações neste dispositivo'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permite que o servidor envie notificações para esta sessão. É independente da permissão de notificações do sistema.'**
+  String get settingsNotificationsDesc;
+
+  /// No description provided for @notificationConsentTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir notificações neste dispositivo?'**
+  String get notificationConsentTitle;
+
+  /// No description provided for @notificationConsentMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Se permitir, o servidor poderá enviar-lhe avisos de cultos e novidades da biblioteca neste dispositivo. Pode alterar isto nas Definições.'**
+  String get notificationConsentMessage;
+
+  /// No description provided for @notificationConsentAllow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir'**
+  String get notificationConsentAllow;
+
+  /// No description provided for @notificationConsentNotNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agora não'**
+  String get notificationConsentNotNow;
+
+  /// No description provided for @notificationOpenAction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get notificationOpenAction;
+
   /// No description provided for @settingsSessionsOnly.
   ///
   /// In pt, this message translates to:

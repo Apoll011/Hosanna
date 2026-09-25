@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../app/theme.dart';
@@ -740,6 +741,10 @@ class _PreferencesTab extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
 
+        // Per-device notifications (Better Auth `session.notify`).
+        const _NotificationsCard(),
+        const SizedBox(height: 12),
+
         // Theme.
         _Card(
           child: Column(
@@ -902,6 +907,69 @@ class _PreferencesTab extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Allow notifications on this device" — toggles the current Better Auth
+/// session's `notify` field only.
+///
+/// This is a server-side, per-device preference ("may the server push to this
+/// session?") and is deliberately independent of the OS notification
+/// permission, which the app manages separately.
+class _NotificationsCard extends ConsumerStatefulWidget {
+  const _NotificationsCard();
+
+  @override
+  ConsumerState<_NotificationsCard> createState() => _NotificationsCardState();
+}
+
+class _NotificationsCardState extends ConsumerState<_NotificationsCard> {
+  bool _saving = false;
+
+  Future<void> _set(bool value) async {
+    setState(() => _saving = true);
+    final auth = ref.read(authControllerProvider.notifier);
+    try {
+      // Toggling the switch is itself a consent decision: remember it and flip
+      // this session's `session.notify` between true and false.
+      await auth.recordNotificationConsent(value);
+      if (value) {
+        await ref.read(fcmServiceProvider).requestPermission();
+      }
+      await auth.setNotify(value);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context).commonError)),
+          );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    // Older sessions may not carry `notify`; the model defaults it to true,
+    // matching Better Auth's `defaultValue`.
+    final notify =
+        ref.watch(authControllerProvider).session?.notify ?? true;
+
+    return _Card(
+      child: _SwitchRow(
+        icon: Icons.notifications_active_outlined,
+        iconColor: theme.colorScheme.primary,
+        title: l10n.settingsNotifications,
+        subtitle: l10n.settingsNotificationsDesc,
+        value: notify,
+        enabled: !_saving,
+        onChanged: _set,
+      ),
     );
   }
 }
@@ -1077,6 +1145,7 @@ class _SwitchRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final IconData icon;
@@ -1084,6 +1153,7 @@ class _SwitchRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool value;
+  final bool enabled;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -1120,7 +1190,7 @@ class _SwitchRow extends StatelessWidget {
             ],
           ),
         ),
-        Switch(value: value, onChanged: onChanged),
+        Switch(value: value, onChanged: enabled ? onChanged : null),
       ],
     );
   }

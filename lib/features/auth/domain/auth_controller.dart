@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -9,6 +11,8 @@ import '../../../core/auth/social_auth_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
+import '../../notifications/data/fcm_service.dart';
+import '../../notifications/data/notification_consent_store.dart';
 import '../data/auth_repository.dart';
 
 enum AuthStatus { loading, authenticated, unauthenticated }
@@ -53,13 +57,25 @@ class AuthController extends StateNotifier<AuthState> {
     this._repository,
     this._store,
     this._tokenStore,
-    this._config,
-  ) : super(const AuthState(status: AuthStatus.loading));
+    this._config, {
+    FcmService? fcm,
+    NotificationConsentStore? consentStore,
+  })  : _fcm = fcm ?? FcmService(),
+        _consent = consentStore ?? InMemoryNotificationConsentStore(),
+        super(const AuthState(status: AuthStatus.loading)) {
+    // Firebase may rotate the device token at any time; when it does, push the
+    // new token onto the **current** session only.
+    _fcmSubscription = _fcm.onTokenRefresh.listen(_onFcmTokenRefresh);
+  }
 
   final AuthRepository _repository;
   final SessionStore _store;
   final TokenStore _tokenStore;
   final AppConfig _config;
+  final FcmService _fcm;
+  final NotificationConsentStore _consent;
+
+  StreamSubscription<String>? _fcmSubscription;
 
   /// Restores a persisted session on launch, then verifies it against the
   /// server (falling back to the cached session on network errors).
@@ -84,6 +100,9 @@ class AuthController extends StateNotifier<AuthState> {
       }
       await _applySession(fresh, token: fresh.sessionToken);
       await _resolveOrganization(fresh);
+      // Sessions created before FCM support carry no token; sync this device's
+      // token onto the session on every authenticated startup.
+      await syncFcmToken();
     } on ApiException catch (e) {
       // Explicit auth rejection → sign out; network error → keep cache.
       if (_isAuthRejection(e)) {
@@ -104,13 +123,22 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    // Resolve this device's token up front so it lands on the session being
+    // created (it belongs to *this* device, not the account).
+    final fcm = await _fcm.getToken();
+    final consented = await _consent.read();
     final session = await _repository.signIn(
       email: email.trim(),
       password: password,
       captchaToken: captchaToken,
+      fcm: fcm,
+      // No explicit consent yet → the session starts with notifications off.
+      notify: consented == true,
     );
     await _applySession(session, token: session.sessionToken);
     await _resolveOrganization(session);
+    await _applyNotificationConsent();
+    await syncFcmToken();
   }
 
   Future<void> signUp({
@@ -120,14 +148,21 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    final fcm = await _fcm.getToken();
+    final consented = await _consent.read();
     final session = await _repository.signUp(
       name: name.trim(),
       email: email.trim(),
       password: password,
       captchaToken: captchaToken,
+      fcm: fcm,
+      // No explicit consent yet → the session starts with notifications off.
+      notify: consented == true,
     );
     await _applySession(session, token: session.sessionToken);
     await _resolveOrganization(session);
+    await _applyNotificationConsent();
+    await syncFcmToken();
   }
 
   /// Signs in — or signs up — with a native social provider.
@@ -145,14 +180,101 @@ class AuthController extends StateNotifier<AuthState> {
       );
       await _applySession(session, token: session.sessionToken);
       await _resolveOrganization(session);
+      // Same per-device sync as email auth: the social flow creates a session
+      // on this device too.
+      await _applyNotificationConsent();
+      await syncFcmToken();
     } on ApiException catch (e) {
       throw _socialFailure(e);
     }
   }
 
   Future<void> signOut() async {
+    // The session naturally stops being valid server-side; the FCM token is
+    // intentionally left on the (now dead) session rather than deleted first.
     await _repository.signOut();
     await _clearSession();
+  }
+
+  // ── FCM / per-session notifications ──────────────────────────────────────
+
+  /// Pushes this device's current FCM token onto the authenticated session.
+  ///
+  /// Centralised so sign-in, sign-up, startup and token refresh all funnel
+  /// through one place. No request is made when the token is missing or the
+  /// session already carries the same token. Does nothing when signed out.
+  Future<void> syncFcmToken() async {
+    final session = state.session;
+    if (session == null) return;
+    final token = await _fcm.getToken();
+    if (token == null || token.isEmpty) return;
+    if (session.fcm == token) return;
+    try {
+      await updateCurrentSession(fcm: token);
+    } catch (_) {
+      // Best-effort backstop — retried on the next startup/token refresh, so a
+      // failed sync never turns a successful sign-in into a failure.
+    }
+  }
+
+  /// Enables/disables server notifications for **this** session only
+  /// (`session.notify`), flipping it between true and false. Independent of the
+  /// OS notification permission.
+  Future<void> setNotify(bool value) => updateCurrentSession(notify: value);
+
+  /// Records the user's consent decision for this device.
+  Future<void> recordNotificationConsent(bool consented) =>
+      _consent.write(consented);
+
+  /// Ensures a session without explicit consent has `notify` disabled.
+  ///
+  /// Email sign-in/sign-up already send this at creation time; this also
+  /// covers the social flow (whose endpoint has no `notify` field) and any
+  /// server that does not echo the additional field back.
+  Future<void> _applyNotificationConsent() async {
+    final consented = await _consent.read();
+    final session = state.session;
+    if (session == null) return;
+    if (consented != true && session.notify) {
+      try {
+        await updateCurrentSession(notify: false);
+      } catch (_) {
+        // Best-effort; retried on the next auth/startup.
+      }
+    }
+  }
+
+  /// Updates the current session's additional fields via
+  /// `POST /api/auth/update-session`, then mirrors the change locally.
+  ///
+  /// Only the supplied values are sent, and only the current session is
+  /// touched — other devices/sessions keep their own `fcm`/`notify`.
+  Future<void> updateCurrentSession({String? fcm, bool? notify}) async {
+    final current = state.session;
+    if (current == null) return;
+    await _repository.updateSession(fcm: fcm, notify: notify);
+    // Mirror exactly what we asked for; `copyWithFcm` keeps whatever was not
+    // supplied (e.g. `notify: false` leaves `fcm` intact).
+    final merged = current.copyWithFcm(fcm: fcm, notify: notify);
+    _tokenStore.update(merged.sessionToken);
+    await _store.writeSession(merged);
+    state = state.copyWith(session: merged);
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _onFcmTokenRefresh(String token) async {
+    final session = state.session;
+    if (session == null || token.isEmpty || session.fcm == token) return;
+    try {
+      await updateCurrentSession(fcm: token);
+    } catch (_) {
+      // A failed sync is retried on the next refresh/startup.
+    }
   }
 
   Future<void> updateProfile({String? name}) async {
@@ -165,6 +287,8 @@ class AuthController extends StateNotifier<AuthState> {
           current?.activeOrganizationId ?? session.activeOrganizationId,
       organization: current?.organization ?? session.organization,
       expiresAt: current?.expiresAt ?? session.expiresAt,
+      fcm: current?.fcm ?? session.fcm,
+      notify: current?.notify ?? session.notify,
     );
     await _applySession(merged, token: merged.sessionToken);
   }
@@ -246,6 +370,8 @@ class AuthController extends StateNotifier<AuthState> {
       activeOrganizationId: session.activeOrganizationId,
       organization: session.organization,
       expiresAt: session.expiresAt,
+      fcm: session.fcm,
+      notify: session.notify,
     );
     _tokenStore.update(merged.sessionToken);
     await _store.writeToken(merged.sessionToken);
@@ -278,6 +404,8 @@ class AuthController extends StateNotifier<AuthState> {
           activeOrganizationId: org.id,
           organization: org,
           expiresAt: session.expiresAt,
+          fcm: session.fcm,
+          notify: session.notify,
         );
         await _store.writeSession(merged);
         state = state.copyWith(
@@ -348,6 +476,8 @@ final authControllerProvider =
     ref.watch(sessionStoreProvider),
     ref.watch(tokenStoreProvider),
     ref.watch(appConfigProvider),
+    fcm: ref.watch(fcmServiceProvider),
+    consentStore: ref.watch(notificationConsentStoreProvider),
   );
 });
 
