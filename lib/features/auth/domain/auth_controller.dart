@@ -12,6 +12,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../notifications/data/fcm_service.dart';
+import '../../notifications/data/notification_consent_store.dart';
 import '../data/auth_repository.dart';
 
 enum AuthStatus { loading, authenticated, unauthenticated }
@@ -58,7 +59,9 @@ class AuthController extends StateNotifier<AuthState> {
     this._tokenStore,
     this._config, {
     FcmService? fcm,
+    NotificationConsentStore? consentStore,
   })  : _fcm = fcm ?? FcmService(),
+        _consent = consentStore ?? InMemoryNotificationConsentStore(),
         super(const AuthState(status: AuthStatus.loading)) {
     // Firebase may rotate the device token at any time; when it does, push the
     // new token onto the **current** session only.
@@ -70,6 +73,7 @@ class AuthController extends StateNotifier<AuthState> {
   final TokenStore _tokenStore;
   final AppConfig _config;
   final FcmService _fcm;
+  final NotificationConsentStore _consent;
 
   StreamSubscription<String>? _fcmSubscription;
 
@@ -122,14 +126,18 @@ class AuthController extends StateNotifier<AuthState> {
     // Resolve this device's token up front so it lands on the session being
     // created (it belongs to *this* device, not the account).
     final fcm = await _fcm.getToken();
+    final consented = await _consent.read();
     final session = await _repository.signIn(
       email: email.trim(),
       password: password,
       captchaToken: captchaToken,
       fcm: fcm,
+      // No explicit consent yet → the session starts with notifications off.
+      notify: consented == true,
     );
     await _applySession(session, token: session.sessionToken);
     await _resolveOrganization(session);
+    await _applyNotificationConsent();
     await syncFcmToken();
   }
 
@@ -141,15 +149,19 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
     final fcm = await _fcm.getToken();
+    final consented = await _consent.read();
     final session = await _repository.signUp(
       name: name.trim(),
       email: email.trim(),
       password: password,
       captchaToken: captchaToken,
       fcm: fcm,
+      // No explicit consent yet → the session starts with notifications off.
+      notify: consented == true,
     );
     await _applySession(session, token: session.sessionToken);
     await _resolveOrganization(session);
+    await _applyNotificationConsent();
     await syncFcmToken();
   }
 
@@ -170,6 +182,7 @@ class AuthController extends StateNotifier<AuthState> {
       await _resolveOrganization(session);
       // Same per-device sync as email auth: the social flow creates a session
       // on this device too.
+      await _applyNotificationConsent();
       await syncFcmToken();
     } on ApiException catch (e) {
       throw _socialFailure(e);
@@ -205,8 +218,31 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   /// Enables/disables server notifications for **this** session only
-  /// (`session.notify`). Independent of the OS notification permission.
+  /// (`session.notify`), flipping it between true and false. Independent of the
+  /// OS notification permission.
   Future<void> setNotify(bool value) => updateCurrentSession(notify: value);
+
+  /// Records the user's consent decision for this device.
+  Future<void> recordNotificationConsent(bool consented) =>
+      _consent.write(consented);
+
+  /// Ensures a session without explicit consent has `notify` disabled.
+  ///
+  /// Email sign-in/sign-up already send this at creation time; this also
+  /// covers the social flow (whose endpoint has no `notify` field) and any
+  /// server that does not echo the additional field back.
+  Future<void> _applyNotificationConsent() async {
+    final consented = await _consent.read();
+    final session = state.session;
+    if (session == null) return;
+    if (consented != true && session.notify) {
+      try {
+        await updateCurrentSession(notify: false);
+      } catch (_) {
+        // Best-effort; retried on the next auth/startup.
+      }
+    }
+  }
 
   /// Updates the current session's additional fields via
   /// `POST /api/auth/update-session`, then mirrors the change locally.
@@ -441,6 +477,7 @@ final authControllerProvider =
     ref.watch(tokenStoreProvider),
     ref.watch(appConfigProvider),
     fcm: ref.watch(fcmServiceProvider),
+    consentStore: ref.watch(notificationConsentStoreProvider),
   );
 });
 

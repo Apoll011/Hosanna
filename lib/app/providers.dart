@@ -17,6 +17,7 @@ import '../core/network/user_agent.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/data/google_auth_provider.dart';
 import '../features/notifications/data/fcm_service.dart';
+import '../features/notifications/data/notification_consent_store.dart';
 
 /// Compile-time configuration (API URL, hosted Turnstile page URL).
 final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.instance);
@@ -73,6 +74,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// marked available once `Firebase.initializeApp` succeeds; the default (and
 /// the test default) is an unconfigured service whose calls are safe no-ops.
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService());
+
+/// Per-device notification consent (drives `session.notify`).
+final notificationConsentStoreProvider = Provider<NotificationConsentStore>(
+  (ref) => PrefsNotificationConsentStore(ref.watch(sharedPreferencesProvider)),
+);
 
 /// Native social sign-in providers offered by this build.
 ///

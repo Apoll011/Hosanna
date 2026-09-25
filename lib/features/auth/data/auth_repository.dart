@@ -40,13 +40,14 @@ class AuthRepository {
     required String password,
     String? captchaToken,
     String? fcm,
+    bool? notify,
   }) async {
     return _authRequest(
       () => _dio.post<dynamic>(
         '/api/auth/sign-in/email',
-        // The `fcm` session additional field is written onto the session this
-        // call creates, so the token always belongs to the new device session.
-        data: {'email': email, 'password': password, 'fcm': ?fcm},
+        // The `fcm`/`notify` session additional fields are written onto the
+        // session this call creates, so they belong to the new device session.
+        data: {'email': email, 'password': password, 'fcm': ?fcm, 'notify': ?notify},
         options: _captchaOptions(captchaToken),
       ),
     );
@@ -58,11 +59,18 @@ class AuthRepository {
     required String password,
     String? captchaToken,
     String? fcm,
+    bool? notify,
   }) async {
     return _authRequest(
       () => _dio.post<dynamic>(
         '/api/auth/sign-up/email',
-        data: {'name': name, 'email': email, 'password': password, 'fcm': ?fcm},
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'fcm': ?fcm,
+          'notify': ?notify,
+        },
         options: _captchaOptions(captchaToken),
       ),
     );

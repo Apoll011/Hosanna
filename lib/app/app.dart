@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
 import 'router.dart';
@@ -153,6 +154,10 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
+      // Sits above the Navigator so it can overlay the first-run notification
+      // consent prompt over whatever route is showing.
+      builder: (context, child) =>
+          NotificationConsentGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

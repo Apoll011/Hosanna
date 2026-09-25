@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../app/theme.dart';
@@ -928,8 +929,15 @@ class _NotificationsCardState extends ConsumerState<_NotificationsCard> {
 
   Future<void> _set(bool value) async {
     setState(() => _saving = true);
+    final auth = ref.read(authControllerProvider.notifier);
     try {
-      await ref.read(authControllerProvider.notifier).setNotify(value);
+      // Toggling the switch is itself a consent decision: remember it and flip
+      // this session's `session.notify` between true and false.
+      await auth.recordNotificationConsent(value);
+      if (value) {
+        await ref.read(fcmServiceProvider).requestPermission();
+      }
+      await auth.setNotify(value);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context)
