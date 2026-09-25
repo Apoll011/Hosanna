@@ -827,6 +827,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationConsentNotNow => 'Agora não';
 
   @override
+  String get notificationOpenAction => 'Abrir';
+
+  @override
   String get settingsSessionsOnly =>
       'Apenas a sessão atual deste dispositivo está ativa.';
 

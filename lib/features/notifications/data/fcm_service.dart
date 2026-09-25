@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../domain/notification_route.dart';
+
 /// Handles messages received while the app is terminated/backgrounded.
 ///
 /// Must be a top-level function annotated for the background isolate. It only
@@ -72,6 +74,32 @@ class FcmService {
   Stream<RemoteMessage> get onMessage {
     if (!_available) return const Stream<RemoteMessage>.empty();
     return FirebaseMessaging.onMessage;
+  }
+
+  /// go_router locations for notifications the user tapped while the app was
+  /// backgrounded (or running). Emits only payloads we know how to open.
+  Stream<String> get onNotificationTap {
+    if (!_available) return const Stream<String>.empty();
+    return FirebaseMessaging.onMessageOpenedApp
+        .map((message) => notificationTapLocation(message.data))
+        .where((location) => location != null)
+        .cast<String>();
+  }
+
+  /// The location for the notification that cold-started the app, if any.
+  ///
+  /// Must be read once on startup; returns null when the app was launched
+  /// normally or the payload points nowhere we know.
+  Future<String?> initialNotificationLocation() async {
+    if (!_available) return null;
+    try {
+      final message = await FirebaseMessaging.instance.getInitialMessage();
+      if (message == null) return null;
+      return notificationTapLocation(message.data);
+    } catch (e) {
+      debugPrint('FcmService: getInitialMessage failed: $e');
+      return null;
+    }
   }
 
   /// Asks the OS for notification permission (independent of Better Auth's

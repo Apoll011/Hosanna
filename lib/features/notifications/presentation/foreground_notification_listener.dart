@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../domain/notification_route.dart';
 
 /// Subscribes to foreground FCM messages and presents them in-app.
 ///
@@ -17,10 +19,14 @@ class ForegroundNotificationListener extends ConsumerStatefulWidget {
     super.key,
     required this.messengerKey,
     required this.child,
+    this.onOpen,
   });
 
   /// The app's root `ScaffoldMessenger` key, used to show the banner.
   final GlobalKey<ScaffoldMessengerState> messengerKey;
+
+  /// Called with the go_router location when the banner's action is tapped.
+  final void Function(String location)? onOpen;
 
   final Widget child;
 
@@ -47,6 +53,7 @@ class _ForegroundNotificationListenerState
   }
 
   void _present(RemoteMessage message) {
+    if (!mounted) return;
     final notification = message.notification;
     final title = notification?.title ?? message.data['title'] as String?;
     final body = notification?.body ?? message.data['body'] as String?;
@@ -59,6 +66,9 @@ class _ForegroundNotificationListenerState
       if (body != null && body.isNotEmpty) body,
     ].join('\n');
 
+    final location = notificationTapLocation(message.data);
+    final onOpen = widget.onOpen;
+
     final messenger = widget.messengerKey.currentState;
     if (messenger == null) return;
     messenger
@@ -68,6 +78,12 @@ class _ForegroundNotificationListenerState
           content: Text(text),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 5),
+          action: (location != null && onOpen != null)
+              ? SnackBarAction(
+                  label: AppLocalizations.of(context).notificationOpenAction,
+                  onPressed: () => onOpen(location),
+                )
+              : null,
         ),
       );
   }

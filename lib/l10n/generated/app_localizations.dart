@@ -1612,6 +1612,12 @@ abstract class AppLocalizations {
   /// **'Agora não'**
   String get notificationConsentNotNow;
 
+  /// No description provided for @notificationOpenAction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get notificationOpenAction;
+
   /// No description provided for @settingsSessionsOnly.
   ///
   /// In pt, this message translates to:

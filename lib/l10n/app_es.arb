@@ -260,6 +260,7 @@
   "notificationConsentMessage": "Si lo permites, el servidor podrá enviarte avisos de servicios y novedades de la biblioteca en este dispositivo. Puedes cambiarlo en Ajustes.",
   "notificationConsentAllow": "Permitir",
   "notificationConsentNotNow": "Ahora no",
+  "notificationOpenAction": "Abrir",
   "settingsSessionsOnly": "Solo está activa la sesión actual de este dispositivo.",
 
   "metronomeTitle": "Metrónomo",

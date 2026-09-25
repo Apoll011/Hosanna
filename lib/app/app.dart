@@ -25,6 +25,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     with WidgetsBindingObserver {
   ProviderSubscription<AuthState>? _authSubscription;
   StreamSubscription<Uri>? _launcherLinks;
+  StreamSubscription<String>? _notificationTaps;
   ProviderContainer? _container;
 
   /// Root messenger used to surface foreground FCM messages in-app.
@@ -69,6 +70,17 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
     // The stream also replays the link the app was cold-started with.
     _launcherLinks = listenToLauncherLinks(_openLocation);
+
+    // Notification taps. Routed through the same deferred `_openLocation` as
+    // launcher links, so cold starts wait for the session/organization to
+    // resolve before navigating.
+    final fcm = ref.read(fcmServiceProvider);
+    _notificationTaps = fcm.onNotificationTap.listen(_openLocation);
+    unawaited(
+      fcm.initialNotificationLocation().then((location) {
+        if (location != null) _openLocation(location);
+      }),
+    );
   }
 
   /// Navigates to a launcher link's location once the app is ready for it.
@@ -108,6 +120,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   @override
   void dispose() {
     _launcherLinks?.cancel();
+    _notificationTaps?.cancel();
     _authSubscription?.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -179,6 +192,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       // and the gate overlays the first-run notification consent prompt.
       builder: (context, child) => ForegroundNotificationListener(
         messengerKey: _messengerKey,
+        onOpen: _openLocation,
         child: NotificationConsentGate(
           child: child ?? const SizedBox.shrink(),
         ),
