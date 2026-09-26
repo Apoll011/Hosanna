@@ -7,6 +7,7 @@ import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
@@ -71,9 +72,16 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             ),
       body: serviceAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(child: Text(l10n.commonError)),
+        error: (_, _) => ErrorState(
+          title: l10n.commonError,
+          description: l10n.commonErrorDesc,
+        ),
         data: (service) => service == null
-            ? Center(child: Text(l10n.servicesEmpty))
+            ? EmptyState(
+                icon: Icons.event_busy_outlined,
+                title: l10n.servicesNotFound,
+                description: l10n.servicesNotFoundDesc,
+              )
             : _body(service: service),
       ),
     );
@@ -90,7 +98,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     final elements = _sorted(service);
 
     if (elements.isEmpty) {
-      return Center(child: Text(l10n.servicesNoItems));
+      return EmptyState(
+        icon: Icons.playlist_add_outlined,
+        title: l10n.servicesNoItems,
+        description: l10n.servicesNoItemsDesc,
+      );
     }
 
     // Resolve the current element, defaulting to the first song element (the
@@ -269,9 +281,16 @@ class _SongElementView extends ConsumerWidget {
 
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Center(child: Text(l10n.commonError)),
+      error: (_, _) => ErrorState(
+        title: l10n.commonError,
+        description: l10n.commonErrorDesc,
+      ),
       data: (song) => song == null
-          ? Center(child: Text(l10n.songsNoResults))
+          ? EmptyState(
+              icon: Icons.music_off_outlined,
+              title: l10n.songsNotFound,
+              description: l10n.songsNotFoundDesc,
+            )
           : SongReader(
               content: song.content,
               notes: notes,

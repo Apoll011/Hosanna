@@ -6,6 +6,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/domain/library_controller.dart';
@@ -187,18 +188,28 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
               child: RefreshIndicator(
                 onRefresh: _refresh,
                 child: isEmpty
-                    ? _Empty(
-                        message: hasQuery || !_settings.isDefault
-                            ? l10n.songsNoResults
-                            : l10n.foldersEmpty,
-                        onRefresh: _refresh,
-                        onClear: hasQuery
-                            ? _clearSearch
-                            : (_settings.isDefault ? null : _resetFilters),
-                        clearLabel: hasQuery
-                            ? l10n.songsClearSearch
-                            : l10n.songsClearFilters,
-                      )
+                    ? hasQuery || !_settings.isDefault
+                        ? EmptyState(
+                            icon: Icons.search_off_outlined,
+                            title: l10n.songsNoResults,
+                            description: l10n.foldersNoResultsDesc,
+                            primaryLabel: hasQuery
+                                ? l10n.songsClearSearch
+                                : l10n.songsClearFilters,
+                            primaryIcon: hasQuery
+                                ? Icons.search_off_outlined
+                                : Icons.filter_alt_off_outlined,
+                            onPrimary: hasQuery
+                                ? _clearSearch
+                                : _resetFilters,
+                            scrollable: true,
+                          )
+                        : EmptyState(
+                            icon: Icons.folder_open_outlined,
+                            title: l10n.foldersEmpty,
+                            description: l10n.foldersEmptyDesc,
+                            scrollable: true,
+                          )
                     : _gridView
                     ? _BrowserGrid(
                         folders: visibleFolders,
@@ -694,54 +705,6 @@ class _SongTile extends StatelessWidget {
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(song.artist, maxLines: 1, overflow: TextOverflow.ellipsis),
       onTap: onOpen,
-    );
-  }
-}
-
-class _Empty extends StatelessWidget {
-  const _Empty({
-    required this.message,
-    required this.onRefresh,
-    this.clearLabel,
-    this.onClear,
-  });
-
-  final String message;
-  final Future<void> Function() onRefresh;
-  final String? clearLabel;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: constraints.maxHeight,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(message),
-                if (onClear != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: onClear,
-                    icon: const Icon(Icons.filter_alt_off),
-                    label: Text(clearLabel!),
-                  ),
-                ],
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(AppLocalizations.of(context).commonRetry),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_session.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_logo.dart';
 import '../../auth/domain/auth_controller.dart';
 
@@ -111,9 +112,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   if (_loading)
                     const Center(child: CircularProgressIndicator())
                   else if (_error != null)
-                    _ErrorState(message: _error!, onRetry: _load)
+                    ErrorState(
+                      title: _error!,
+                      description: l10n.commonErrorDesc,
+                      retryLabel: l10n.commonRetry,
+                      onRetry: _load,
+                    )
                   else if (_invitations.isEmpty)
-                    _EmptyState(
+                    EmptyState(
+                      icon: Icons.mail_outline,
                       title: l10n.onboardingNoInvites,
                       description: l10n.onboardingNoInvitesDesc,
                     )
@@ -240,56 +247,5 @@ class _InvitationCard extends StatelessWidget {
       'guest' => 'Guest',
       _ => role.isEmpty ? 'member' : role,
     };
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.title, required this.description});
-
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        children: [
-          Icon(Icons.mail_outline,
-              size: 48, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(height: 12),
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(message),
-        TextButton.icon(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh),
-          label: Text(AppLocalizations.of(context).commonRetry),
-        ),
-      ],
-    );
   }
 }

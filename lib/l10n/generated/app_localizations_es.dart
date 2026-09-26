@@ -50,6 +50,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonError => 'Algo salió mal';
 
   @override
+  String get commonErrorDesc => 'Comprueba tu conexión e inténtalo de nuevo.';
+
+  @override
   String get commonOffline => 'Sin conexión a internet';
 
   @override
@@ -374,10 +377,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsSearchHint => 'Buscar canciones…';
 
   @override
-  String get songsEmpty => 'Sin canciones';
+  String get songsEmpty => 'Aún no hay canciones';
+
+  @override
+  String get songsEmptyDesc =>
+      'Las canciones de tu iglesia aparecerán aquí tras sincronizar.';
 
   @override
   String get songsNoResults => 'Sin resultados';
+
+  @override
+  String get songsNoResultsDesc => 'Prueba otra búsqueda o limpia los filtros.';
+
+  @override
+  String get songsFavoritesEmpty => 'Aún no hay favoritos';
+
+  @override
+  String get songsFavoritesEmptyDesc =>
+      'Toca el corazón en una canción para guardarla aquí.';
+
+  @override
+  String get songsRecentsEmpty => 'Aún no hay recientes';
+
+  @override
+  String get songsRecentsEmptyDesc =>
+      'Las canciones que abras aparecerán aquí.';
+
+  @override
+  String get songsNotFound => 'Canción no encontrada';
+
+  @override
+  String get songsNotFoundDesc =>
+      'Esta canción puede haberse eliminado o aún no se ha sincronizado.';
 
   @override
   String get songsAllSongs => 'Todas las canciones';
@@ -556,10 +587,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get foldersTitle => 'Carpetas';
 
   @override
-  String get foldersEmpty => 'Sin carpetas';
+  String get foldersEmpty => 'Aún no hay carpetas';
 
   @override
-  String get collectionsEmpty => 'Sin colecciones';
+  String get foldersEmptyDesc =>
+      'Las carpetas organizan la biblioteca de canciones de tu iglesia.';
+
+  @override
+  String get foldersNoResultsDesc =>
+      'Prueba otra búsqueda o limpia los filtros.';
+
+  @override
+  String get collectionsEmpty => 'Aún no hay colecciones';
+
+  @override
+  String get collectionsEmptyDesc =>
+      'Las colecciones aparecen aquí cuando tu iglesia las cree.';
 
   @override
   String get foldersSubfolders => 'Subcarpetas';
@@ -588,16 +631,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesTitle => 'Servicios';
 
   @override
-  String get servicesEmpty => 'Sin servicios';
+  String get servicesEmpty => 'Aún no hay servicios';
+
+  @override
+  String get servicesEmptyDesc =>
+      'Los servicios y planes de adoración de tu iglesia aparecerán aquí.';
 
   @override
   String get servicesSearchHint => 'Buscar servicios…';
+
+  @override
+  String get servicesNoResults => 'Sin servicios coincidentes';
+
+  @override
+  String get servicesNoResultsDesc => 'Prueba otra búsqueda.';
 
   @override
   String get servicesNextService => 'Próximo servicio';
 
   @override
   String get servicesNoUpcoming => 'Sin servicios próximos';
+
+  @override
+  String get servicesNoUpcomingDesc =>
+      'No hay servicios programados en este momento.';
 
   @override
   String get servicesItems => 'Elementos';
@@ -615,7 +672,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesOrderedItems => 'Elementos ordenados';
 
   @override
-  String get servicesNoItems => 'Sin elementos en este servicio.';
+  String get servicesNoItems => 'Servicio sin elementos';
+
+  @override
+  String get servicesNoItemsDesc =>
+      'Este servicio aún no tiene momentos ni canciones.';
+
+  @override
+  String get servicesNotFound => 'Servicio no encontrado';
+
+  @override
+  String get servicesNotFoundDesc =>
+      'Este servicio puede haberse eliminado o aún no se ha sincronizado.';
 
   @override
   String get servicesOrderTitle => 'Orden del Servicio';

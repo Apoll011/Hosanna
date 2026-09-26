@@ -50,6 +50,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonError => 'Ocorreu um erro';
 
   @override
+  String get commonErrorDesc => 'Verifique a ligação e tente novamente.';
+
+  @override
   String get commonOffline => 'Sem ligação à internet';
 
   @override
@@ -376,10 +379,38 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsSearchHint => 'Pesquisar cânticos…';
 
   @override
-  String get songsEmpty => 'Sem cânticos';
+  String get songsEmpty => 'Ainda sem cânticos';
 
   @override
-  String get songsNoResults => 'Sem resultados';
+  String get songsEmptyDesc =>
+      'Os cânticos da sua igreja aparecem aqui após a sincronização.';
+
+  @override
+  String get songsNoResults => 'Nenhum resultado';
+
+  @override
+  String get songsNoResultsDesc =>
+      'Experimente outra pesquisa ou limpe os filtros.';
+
+  @override
+  String get songsFavoritesEmpty => 'Ainda sem favoritos';
+
+  @override
+  String get songsFavoritesEmptyDesc =>
+      'Toque no coração num cântico para o guardar aqui.';
+
+  @override
+  String get songsRecentsEmpty => 'Ainda sem recentes';
+
+  @override
+  String get songsRecentsEmptyDesc => 'Os cânticos que abrir aparecem aqui.';
+
+  @override
+  String get songsNotFound => 'Cântico não encontrado';
+
+  @override
+  String get songsNotFoundDesc =>
+      'Este cântico pode ter sido removido ou ainda não sincronizou.';
 
   @override
   String get songsAllSongs => 'Todos os cânticos';
@@ -558,10 +589,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get foldersTitle => 'Pastas';
 
   @override
-  String get foldersEmpty => 'Sem pastas';
+  String get foldersEmpty => 'Ainda sem pastas';
 
   @override
-  String get collectionsEmpty => 'Sem coleções';
+  String get foldersEmptyDesc =>
+      'As pastas organizam a biblioteca de cânticos da sua igreja.';
+
+  @override
+  String get foldersNoResultsDesc =>
+      'Experimente outra pesquisa ou limpe os filtros.';
+
+  @override
+  String get collectionsEmpty => 'Ainda sem coleções';
+
+  @override
+  String get collectionsEmptyDesc =>
+      'As coleções aparecem aqui quando a sua igreja as criar.';
 
   @override
   String get foldersSubfolders => 'Subpastas';
@@ -590,16 +633,29 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesTitle => 'Cultos';
 
   @override
-  String get servicesEmpty => 'Sem cultos';
+  String get servicesEmpty => 'Ainda sem cultos';
+
+  @override
+  String get servicesEmptyDesc =>
+      'Os cultos e planos de louvor da sua igreja aparecem aqui.';
 
   @override
   String get servicesSearchHint => 'Pesquisar cultos…';
+
+  @override
+  String get servicesNoResults => 'Nenhum culto correspondente';
+
+  @override
+  String get servicesNoResultsDesc => 'Experimente outra pesquisa.';
 
   @override
   String get servicesNextService => 'Próximo culto';
 
   @override
   String get servicesNoUpcoming => 'Sem cultos futuros';
+
+  @override
+  String get servicesNoUpcomingDesc => 'Não há cultos agendados de momento.';
 
   @override
   String get servicesItems => 'Itens';
@@ -617,7 +673,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesOrderedItems => 'Itens ordenados';
 
   @override
-  String get servicesNoItems => 'Sem itens neste culto.';
+  String get servicesNoItems => 'Culto sem itens';
+
+  @override
+  String get servicesNoItemsDesc =>
+      'Este culto ainda não tem momentos ou cânticos.';
+
+  @override
+  String get servicesNotFound => 'Culto não encontrado';
+
+  @override
+  String get servicesNotFoundDesc =>
+      'Este culto pode ter sido removido ou ainda não sincronizou.';
 
   @override
   String get servicesOrderTitle => 'Ordem do Culto';

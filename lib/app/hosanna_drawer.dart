@@ -271,13 +271,24 @@ class HosannaNavContent extends ConsumerWidget {
                       ),
                       if (collections.isEmpty)
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            l10n.collectionsEmpty,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
+                          padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.collections_bookmark_outlined,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.collectionsEmpty,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       else

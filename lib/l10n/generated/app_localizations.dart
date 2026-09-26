@@ -178,6 +178,12 @@ abstract class AppLocalizations {
   /// **'Ocorreu um erro'**
   String get commonError;
 
+  /// No description provided for @commonErrorDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verifique a ligação e tente novamente.'**
+  String get commonErrorDesc;
+
   /// No description provided for @commonOffline.
   ///
   /// In pt, this message translates to:
@@ -769,14 +775,62 @@ abstract class AppLocalizations {
   /// No description provided for @songsEmpty.
   ///
   /// In pt, this message translates to:
-  /// **'Sem cânticos'**
+  /// **'Ainda sem cânticos'**
   String get songsEmpty;
+
+  /// No description provided for @songsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os cânticos da sua igreja aparecem aqui após a sincronização.'**
+  String get songsEmptyDesc;
 
   /// No description provided for @songsNoResults.
   ///
   /// In pt, this message translates to:
-  /// **'Sem resultados'**
+  /// **'Nenhum resultado'**
   String get songsNoResults;
+
+  /// No description provided for @songsNoResultsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Experimente outra pesquisa ou limpe os filtros.'**
+  String get songsNoResultsDesc;
+
+  /// No description provided for @songsFavoritesEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda sem favoritos'**
+  String get songsFavoritesEmpty;
+
+  /// No description provided for @songsFavoritesEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque no coração num cântico para o guardar aqui.'**
+  String get songsFavoritesEmptyDesc;
+
+  /// No description provided for @songsRecentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda sem recentes'**
+  String get songsRecentsEmpty;
+
+  /// No description provided for @songsRecentsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os cânticos que abrir aparecem aqui.'**
+  String get songsRecentsEmptyDesc;
+
+  /// No description provided for @songsNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cântico não encontrado'**
+  String get songsNotFound;
+
+  /// No description provided for @songsNotFoundDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este cântico pode ter sido removido ou ainda não sincronizou.'**
+  String get songsNotFoundDesc;
 
   /// No description provided for @songsAllSongs.
   ///
@@ -1129,14 +1183,32 @@ abstract class AppLocalizations {
   /// No description provided for @foldersEmpty.
   ///
   /// In pt, this message translates to:
-  /// **'Sem pastas'**
+  /// **'Ainda sem pastas'**
   String get foldersEmpty;
+
+  /// No description provided for @foldersEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'As pastas organizam a biblioteca de cânticos da sua igreja.'**
+  String get foldersEmptyDesc;
+
+  /// No description provided for @foldersNoResultsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Experimente outra pesquisa ou limpe os filtros.'**
+  String get foldersNoResultsDesc;
 
   /// No description provided for @collectionsEmpty.
   ///
   /// In pt, this message translates to:
-  /// **'Sem coleções'**
+  /// **'Ainda sem coleções'**
   String get collectionsEmpty;
+
+  /// No description provided for @collectionsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'As coleções aparecem aqui quando a sua igreja as criar.'**
+  String get collectionsEmptyDesc;
 
   /// No description provided for @foldersSubfolders.
   ///
@@ -1177,14 +1249,32 @@ abstract class AppLocalizations {
   /// No description provided for @servicesEmpty.
   ///
   /// In pt, this message translates to:
-  /// **'Sem cultos'**
+  /// **'Ainda sem cultos'**
   String get servicesEmpty;
+
+  /// No description provided for @servicesEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os cultos e planos de louvor da sua igreja aparecem aqui.'**
+  String get servicesEmptyDesc;
 
   /// No description provided for @servicesSearchHint.
   ///
   /// In pt, this message translates to:
   /// **'Pesquisar cultos…'**
   String get servicesSearchHint;
+
+  /// No description provided for @servicesNoResults.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum culto correspondente'**
+  String get servicesNoResults;
+
+  /// No description provided for @servicesNoResultsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Experimente outra pesquisa.'**
+  String get servicesNoResultsDesc;
 
   /// No description provided for @servicesNextService.
   ///
@@ -1197,6 +1287,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sem cultos futuros'**
   String get servicesNoUpcoming;
+
+  /// No description provided for @servicesNoUpcomingDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não há cultos agendados de momento.'**
+  String get servicesNoUpcomingDesc;
 
   /// No description provided for @servicesItems.
   ///
@@ -1231,8 +1327,26 @@ abstract class AppLocalizations {
   /// No description provided for @servicesNoItems.
   ///
   /// In pt, this message translates to:
-  /// **'Sem itens neste culto.'**
+  /// **'Culto sem itens'**
   String get servicesNoItems;
+
+  /// No description provided for @servicesNoItemsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este culto ainda não tem momentos ou cânticos.'**
+  String get servicesNoItemsDesc;
+
+  /// No description provided for @servicesNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Culto não encontrado'**
+  String get servicesNotFound;
+
+  /// No description provided for @servicesNotFoundDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este culto pode ter sido removido ou ainda não sincronizou.'**
+  String get servicesNotFoundDesc;
 
   /// No description provided for @servicesOrderTitle.
   ///

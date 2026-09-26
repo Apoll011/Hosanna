@@ -7,6 +7,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../data/service_repository.dart';
 
 /// Common date formats used for search, so queries like `dd/MM/yyyy`,
@@ -88,13 +89,20 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: switch (servicesAsync) {
-                AsyncValue(hasError: true) => _Empty(
-                  message: l10n.commonError,
-                  onRefresh: _refresh,
+                AsyncValue(hasError: true) => ErrorState(
+                  title: l10n.commonError,
+                  description: l10n.commonErrorDesc,
+                  retryLabel: l10n.commonRetry,
+                  onRetry: _refresh,
+                  scrollable: true,
                 ),
                 AsyncValue(:final value?) => _ServiceList(
                   services: _filtered(value),
-                  onRefresh: _refresh,
+                  hasQuery: _search.text.trim().isNotEmpty,
+                  onClearSearch: () {
+                    _search.clear();
+                    setState(() => _searchOpen = false);
+                  },
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -125,16 +133,37 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
 }
 
 class _ServiceList extends StatelessWidget {
-  const _ServiceList({required this.services, required this.onRefresh});
+  const _ServiceList({
+    required this.services,
+    required this.hasQuery,
+    required this.onClearSearch,
+  });
 
   final List<ServiceRow> services;
-  final Future<void> Function() onRefresh;
+  final bool hasQuery;
+  final VoidCallback onClearSearch;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (services.isEmpty) {
-      return _Empty(message: l10n.servicesEmpty, onRefresh: onRefresh);
+      if (hasQuery) {
+        return EmptyState(
+          icon: Icons.search_off_outlined,
+          title: l10n.servicesNoResults,
+          description: l10n.servicesNoResultsDesc,
+          primaryLabel: l10n.songsClearSearch,
+          primaryIcon: Icons.search_off_outlined,
+          onPrimary: onClearSearch,
+          scrollable: true,
+        );
+      }
+      return EmptyState(
+        icon: Icons.event_note_outlined,
+        title: l10n.servicesEmpty,
+        description: l10n.servicesEmptyDesc,
+        scrollable: true,
+      );
     }
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -163,39 +192,6 @@ class _ServiceList extends StatelessWidget {
           onTap: () => context.push('/services/${service.id}'),
         );
       },
-    );
-  }
-}
-
-class _Empty extends StatelessWidget {
-  const _Empty({required this.message, required this.onRefresh});
-
-  final String message;
-  final Future<void> Function() onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: constraints.maxHeight,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(message),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(AppLocalizations.of(context).commonRetry),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

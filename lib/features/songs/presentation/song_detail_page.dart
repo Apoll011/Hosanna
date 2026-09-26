@@ -5,6 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../export/presentation/song_pdf_share.dart';
 import '../data/song_repository.dart';
 import 'chordpro/song_display_settings.dart';
@@ -90,9 +91,16 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       ),
       body: songAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(child: Text(l10n.commonError)),
+        error: (_, _) => ErrorState(
+          title: l10n.commonError,
+          description: l10n.commonErrorDesc,
+        ),
         data: (song) => song == null
-            ? Center(child: Text(l10n.songsNoResults))
+            ? EmptyState(
+                icon: Icons.music_off_outlined,
+                title: l10n.songsNotFound,
+                description: l10n.songsNotFoundDesc,
+              )
             : SongReader(content: song.content),
       ),
     );
