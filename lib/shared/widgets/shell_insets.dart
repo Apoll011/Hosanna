@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../app/shell.dart';
+import '../../app/shell.dart';
 
 /// Bottom padding so list/grid content clears the floating bottom nav.
 ///
@@ -11,7 +11,6 @@ double shellBottomContentPadding(BuildContext context) {
   // Pill height (64) + outer SafeArea minimum bottom (12) + breathing room.
   const navClearance = 64.0 + 12.0 + 16.0;
   // On tablet the bar is overlaid the same way inside the content pane.
-  // When the bar is hidden (tools/settings), still keep a modest safe inset.
   final width = MediaQuery.sizeOf(context).width;
   final isPhone = width < kTabletBreakpoint;
   if (!isPhone) {

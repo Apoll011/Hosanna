@@ -335,7 +335,7 @@ class _NonSongElementView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, element.type);
+    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -576,7 +576,7 @@ class _OrderItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, element.type);
+    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
 
     final songAsync = element.songId == null
         ? null
@@ -662,37 +662,41 @@ class _ElementMeta {
   final Color color;
 }
 
-_ElementMeta _elementMeta(AppLocalizations l10n, String type) {
+_ElementMeta _elementMeta(
+  AppLocalizations l10n,
+  ColorScheme colors,
+  String type,
+) {
   return switch (type) {
     'song' => _ElementMeta(
       l10n.servicesElementSong,
       Icons.music_note,
-      const Color(0xFF0284C7),
+      colors.primary,
     ),
     'welcome' => _ElementMeta(
       l10n.servicesElementWelcome,
       Icons.waving_hand_outlined,
-      const Color(0xFF2563EB),
+      colors.secondary,
     ),
     'scripture' => _ElementMeta(
       l10n.servicesElementScripture,
       Icons.menu_book_outlined,
-      const Color(0xFF9333EA),
+      colors.tertiary,
     ),
     'message' => _ElementMeta(
       l10n.servicesElementMessage,
       Icons.chat_bubble_outline,
-      const Color(0xFFD97706),
+      colors.error,
     ),
     'announcement' => _ElementMeta(
       l10n.servicesElementAnnouncement,
       Icons.campaign_outlined,
-      const Color(0xFF059669),
+      colors.primary,
     ),
     _ => _ElementMeta(
       l10n.servicesElementDefault,
       Icons.label_outline,
-      const Color(0xFF64748B),
+      colors.onSurfaceVariant,
     ),
   };
 }

@@ -59,7 +59,6 @@ class SongControlsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
 
