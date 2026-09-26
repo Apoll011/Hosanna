@@ -7,8 +7,8 @@ class ClickSynth {
   static Uint8List generate({
     required double frequency,
     int sampleRate = 44100,
-    double durationMs = 45,
-    double amplitude = 0.9,
+    double durationMs = 55,
+    double amplitude = 1.0,
   }) {
     final sampleCount = (sampleRate * durationMs / 1000).round();
     final samples = Int16List(sampleCount);

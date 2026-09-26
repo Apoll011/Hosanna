@@ -50,6 +50,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonError => 'Something went wrong';
 
   @override
+  String get commonErrorDesc => 'Check your connection and try again.';
+
+  @override
   String get commonOffline => 'No internet connection';
 
   @override
@@ -369,10 +372,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsSearchHint => 'Search songs…';
 
   @override
-  String get songsEmpty => 'No songs';
+  String get songsEmpty => 'No songs yet';
 
   @override
-  String get songsNoResults => 'No results';
+  String get songsEmptyDesc =>
+      'Songs from your church will appear here once they sync.';
+
+  @override
+  String get songsNoResults => 'No matching songs';
+
+  @override
+  String get songsNoResultsDesc =>
+      'Try a different search or clear your filters.';
+
+  @override
+  String get songsFavoritesEmpty => 'No favorites yet';
+
+  @override
+  String get songsFavoritesEmptyDesc =>
+      'Tap the heart on a song to save it here.';
+
+  @override
+  String get songsRecentsEmpty => 'No recent songs';
+
+  @override
+  String get songsRecentsEmptyDesc => 'Songs you open will show up here.';
+
+  @override
+  String get songsNotFound => 'Song not found';
+
+  @override
+  String get songsNotFoundDesc =>
+      'This song may have been removed or has not synced yet.';
 
   @override
   String get songsAllSongs => 'All songs';
@@ -551,10 +582,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get foldersTitle => 'Folders';
 
   @override
-  String get foldersEmpty => 'No folders';
+  String get foldersEmpty => 'No folders yet';
 
   @override
-  String get collectionsEmpty => 'No collections';
+  String get foldersEmptyDesc =>
+      'Folders help organize your church’s song library.';
+
+  @override
+  String get foldersNoResultsDesc =>
+      'Try a different search or clear your filters.';
+
+  @override
+  String get collectionsEmpty => 'No collections yet';
+
+  @override
+  String get collectionsEmptyDesc =>
+      'Collections appear here when your church creates them.';
 
   @override
   String get foldersSubfolders => 'Subfolders';
@@ -583,16 +626,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesTitle => 'Services';
 
   @override
-  String get servicesEmpty => 'No services';
+  String get servicesEmpty => 'No services yet';
+
+  @override
+  String get servicesEmptyDesc =>
+      'Worship services and plans from your church will appear here.';
 
   @override
   String get servicesSearchHint => 'Search services…';
+
+  @override
+  String get servicesNoResults => 'No matching services';
+
+  @override
+  String get servicesNoResultsDesc => 'Try a different search.';
 
   @override
   String get servicesNextService => 'Next service';
 
   @override
   String get servicesNoUpcoming => 'No upcoming services';
+
+  @override
+  String get servicesNoUpcomingDesc =>
+      'There are no scheduled services right now.';
 
   @override
   String get servicesItems => 'Items';
@@ -610,13 +667,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesOrderedItems => 'Ordered items';
 
   @override
-  String get servicesNoItems => 'No items in this service.';
+  String get servicesNoItems => 'No items in this service';
+
+  @override
+  String get servicesNoItemsDesc =>
+      'This service doesn’t have any moments or songs yet.';
+
+  @override
+  String get servicesNotFound => 'Service not found';
+
+  @override
+  String get servicesNotFoundDesc =>
+      'This service may have been removed or has not synced yet.';
 
   @override
   String get servicesOrderTitle => 'Service Order';
 
   @override
-  String get servicesArchived => 'Arquived';
+  String get servicesArchived => 'Archived';
 
   @override
   String get servicesLeave => 'Leave';
@@ -840,6 +908,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metronomeAccent => 'Accent';
 
   @override
+  String get metronomePlay => 'Play';
+
+  @override
+  String get metronomePause => 'Pause';
+
+  @override
+  String get metronomeAudioUnavailable =>
+      'Metronome sound is unavailable on this device.';
+
+  @override
   String get circleOfFifthsTitle => 'Circle of Fifths';
 
   @override
@@ -914,4 +992,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get annotationClose => 'Done';
+
+  @override
+  String get annotationRemoteChanges => 'New changes from another device';
+
+  @override
+  String get annotationKeepMine => 'Keep mine';
+
+  @override
+  String get annotationReload => 'Reload';
+
+  @override
+  String get songVariant => 'Version';
+
+  @override
+  String songVariantTooltip(String name) {
+    return 'Version: $name';
+  }
+
+  @override
+  String get settingsLanguageSystem => 'System';
+
+  @override
+  String get settingsFontPreview => 'Sample';
 }

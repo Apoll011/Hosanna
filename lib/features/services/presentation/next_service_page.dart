@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../data/service_repository.dart';
 
 /// Opens the next upcoming service, forwarding to its detail page.
@@ -40,7 +41,10 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.servicesNextService)),
       body: switch (servicesAsync) {
-        AsyncValue(hasError: true) => _Message(message: l10n.commonError),
+        AsyncValue(hasError: true) => ErrorState(
+            title: l10n.commonError,
+            description: l10n.commonErrorDesc,
+          ),
         AsyncValue(:final value?) => _buildBody(value, l10n),
         _ => const Center(child: CircularProgressIndicator()),
       },
@@ -49,25 +53,15 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
 
   Widget _buildBody(List<ServiceRow> services, AppLocalizations l10n) {
     final next = nextUpcomingService(services);
-    if (next == null) return _Message(message: l10n.servicesNoUpcoming);
+    if (next == null) {
+      return EmptyState(
+        icon: Icons.event_available_outlined,
+        title: l10n.servicesNoUpcoming,
+        description: l10n.servicesNoUpcomingDesc,
+      );
+    }
 
     _forward(next.id);
     return const Center(child: CircularProgressIndicator());
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(message, textAlign: TextAlign.center),
-      ),
-    );
   }
 }

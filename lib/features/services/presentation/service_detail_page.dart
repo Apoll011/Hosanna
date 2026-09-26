@@ -7,6 +7,7 @@ import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
@@ -51,6 +52,8 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
     return Scaffold(
       key: _scaffoldKey,
+      // Edge-drag open fights horizontal prev/next swipes in the song reader.
+      drawerEnableOpenDragGesture: false,
       drawer: service == null
           ? null
           : _OrderDrawer(
@@ -71,9 +74,16 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             ),
       body: serviceAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(child: Text(l10n.commonError)),
+        error: (_, _) => ErrorState(
+          title: l10n.commonError,
+          description: l10n.commonErrorDesc,
+        ),
         data: (service) => service == null
-            ? Center(child: Text(l10n.servicesEmpty))
+            ? EmptyState(
+                icon: Icons.event_busy_outlined,
+                title: l10n.servicesNotFound,
+                description: l10n.servicesNotFoundDesc,
+              )
             : _body(service: service),
       ),
     );
@@ -90,7 +100,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     final elements = _sorted(service);
 
     if (elements.isEmpty) {
-      return Center(child: Text(l10n.servicesNoItems));
+      return EmptyState(
+        icon: Icons.playlist_add_outlined,
+        title: l10n.servicesNoItems,
+        description: l10n.servicesNoItemsDesc,
+      );
     }
 
     // Resolve the current element, defaulting to the first song element (the
@@ -220,13 +234,30 @@ class _MusicianTopBar extends StatelessWidget {
               ),
               const SongToolbarButton(),
             ],
-            TextButton.icon(
-              onPressed: onLeave,
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-              icon: const Icon(Icons.logout, size: 18),
-              label: Text(l10n.servicesLeave),
+            // Icon-only Leave avoids overflow on narrow phones; keep the
+            // labelled button when there is room.
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final narrow = MediaQuery.sizeOf(context).width < 420;
+                if (narrow) {
+                  return IconButton(
+                    onPressed: onLeave,
+                    tooltip: l10n.servicesLeave,
+                    icon: Icon(
+                      Icons.logout,
+                      color: theme.colorScheme.error,
+                    ),
+                  );
+                }
+                return TextButton.icon(
+                  onPressed: onLeave,
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: Text(l10n.servicesLeave),
+                );
+              },
             ),
           ],
         ),
@@ -269,9 +300,16 @@ class _SongElementView extends ConsumerWidget {
 
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Center(child: Text(l10n.commonError)),
+      error: (_, _) => ErrorState(
+        title: l10n.commonError,
+        description: l10n.commonErrorDesc,
+      ),
       data: (song) => song == null
-          ? Center(child: Text(l10n.songsNoResults))
+          ? EmptyState(
+              icon: Icons.music_off_outlined,
+              title: l10n.songsNotFound,
+              description: l10n.songsNotFoundDesc,
+            )
           : SongReader(
               content: song.content,
               notes: notes,
@@ -297,7 +335,7 @@ class _NonSongElementView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, element.type);
+    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -538,7 +576,7 @@ class _OrderItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, element.type);
+    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
 
     final songAsync = element.songId == null
         ? null
@@ -624,37 +662,41 @@ class _ElementMeta {
   final Color color;
 }
 
-_ElementMeta _elementMeta(AppLocalizations l10n, String type) {
+_ElementMeta _elementMeta(
+  AppLocalizations l10n,
+  ColorScheme colors,
+  String type,
+) {
   return switch (type) {
     'song' => _ElementMeta(
       l10n.servicesElementSong,
       Icons.music_note,
-      const Color(0xFF0284C7),
+      colors.primary,
     ),
     'welcome' => _ElementMeta(
       l10n.servicesElementWelcome,
       Icons.waving_hand_outlined,
-      const Color(0xFF2563EB),
+      colors.secondary,
     ),
     'scripture' => _ElementMeta(
       l10n.servicesElementScripture,
       Icons.menu_book_outlined,
-      const Color(0xFF9333EA),
+      colors.tertiary,
     ),
     'message' => _ElementMeta(
       l10n.servicesElementMessage,
       Icons.chat_bubble_outline,
-      const Color(0xFFD97706),
+      colors.error,
     ),
     'announcement' => _ElementMeta(
       l10n.servicesElementAnnouncement,
       Icons.campaign_outlined,
-      const Color(0xFF059669),
+      colors.primary,
     ),
     _ => _ElementMeta(
       l10n.servicesElementDefault,
       Icons.label_outline,
-      const Color(0xFF64748B),
+      colors.onSurfaceVariant,
     ),
   };
 }

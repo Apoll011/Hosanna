@@ -6,6 +6,8 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/shell_insets.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
 import '../data/song_repository.dart';
@@ -70,8 +72,13 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             ? TextField(
                 controller: _search,
                 autofocus: true,
+                style: Theme.of(context).textTheme.titleLarge,
+                textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: l10n.songsSearchHint,
+                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                   border: InputBorder.none,
                   isDense: true,
                 ),
@@ -107,9 +114,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: switch (songsAsync) {
-                AsyncValue(hasError: true) => _EmptyState(
-                    message: l10n.commonError,
+                AsyncValue(hasError: true) => ErrorState(
+                    title: l10n.commonError,
+                    description: l10n.commonErrorDesc,
+                    retryLabel: l10n.commonRetry,
                     onRetry: _refresh,
+                    scrollable: true,
                   ),
                 AsyncValue(:final value?) => _songList(
                     songs: _applySectionAndFilters(
@@ -121,6 +131,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     ),
                     folderNames: folderNames,
                     favorites: library.favoriteIds,
+                    library: library,
                     onToggleFavorite: libraryController.toggleFavorite,
                     onOpenSong: (id) {
                       libraryController.markPlayed(id);
@@ -282,20 +293,17 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     required List<SongRow> songs,
     required Map<String, String> folderNames,
     required List<String> favorites,
+    required LibraryState library,
     required ValueChanged<String> onToggleFavorite,
     required ValueChanged<String> onOpenSong,
   }) {
     final l10n = AppLocalizations.of(context);
     if (songs.isEmpty) {
-      return _EmptyState(
-        message: l10n.songsNoResults,
-        onRetry: _refresh,
-        onClearFilters: _settings.isDefault ? null : _resetFilters,
-        clearLabel: l10n.songsClearFilters,
-      );
+      return _buildEmpty(l10n, library);
     }
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
       itemCount: songs.length,
       itemBuilder: (context, index) {
         final song = songs[index];
@@ -318,9 +326,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           trailing: IconButton(
             icon: Icon(
               isFav ? Icons.favorite : Icons.favorite_border,
-              color: isFav ? Colors.pink : null,
+              color: isFav ? Theme.of(context).colorScheme.error : null,
             ),
-            tooltip: l10n.navFavorites,
+            tooltip: isFav ? l10n.navFavorites : l10n.navFavorites,
             onPressed: () => onToggleFavorite(song.id),
           ),
           onTap: () => onOpenSong(song.id),
@@ -328,52 +336,53 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       },
     );
   }
-}
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.message,
-    required this.onRetry,
-    this.clearLabel,
-    this.onClearFilters,
-  });
+  Widget _buildEmpty(AppLocalizations l10n, LibraryState library) {
+    final hasFilters = !_settings.isDefault || _search.text.trim().isNotEmpty;
 
-  final String message;
-  final Future<void> Function() onRetry;
-  final String? clearLabel;
-  final VoidCallback? onClearFilters;
+    if (hasFilters) {
+      return EmptyState(
+        icon: Icons.search_off_outlined,
+        title: l10n.songsNoResults,
+        description: l10n.songsNoResultsDesc,
+        primaryLabel: l10n.songsClearFilters,
+        primaryIcon: Icons.filter_alt_off_outlined,
+        onPrimary: () {
+          _search.clear();
+          _resetFilters();
+          if (_searchOpen) setState(() => _searchOpen = false);
+        },
+        scrollable: true,
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: constraints.maxHeight,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(message),
-                if (onClearFilters != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: onClearFilters,
-                    icon: const Icon(Icons.filter_alt_off),
-                    label: Text(clearLabel!),
-                  ),
-                ],
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(AppLocalizations.of(context).commonRetry),
-                ),
-              ],
-            ),
-          ),
+    return switch (library.section) {
+      LibrarySection.favorites => EmptyState(
+          icon: Icons.favorite_border,
+          title: l10n.songsFavoritesEmpty,
+          description: l10n.songsFavoritesEmptyDesc,
+          scrollable: true,
         ),
-      ),
-    );
+      LibrarySection.recent => EmptyState(
+          icon: Icons.history,
+          title: l10n.songsRecentsEmpty,
+          description: l10n.songsRecentsEmptyDesc,
+          scrollable: true,
+        ),
+      LibrarySection.folder ||
+      LibrarySection.collection =>
+        EmptyState(
+          icon: Icons.music_note_outlined,
+          title: l10n.songsEmpty,
+          description: l10n.songsEmptyDesc,
+          scrollable: true,
+        ),
+      LibrarySection.all => EmptyState(
+          icon: Icons.library_music_outlined,
+          title: l10n.songsEmpty,
+          description: l10n.songsEmptyDesc,
+          scrollable: true,
+        ),
+    };
   }
 }

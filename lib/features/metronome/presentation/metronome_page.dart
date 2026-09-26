@@ -36,13 +36,16 @@ class _MetronomePageState extends State<MetronomePage>
 
   Duration get _beatDuration => Duration(milliseconds: (60000 / _bpm).round());
 
-  late final AudioPlayer _accentPlayer;
-  late final AudioPlayer _normalPlayer;
+  AudioPlayer? _accentPlayer;
+  AudioPlayer? _normalPlayer;
+  Source? _accentSource;
+  Source? _normalSource;
   bool _audioReady = false;
+  bool _audioInitFailed = false;
 
-  /// Whether the low-latency backend on this platform is Android's SoundPool,
-  /// which needs a different source type and trigger sequence than the
-  /// MediaPlayer-style backends used elsewhere.
+  /// Android SoundPool needs stop()+resume(); other backends need a fresh
+  /// [AudioPlayer.play] because [AudioPlayer.resume] is a no-op until the
+  /// player has been started at least once (which was the silent-metronome bug).
   static final bool _usesAndroidSoundPool =
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
@@ -56,56 +59,80 @@ class _MetronomePageState extends State<MetronomePage>
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 550),
+      duration: const Duration(milliseconds: 180),
     );
 
-    _initAudio();
+    unawaited(_initAudio());
   }
 
   Future<void> _initAudio() async {
     try {
-      _accentPlayer = AudioPlayer(playerId: 'metronome_accent');
-      _normalPlayer = AudioPlayer(playerId: 'metronome_normal');
+      await AudioPlayer.global.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            contentType: AndroidContentType.sonification,
+            usageType: AndroidUsageType.assistanceSonification,
+            audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: const {AVAudioSessionOptions.mixWithOthers},
+          ),
+        ),
+      );
 
-      // Build the sources up front so any file I/O happens before playback.
-      // On Android this writes the synthesized WAVs to temp files, because
-      // SoundPool (low-latency mode) cannot play raw byte buffers.
+      final accentPlayer = AudioPlayer();
+      final normalPlayer = AudioPlayer();
       final accentSource = await createClickSource(frequency: 1500);
-      final normalSource = await createClickSource(frequency: 900);
+      final normalSource = await createClickSource(frequency: 1000);
 
-      // Low-latency mode is essential here — the default mode buffers/streams
-      // and adds noticeable delay, which would drift the click out of sync
-      // with the pendulum.
-      await Future.wait([
-        _accentPlayer.setPlayerMode(PlayerMode.lowLatency),
-        _normalPlayer.setPlayerMode(PlayerMode.lowLatency),
-      ]);
-      await Future.wait([
-        _accentPlayer.setSource(accentSource),
-        _normalPlayer.setSource(normalSource),
-      ]);
-
-      if (_usesAndroidSoundPool) {
-        // With SoundPool, `stop()` would otherwise unload the loaded sound,
-        // and `seek()` never completes (SoundPool emits no seek-complete
-        // event). Keep the sound loaded and retrigger each beat with
-        // stop() + resume() instead (see [_triggerClick]).
+      // Prefer low-latency; fall back silently if the platform rejects it.
+      try {
         await Future.wait([
-          _accentPlayer.setReleaseMode(ReleaseMode.stop),
-          _normalPlayer.setReleaseMode(ReleaseMode.stop),
+          accentPlayer.setPlayerMode(PlayerMode.lowLatency),
+          normalPlayer.setPlayerMode(PlayerMode.lowLatency),
         ]);
+      } catch (error) {
+        debugPrint('Metronome lowLatency unavailable, using mediaPlayer: $error');
       }
 
       await Future.wait([
-        _accentPlayer.setVolume(1.0),
-        _normalPlayer.setVolume(0.85),
+        accentPlayer.setReleaseMode(ReleaseMode.stop),
+        normalPlayer.setReleaseMode(ReleaseMode.stop),
+        accentPlayer.setVolume(1.0),
+        normalPlayer.setVolume(0.8),
       ]);
 
-      if (mounted) setState(() => _audioReady = true);
+      if (_usesAndroidSoundPool) {
+        // Preload into SoundPool so the first resume() is instant.
+        await Future.wait([
+          accentPlayer.setSource(accentSource),
+          normalPlayer.setSource(normalSource),
+        ]);
+      }
+
+      if (!mounted) {
+        await accentPlayer.dispose();
+        await normalPlayer.dispose();
+        return;
+      }
+
+      _accentPlayer = accentPlayer;
+      _normalPlayer = normalPlayer;
+      _accentSource = accentSource;
+      _normalSource = normalSource;
+      setState(() {
+        _audioReady = true;
+        _audioInitFailed = false;
+      });
     } catch (error, stackTrace) {
-      // Never crash the page because audio failed to initialize: the haptics
-      // and the pendulum still work, and _audioReady stays false.
       debugPrint('Metronome audio init failed: $error\n$stackTrace');
+      if (mounted) {
+        setState(() {
+          _audioReady = false;
+          _audioInitFailed = true;
+        });
+      }
     }
   }
 
@@ -114,8 +141,8 @@ class _MetronomePageState extends State<MetronomePage>
     _pendulumController.dispose();
     _pulseController.dispose();
     _holdTimer?.cancel();
-    _accentPlayer.dispose();
-    _normalPlayer.dispose();
+    unawaited(_accentPlayer?.dispose() ?? Future<void>.value());
+    unawaited(_normalPlayer?.dispose() ?? Future<void>.value());
     super.dispose();
   }
 
@@ -134,44 +161,64 @@ class _MetronomePageState extends State<MetronomePage>
     isAccent ? HapticFeedback.mediumImpact() : HapticFeedback.selectionClick();
 
     if (_audioReady) {
-      final player = isAccent ? _accentPlayer : _normalPlayer;
-      unawaited(_triggerClick(player));
+      unawaited(_triggerClick(accent: isAccent));
     }
 
     _pulseController.forward(from: 0);
   }
 
-  /// Starts one click on [player].
-  ///
-  /// On Android (SoundPool) each beat must start a fresh stream: `stop()`
-  /// resets the SoundPool stream id and `resume()` fires a new
-  /// `soundPool.play()`. Everywhere else a seek to zero plus resume restarts
-  /// the (very short) sample.
-  Future<void> _triggerClick(AudioPlayer player) async {
+  Future<void> _triggerClick({required bool accent}) async {
+    final player = accent ? _accentPlayer : _normalPlayer;
+    final source = accent ? _accentSource : _normalSource;
+    if (player == null || source == null) return;
+
     try {
       if (_usesAndroidSoundPool) {
+        // SoundPool: stop resets the stream id; resume fires soundPool.play().
         await player.stop();
         await player.resume();
       } else {
-        await player.seek(Duration.zero);
-        await player.resume();
+        // MediaPlayer-style backends: resume() is a no-op until play() has
+        // run once, so always play the source from the start.
+        await player.stop();
+        await player.play(source);
       }
     } catch (error) {
       debugPrint('Metronome click trigger failed: $error');
+      // One-shot recovery: rebuild sources and retry once.
+      try {
+        final rebuilt = await createClickSource(
+          frequency: accent ? 1500 : 1000,
+        );
+        if (accent) {
+          _accentSource = rebuilt;
+        } else {
+          _normalSource = rebuilt;
+        }
+        await player.stop();
+        await player.play(rebuilt);
+      } catch (retryError) {
+        debugPrint('Metronome click retry failed: $retryError');
+      }
     }
   }
 
   void _togglePlay() {
+    final starting = !_isPlaying;
     setState(() {
-      _isPlaying = !_isPlaying;
-      if (_isPlaying) {
+      _isPlaying = starting;
+      if (starting) {
         _currentBeat = _beatsPerBar - 1; // next tick lands on beat 0
         _pendulumController.duration = _beatDuration;
+        _pendulumController.value = 0;
         _pendulumController.repeat(reverse: true);
       } else {
         _pendulumController.stop();
+        _pendulumController.value = 0;
       }
     });
+    // Fire the downbeat immediately so the first click isn't one full swing late.
+    if (starting) _onBeat();
   }
 
   void _setBpm(int value) {
@@ -225,7 +272,8 @@ class _MetronomePageState extends State<MetronomePage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -235,42 +283,70 @@ class _MetronomePageState extends State<MetronomePage>
         leading: const ShellLeadingButton(),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            _buildAura(colors),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOut,
-              builder: (context, t, child) => Opacity(
-                opacity: t,
-                child: Transform.translate(
-                  offset: Offset(0, (1 - t) * 16),
-                  child: child,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxHeight < 640;
+            return Stack(
+              children: [
+                _buildAura(colors),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                  builder: (context, t, child) => Opacity(
+                    opacity: t,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - t) * 16),
+                      child: child,
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: compact ? 8 : 16,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - (compact ? 16 : 32),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            children: [
+                              _buildBeatDots(colors),
+                              if (_audioInitFailed) ...[
+                                const SizedBox(height: 12),
+                                Text(
+                                  l10n.metronomeAudioUnavailable,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors.error,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ],
+                          ),
+                          _buildPendulum(colors, compact: compact),
+                          Column(
+                            children: [
+                              _buildBpmDisplay(theme, colors),
+                              SizedBox(height: compact ? 12 : 20),
+                              _buildBpmStepper(colors),
+                              SizedBox(height: compact ? 16 : 28),
+                              _buildTimeSignatureRow(theme, colors, l10n),
+                              SizedBox(height: compact ? 16 : 24),
+                              _buildTransportRow(colors, l10n),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildBeatDots(colors),
-                    const Spacer(),
-                    _buildPendulum(colors),
-                    const SizedBox(height: 28),
-                    _buildBpmDisplay(colors),
-                    const SizedBox(height: 20),
-                    _buildBpmStepper(colors),
-                    const SizedBox(height: 28),
-                    _buildTimeSignatureRow(colors, l10n),
-                    const SizedBox(height: 24),
-                    _buildTransportRow(colors, l10n),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -304,52 +380,58 @@ class _MetronomePageState extends State<MetronomePage>
   }
 
   Widget _buildBeatDots(ColorScheme colors) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_beatsPerBar, (i) {
-        final active = _isPlaying && i == _currentBeat;
-        final isFirst = i == 0;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: active ? 20 : 9,
-          height: 9,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            color: active
-                ? (isFirst && _accentFirstBeat
-                      ? colors.primary
-                      : colors.secondary)
-                : colors.outline.withValues(alpha: 0.25),
-          ),
-        );
-      }),
+    return Semantics(
+      liveRegion: true,
+      label: _isPlaying
+          ? 'Beat ${_currentBeat + 1} of $_beatsPerBar'
+          : 'Metronome stopped',
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_beatsPerBar, (i) {
+          final active = _isPlaying && i == _currentBeat;
+          final isFirst = i == 0;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: active ? 20 : 9,
+            height: 9,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              color: active
+                  ? (isFirst && _accentFirstBeat
+                        ? colors.primary
+                        : colors.secondary)
+                  : colors.outline.withValues(alpha: 0.25),
+            ),
+          );
+        }),
+      ),
     );
   }
 
-  Widget _buildPendulum(ColorScheme colors) {
+  Widget _buildPendulum(ColorScheme colors, {required bool compact}) {
     const maxAngle = 26 * math.pi / 180;
     final weightFraction = (1 - (_bpm - _minBpm) / (_maxBpm - _minBpm)).clamp(
       0.12,
       0.82,
     );
+    final height = compact ? 160.0 : 220.0;
+    final armHeight = compact ? 120.0 : 168.0;
 
     return SizedBox(
-      height: 220,
+      height: height,
       width: 200,
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          // Static body
           CustomPaint(
-            size: const Size(180, 200),
+            size: Size(180, height - 20),
             painter: _MetronomeBodyPainter(
               fill: colors.surfaceContainerHighest,
               outline: colors.outline.withValues(alpha: 0.3),
             ),
           ),
-          // Swinging arm
           AnimatedBuilder(
             animation: _pendulumController,
             builder: (context, _) {
@@ -362,7 +444,7 @@ class _MetronomePageState extends State<MetronomePage>
                   angle: angle,
                   alignment: Alignment.bottomCenter,
                   child: CustomPaint(
-                    size: const Size(14, 168),
+                    size: Size(14, armHeight),
                     painter: _MetronomeArmPainter(
                       armColor: colors.onSurfaceVariant,
                       weightColor: colors.primary,
@@ -389,49 +471,50 @@ class _MetronomePageState extends State<MetronomePage>
     );
   }
 
-  Widget _buildBpmDisplay(ColorScheme colors) {
+  Widget _buildBpmDisplay(ThemeData theme, ColorScheme colors) {
     return GestureDetector(
       onVerticalDragUpdate: (details) {
         if (details.delta.dy.abs() < 1) return;
         _setBpm(_bpm - (details.delta.dy / 6).round());
       },
-      child: Column(
-        children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final scale = _isPlaying
-                  ? 1 + (0.06 * (1 - _pulseController.value))
-                  : 1.0;
-              return Transform.scale(scale: scale, child: child);
-            },
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (child, anim) =>
-                  FadeTransition(opacity: anim, child: child),
-              child: Text(
-                '$_bpm',
-                key: ValueKey(_bpm),
-                style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  color: colors.onSurface,
-                  height: 1,
+      child: Semantics(
+        label: '$_bpm BPM, ${_tempoMarking(_bpm)}',
+        child: Column(
+          children: [
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final scale = _isPlaying
+                    ? 1 + (0.06 * (1 - _pulseController.value))
+                    : 1.0;
+                return Transform.scale(scale: scale, child: child);
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                transitionBuilder: (child, anim) =>
+                    FadeTransition(opacity: anim, child: child),
+                child: Text(
+                  '$_bpm',
+                  key: ValueKey(_bpm),
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: colors.onSurface,
+                    height: 1,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'BPM · ${_tempoMarking(_bpm)}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-              color: colors.secondary,
+            const SizedBox(height: 2),
+            Text(
+              'BPM · ${_tempoMarking(_bpm)}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+                color: colors.secondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -442,12 +525,12 @@ class _MetronomePageState extends State<MetronomePage>
       children: [
         _StepperButton(
           icon: Icons.remove,
+          tooltip: 'Decrease tempo',
           colors: colors,
           onTapDown: () => _startHold(-1),
           onTapUp: _endHold,
         ),
-        SizedBox(
-          width: 180,
+        Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
@@ -460,12 +543,14 @@ class _MetronomePageState extends State<MetronomePage>
               max: _maxBpm.toDouble(),
               activeColor: colors.primary,
               inactiveColor: colors.outline.withValues(alpha: 0.25),
+              label: '$_bpm',
               onChanged: (v) => _setBpm(v.round()),
             ),
           ),
         ),
         _StepperButton(
           icon: Icons.add,
+          tooltip: 'Increase tempo',
           colors: colors,
           onTapDown: () => _startHold(1),
           onTapUp: _endHold,
@@ -474,7 +559,11 @@ class _MetronomePageState extends State<MetronomePage>
     );
   }
 
-  Widget _buildTimeSignatureRow(ColorScheme colors, AppLocalizations l10n) {
+  Widget _buildTimeSignatureRow(
+    ThemeData theme,
+    ColorScheme colors,
+    AppLocalizations l10n,
+  ) {
     return Column(
       children: [
         Row(
@@ -482,8 +571,7 @@ class _MetronomePageState extends State<MetronomePage>
           children: [
             Text(
               l10n.metronomeTimeSignature,
-              style: TextStyle(
-                fontSize: 11,
+              style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
                 color: colors.secondary,
@@ -492,12 +580,13 @@ class _MetronomePageState extends State<MetronomePage>
             const Spacer(),
             Text(
               l10n.metronomeAccent,
-              style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
             ),
             Switch(
               value: _accentFirstBeat,
               onChanged: (v) => setState(() => _accentFirstBeat = v),
-              activeThumbColor: colors.primary,
             ),
           ],
         ),
@@ -514,7 +603,7 @@ class _MetronomePageState extends State<MetronomePage>
               showCheckmark: false,
               selectedColor: colors.primary,
               backgroundColor: colors.surfaceContainerHighest,
-              labelStyle: TextStyle(
+              labelStyle: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: selected ? colors.onPrimary : colors.onSurfaceVariant,
               ),
@@ -547,33 +636,33 @@ class _MetronomePageState extends State<MetronomePage>
             ),
           ),
         ),
-        GestureDetector(
-          onTap: _togglePlay,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.primary,
-              boxShadow: [
-                BoxShadow(
-                  color: colors.primary.withValues(alpha: 0.35),
-                  blurRadius: 20,
-                  spreadRadius: _isPlaying ? 2 : 0,
+        Semantics(
+          button: true,
+          label: _isPlaying ? l10n.metronomePause : l10n.metronomePlay,
+          child: Material(
+            color: colors.primary,
+            shape: const CircleBorder(),
+            elevation: _isPlaying ? 6 : 2,
+            shadowColor: colors.primary.withValues(alpha: 0.45),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _togglePlay,
+              child: SizedBox(
+                width: 76,
+                height: 76,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, anim) =>
+                      ScaleTransition(scale: anim, child: child),
+                  child: Icon(
+                    _isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    key: ValueKey(_isPlaying),
+                    color: colors.onPrimary,
+                    size: 34,
+                  ),
                 ),
-              ],
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                key: ValueKey(_isPlaying),
-                color: colors.onPrimary,
-                size: 34,
               ),
             ),
           ),
@@ -586,31 +675,46 @@ class _MetronomePageState extends State<MetronomePage>
 class _StepperButton extends StatelessWidget {
   const _StepperButton({
     required this.icon,
+    required this.tooltip,
     required this.colors,
     required this.onTapDown,
     required this.onTapUp,
   });
 
   final IconData icon;
+  final String tooltip;
   final ColorScheme colors;
   final VoidCallback onTapDown;
   final VoidCallback onTapUp;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => onTapDown(),
-      onTapUp: (_) => onTapUp(),
-      onTapCancel: onTapUp,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: Material(
           color: colors.surfaceContainerHighest,
-          border: Border.all(color: colors.outline.withValues(alpha: 0.25)),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTapDown: (_) => onTapDown(),
+            onTapUp: (_) => onTapUp(),
+            onTapCancel: onTapUp,
+            child: Ink(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colors.outline.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Icon(icon, size: 20, color: colors.onSurface),
+            ),
+          ),
         ),
-        child: Icon(icon, size: 18, color: colors.onSurface),
       ),
     );
   }

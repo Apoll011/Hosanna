@@ -647,20 +647,43 @@ class _SongReaderState extends ConsumerState<SongReader>
                     horizontal: 12,
                     vertical: 8,
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.sync_rounded, size: 18),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text('New changes from another device'),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.sync_rounded,
+                            size: 18,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.annotationRemoteChanges,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
                       ),
-                      TextButton(
-                        onPressed: _dismissPendingRemoteUpdate,
-                        child: const Text('Keep mine'),
-                      ),
-                      FilledButton(
-                        onPressed: _acceptPendingRemoteUpdate,
-                        child: const Text('Reload'),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          TextButton(
+                            onPressed: _dismissPendingRemoteUpdate,
+                            child: Text(l10n.annotationKeepMine),
+                          ),
+                          FilledButton(
+                            onPressed: _acceptPendingRemoteUpdate,
+                            child: Text(l10n.annotationReload),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1045,108 +1068,141 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              // Row 2: Swatches, Prominent Color Picker Button & Stroke Width Slider
-              Row(
-                children: [
-                  for (final c in _kAnnotationPalette)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: GestureDetector(
-                        onTap: () {
-                          onColorChanged(c);
-                          if (tool == CanvasTool.erase ||
-                              tool == CanvasTool.erasePixel) {
-                            onToolChanged(CanvasTool.draw);
-                          }
-                        },
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: c,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: c.toARGB32() == color.toARGB32()
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.outline.withValues(
-                                      alpha: 0.4,
+              // Row 2: Swatches + stroke width (stacked on narrow widths).
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final narrow = constraints.maxWidth < 360;
+                  final swatches = Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final c in _kAnnotationPalette)
+                        Tooltip(
+                          message: l10n.annotationPen,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () {
+                                onColorChanged(c);
+                                if (tool == CanvasTool.erase ||
+                                    tool == CanvasTool.erasePixel) {
+                                  onToolChanged(CanvasTool.draw);
+                                }
+                              },
+                              child: Ink(
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: c,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: c.toARGB32() == color.toARGB32()
+                                            ? theme.colorScheme.primary
+                                            : theme.colorScheme.outline
+                                                .withValues(alpha: 0.4),
+                                        width: c.toARGB32() == color.toARGB32()
+                                            ? 2.5
+                                            : 1,
+                                      ),
                                     ),
-                              width: c.toARGB32() == color.toARGB32() ? 2.5 : 1,
+                                    child: c.toARGB32() == color.toARGB32()
+                                        ? Center(
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: c.computeLuminance() > 0.5
+                                                    ? Colors.black
+                                                    : Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          child: c.toARGB32() == color.toARGB32()
-                              ? Center(
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: c.computeLuminance() > 0.5
-                                          ? Colors.black
-                                          : Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                )
-                              : null,
                         ),
-                      ),
-                    ),
-                  // Prominent & comfortable Color Picker button
-                  Tooltip(
-                    message: l10n.annotationColorPicker,
-                    child: Material(
-                      color: theme.colorScheme.surfaceContainer,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () async {
-                          final picked = await showFlueraColorPicker(
-                            context: context,
-                            initial: color,
-                            title: l10n.annotationColorPicker,
-                          );
-                          if (picked != null) {
-                            onColorChanged(picked);
-                            if (tool == CanvasTool.erase ||
-                                tool == CanvasTool.erasePixel) {
-                              onToolChanged(CanvasTool.draw);
-                            }
-                          }
-                        },
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.colorize_rounded,
-                            size: 20,
-                            color: theme.colorScheme.primary,
+                      Tooltip(
+                        message: l10n.annotationColorPicker,
+                        child: Material(
+                          color: theme.colorScheme.surfaceContainer,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () async {
+                              final picked = await showFlueraColorPicker(
+                                context: context,
+                                initial: color,
+                                title: l10n.annotationColorPicker,
+                              );
+                              if (picked != null) {
+                                onColorChanged(picked);
+                                if (tool == CanvasTool.erase ||
+                                    tool == CanvasTool.erasePixel) {
+                                  onToolChanged(CanvasTool.draw);
+                                }
+                              }
+                            },
+                            child: const SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Icon(Icons.colorize_rounded, size: 20),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 3,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 6,
-                        ),
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 14,
-                        ),
+                    ],
+                  );
+
+                  final strokeSlider = SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 3,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 8,
                       ),
-                      child: Slider(
-                        value: strokeWidth,
-                        min: 1.0,
-                        max: 16.0,
-                        onChanged: onStrokeWidthChanged,
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 18,
                       ),
                     ),
-                  ),
-                ],
+                    child: Slider(
+                      value: strokeWidth,
+                      min: 1.0,
+                      max: 16.0,
+                      label: strokeWidth.toStringAsFixed(0),
+                      onChanged: onStrokeWidthChanged,
+                    ),
+                  );
+
+                  if (narrow) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        swatches,
+                        strokeSlider,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: swatches),
+                      const SizedBox(width: 8),
+                      Expanded(child: strokeSlider),
+                    ],
+                  );
+                },
               ),
             ],
           ),

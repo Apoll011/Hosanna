@@ -590,16 +590,18 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.12),
+                        color: theme.colorScheme.tertiaryContainer,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Colors.green.withValues(alpha: 0.4),
+                          color: theme.colorScheme.tertiary.withValues(
+                            alpha: 0.45,
+                          ),
                         ),
                       ),
                       child: Text(
                         l10n.settingsActive,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.green.shade700,
+                          color: theme.colorScheme.onTertiaryContainer,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -795,11 +797,14 @@ class _PreferencesTab extends ConsumerWidget {
             trailing: DropdownButton<String?>(
               value: settings.localeCode,
               underline: const SizedBox.shrink(),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('—')),
-                DropdownMenuItem(value: 'pt', child: Text('Português')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
-                DropdownMenuItem(value: 'es', child: Text('Español')),
+              items: [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(l10n.settingsLanguageSystem),
+                ),
+                const DropdownMenuItem(value: 'pt', child: Text('Português')),
+                const DropdownMenuItem(value: 'en', child: Text('English')),
+                const DropdownMenuItem(value: 'es', child: Text('Español')),
               ],
               onChanged: settingsController.setLocale,
             ),
@@ -819,7 +824,7 @@ class _PreferencesTab extends ConsumerWidget {
                     '${l10n.songFontSize} (${display.fontSize.toInt()}px)',
                   ),
                   Text(
-                    'Exemplo',
+                    l10n.settingsFontPreview,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: display.fontSize,
                       fontWeight: FontWeight.w700,
@@ -828,10 +833,18 @@ class _PreferencesTab extends ConsumerWidget {
                 ],
               ),
               Slider(
-                value: display.fontSize.clamp(12, 28).toDouble(),
-                min: 12,
-                max: 28,
-                divisions: 16,
+                value: display.fontSize
+                    .clamp(
+                      SongDisplaySettings.minFontSize,
+                      SongDisplaySettings.maxFontSize,
+                    )
+                    .toDouble(),
+                min: SongDisplaySettings.minFontSize,
+                max: SongDisplaySettings.maxFontSize,
+                divisions: ((SongDisplaySettings.maxFontSize -
+                            SongDisplaySettings.minFontSize) /
+                        2)
+                    .round(),
                 label: display.fontSize.toInt().toString(),
                 onChanged: displayController.setFontSize,
               ),
