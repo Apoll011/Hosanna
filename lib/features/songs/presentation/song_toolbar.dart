@@ -71,25 +71,7 @@ class SongControlsSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header.
-            Row(
-              children: [
-                Text(
-                  l10n.songControlsTitle.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.commonClose),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
 
             // Transpose.
             _SectionTitle(
@@ -507,11 +489,7 @@ class _ToolbarVariantButton extends StatelessWidget {
             child: Row(
               children: [
                 if (version.id == selectedId)
-                  Icon(
-                    Icons.check,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  )
+                  Icon(Icons.check, size: 18, color: theme.colorScheme.primary)
                 else
                   const SizedBox(width: 18),
                 const SizedBox(width: 8),
@@ -535,7 +513,9 @@ class _ToolbarVariantButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.7,
+            ),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
