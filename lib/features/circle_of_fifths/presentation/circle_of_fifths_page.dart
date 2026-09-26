@@ -52,45 +52,50 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
         leading: const ShellLeadingButton(),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              _buildCircle(colors, selectedData),
-              const SizedBox(height: 32),
-              _buildHarmonicField(colors, selectedData, l10n),
-            ],
-          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final circleSize =
+                (constraints.maxWidth - 32).clamp(240.0, 380.0);
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Center(
+                    child: _buildCircle(colors, selectedData, circleSize),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildHarmonicField(colors, selectedData, l10n),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildCircle(ColorScheme colors, _KeyData selectedData) {
-    const size = 300.0;
-
+  Widget _buildCircle(
+    ColorScheme colors,
+    _KeyData selectedData,
+    double size,
+  ) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Decorative dashed rings
           _dashedRing(size * 0.84, colors.outline.withValues(alpha: 0.25)),
-
-          // Major / minor key buttons
           for (int index = 0; index < _circleData.length; index++)
             ..._buildKeyButtons(index, size, colors),
-
-          // Center content
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 selectedData.major,
-                style: TextStyle(
-                  fontSize: 30,
+                style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: colors.primary,
                 ),
@@ -98,8 +103,7 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
               const SizedBox(height: 4),
               Text(
                 selectedData.minor,
-                style: TextStyle(
-                  fontSize: 14,
+                style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colors.secondary,
                 ),
@@ -132,15 +136,20 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
       center + rInner * math.sin(angleRad),
     );
 
+    final majorSize = (size * 0.16).clamp(44.0, 52.0);
+    final minorSize = (size * 0.13).clamp(40.0, 46.0);
+    final halfMajor = majorSize / 2;
+    final halfMinor = minorSize / 2;
+
     return [
       Positioned(
-        left: outerOffset.dx - 24,
-        top: outerOffset.dy - 24,
+        left: outerOffset.dx - halfMajor,
+        top: outerOffset.dy - halfMajor,
         child: _KeyButton(
           label: item.major,
-          size: 48,
+          size: majorSize,
           selected: isSelected,
-          fontSize: 14,
+          fontSize: majorSize * 0.3,
           onTap: () => setState(() => _selectedIndex = index),
           selectedBackground: colors.primary,
           selectedForeground: colors.onPrimary,
@@ -150,13 +159,13 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
         ),
       ),
       Positioned(
-        left: innerOffset.dx - 20,
-        top: innerOffset.dy - 20,
+        left: innerOffset.dx - halfMinor,
+        top: innerOffset.dy - halfMinor,
         child: _KeyButton(
           label: item.minor,
-          size: 40,
+          size: minorSize,
           selected: isSelected,
-          fontSize: 12,
+          fontSize: minorSize * 0.28,
           bold: isSelected,
           onTap: () => setState(() => _selectedIndex = index),
           selectedBackground: colors.primaryContainer,
@@ -185,8 +194,9 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
     _KeyData selectedData,
     AppLocalizations l10n,
   ) {
-    return SizedBox(
-      width: double.infinity,
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.center,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 384),
         child: Column(
@@ -195,8 +205,7 @@ class _CircleOfFifthsPageState extends State<CircleOfFifthsPage> {
             Text(
               l10n.circleOfFifthsHarmonicField.toUpperCase(),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
+              style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.5,
                 color: colors.secondary,
@@ -341,41 +350,52 @@ class _KeyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: size,
-        height: size,
-        transform: selected
-            ? (Matrix4.diagonal3Values(1.1, 1.1, 1.0))
-            : Matrix4.identity(),
-        transformAlignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: selected ? selectedBackground : unselectedBackground,
-          border: Border.all(
-            color: selected
-                ? (selectedBorder ?? selectedBackground)
-                : (unselectedBorder ?? Colors.transparent),
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: selectedBackground.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: size,
+            height: size,
+            transform: selected
+                ? (Matrix4.diagonal3Values(1.06, 1.06, 1.0))
+                : Matrix4.identity(),
+            transformAlignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? selectedBackground : unselectedBackground,
+              border: Border.all(
+                color: selected
+                    ? (selectedBorder ?? selectedBackground)
+                    : (unselectedBorder ?? Colors.transparent),
+              ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: selectedBackground.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: fontSize,
+                    fontWeight:
+                        (selected || bold) ? FontWeight.bold : FontWeight.w500,
+                    color:
+                        selected ? selectedForeground : unselectedForeground,
                   ),
-                ]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: (selected || bold) ? FontWeight.bold : FontWeight.w500,
-            color: selected ? selectedForeground : unselectedForeground,
+            ),
           ),
         ),
       ),

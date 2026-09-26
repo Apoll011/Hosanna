@@ -1768,6 +1768,24 @@ abstract class AppLocalizations {
   /// **'Acentuar'**
   String get metronomeAccent;
 
+  /// No description provided for @metronomePlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reproduzir'**
+  String get metronomePlay;
+
+  /// No description provided for @metronomePause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar'**
+  String get metronomePause;
+
+  /// No description provided for @metronomeAudioUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'O som do metrónomo não está disponível neste dispositivo.'**
+  String get metronomeAudioUnavailable;
+
   /// No description provided for @circleOfFifthsTitle.
   ///
   /// In pt, this message translates to:
@@ -1917,6 +1935,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Concluir'**
   String get annotationClose;
+
+  /// No description provided for @annotationRemoteChanges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novas alterações de outro dispositivo'**
+  String get annotationRemoteChanges;
+
+  /// No description provided for @annotationKeepMine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manter as minhas'**
+  String get annotationKeepMine;
+
+  /// No description provided for @annotationReload.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recarregar'**
+  String get annotationReload;
+
+  /// No description provided for @songVariant.
+  ///
+  /// In pt, this message translates to:
+  /// **'Versão'**
+  String get songVariant;
+
+  /// No description provided for @songVariantTooltip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Versão: {name}'**
+  String songVariantTooltip(String name);
+
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sistema'**
+  String get settingsLanguageSystem;
+
+  /// No description provided for @settingsFontPreview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exemplo'**
+  String get settingsFontPreview;
 }
 
 class _AppLocalizationsDelegate

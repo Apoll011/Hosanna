@@ -689,7 +689,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesOrderTitle => 'Orden del Servicio';
 
   @override
-  String get servicesArchived => 'Sair';
+  String get servicesArchived => 'Archivado';
 
   @override
   String get servicesLeave => 'Salir';
@@ -916,6 +916,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get metronomeAccent => 'Acento';
 
   @override
+  String get metronomePlay => 'Reproducir';
+
+  @override
+  String get metronomePause => 'Pausar';
+
+  @override
+  String get metronomeAudioUnavailable =>
+      'El sonido del metrónomo no está disponible en este dispositivo.';
+
+  @override
   String get circleOfFifthsTitle => 'Círculo de Quintas';
 
   @override
@@ -992,4 +1002,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get annotationClose => 'Listo';
+
+  @override
+  String get annotationRemoteChanges => 'Nuevos cambios de otro dispositivo';
+
+  @override
+  String get annotationKeepMine => 'Mantener los míos';
+
+  @override
+  String get annotationReload => 'Recargar';
+
+  @override
+  String get songVariant => 'Versión';
+
+  @override
+  String songVariantTooltip(String name) {
+    return 'Versión: $name';
+  }
+
+  @override
+  String get settingsLanguageSystem => 'Sistema';
+
+  @override
+  String get settingsFontPreview => 'Ejemplo';
 }

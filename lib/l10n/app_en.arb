@@ -209,7 +209,7 @@
   "servicesNotFound": "Service not found",
   "servicesNotFoundDesc": "This service may have been removed or has not synced yet.",
   "servicesOrderTitle": "Service Order",
-  "servicesArchived": "Arquived",
+  "servicesArchived": "Archived",
   "servicesLeave": "Leave",
   "servicesLeaveMode": "Leave Service Mode",
   "servicesMoments": "{count, plural, =1{1 moment} other{{count} moments}}",
@@ -279,6 +279,9 @@
   "metronomeTapTempo": "Tap Tempo",
   "metronomeTimeSignature": "TIME SIGNATURE",
   "metronomeAccent": "Accent",
+  "metronomePlay": "Play",
+  "metronomePause": "Pause",
+  "metronomeAudioUnavailable": "Metronome sound is unavailable on this device.",
 
   "circleOfFifthsTitle": "Circle of Fifths",
   "circleOfFifthsDescription": "Key and relative-key reference.",
@@ -314,5 +317,17 @@
   "annotationClear": "Clear All",
   "annotationClearConfirm": "Clear all annotations for this song?",
   "annotationColorPicker": "Custom Color",
-  "annotationClose": "Done"
+  "annotationClose": "Done",
+  "annotationRemoteChanges": "New changes from another device",
+  "annotationKeepMine": "Keep mine",
+  "annotationReload": "Reload",
+  "songVariant": "Version",
+  "songVariantTooltip": "Version: {name}",
+  "@songVariantTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsLanguageSystem": "System",
+  "settingsFontPreview": "Sample"
 }

@@ -295,6 +295,9 @@
   "metronomeTapTempo": "Toque o Tempo",
   "metronomeTimeSignature": "COMPASSO",
   "metronomeAccent": "Acentuar",
+  "metronomePlay": "Reproduzir",
+  "metronomePause": "Pausar",
+  "metronomeAudioUnavailable": "O som do metrónomo não está disponível neste dispositivo.",
 
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referência de tons e relativas.",
@@ -330,5 +333,17 @@
   "annotationClear": "Limpar Tudo",
   "annotationClearConfirm": "Limpar todas as anotações deste cântico?",
   "annotationColorPicker": "Cor Personalizada",
-  "annotationClose": "Concluir"
+  "annotationClose": "Concluir",
+  "annotationRemoteChanges": "Novas alterações de outro dispositivo",
+  "annotationKeepMine": "Manter as minhas",
+  "annotationReload": "Recarregar",
+  "songVariant": "Versão",
+  "songVariantTooltip": "Versão: {name}",
+  "@songVariantTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsLanguageSystem": "Sistema",
+  "settingsFontPreview": "Exemplo"
 }

@@ -117,10 +117,18 @@ class SongControlsSheet extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Slider(
-                    value: settings.fontSize.clamp(10, 24).toDouble(),
-                    min: 10,
-                    max: 24,
-                    divisions: 12,
+                    value: settings.fontSize
+                        .clamp(
+                          SongDisplaySettings.minFontSize,
+                          SongDisplaySettings.maxFontSize,
+                        )
+                        .toDouble(),
+                    min: SongDisplaySettings.minFontSize,
+                    max: SongDisplaySettings.maxFontSize,
+                    divisions: ((SongDisplaySettings.maxFontSize -
+                                SongDisplaySettings.minFontSize) /
+                            2)
+                        .round(),
                     label: settings.fontSize.toInt().toString(),
                     onChanged: controller.setFontSize,
                   ),
@@ -195,7 +203,7 @@ class SongControlsSheet extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Divider(height: 24),
-                    _SectionTitle(label: 'Versão', value: ''),
+                    _SectionTitle(label: l10n.songVariant, value: ''),
                     _VariantSelector(
                       versions: all,
                       selectedId: settings.variantId,
@@ -474,13 +482,14 @@ class _ToolbarVariantButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final current = versions.firstWhere(
       (v) => v.id == selectedId,
       orElse: () => versions.first,
     );
 
     return PopupMenuButton<String>(
-      tooltip: 'Versão: ${current.name}',
+      tooltip: l10n.songVariantTooltip(current.name),
       onSelected: onSelected,
       itemBuilder: (context) => [
         for (final version in versions)

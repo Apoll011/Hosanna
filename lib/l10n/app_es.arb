@@ -216,7 +216,7 @@
   "servicesNotFound": "Servicio no encontrado",
   "servicesNotFoundDesc": "Este servicio puede haberse eliminado o aún no se ha sincronizado.",
   "servicesOrderTitle": "Orden del Servicio",
-    "servicesArchived": "Sair",
+    "servicesArchived": "Archivado",
   "servicesLeave": "Salir",
   "servicesLeaveMode": "Salir del Modo Servicio",
   "servicesMoments": "{count, plural, =1{1 momento} other{{count} momentos}}",
@@ -287,6 +287,9 @@
   "metronomeTapTempo": "Marcar Tempo",
   "metronomeTimeSignature": "COMPÁS",
   "metronomeAccent": "Acento",
+  "metronomePlay": "Reproducir",
+  "metronomePause": "Pausar",
+  "metronomeAudioUnavailable": "El sonido del metrónomo no está disponible en este dispositivo.",
   
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referencia de tonalidades y relativas.",
@@ -322,5 +325,17 @@
   "annotationClear": "Borrar Todo",
   "annotationClearConfirm": "¿Borrar todas las anotaciones de esta canción?",
   "annotationColorPicker": "Color Personalizado",
-  "annotationClose": "Listo"
+  "annotationClose": "Listo",
+  "annotationRemoteChanges": "Nuevos cambios de otro dispositivo",
+  "annotationKeepMine": "Mantener los míos",
+  "annotationReload": "Recargar",
+  "songVariant": "Versión",
+  "songVariantTooltip": "Versión: {name}",
+  "@songVariantTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsLanguageSystem": "Sistema",
+  "settingsFontPreview": "Ejemplo"
 }

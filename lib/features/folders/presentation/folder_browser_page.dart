@@ -7,6 +7,7 @@ import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/shell_insets.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/domain/library_controller.dart';
@@ -135,8 +136,14 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
               ? TextField(
                   controller: _search,
                   autofocus: true,
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     hintText: l10n.songsSearchHint,
+                    hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                     border: InputBorder.none,
                     isDense: true,
                   ),
@@ -220,6 +227,9 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                       )
                     : ListView(
                         physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.only(
+                          bottom: shellBottomContentPadding(context),
+                        ),
                         children: [
                           for (final folder in visibleFolders)
                             _FolderTile(
@@ -493,6 +503,7 @@ class _BrowserGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = shellBottomContentPadding(context);
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -520,7 +531,7 @@ class _BrowserGrid extends StatelessWidget {
           ),
         if (songs.isNotEmpty)
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+            padding: EdgeInsets.fromLTRB(10, 0, 10, bottom),
             sliver: SliverGrid(
               gridDelegate: _gridDelegate,
               delegate: SliverChildBuilderDelegate((context, index) {
@@ -528,7 +539,9 @@ class _BrowserGrid extends StatelessWidget {
                 return _SongCard(song: song, onOpen: () => onOpenSong(song));
               }, childCount: songs.length),
             ),
-          ),
+          )
+        else
+          SliverPadding(padding: EdgeInsets.only(bottom: bottom)),
       ],
     );
   }
@@ -649,9 +662,9 @@ class _Crumb extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(48, 40),
+        tapTargetSize: MaterialTapTargetSize.padded,
       ),
       child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );

@@ -916,6 +916,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get metronomeAccent => 'Acentuar';
 
   @override
+  String get metronomePlay => 'Reproduzir';
+
+  @override
+  String get metronomePause => 'Pausar';
+
+  @override
+  String get metronomeAudioUnavailable =>
+      'O som do metrónomo não está disponível neste dispositivo.';
+
+  @override
   String get circleOfFifthsTitle => 'Círculo de Quintas';
 
   @override
@@ -991,4 +1001,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get annotationClose => 'Concluir';
+
+  @override
+  String get annotationRemoteChanges => 'Novas alterações de outro dispositivo';
+
+  @override
+  String get annotationKeepMine => 'Manter as minhas';
+
+  @override
+  String get annotationReload => 'Recarregar';
+
+  @override
+  String get songVariant => 'Versão';
+
+  @override
+  String songVariantTooltip(String name) {
+    return 'Versão: $name';
+  }
+
+  @override
+  String get settingsLanguageSystem => 'Sistema';
+
+  @override
+  String get settingsFontPreview => 'Exemplo';
 }

@@ -9,12 +9,17 @@ import '../../../songs/domain/chordpro/parser.dart';
 /// props (transpose, capo, show chords, two-column, font size, instrument,
 /// diagrams). Appearance settings are persisted; transpose/capo are transient.
 class SongDisplaySettings {
+  /// Shared font-size range for the song reader toolbar and Settings.
+  static const double minFontSize = 12;
+  static const double maxFontSize = 28;
+  static const double defaultFontSize = 14;
+
   const SongDisplaySettings({
     this.transpose = 0,
     this.capo = 0,
     this.showChords = true,
     this.twoColumn = false,
-    this.fontSize = 14,
+    this.fontSize = defaultFontSize,
     this.instrument = 'guitar',
     this.showDiagrams = false,
     this.sectionColorBackground = false,
@@ -90,7 +95,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     state = SongDisplaySettings(
       showChords: _prefs.getBool(_showChordsKey) ?? true,
       twoColumn: _prefs.getBool(_twoColumnKey) ?? false,
-      fontSize: _prefs.getDouble(_fontSizeKey) ?? 14,
+      fontSize: _prefs.getDouble(_fontSizeKey) ?? SongDisplaySettings.defaultFontSize,
       instrument: instrumentRegistry
           .resolve(_prefs.getString(_instrumentKey) ?? _defaultInstrument)
           .id,
@@ -128,7 +133,12 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void setFontSize(double value) {
-    final v = value.clamp(10.0, 24.0).toDouble();
+    final v = value
+        .clamp(
+          SongDisplaySettings.minFontSize,
+          SongDisplaySettings.maxFontSize,
+        )
+        .toDouble();
     _prefs.setDouble(_fontSizeKey, v);
     state = state.copyWith(fontSize: v);
   }

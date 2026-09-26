@@ -8,6 +8,7 @@ import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/shell_insets.dart';
 import '../data/service_repository.dart';
 
 /// Common date formats used for search, so queries like `dd/MM/yyyy`,
@@ -61,8 +62,13 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
             ? TextField(
                 controller: _search,
                 autofocus: true,
+                style: Theme.of(context).textTheme.titleLarge,
+                textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: l10n.servicesSearchHint,
+                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                   border: InputBorder.none,
                   isDense: true,
                 ),
@@ -167,6 +173,7 @@ class _ServiceList extends StatelessWidget {
     }
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
       itemCount: services.length,
       itemBuilder: (context, index) {
         final service = services[index];

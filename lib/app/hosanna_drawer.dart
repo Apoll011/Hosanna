@@ -235,7 +235,7 @@ class HosannaNavContent extends ConsumerWidget {
                 ),
                 _NavItem(
                   icon: Icons.history,
-                  iconColor: Colors.amber,
+                  iconColor: theme.colorScheme.tertiary,
                   label: l10n.navRecents,
                   count: library.recentIds.length,
                   selected:
@@ -246,7 +246,7 @@ class HosannaNavContent extends ConsumerWidget {
                 ),
                 _NavItem(
                   icon: Icons.folder_outlined,
-                  iconColor: Colors.amber,
+                  iconColor: theme.colorScheme.secondary,
                   label: l10n.navFolders,
                   count: folders.length,
                   // The folders row belongs to its own branch and opens the
@@ -324,7 +324,7 @@ class HosannaNavContent extends ConsumerWidget {
                 ),
                 _NavItem(
                   icon: Icons.speed,
-                  iconColor: Colors.teal,
+                  iconColor: theme.colorScheme.tertiary,
                   label: l10n.navMetronome,
                   selected: currentBranch == kMetronomeBranch,
                   collapsed: collapsed,
@@ -424,7 +424,7 @@ class HosannaNavContent extends ConsumerWidget {
                           child: Icon(
                             Icons.settings_outlined,
                             size: 22,
-                            color: Colors.blueGrey,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

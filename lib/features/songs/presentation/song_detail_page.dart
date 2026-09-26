@@ -72,6 +72,11 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        title: Text(
+          song?.title ?? l10n.songsTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           const SongToolbarButton(),
           IconButton(

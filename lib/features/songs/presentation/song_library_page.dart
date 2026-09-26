@@ -7,6 +7,7 @@ import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/shell_insets.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
 import '../data/song_repository.dart';
@@ -71,8 +72,13 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             ? TextField(
                 controller: _search,
                 autofocus: true,
+                style: Theme.of(context).textTheme.titleLarge,
+                textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: l10n.songsSearchHint,
+                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                   border: InputBorder.none,
                   isDense: true,
                 ),
@@ -297,6 +303,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     }
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
       itemCount: songs.length,
       itemBuilder: (context, index) {
         final song = songs[index];
@@ -319,9 +326,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           trailing: IconButton(
             icon: Icon(
               isFav ? Icons.favorite : Icons.favorite_border,
-              color: isFav ? Colors.pink : null,
+              color: isFav ? Theme.of(context).colorScheme.error : null,
             ),
-            tooltip: l10n.navFavorites,
+            tooltip: isFav ? l10n.navFavorites : l10n.navFavorites,
             onPressed: () => onToggleFavorite(song.id),
           ),
           onTap: () => onOpenSong(song.id),

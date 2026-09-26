@@ -52,6 +52,8 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
     return Scaffold(
       key: _scaffoldKey,
+      // Edge-drag open fights horizontal prev/next swipes in the song reader.
+      drawerEnableOpenDragGesture: false,
       drawer: service == null
           ? null
           : _OrderDrawer(
@@ -232,13 +234,30 @@ class _MusicianTopBar extends StatelessWidget {
               ),
               const SongToolbarButton(),
             ],
-            TextButton.icon(
-              onPressed: onLeave,
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-              icon: const Icon(Icons.logout, size: 18),
-              label: Text(l10n.servicesLeave),
+            // Icon-only Leave avoids overflow on narrow phones; keep the
+            // labelled button when there is room.
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final narrow = MediaQuery.sizeOf(context).width < 420;
+                if (narrow) {
+                  return IconButton(
+                    onPressed: onLeave,
+                    tooltip: l10n.servicesLeave,
+                    icon: Icon(
+                      Icons.logout,
+                      color: theme.colorScheme.error,
+                    ),
+                  );
+                }
+                return TextButton.icon(
+                  onPressed: onLeave,
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: Text(l10n.servicesLeave),
+                );
+              },
             ),
           ],
         ),
