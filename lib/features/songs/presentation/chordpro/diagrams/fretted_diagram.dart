@@ -10,12 +10,15 @@ class FrettedDiagram extends StatelessWidget {
     required this.frets,
     this.fingers,
     this.barre,
+    this.capo = 0,
     this.maxFrets = 4,
+    this.showFingerNumbers = true,
     required this.dotColor,
     required this.lineColor,
     required this.textColor,
     required this.muteColor,
     required this.openColor,
+    this.capoColor = const Color(0xFFB45309),
   });
 
   /// Per-string frets in diagram order (leftmost string first).
@@ -26,14 +29,22 @@ class FrettedDiagram extends StatelessWidget {
   /// Fret number the barre sits on, when any.
   final int? barre;
 
+  /// Capo fret (0 = none). When set, the nut is drawn as a capo clamp with the
+  /// fret number — shapes are already relative to the capo as nut.
+  final int capo;
+
   /// Number of fret rows drawn.
   final int maxFrets;
+
+  /// Whether to paint finger numbers inside the fretting dots.
+  final bool showFingerNumbers;
 
   final Color dotColor;
   final Color lineColor;
   final Color textColor;
   final Color muteColor;
   final Color openColor;
+  final Color capoColor;
 
   static const double _stringSpacing = 14;
   static const double _fretSpacing = 20;
@@ -58,12 +69,15 @@ class FrettedDiagram extends StatelessWidget {
         frets: frets,
         fingers: fingers,
         barre: barre,
+        capo: capo,
         maxFrets: maxFrets,
+        showFingerNumbers: showFingerNumbers,
         dotColor: dotColor,
         lineColor: lineColor,
         textColor: textColor,
         muteColor: muteColor,
         openColor: openColor,
+        capoColor: capoColor,
       ),
     );
   }
@@ -74,23 +88,29 @@ class _FrettedDiagramPainter extends CustomPainter {
     required this.frets,
     required this.fingers,
     required this.barre,
+    required this.capo,
     required this.maxFrets,
+    required this.showFingerNumbers,
     required this.dotColor,
     required this.lineColor,
     required this.textColor,
     required this.muteColor,
     required this.openColor,
+    required this.capoColor,
   });
 
   final List<int> frets;
   final List<int>? fingers;
   final int? barre;
+  final int capo;
   final int maxFrets;
+  final bool showFingerNumbers;
   final Color dotColor;
   final Color lineColor;
   final Color textColor;
   final Color muteColor;
   final Color openColor;
+  final Color capoColor;
 
   int get _stringCount => frets.length;
 
@@ -121,16 +141,22 @@ class _FrettedDiagramPainter extends CustomPainter {
     if (_stringCount == 0) return;
     final lastString = _stringCount - 1;
     final startFret = _startFret;
+    final hasCapo = capo > 0 && startFret == 1;
 
-    // Nut (drawn thick when the window starts at the first fret).
-    final nutOffset = startFret == 1 ? 3.0 : 0.0;
-    canvas.drawLine(
-      Offset(_stringX(0), _fretY(0) - nutOffset),
-      Offset(_stringX(lastString), _fretY(0) - nutOffset),
-      Paint()
-        ..color = lineColor
-        ..strokeWidth = startFret == 1 ? 3.5 : 1.5,
-    );
+    // Nut — when a capo is active the nut becomes the capo clamp (CifraClub).
+    if (hasCapo) {
+      _paintCapo(canvas, lastString);
+    } else {
+      final nutOffset = startFret == 1 ? 3.0 : 0.0;
+      canvas.drawLine(
+        Offset(_stringX(0), _fretY(0) - nutOffset),
+        Offset(_stringX(lastString), _fretY(0) - nutOffset),
+        Paint()
+          ..color = lineColor
+          ..strokeWidth = startFret == 1 ? 3.5 : 1.5
+          ..strokeCap = StrokeCap.round,
+      );
+    }
 
     if (startFret > 1) {
       _drawText(
@@ -172,6 +198,46 @@ class _FrettedDiagramPainter extends CustomPainter {
     }
   }
 
+  /// Capo clamp across the nut with the fret number centred on the bar.
+  void _paintCapo(Canvas canvas, int lastString) {
+    final left = _stringX(0) - 5;
+    final right = _stringX(lastString) + 5;
+    final cy = _fretY(0) - 3;
+    const height = 7.0;
+
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTRB(left, cy - height / 2, right, cy + height / 2),
+      const Radius.circular(3.5),
+    );
+    canvas.drawRRect(rect, Paint()..color = capoColor);
+
+    // Small "wing" notches at each end (suggests a capo clamp).
+    final wingPaint = Paint()..color = capoColor.withValues(alpha: 0.85);
+    canvas.drawCircle(Offset(left + 1, cy), 3.5, wingPaint);
+    canvas.drawCircle(Offset(right - 1, cy), 3.5, wingPaint);
+
+    _drawText(
+      canvas,
+      '$capo',
+      Offset((left + right) / 2, cy),
+      color: Colors.white,
+      fontSize: 7,
+      alignCenter: true,
+      bold: true,
+    );
+
+    // Capo fret label to the left of the clamp.
+    _drawText(
+      canvas,
+      'C$capo',
+      Offset(_stringX(0) - 5, cy - 10),
+      color: capoColor,
+      fontSize: 7,
+      alignEnd: true,
+      bold: true,
+    );
+  }
+
   void _paintBarre(Canvas canvas, int startFret) {
     final barreFret = barre;
     if (barreFret == null) return;
@@ -182,7 +248,7 @@ class _FrettedDiagramPainter extends CustomPainter {
     final startString = frets.indexOf(barreFret);
     if (startString == -1) return;
 
-    final y = _fretY(row) + 10;
+    final y = _fretY(row) + FrettedDiagram._fretSpacing / 2;
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(
         _stringX(startString) - 4,
@@ -226,7 +292,7 @@ class _FrettedDiagramPainter extends CustomPainter {
     if (row < 0 || row >= maxFrets) return;
 
     final cx = _stringX(stringIdx);
-    final cy = _fretY(row) + 10;
+    final cy = _fretY(row) + FrettedDiagram._fretSpacing / 2;
     final finger =
         fingers != null && stringIdx < fingers!.length ? fingers![stringIdx] : 0;
 
@@ -238,13 +304,14 @@ class _FrettedDiagramPainter extends CustomPainter {
     if (!isBarred) {
       canvas.drawCircle(Offset(cx, cy), 5, Paint()..color = dotColor);
     }
-    if (finger > 0) {
+    if (showFingerNumbers && finger > 0) {
+      // Centre the digit in the bubble (no vertical nudge).
       _drawText(
         canvas,
         '$finger',
-        Offset(cx, cy + 2.5),
+        Offset(cx, cy),
         color: Colors.white,
-        fontSize: 6.5,
+        fontSize: 7,
         alignCenter: true,
         bold: true,
       );
@@ -268,6 +335,7 @@ class _FrettedDiagramPainter extends CustomPainter {
           color: color,
           fontSize: fontSize,
           fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          height: 1,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -278,7 +346,8 @@ class _FrettedDiagramPainter extends CustomPainter {
         : alignCenter
             ? offset.dx - tp.width / 2
             : offset.dx;
-    tp.paint(canvas, Offset(dx, offset.dy - tp.height / 2));
+    final dy = offset.dy - tp.height / 2;
+    tp.paint(canvas, Offset(dx, dy));
   }
 
   @override
@@ -286,10 +355,13 @@ class _FrettedDiagramPainter extends CustomPainter {
       old.frets != frets ||
       old.fingers != fingers ||
       old.barre != barre ||
+      old.capo != capo ||
       old.maxFrets != maxFrets ||
+      old.showFingerNumbers != showFingerNumbers ||
       old.dotColor != dotColor ||
       old.lineColor != lineColor ||
       old.textColor != textColor ||
       old.muteColor != muteColor ||
-      old.openColor != openColor;
+      old.openColor != openColor ||
+      old.capoColor != capoColor;
 }

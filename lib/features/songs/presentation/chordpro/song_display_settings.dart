@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +27,7 @@ class SongDisplaySettings {
     this.sectionColorBackground = false,
     this.autoScrollSpeed = 5,
     this.variantId = 'default',
+    this.instrumentPreferences = const InstrumentPreferences(),
   });
 
   final int transpose;
@@ -42,8 +45,15 @@ class SongDisplaySettings {
   /// Active variant id (transient — not persisted).
   final String variantId;
 
+  /// Per-instrument voicing / diagram preferences.
+  final InstrumentPreferences instrumentPreferences;
+
   /// The instrument selected for the current song.
   Instrument get instrumentInfo => instrumentRegistry.resolve(instrument);
+
+  /// Preference bag for the currently selected instrument.
+  InstrumentPreference get currentInstrumentPreference =>
+      instrumentPreferences.forId(instrument);
 
   /// Whether a capo changes the sounding pitch for the selected instrument.
   bool get instrumentSupportsCapo => instrumentInfo.supportsCapo;
@@ -59,6 +69,7 @@ class SongDisplaySettings {
     bool? sectionColorBackground,
     double? autoScrollSpeed,
     String? variantId,
+    InstrumentPreferences? instrumentPreferences,
   }) {
     return SongDisplaySettings(
       transpose: transpose ?? this.transpose,
@@ -72,6 +83,8 @@ class SongDisplaySettings {
           sectionColorBackground ?? this.sectionColorBackground,
       autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
       variantId: variantId ?? this.variantId,
+      instrumentPreferences:
+          instrumentPreferences ?? this.instrumentPreferences,
     );
   }
 }
@@ -90,8 +103,25 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _defaultInstrument = 'guitar';
   static const _diagramsKey = 'songDisplay.showDiagrams';
   static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
+  static const _instrumentPreferencesKey = 'songDisplay.instrumentPreferences';
 
   void _restore() {
+    InstrumentPreferences instrumentPreferences =
+        const InstrumentPreferences();
+    final raw = _prefs.getString(_instrumentPreferencesKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          instrumentPreferences = InstrumentPreferences.fromJson(
+            Map<String, dynamic>.from(decoded),
+          );
+        }
+      } catch (_) {
+        // Corrupt prefs — fall back to defaults.
+      }
+    }
+
     state = SongDisplaySettings(
       showChords: _prefs.getBool(_showChordsKey) ?? true,
       twoColumn: _prefs.getBool(_twoColumnKey) ?? false,
@@ -102,6 +132,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       showDiagrams: _prefs.getBool(_diagramsKey) ?? false,
       sectionColorBackground:
           _prefs.getBool(_sectionColorBackgroundKey) ?? false,
+      instrumentPreferences: instrumentPreferences,
     );
   }
 
@@ -160,6 +191,17 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   void setAutoScrollSpeed(double value) {
     state = state.copyWith(autoScrollSpeed: value.clamp(1, 10).toDouble());
   }
+
+  /// Updates preferences for a single instrument id and persists the map.
+  void updateInstrumentPreference(
+    String instrumentId,
+    InstrumentPreference preference,
+  ) {
+    final id = instrumentRegistry.resolve(instrumentId).id;
+    final next = state.instrumentPreferences.upsert(id, preference);
+    _prefs.setString(_instrumentPreferencesKey, jsonEncode(next.toJson()));
+    state = state.copyWith(instrumentPreferences: next);
+  }
 }
 
 final songDisplaySettingsProvider = StateNotifierProvider<
@@ -174,4 +216,3 @@ final songDisplaySettingsProvider = StateNotifierProvider<
 /// Updated by [SongBodyRenderer] every time the content changes. The toolbar
 /// reads this to build the variant switcher directly on the toolbar without prop-drilling.
 final songCurrentDocumentProvider = StateProvider<ChordProDocument?>((ref) => null);
-

@@ -15,6 +15,7 @@ import '../../services/data/service_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
+import '../../songs/domain/chordpro/instruments/instruments.dart';
 
 enum SettingsTab { account, workspace, preferences }
 
@@ -919,7 +920,115 @@ class _PreferencesTab extends ConsumerWidget {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+
+        // Per-instrument configuration.
+        _InstrumentSettingsCard(
+          instrumentId: display.instrument,
+          preference: display.currentInstrumentPreference,
+          onChanged: (pref) => displayController.updateInstrumentPreference(
+            display.instrument,
+            pref,
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// Settings that apply only to the currently selected instrument.
+class _InstrumentSettingsCard extends StatelessWidget {
+  const _InstrumentSettingsCard({
+    required this.instrumentId,
+    required this.preference,
+    required this.onChanged,
+  });
+
+  final String instrumentId;
+  final InstrumentPreference preference;
+  final ValueChanged<InstrumentPreference> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final instrument = instrumentRegistry.resolve(instrumentId);
+    final isPiano = instrumentId == 'piano';
+    final isFretted = instrument.supportsCapo;
+
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(instrument.icon, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${l10n.settingsInstrumentConfig} · ${instrument.localizedLabel(l10n)}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.settingsInstrumentConfigDesc,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (isFretted) ...[
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsShowFingerNumbers),
+              subtitle: Text(l10n.settingsShowFingerNumbersDesc),
+              value: preference.showFingerNumbers,
+              onChanged: (v) =>
+                  onChanged(preference.copyWith(showFingerNumbers: v)),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsShowCapoMarker),
+              subtitle: Text(l10n.settingsShowCapoMarkerDesc),
+              value: preference.showCapoMarker,
+              onChanged: (v) =>
+                  onChanged(preference.copyWith(showCapoMarker: v)),
+            ),
+          ],
+          if (isPiano) ...[
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsPianoCompactVoicing),
+              subtitle: Text(l10n.settingsPianoCompactVoicingDesc),
+              value: preference.pianoVoicingStyle == PianoVoicingStyle.compact,
+              onChanged: (v) => onChanged(
+                preference.copyWith(
+                  pianoVoicingStyle:
+                      v ? PianoVoicingStyle.compact : PianoVoicingStyle.full,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsPianoSlashSplit),
+              subtitle: Text(l10n.settingsPianoSlashSplitDesc),
+              value: preference.pianoSlashSplitHands,
+              onChanged: (v) =>
+                  onChanged(preference.copyWith(pianoSlashSplitHands: v)),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

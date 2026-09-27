@@ -28,6 +28,7 @@ class ChordProRenderer extends StatefulWidget {
     this.scrollController,
     this.notes,
     this.variantId = 'default',
+    this.instrumentPreferences = const InstrumentPreferences(),
   });
 
   final String content;
@@ -43,6 +44,9 @@ class ChordProRenderer extends StatefulWidget {
   /// Active variant id — delegates variant selection to the caller.
   /// Defaults to `'default'` (the main song body).
   final String variantId;
+
+  /// Per-instrument voicing / diagram preferences.
+  final InstrumentPreferences instrumentPreferences;
 
   /// Optional musician notes, shown in a card below the metadata header and
   /// before the chord roll (when present).
@@ -158,6 +162,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
                   effectiveTranspose: _effectiveTranspose,
                   capo: _effectiveCapo,
                   instrument: widget.instrument,
+                  preferences: widget.instrumentPreferences,
                   onChordTap: _openChord,
                 ),
               LayoutBuilder(
@@ -178,6 +183,8 @@ class _ChordProRendererState extends State<ChordProRenderer> {
           _ChordDialog(
             chord: _selectedChord!,
             instrument: _dialogInstrument,
+            capo: _effectiveCapo,
+            preferences: widget.instrumentPreferences,
             onInstrumentChange: (i) => setState(() => _dialogInstrument = i),
             onClose: () => setState(() => _selectedChord = null),
           ),
@@ -811,40 +818,106 @@ class _LyricsRenderer extends StatelessWidget {
       }
     }
 
+    final chordStyle = TextStyle(
+      color: theme.colorScheme.primary,
+      fontFamily: 'monospace',
+      fontWeight: FontWeight.w800,
+      fontSize: chordFontSize,
+      height: 1.2,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.end,
         children: [
-          for (final item in items)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showChords)
-                  if (item.chord.isNotEmpty)
-                    GestureDetector(
-                      onTap: () =>
-                          onChordTap(transposeChord(item.chord, transpose)),
-                      child: Text(
-                        transposeChord(item.chord, transpose),
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w800,
-                          fontSize: chordFontSize,
-                          height: 1.2,
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox(height: chordFontSize * 1.2),
-                Text(
-                  item.text.isEmpty ? '\u00A0' : item.text,
-                  style: const TextStyle(height: 1.3),
-                ),
-              ],
+          for (var i = 0; i < items.length; i++)
+            _ChordLyricCell(
+              chord: items[i].chord.isEmpty
+                  ? ''
+                  : transposeChord(items[i].chord, transpose),
+              text: items[i].text,
+              showChords: showChords,
+              chordStyle: chordStyle,
+              chordFontSize: chordFontSize,
+              // Peek at the next chord-bearing cell so we can pad when two
+              // chords would otherwise glue together over short/empty lyrics.
+              nextHasChord: showChords &&
+                  i + 1 < items.length &&
+                  items[i + 1].chord.isNotEmpty,
+              onChordTap: onChordTap,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One chord + lyric syllable. Pads the cell when the chord label is wider
+/// than the lyric (or the lyric is empty) so adjacent chords like `[Em][C]`
+/// don't render as `EmC`.
+class _ChordLyricCell extends StatelessWidget {
+  const _ChordLyricCell({
+    required this.chord,
+    required this.text,
+    required this.showChords,
+    required this.chordStyle,
+    required this.chordFontSize,
+    required this.nextHasChord,
+    required this.onChordTap,
+  });
+
+  final String chord;
+  final String text;
+  final bool showChords;
+  final TextStyle chordStyle;
+  final double chordFontSize;
+  final bool nextHasChord;
+  final void Function(String) onChordTap;
+
+  static double _measure(String value, TextStyle style) {
+    if (value.isEmpty) return 0;
+    final tp = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    return tp.width;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lyric = text.isEmpty ? '\u00A0' : text;
+    final lyricStyle = const TextStyle(height: 1.3);
+
+    var minWidth = 0.0;
+    if (showChords && chord.isNotEmpty) {
+      final chordW = _measure(chord, chordStyle);
+      final lyricW = _measure(lyric, lyricStyle);
+      // Always keep the column at least as wide as the chord label.
+      minWidth = chordW;
+      // Extra gap when the next cell also has a chord and lyrics alone
+      // wouldn't separate them.
+      if (nextHasChord && lyricW < chordW + 4) {
+        minWidth = chordW + 6;
+      }
+    }
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showChords)
+            if (chord.isNotEmpty)
+              GestureDetector(
+                onTap: () => onChordTap(chord),
+                child: Text(chord, style: chordStyle),
+              )
+            else
+              SizedBox(height: chordFontSize * 1.2),
+          Text(lyric, style: lyricStyle),
         ],
       ),
     );
@@ -948,6 +1021,7 @@ class _ChordRoll extends StatelessWidget {
     required this.effectiveTranspose,
     required this.capo,
     required this.instrument,
+    required this.preferences,
     required this.onChordTap,
   });
 
@@ -955,11 +1029,13 @@ class _ChordRoll extends StatelessWidget {
   final int effectiveTranspose;
   final int capo;
   final String instrument;
+  final InstrumentPreferences preferences;
   final void Function(String) onChordTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pref = preferences.forId(instrument);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -985,6 +1061,9 @@ class _ChordRoll extends StatelessWidget {
                     chord: chord,
                     transposed: transposeChord(chord, effectiveTranspose),
                     instrument: instrument,
+                    capo: capo,
+                    preference: pref,
+                    preferences: preferences,
                     onTap: onChordTap,
                   ),
               ],
@@ -1001,20 +1080,26 @@ class _ChordRollItem extends StatelessWidget {
     required this.chord,
     required this.transposed,
     required this.instrument,
+    required this.capo,
+    required this.preference,
+    required this.preferences,
     required this.onTap,
   });
 
   final String chord;
   final String transposed;
   final String instrument;
+  final int capo;
+  final InstrumentPreference preference;
+  final InstrumentPreferences preferences;
   final void Function(String) onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final voicing = chordDictionary.getFingering(transposed)?.forInstrument(
-      instrument,
-    );
+    final voicing = chordDictionary
+        .getFingering(transposed, preferences: preferences)
+        ?.forInstrument(instrument);
 
     return InkWell(
       onTap: () => onTap(transposed),
@@ -1034,7 +1119,12 @@ class _ChordRollItem extends StatelessWidget {
             const SizedBox(height: 4),
             SizedBox(
               height: 116,
-              child: InstrumentDiagram(fingering: voicing),
+              child: InstrumentDiagram(
+                fingering: voicing,
+                capo: capo,
+                showFingerNumbers: preference.showFingerNumbers,
+                showCapoMarker: preference.showCapoMarker,
+              ),
             ),
             if (voicing != null)
               Padding(
@@ -1057,20 +1147,28 @@ class _ChordDialog extends StatelessWidget {
   const _ChordDialog({
     required this.chord,
     required this.instrument,
+    required this.capo,
+    required this.preferences,
     required this.onInstrumentChange,
     required this.onClose,
   });
 
   final String chord;
   final String instrument;
+  final int capo;
+  final InstrumentPreferences preferences;
   final void Function(String) onInstrumentChange;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final fingering = chordDictionary.getFingering(chord);
+    final fingering =
+        chordDictionary.getFingering(chord, preferences: preferences);
     final voicing = fingering?.forInstrument(instrument);
+    final supportsCapo = instrumentRegistry.resolve(instrument).supportsCapo;
+    final diagramCapo = supportsCapo ? capo : 0;
+    final pref = preferences.forId(instrument);
 
     return Positioned.fill(
       child: GestureDetector(
@@ -1108,9 +1206,25 @@ class _ChordDialog extends StatelessWidget {
                     selected: instrument,
                     onChanged: onInstrumentChange,
                   ),
+                  if (diagramCapo > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Capo na $diagramCapoª casa',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: const Color(0xFFB45309),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   if (fingering != null)
-                    InstrumentDiagram(fingering: voicing)
+                    InstrumentDiagram(
+                      fingering: voicing,
+                      capo: diagramCapo,
+                      showFingerNumbers: pref.showFingerNumbers,
+                      showCapoMarker: pref.showCapoMarker,
+                    )
                   else
                     Padding(
                       padding: const EdgeInsets.all(16),

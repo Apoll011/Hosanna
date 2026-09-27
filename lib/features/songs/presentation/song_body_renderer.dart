@@ -87,6 +87,7 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
       sectionColorBackground: settings.sectionColorBackground,
       scrollController: widget.scrollController,
       variantId: settings.variantId,
+      instrumentPreferences: settings.instrumentPreferences,
     );
   }
 }
