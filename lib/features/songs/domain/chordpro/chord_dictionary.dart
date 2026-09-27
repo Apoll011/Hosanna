@@ -41,13 +41,20 @@ class ChordDictionary {
 
   final List<Instrument> instruments;
 
-  ChordFingering? getFingering(String chord) {
+  ChordFingering? getFingering(
+    String chord, {
+    InstrumentPreferences preferences = const InstrumentPreferences(),
+  }) {
     final parsed = parseChordSymbol(chord);
     if (parsed == null) return null;
 
     final fingerings = <String, InstrumentFingering>{};
     for (final instrument in instruments) {
-      final fingering = instrument.fingering(parsed);
+      final pref = preferences.forId(instrument.id);
+      final fingering = instrument.fingering(
+        parsed,
+        options: InstrumentFingeringOptions.fromPreference(pref),
+      );
       if (fingering != null) fingerings[instrument.id] = fingering;
     }
 

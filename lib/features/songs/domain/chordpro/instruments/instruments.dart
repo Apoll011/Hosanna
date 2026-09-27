@@ -17,6 +17,7 @@ import 'ukulele_instrument.dart';
 export 'fretted_instrument.dart';
 export 'guitar_instrument.dart';
 export 'instrument.dart';
+export 'instrument_preferences.dart';
 export 'keyboard_instrument.dart';
 export 'ukulele_instrument.dart';
 

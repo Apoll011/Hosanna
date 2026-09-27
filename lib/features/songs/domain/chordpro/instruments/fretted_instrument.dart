@@ -71,7 +71,10 @@ abstract class FrettedInstrument extends Instrument {
   FrettedShape? powerChordShape(int rootSemitone) => null;
 
   @override
-  InstrumentFingering? fingering(ParsedChord chord) {
+  InstrumentFingering? fingering(
+    ParsedChord chord, {
+    InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
+  }) {
     final resolved = _resolve(chord);
     if (resolved == null) return null;
     return FrettedFingering(

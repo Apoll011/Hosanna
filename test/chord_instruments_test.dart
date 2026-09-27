@@ -129,6 +129,32 @@ void main() {
       expect(fingering.highlightKeys, containsAll(<int>[0, 4, 7, 11]));
     });
 
+    test('compact voicing omits the root on dominant 7ths', () {
+      final prefs = InstrumentPreferences().upsert(
+        'piano',
+        const InstrumentPreference(
+          pianoVoicingStyle: PianoVoicingStyle.compact,
+        ),
+      );
+      final fingering =
+          chordDictionary
+                  .getFingering('C7', preferences: prefs)!
+                  .forInstrument('piano')
+              as KeyboardFingering;
+      expect(fingering.notes, isNot(contains('C')));
+      expect(fingering.notes.toSet(), containsAll(<String>{'E', 'G', 'A#'}));
+    });
+
+    test('slash chords put bass in the lower octave by default', () {
+      final fingering =
+          chordDictionary.getFingering('A/C#')!.forInstrument('piano')
+              as KeyboardFingering;
+      expect(fingering.notes.first, 'C#');
+      // Bass stays in octave 0..11; chord tones sit above.
+      expect(fingering.highlightKeys.first, lessThan(12));
+      expect(fingering.highlightKeys.any((k) => k >= 12), isTrue);
+    });
+
     test('renders every chord within the drawn keyboard range', () {
       for (final symbol in _chords) {
         final fingering =
