@@ -564,6 +564,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get settingsInstrumentConfig => 'Instrument settings';
+
+  @override
+  String get settingsInstrumentConfigDesc =>
+      'Options for the selected instrument — used when rendering chord diagrams.';
+
+  @override
+  String get settingsShowFingerNumbers => 'Show finger numbers';
+
+  @override
+  String get settingsShowFingerNumbersDesc =>
+      'Paint 1–4 inside fretting dots on chord diagrams.';
+
+  @override
+  String get settingsShowCapoMarker => 'Show capo on diagrams';
+
+  @override
+  String get settingsShowCapoMarkerDesc =>
+      'Draw a capo clamp on the nut when a capo is active (CifraClub-style).';
+
+  @override
+  String get settingsPianoCompactVoicing => 'Compact voicings';
+
+  @override
+  String get settingsPianoCompactVoicingDesc =>
+      'For 7th chords and extensions, omit the root from the right hand (e.g. C7 → Bb-E-G).';
+
+  @override
+  String get settingsPianoSlashSplit => 'Slash chords: bass in left hand';
+
+  @override
+  String get settingsPianoSlashSplitDesc =>
+      'Play the slash bass with the left hand and the chord with the right (e.g. A/C#).';
+
+  @override
   String get songAutoScrollStart => 'Start auto-scroll';
 
   @override

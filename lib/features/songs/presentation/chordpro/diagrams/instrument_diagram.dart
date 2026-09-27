@@ -14,6 +14,7 @@ class DiagramColors {
     required this.black,
     required this.open,
     required this.mute,
+    required this.capo,
   });
 
   final Color primary;
@@ -23,6 +24,7 @@ class DiagramColors {
   final Color black;
   final Color open;
   final Color mute;
+  final Color capo;
 
   static DiagramColors of(BuildContext context) {
     final theme = Theme.of(context);
@@ -35,6 +37,7 @@ class DiagramColors {
       black: isDark ? const Color(0xFF09090B) : const Color(0xFF27272A),
       open: const Color(0xFF10B981),
       mute: theme.colorScheme.error,
+      capo: const Color(0xFFB45309),
     );
   }
 }
@@ -45,12 +48,29 @@ class DiagramColors {
 /// keyboard instruments render automatically; only a genuinely new fingering
 /// family needs a case added here.
 class InstrumentDiagram extends StatelessWidget {
-  const InstrumentDiagram({super.key, required this.fingering, this.maxFrets = 4});
+  const InstrumentDiagram({
+    super.key,
+    required this.fingering,
+    this.maxFrets = 4,
+    this.capo = 0,
+    this.showFingerNumbers = true,
+    this.showCapoMarker = true,
+  });
 
   final InstrumentFingering? fingering;
 
   /// Fret rows drawn for fretted instruments.
   final int maxFrets;
+
+  /// Capo fret for fretted diagrams (0 = none). Only drawn when
+  /// [showCapoMarker] is true and the instrument supports capo.
+  final int capo;
+
+  /// Whether fretted dots show finger numbers.
+  final bool showFingerNumbers;
+
+  /// Whether to paint the capo clamp on fretted diagrams when [capo] > 0.
+  final bool showCapoMarker;
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +90,15 @@ class InstrumentDiagram extends StatelessWidget {
         frets: fretted.frets,
         fingers: fretted.fingers,
         barre: fretted.barre,
+        capo: showCapoMarker ? capo : 0,
         maxFrets: maxFrets,
+        showFingerNumbers: showFingerNumbers,
         dotColor: colors.primary,
         lineColor: colors.line,
         textColor: colors.text,
         muteColor: colors.mute,
         openColor: colors.open,
+        capoColor: colors.capo,
       ),
       KeyboardFingering keyboard => KeyboardDiagram(
         highlightKeys: keyboard.highlightKeys,

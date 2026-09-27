@@ -1,4 +1,7 @@
 import '../chord_theory.dart';
+import 'instrument_preferences.dart';
+
+export 'instrument_preferences.dart';
 
 /// A chord voicing produced for one instrument.
 ///
@@ -70,7 +73,13 @@ abstract class Instrument {
   bool get supportsCapo;
 
   /// Suggests a voicing for [chord], or null when this instrument has none.
-  InstrumentFingering? fingering(ParsedChord chord);
+  ///
+  /// [options] carries per-instrument preferences (e.g. piano compact
+  /// voicings). Fretted instruments typically ignore it.
+  InstrumentFingering? fingering(
+    ParsedChord chord, {
+    InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
+  });
 }
 
 /// Ordered collection of available instruments, with id lookup.

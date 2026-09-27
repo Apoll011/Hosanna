@@ -1144,6 +1144,66 @@ abstract class AppLocalizations {
   /// **'Piano'**
   String get songPiano;
 
+  /// No description provided for @settingsInstrumentConfig.
+  ///
+  /// In pt, this message translates to:
+  /// **'Definições do instrumento'**
+  String get settingsInstrumentConfig;
+
+  /// No description provided for @settingsInstrumentConfigDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções do instrumento selecionado — usadas ao desenhar os diagramas de acordes.'**
+  String get settingsInstrumentConfigDesc;
+
+  /// No description provided for @settingsShowFingerNumbers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar números dos dedos'**
+  String get settingsShowFingerNumbers;
+
+  /// No description provided for @settingsShowFingerNumbersDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desenha 1–4 dentro dos pontos no diagrama.'**
+  String get settingsShowFingerNumbersDesc;
+
+  /// No description provided for @settingsShowCapoMarker.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar capo nos diagramas'**
+  String get settingsShowCapoMarker;
+
+  /// No description provided for @settingsShowCapoMarkerDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desenha o capo no pestana quando está ativo (estilo CifraClub).'**
+  String get settingsShowCapoMarkerDesc;
+
+  /// No description provided for @settingsPianoCompactVoicing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voicings compactos'**
+  String get settingsPianoCompactVoicing;
+
+  /// No description provided for @settingsPianoCompactVoicingDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em acordes de 7ª e extensões, omite a tónica na mão direita (ex.: C7 → Bb-E-G).'**
+  String get settingsPianoCompactVoicingDesc;
+
+  /// No description provided for @settingsPianoSlashSplit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acordes com baixo: baixo na mão esquerda'**
+  String get settingsPianoSlashSplit;
+
+  /// No description provided for @settingsPianoSlashSplitDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toca o baixo do acorde com barra na mão esquerda e o acorde na direita (ex.: A/C#).'**
+  String get settingsPianoSlashSplitDesc;
+
   /// No description provided for @songAutoScrollStart.
   ///
   /// In pt, this message translates to:

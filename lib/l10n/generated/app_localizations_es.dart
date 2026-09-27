@@ -569,6 +569,42 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get settingsInstrumentConfig => 'Ajustes del instrumento';
+
+  @override
+  String get settingsInstrumentConfigDesc =>
+      'Opciones del instrumento seleccionado — usadas al dibujar los diagramas de acordes.';
+
+  @override
+  String get settingsShowFingerNumbers => 'Mostrar números de dedos';
+
+  @override
+  String get settingsShowFingerNumbersDesc =>
+      'Dibuja 1–4 dentro de los puntos del diagrama.';
+
+  @override
+  String get settingsShowCapoMarker => 'Mostrar capo en los diagramas';
+
+  @override
+  String get settingsShowCapoMarkerDesc =>
+      'Dibuja el capo en la cejilla cuando está activo (estilo CifraClub).';
+
+  @override
+  String get settingsPianoCompactVoicing => 'Voicings compactos';
+
+  @override
+  String get settingsPianoCompactVoicingDesc =>
+      'En acordes de 7ª y extensiones, omite la tónica en la mano derecha (ej.: C7 → Bb-E-G).';
+
+  @override
+  String get settingsPianoSlashSplit =>
+      'Acordes con bajo: bajo en la mano izquierda';
+
+  @override
+  String get settingsPianoSlashSplitDesc =>
+      'Toca el bajo del acorde con barra en la mano izquierda y el acorde en la derecha (ej.: A/C#).';
+
+  @override
   String get songAutoScrollStart => 'Iniciar desplazamiento automático';
 
   @override
