@@ -14,6 +14,7 @@ class AppSettings {
     this.keepScreenAwake = false,
     this.musicianMode = true,
     this.syncAnnotations = false,
+    this.serviceOrderSidePanel = true,
   });
 
   final AppThemeMode themeMode;
@@ -29,8 +30,11 @@ class AppSettings {
   /// Whether services open directly in musician view (first song + order nav).
   final bool musicianMode;
 
-  ///Wheather the user will sync with the other userver service song anotations
+  /// Whether the user will sync live service song annotations.
   final bool syncAnnotations;
+
+  /// Non-musician tablet layout: keep the service order visible in a side rail.
+  final bool serviceOrderSidePanel;
 
   Locale? get locale => localeCode == null ? null : Locale(localeCode!);
 
@@ -42,6 +46,7 @@ class AppSettings {
     bool? keepScreenAwake,
     bool? musicianMode,
     bool? syncAnnotations,
+    bool? serviceOrderSidePanel,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -50,6 +55,8 @@ class AppSettings {
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       musicianMode: musicianMode ?? this.musicianMode,
       syncAnnotations: syncAnnotations ?? this.syncAnnotations,
+      serviceOrderSidePanel:
+          serviceOrderSidePanel ?? this.serviceOrderSidePanel,
     );
   }
 }
@@ -65,6 +72,7 @@ class SettingsController extends StateNotifier<AppSettings> {
   static const _keepAwakeKey = 'settings.keepScreenAwake';
   static const _musicianModeKey = 'settings.musicianMode';
   static const _syncAnnotation = 'settings.syncAnnotation';
+  static const _serviceOrderSidePanelKey = 'settings.serviceOrderSidePanel';
 
   final SharedPreferences _prefs;
 
@@ -76,6 +84,8 @@ class SettingsController extends StateNotifier<AppSettings> {
       keepScreenAwake: _prefs.getBool(_keepAwakeKey) ?? false,
       musicianMode: _prefs.getBool(_musicianModeKey) ?? true,
       syncAnnotations: _prefs.getBool(_syncAnnotation) ?? true,
+      serviceOrderSidePanel:
+          _prefs.getBool(_serviceOrderSidePanelKey) ?? true,
     );
   }
 
@@ -120,6 +130,11 @@ class SettingsController extends StateNotifier<AppSettings> {
   void setSyncAnnotations(bool value) {
     state = state.copyWith(syncAnnotations: value);
     _prefs.setBool(_syncAnnotation, value);
+  }
+
+  void setServiceOrderSidePanel(bool value) {
+    state = state.copyWith(serviceOrderSidePanel: value);
+    _prefs.setBool(_serviceOrderSidePanelKey, value);
   }
 }
 

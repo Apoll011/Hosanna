@@ -1888,6 +1888,18 @@ abstract class AppLocalizations {
   /// **'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.'**
   String get settingsMusicianModeDesc;
 
+  /// No description provided for @settingsServiceOrderSidePanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Painel lateral da ordem do culto'**
+  String get settingsServiceOrderSidePanel;
+
+  /// No description provided for @settingsServiceOrderSidePanelDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em tablets, mantém a ordem do culto visível ao lado do conteúdo no modo não músico.'**
+  String get settingsServiceOrderSidePanelDesc;
+
   /// No description provided for @settingsKeepAwake.
   ///
   /// In pt, this message translates to:

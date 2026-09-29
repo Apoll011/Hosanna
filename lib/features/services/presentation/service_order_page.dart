@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../app/settings_controller.dart';
+import '../../../app/shell.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -36,8 +37,12 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
   int _tabIndex = 0;
   final Set<String> _completedIds = {};
   String? _currentElementId;
+  /// When set (tablet side-rail layout), item detail is shown inline.
+  int? _viewerIndex;
   DateTime? _startedAt;
   Timer? _ticker;
+
+  static const _sideRailWidth = 220.0;
 
   @override
   void initState() {
@@ -79,10 +84,17 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     return DateTime.now().difference(start);
   }
 
+  bool _useSideRail(BuildContext context) {
+    final settings = ref.watch(settingsControllerProvider);
+    if (!settings.serviceOrderSidePanel) return false;
+    return MediaQuery.sizeOf(context).width >= kTabletBreakpoint;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final serviceAsync = ref.watch(serviceByIdProvider(widget.serviceId));
+    final useSideRail = _useSideRail(context);
 
     return serviceAsync.when(
       loading: () => const Scaffold(
@@ -107,87 +119,164 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         final elements = _sorted(service);
         _ensureCurrent(elements);
 
+        final mainColumn = Column(
+          children: [
+            _OrderHeader(
+              service: service,
+              elapsed: _elapsed,
+              onLeave: () => context.pop(),
+            ),
+            Expanded(child: _buildMainPane(l10n, elements, useSideRail)),
+          ],
+        );
+
         return ServiceNotesIncomingListener(
           serviceId: widget.serviceId,
-          suppressToast: _tabIndex == 1,
-          onOpenNotes: () => setState(() => _tabIndex = 1),
+          suppressToast: _tabIndex == 1 && _viewerIndex == null,
+          onOpenNotes: () => setState(() {
+            _viewerIndex = null;
+            _tabIndex = 1;
+          }),
           child: Scaffold(
-            body: Column(
-              children: [
-                _OrderHeader(
-                  service: service,
-                  elapsed: _elapsed,
-                  onLeave: () => context.pop(),
-                ),
-                Expanded(
-                  child: IndexedStack(
-                    index: _tabIndex,
+            body: useSideRail
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _OrderListTab(
-                        elements: elements,
-                        completedIds: _completedIds,
-                        currentElementId: _currentElementId,
-                        onOpen: (element) => _openElement(context, element),
+                      SizedBox(
+                        width: _sideRailWidth,
+                        child: _ServiceOrderSideRail(
+                          elements: elements,
+                          completedIds: _completedIds,
+                          currentElementId: _currentElementId,
+                          onSelect: (element) =>
+                              _openElement(context, element, useSideRail: true),
+                        ),
                       ),
-                      ServiceNotesPanel(
-                        serviceId: widget.serviceId,
-                        embedded: true,
-                        title: l10n.servicesTeamNotes,
-                        markReadWhenBuilt: _tabIndex == 1,
+                      VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      // Clip so horizontal swipe transforms in the viewer
+                      // cannot paint over the side rail.
+                      Expanded(
+                        child: ClipRect(child: mainColumn),
+                      ),
+                    ],
+                  )
+                : mainColumn,
+            floatingActionButton: _tabIndex == 1 && _viewerIndex == null
+                ? ServiceNotesFab(serviceId: widget.serviceId)
+                : null,
+            bottomNavigationBar: _viewerIndex != null
+                ? null
+                : NavigationBar(
+                    selectedIndex: _tabIndex,
+                    onDestinationSelected: (i) {
+                      setState(() {
+                        _tabIndex = i;
+                        _viewerIndex = null;
+                      });
+                      if (i == 1) {
+                        ref
+                            .read(
+                              serviceNotesWatchProvider(widget.serviceId)
+                                  .notifier,
+                            )
+                            .markAllRead();
+                      }
+                    },
+                    destinations: [
+                      NavigationDestination(
+                        icon: const Icon(Icons.view_list_outlined),
+                        selectedIcon: const Icon(Icons.view_list),
+                        label: l10n.servicesOrderTitle,
+                      ),
+                      NavigationDestination(
+                        icon: NotesUnreadBadge(
+                          serviceId: widget.serviceId,
+                          child: const Icon(Icons.sticky_note_2_outlined),
+                        ),
+                        selectedIcon: NotesUnreadBadge(
+                          serviceId: widget.serviceId,
+                          child: const Icon(Icons.sticky_note_2),
+                        ),
+                        label: l10n.servicesNotes,
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            floatingActionButton: _tabIndex == 1
-                ? ServiceNotesFab(serviceId: widget.serviceId)
-                : null,
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: _tabIndex,
-              onDestinationSelected: (i) {
-                setState(() => _tabIndex = i);
-                if (i == 1) {
-                  ref
-                      .read(serviceNotesWatchProvider(widget.serviceId).notifier)
-                      .markAllRead();
-                }
-              },
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(Icons.view_list_outlined),
-                  selectedIcon: const Icon(Icons.view_list),
-                  label: l10n.servicesOrderTitle,
-                ),
-                NavigationDestination(
-                  icon: NotesUnreadBadge(
-                    serviceId: widget.serviceId,
-                    child: const Icon(Icons.sticky_note_2_outlined),
-                  ),
-                  selectedIcon: NotesUnreadBadge(
-                    serviceId: widget.serviceId,
-                    child: const Icon(Icons.sticky_note_2),
-                  ),
-                  label: l10n.servicesNotes,
-                ),
-              ],
-            ),
           ),
         );
       },
     );
   }
 
+  Widget _buildMainPane(
+    AppLocalizations l10n,
+    List<ServiceElement> elements,
+    bool useSideRail,
+  ) {
+    final viewerIndex = _viewerIndex;
+    if (viewerIndex != null &&
+        viewerIndex >= 0 &&
+        viewerIndex < elements.length) {
+      return _ElementViewerPage(
+        serviceId: widget.serviceId,
+        elements: elements,
+        initialIndex: viewerIndex,
+        completedIds: _completedIds,
+        embedded: true,
+        onIndexChanged: (i) {
+          setState(() {
+            _viewerIndex = i;
+            _currentElementId = elements[i].id;
+          });
+        },
+        onClose: () => setState(() => _viewerIndex = null),
+      );
+    }
+
+    return IndexedStack(
+      index: _tabIndex,
+      children: [
+        _OrderListTab(
+          elements: elements,
+          completedIds: _completedIds,
+          currentElementId: _currentElementId,
+          onOpen: (element) =>
+              _openElement(context, element, useSideRail: useSideRail),
+        ),
+        ServiceNotesPanel(
+          serviceId: widget.serviceId,
+          embedded: true,
+          title: l10n.servicesTeamNotes,
+          markReadWhenBuilt: _tabIndex == 1,
+        ),
+      ],
+    );
+  }
+
   Future<void> _openElement(
     BuildContext context,
-    ServiceElement element,
-  ) async {
+    ServiceElement element, {
+    required bool useSideRail,
+  }) async {
     final service =
         ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
     if (service == null) return;
     final elements = _sorted(service);
     final index = elements.indexWhere((e) => e.id == element.id);
     if (index < 0) return;
+
+    if (useSideRail) {
+      setState(() {
+        _viewerIndex = index;
+        _currentElementId = element.id;
+        _tabIndex = 0;
+      });
+      return;
+    }
+
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => _ElementViewerPage(
@@ -388,6 +477,215 @@ class _OrderListTab extends ConsumerWidget {
 
 enum _ItemStatus { done, current, upcoming }
 
+/// Compact persistent order list for tablet non-musician layout.
+class _ServiceOrderSideRail extends StatelessWidget {
+  const _ServiceOrderSideRail({
+    required this.elements,
+    required this.completedIds,
+    required this.currentElementId,
+    required this.onSelect,
+  });
+
+  final List<ServiceElement> elements;
+  final Set<String> completedIds;
+  final String? currentElementId;
+  final ValueChanged<ServiceElement> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final windows = computeElementTimeWindows(elements.map((e) => e.duration));
+
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      elevation: 1,
+      shadowColor: Colors.transparent,
+      child: SafeArea(
+        right: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.servicesOrderTitle,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.servicesMoments(elements.length),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: elements.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          l10n.servicesNoItems,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 6,
+                      ),
+                      itemCount: elements.length,
+                      itemBuilder: (context, i) {
+                        final element = elements[i];
+                        final selected = element.id == currentElementId;
+                        return _SideRailItem(
+                          index: i,
+                          element: element,
+                          window: windows[i],
+                          selected: selected,
+                          status: completedIds.contains(element.id)
+                              ? _ItemStatus.done
+                              : selected
+                                  ? _ItemStatus.current
+                                  : _ItemStatus.upcoming,
+                          onTap: () => onSelect(element),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SideRailItem extends ConsumerWidget {
+  const _SideRailItem({
+    required this.index,
+    required this.element,
+    required this.window,
+    required this.selected,
+    required this.status,
+    required this.onTap,
+  });
+
+  final int index;
+  final ServiceElement element;
+  final ElementTimeWindow window;
+  final bool selected;
+  final _ItemStatus status;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
+    final songAsync = element.songId == null
+        ? null
+        : ref.watch(songByIdProvider(element.songId!));
+    final song = songAsync?.valueOrNull;
+    final title = element.type == 'song'
+        ? (song?.title ?? l10n.servicesElementSong)
+        : (element.title.isNotEmpty ? element.title : meta.label);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Material(
+        color: selected
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.65)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  child: Text(
+                    '${index + 1}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      color: selected
+                          ? theme.colorScheme.onPrimaryContainer
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Icon(meta.icon, size: 14, color: meta.color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                          color: selected
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      if (window.hasDuration)
+                        Text(
+                          window.label,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 10,
+                            color: selected
+                                ? theme.colorScheme.onPrimaryContainer
+                                    .withValues(alpha: 0.75)
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  switch (status) {
+                    _ItemStatus.done => Icons.check_circle,
+                    _ItemStatus.current => Icons.play_circle_filled,
+                    _ItemStatus.upcoming => Icons.circle_outlined,
+                  },
+                  size: 16,
+                  color: switch (status) {
+                    _ItemStatus.done => const Color(0xFF16A34A),
+                    _ItemStatus.current => theme.colorScheme.primary,
+                    _ItemStatus.upcoming => theme.colorScheme.outline,
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OrderRow extends ConsumerWidget {
   const _OrderRow({
     required this.index,
@@ -530,19 +828,25 @@ class _StatusGlyph extends StatelessWidget {
   }
 }
 
-/// Full-screen viewer for any service element with swipe across the whole order.
+/// Full-screen (or embedded) viewer for any service element with swipe nav.
 class _ElementViewerPage extends ConsumerStatefulWidget {
   const _ElementViewerPage({
     required this.serviceId,
     required this.elements,
     required this.initialIndex,
     required this.completedIds,
+    this.embedded = false,
+    this.onIndexChanged,
+    this.onClose,
   });
 
   final String serviceId;
   final List<ServiceElement> elements;
   final int initialIndex;
   final Set<String> completedIds;
+  final bool embedded;
+  final ValueChanged<int>? onIndexChanged;
+  final VoidCallback? onClose;
 
   @override
   ConsumerState<_ElementViewerPage> createState() => _ElementViewerPageState();
@@ -563,6 +867,24 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     super.initState();
     _index = widget.initialIndex.clamp(0, widget.elements.length - 1);
     _maybeHideChords();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ElementViewerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex &&
+        widget.initialIndex != _index &&
+        widget.initialIndex >= 0 &&
+        widget.initialIndex < widget.elements.length) {
+      final wasSong = _element.type == 'song';
+      _index = widget.initialIndex;
+      final isSong = _element.type == 'song';
+      if (wasSong && !isSong) {
+        _restoreChords();
+      } else if (isSong) {
+        _maybeHideChords();
+      }
+    }
   }
 
   @override
@@ -596,6 +918,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     if (nextIndex < 0 || nextIndex >= widget.elements.length) return;
     final wasSong = _element.type == 'song';
     setState(() => _index = nextIndex);
+    widget.onIndexChanged?.call(_index);
     final isSong = _element.type == 'song';
     if (wasSong && !isSong) {
       _restoreChords();
@@ -604,13 +927,21 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     }
   }
 
+  void _close() {
+    if (widget.embedded) {
+      widget.onClose?.call();
+    } else if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
   void _markCompleted() {
     final id = _element.id;
     widget.completedIds.add(id);
     if (_index < widget.elements.length - 1) {
       _goTo(_index + 1);
-    } else if (mounted) {
-      Navigator.pop(context);
+    } else {
+      _close();
     }
   }
 
@@ -626,6 +957,12 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            widget.embedded ? Icons.close : Icons.arrow_back,
+          ),
+          onPressed: _close,
+        ),
         title: Text(l10n.servicesItemDetail),
         actions: [
           if (isSong) const SongToolbarButton(),

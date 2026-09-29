@@ -973,6 +973,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Opens the service directly on the first song with continuous side navigation.';
 
   @override
+  String get settingsServiceOrderSidePanel => 'Service order side panel';
+
+  @override
+  String get settingsServiceOrderSidePanelDesc =>
+      'On tablets, keep the service order visible beside the content in non-musician mode.';
+
+  @override
   String get settingsKeepAwake => 'Keep Screen Awake';
 
   @override

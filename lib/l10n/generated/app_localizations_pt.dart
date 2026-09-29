@@ -983,6 +983,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.';
 
   @override
+  String get settingsServiceOrderSidePanel =>
+      'Painel lateral da ordem do culto';
+
+  @override
+  String get settingsServiceOrderSidePanelDesc =>
+      'Em tablets, mantém a ordem do culto visível ao lado do conteúdo no modo não músico.';
+
+  @override
   String get settingsKeepAwake => 'Manter Ecrã Ligado';
 
   @override

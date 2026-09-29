@@ -744,6 +744,19 @@ class _PreferencesTab extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
 
+        // Non-musician tablet side order panel.
+        _Card(
+          child: _SwitchRow(
+            icon: Icons.view_sidebar_outlined,
+            iconColor: theme.colorScheme.secondary,
+            title: l10n.settingsServiceOrderSidePanel,
+            subtitle: l10n.settingsServiceOrderSidePanelDesc,
+            value: settings.serviceOrderSidePanel,
+            onChanged: settingsController.setServiceOrderSidePanel,
+          ),
+        ),
+        const SizedBox(height: 12),
+
         // Per-device notifications (Better Auth `session.notify`).
         const _NotificationsCard(),
         const SizedBox(height: 12),
