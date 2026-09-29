@@ -228,12 +228,14 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         viewerIndex >= 0 &&
         viewerIndex < elements.length) {
       return _ElementViewerPage(
+        // Force a clean subtree when the focused element changes from the
+        // side rail — avoids stacked swipe transforms / nested scaffold ghosts.
+        key: ValueKey(elements[viewerIndex].id),
         serviceId: widget.serviceId,
         elements: elements,
         initialIndex: viewerIndex,
         completedIds: _completedIds,
         startedAt: _startedAt,
-        // Side rail owns the clock; app bar only needs a live orb.
         compactTimerStyle: _ServiceTimerStyle.orbOnly,
         embedded: true,
         onIndexChanged: (i) {
@@ -262,6 +264,16 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
           title: l10n.servicesTeamNotes,
           markReadWhenBuilt: _tabIndex == 1,
           elementType: _ambientElementType(elements),
+          elementLabels: {
+            for (final e in elements)
+              e.id: e.title.trim().isNotEmpty
+                  ? e.title.trim()
+                  : serviceElementMeta(
+                      l10n,
+                      Theme.of(context).colorScheme,
+                      e.type,
+                    ).label,
+          },
         ),
       ],
     );
@@ -1042,6 +1054,7 @@ class _StatusGlyph extends StatelessWidget {
 /// Full-screen (or embedded) viewer for any service element with swipe nav.
 class _ElementViewerPage extends ConsumerStatefulWidget {
   const _ElementViewerPage({
+    super.key,
     required this.serviceId,
     required this.elements,
     required this.initialIndex,
@@ -1070,9 +1083,13 @@ class _ElementViewerPage extends ConsumerStatefulWidget {
 }
 
 class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
-  late int _index;
   bool _hidChords = false;
   SongDisplaySettingsController? _displaySettings;
+
+  int get _index {
+    if (widget.elements.isEmpty) return 0;
+    return widget.initialIndex.clamp(0, widget.elements.length - 1);
+  }
 
   ServiceElement get _element => widget.elements[_index];
 
@@ -1082,26 +1099,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   @override
   void initState() {
     super.initState();
-    _index = widget.initialIndex.clamp(0, widget.elements.length - 1);
     _maybeHideChords();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ElementViewerPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialIndex != widget.initialIndex &&
-        widget.initialIndex != _index &&
-        widget.initialIndex >= 0 &&
-        widget.initialIndex < widget.elements.length) {
-      final wasSong = _element.type == 'song';
-      _index = widget.initialIndex;
-      final isSong = _element.type == 'song';
-      if (wasSong && !isSong) {
-        _restoreChords();
-      } else if (isSong) {
-        _maybeHideChords();
-      }
-    }
   }
 
   @override
@@ -1134,15 +1132,9 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
 
   void _goTo(int nextIndex) {
     if (nextIndex < 0 || nextIndex >= widget.elements.length) return;
-    final wasSong = _element.type == 'song';
-    setState(() => _index = nextIndex);
-    widget.onIndexChanged?.call(_index);
-    final isSong = _element.type == 'song';
-    if (wasSong && !isSong) {
-      _restoreChords();
-    } else if (isSong) {
-      _maybeHideChords();
-    }
+    // Parent owns the index (and, when embedded, the [ValueKey]); do not keep
+    // a local copy that can drift during fast side-rail taps.
+    widget.onIndexChanged?.call(nextIndex);
   }
 
   void _close() {
@@ -1166,6 +1158,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final element = _element;
     final isSong = element.type == 'song' && element.songId != null;
     final canPrev = _index > 0;
@@ -1173,12 +1166,78 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     final positionLabel = '${_index + 1} / ${widget.elements.length}';
     final isCompleted = widget.completedIds.contains(element.id);
 
+    final body = isSong
+        ? _SongDetailBody(
+            serviceId: widget.serviceId,
+            songId: element.songId!,
+            notes: element.notes,
+            canPrev: canPrev,
+            canNext: canNext,
+            positionLabel: positionLabel,
+            onPrev: () => _goTo(_index - 1),
+            onNext: () => _goTo(_index + 1),
+          )
+        : HorizontalSwipeNavigator(
+            canPrev: canPrev,
+            canNext: canNext,
+            positionLabel: positionLabel,
+            onPrev: canPrev ? () => _goTo(_index - 1) : null,
+            onNext: canNext ? () => _goTo(_index + 1) : null,
+            child: _NonSongDetailBody(
+              serviceId: widget.serviceId,
+              element: element,
+              timeWindow: _windows[_index],
+            ),
+          );
+
+    final topBar = _ViewerTopBar(
+      embedded: widget.embedded,
+      title: l10n.servicesItemDetail,
+      onClose: _close,
+      isSong: isSong,
+      compactTimerStyle: widget.compactTimerStyle,
+      startedAt: widget.startedAt,
+      onOpenNotes: () => showServiceNotesSheet(
+        context,
+        serviceId: widget.serviceId,
+        elementId: element.id,
+        elementType: element.type,
+      ),
+    );
+
+    final bottomBar = isCompleted
+        ? null
+        : SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: FilledButton(
+                onPressed: _markCompleted,
+                child: Text(l10n.servicesMarkCompleted),
+              ),
+            ),
+          );
+
+    // Embedded lives inside the order page's Scaffold — nesting another
+    // Scaffold stacks app bars / bodies when switching items quickly.
+    if (widget.embedded) {
+      return Material(
+        color: theme.colorScheme.surface,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SafeArea(bottom: false, child: topBar),
+            Expanded(child: body),
+            ?bottomBar,
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(
-            widget.embedded ? Icons.close : Icons.arrow_back,
-          ),
+          icon: const Icon(Icons.arrow_back),
           onPressed: _close,
         ),
         title: Text(l10n.servicesItemDetail),
@@ -1206,40 +1265,75 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
           ),
         ],
       ),
-      body: isSong
-          ? _SongDetailBody(
-              serviceId: widget.serviceId,
-              songId: element.songId!,
-              notes: element.notes,
-              canPrev: canPrev,
-              canNext: canNext,
-              positionLabel: positionLabel,
-              onPrev: () => _goTo(_index - 1),
-              onNext: () => _goTo(_index + 1),
-            )
-          : HorizontalSwipeNavigator(
-              canPrev: canPrev,
-              canNext: canNext,
-              positionLabel: positionLabel,
-              onPrev: canPrev ? () => _goTo(_index - 1) : null,
-              onNext: canNext ? () => _goTo(_index + 1) : null,
-              child: _NonSongDetailBody(
-                serviceId: widget.serviceId,
-                element: element,
-                timeWindow: _windows[_index],
-              ),
+      body: body,
+      bottomNavigationBar: bottomBar,
+    );
+  }
+}
+
+class _ViewerTopBar extends StatelessWidget {
+  const _ViewerTopBar({
+    required this.embedded,
+    required this.title,
+    required this.onClose,
+    required this.isSong,
+    required this.onOpenNotes,
+    this.compactTimerStyle,
+    this.startedAt,
+  });
+
+  final bool embedded;
+  final String title;
+  final VoidCallback onClose;
+  final bool isSong;
+  final VoidCallback onOpenNotes;
+  final _ServiceTimerStyle? compactTimerStyle;
+  final DateTime? startedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      child: SizedBox(
+        height: kToolbarHeight,
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(embedded ? Icons.close : Icons.arrow_back),
+              onPressed: onClose,
             ),
-      bottomNavigationBar: isCompleted
-          ? null
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: FilledButton(
-                  onPressed: _markCompleted,
-                  child: Text(l10n.servicesMarkCompleted),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
+            if (isSong) const SongToolbarButton(),
+            if (compactTimerStyle != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 2, right: 4),
+                child: _ServiceTimerStrip(
+                  startedAt: startedAt,
+                  style: compactTimerStyle!,
+                ),
+              ),
+            IconButton(
+              tooltip: l10n.servicesNotes,
+              icon: const Icon(Icons.sticky_note_2_outlined),
+              onPressed: onOpenNotes,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -155,7 +155,6 @@ class _SongReaderState extends ConsumerState<SongReader>
 
     bytes ??= await repo.loadAnnotation(serviceId: serviceId, songId: songId);
 
-    // [mounted] stays true while deactivated; [context.mounted] does not.
     if (!context.mounted || _loadedSongKey != key) return;
 
     _applyLoadedBytes(bytes);
@@ -168,6 +167,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   void _applyLoadedBytes(Uint8List? bytes) {
+    if (!mounted) return;
     final canvasState = _canvasKey.currentState;
     if (canvasState != null) {
       if (bytes != null && bytes.isNotEmpty) {
@@ -179,7 +179,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       } else {
         canvasState.clear();
       }
-    } else {
+    } else if (context.mounted) {
       setState(() {
         _initialBytes = bytes;
       });

@@ -108,10 +108,22 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
   Future<void> _openNotes(BuildContext context, {String? elementType}) async {
     ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
+    final service = ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
+    final l10n = AppLocalizations.of(context);
+    final labels = <String, String>{};
+    if (service != null) {
+      final colors = Theme.of(context).colorScheme;
+      for (final e in _sorted(service)) {
+        labels[e.id] = e.title.trim().isNotEmpty
+            ? e.title.trim()
+            : serviceElementMeta(l10n, colors, e.type).label;
+      }
+    }
     await showServiceNotesSheet(
       context,
       serviceId: widget.serviceId,
       elementType: elementType,
+      elementLabels: labels,
     );
     if (mounted) {
       ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();

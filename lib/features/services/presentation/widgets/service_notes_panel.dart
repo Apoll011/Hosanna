@@ -21,6 +21,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     required this.serviceId,
     this.elementId,
     this.elementType,
+    this.elementLabels = const {},
     this.serviceScope = false,
     this.embedded = false,
     this.title,
@@ -33,6 +34,9 @@ class ServiceNotesPanel extends ConsumerWidget {
 
   /// Type of the focused / ambient element (`song`, `message`, …).
   final String? elementType;
+
+  /// `elementId → display name` for labeling notes in the global feed.
+  final Map<String, String> elementLabels;
   final bool serviceScope;
 
   /// When true, omits the outer title chrome (useful inside a tab).
@@ -112,6 +116,10 @@ class ServiceNotesPanel extends ConsumerWidget {
             return _NoteCard(
               note: note,
               isMine: note.isAuthoredBy(userId),
+              // Only show scope chips in the global (unfiltered) feed.
+              elementLabel: elementId == null && !serviceScope
+                  ? _labelForNote(l10n, note)
+                  : null,
               onEdit: note.isAuthoredBy(userId)
                   ? () => _openComposer(
                         context,
@@ -155,6 +163,14 @@ class ServiceNotesPanel extends ConsumerWidget {
       return [for (final n in notes) if (n.elementId == elementId) n];
     }
     return notes;
+  }
+
+  String _labelForNote(AppLocalizations l10n, ServiceNote note) {
+    final id = note.elementId;
+    if (id == null) return l10n.servicesGeneralNotes;
+    final named = elementLabels[id]?.trim();
+    if (named != null && named.isNotEmpty) return named;
+    return l10n.servicesItemDetail;
   }
 
   Future<void> _openComposer(
@@ -309,6 +325,7 @@ Future<void> showServiceNotesSheet(
   required String serviceId,
   String? elementId,
   String? elementType,
+  Map<String, String> elementLabels = const {},
   NoteSuggestionContext? suggestionContext,
 }) {
   return showModalBottomSheet<void>(
@@ -325,6 +342,7 @@ Future<void> showServiceNotesSheet(
             serviceId: serviceId,
             elementId: elementId,
             elementType: elementType,
+            elementLabels: elementLabels,
             suggestionContext: suggestionContext,
           ),
           floatingActionButton: ServiceNotesFab(
@@ -641,12 +659,14 @@ class _NoteCard extends StatelessWidget {
   const _NoteCard({
     required this.note,
     required this.isMine,
+    this.elementLabel,
     this.onEdit,
     this.onDelete,
   });
 
   final ServiceNote note;
   final bool isMine;
+  final String? elementLabel;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -698,6 +718,32 @@ class _NoteCard extends StatelessWidget {
                     ),
                   ],
                   const Spacer(),
+                  if (elementLabel != null) ...[
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer
+                              .withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          elementLabel!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSecondaryContainer,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (isMine) const SizedBox(width: 4),
+                  ],
                   if (isMine)
                     Icon(
                       Icons.more_horiz,
