@@ -241,35 +241,49 @@ ApiException toApiException(DioException error) {
   final status = error.response?.statusCode;
   final data = error.response?.data;
 
-  String message;
-  String? code;
+  final parsed = _parseErrorBody(data);
+  if (parsed != null) {
+    return ApiException(
+      message: parsed.message,
+      code: parsed.code,
+      statusCode: status,
+    );
+  }
 
+  return ApiException(
+    message: _networkMessage(error),
+    statusCode: status,
+  );
+}
+
+({String message, String? code})? _parseErrorBody(dynamic data) {
+  Map<dynamic, dynamic>? map;
   if (data is String && data.isNotEmpty) {
     try {
       final decoded = jsonDecode(data);
-      if (decoded is Map) {
-        message =
-            (decoded['message'] as String?) ??
-            decoded['error']?.toString() ??
-            data;
-        code = decoded['code'] as String?;
-      } else {
-        message = data;
-      }
+      if (decoded is Map) map = decoded;
     } catch (_) {
-      message = data;
+      return (message: data, code: null);
     }
   } else if (data is Map) {
-    message =
-        (data['message'] as String?) ??
-        data['error']?.toString() ??
-        'Request failed';
-    code = data['code'] as String?;
-  } else {
-    message = _networkMessage(error);
+    map = data;
+  }
+  if (map == null) return null;
+
+  final nested = map['error'];
+  if (nested is Map) {
+    return (
+      message: (nested['message'] as String?) ?? 'Request failed',
+      code: nested['code'] as String?,
+    );
   }
 
-  return ApiException(message: message, code: code, statusCode: status);
+  return (
+    message: (map['message'] as String?) ??
+        nested?.toString() ??
+        'Request failed',
+    code: map['code'] as String?,
+  );
 }
 
 String _networkMessage(DioException error) {

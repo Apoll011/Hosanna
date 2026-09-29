@@ -765,6 +765,359 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesElementDefault => 'Element';
 
   @override
+  String get servicesMore => 'More';
+
+  @override
+  String get servicesInProgress => 'In progress';
+
+  @override
+  String get servicesItemDetail => 'Item detail';
+
+  @override
+  String get servicesEstimatedDuration => 'Estimated duration';
+
+  @override
+  String get servicesPassage => 'Passage';
+
+  @override
+  String get servicesMarkCompleted => 'Mark as completed';
+
+  @override
+  String get servicesLeaderNotes => 'Leader notes';
+
+  @override
+  String get servicesLeaderNotesHint => 'Add notes about this moment…';
+
+  @override
+  String get servicesTeamNotes => 'Team notes';
+
+  @override
+  String get servicesNotesEmpty => 'No notes yet';
+
+  @override
+  String get servicesNotesEmptyDesc =>
+      'Share updates with the team during the service.';
+
+  @override
+  String get servicesNotesAdd => 'Add note';
+
+  @override
+  String get servicesNotesEdit => 'Edit note';
+
+  @override
+  String get servicesNotesDelete => 'Delete';
+
+  @override
+  String get servicesNotesDeleteTitle => 'Delete note?';
+
+  @override
+  String get servicesNotesDeleteDesc =>
+      'This note will be removed for everyone who can see it.';
+
+  @override
+  String get servicesNotesHint => 'Write a note for the team…';
+
+  @override
+  String get servicesNotesPrivate => 'Private note';
+
+  @override
+  String get servicesNotesPrivateDesc => 'Only you can see this note.';
+
+  @override
+  String get servicesNotesSubscriptionRequired =>
+      'An active subscription is required to add or edit notes.';
+
+  @override
+  String get servicesNotesForbidden =>
+      'You don’t have permission to change this note.';
+
+  @override
+  String get servicesNotesUnauthorized => 'Sign in again to manage notes.';
+
+  @override
+  String get servicesNotesNotFound => 'This note no longer exists.';
+
+  @override
+  String get servicesNotesElementNotFound => 'That service item was not found.';
+
+  @override
+  String get servicesNotesSomeone => 'Someone';
+
+  @override
+  String get servicesNotesQuickSend => 'Quick send';
+
+  @override
+  String get noteSugReadyToStart => 'Ready to start';
+
+  @override
+  String get noteSugStandbyNext => 'Standby for next';
+
+  @override
+  String get noteSugGoNextItem => 'Moving to next item';
+
+  @override
+  String get noteSugHoldWait => 'Hold — wait';
+
+  @override
+  String get noteSugWrapUp => 'Wrap this up';
+
+  @override
+  String get noteSugBehindSchedule => 'We\'re behind schedule';
+
+  @override
+  String get noteSugAheadSchedule => 'We\'re ahead of schedule';
+
+  @override
+  String get noteSugSkipItem => 'Skip this item';
+
+  @override
+  String get noteSugExtendMoment => 'Extend this moment';
+
+  @override
+  String get noteSugChangeOfPlan => 'Change of plan';
+
+  @override
+  String get noteSugLookingGood => 'Looking good';
+
+  @override
+  String get noteSugNeedHelp => 'Need help on stage';
+
+  @override
+  String get noteSugQuietMoment => 'Quiet moment please';
+
+  @override
+  String get noteSugPrayTogether => 'Let\'s pray';
+
+  @override
+  String get noteSugDoorsClosing => 'Doors closing';
+
+  @override
+  String get noteSugGuestsReady => 'Guests / welcome ready';
+
+  @override
+  String get noteSugMicLive => 'Mic live';
+
+  @override
+  String get noteSugMicMute => 'Mute that mic';
+
+  @override
+  String get noteSugMicCheck => 'Mic check needed';
+
+  @override
+  String get noteSugFeedbackMute => 'Feedback — mute now';
+
+  @override
+  String get noteSugSpareMic => 'Bring spare mic';
+
+  @override
+  String get noteSugSlidesReady => 'Slides ready';
+
+  @override
+  String get noteSugNextSlide => 'Next slide';
+
+  @override
+  String get noteSugWrongSlide => 'Wrong slide';
+
+  @override
+  String get noteSugBlankScreen => 'Blank / blackout screen';
+
+  @override
+  String get noteSugLyricsReady => 'Lyrics ready';
+
+  @override
+  String get noteSugAdvanceLyrics => 'Advance lyrics';
+
+  @override
+  String get noteSugRepeatChorusSlide => 'Repeat chorus on screen';
+
+  @override
+  String get noteSugLightsUp => 'Lights up';
+
+  @override
+  String get noteSugLightsDown => 'Lights down';
+
+  @override
+  String get noteSugLightsAdjust => 'Adjust lights';
+
+  @override
+  String get noteSugVideoPlay => 'Play video';
+
+  @override
+  String get noteSugVideoIssue => 'Video issue';
+
+  @override
+  String get noteSugStreamIssue => 'Stream issue';
+
+  @override
+  String get noteSugHouseVolumeDown => 'House volume down';
+
+  @override
+  String get noteSugHouseVolumeUp => 'House volume up';
+
+  @override
+  String get noteSugVocalsUp => 'Vocals up';
+
+  @override
+  String get noteSugBandDown => 'Band down in the mix';
+
+  @override
+  String get noteSugVerse1 => 'Verse 1';
+
+  @override
+  String get noteSugVerse2 => 'Verse 2';
+
+  @override
+  String get noteSugVerse3 => 'Verse 3';
+
+  @override
+  String get noteSugChorus => 'Chorus';
+
+  @override
+  String get noteSugBridge => 'Bridge';
+
+  @override
+  String get noteSugPreChorus => 'Pre-chorus';
+
+  @override
+  String get noteSugTag => 'Tag';
+
+  @override
+  String get noteSugInstrumental => 'Instrumental';
+
+  @override
+  String get noteSugRepeatSection => 'Repeat this section';
+
+  @override
+  String get noteSugEndSong => 'End song';
+
+  @override
+  String get noteSugBuildUp => 'Build it up';
+
+  @override
+  String get noteSugBringDown => 'Bring it down';
+
+  @override
+  String get noteSugDrumsVocals => 'Drums + vocals only';
+
+  @override
+  String get noteSugSoftPads => 'Soft pads only';
+
+  @override
+  String get noteSugCutVocals => 'Cut vocals';
+
+  @override
+  String get noteSugBandTakeIt => 'Band take it';
+
+  @override
+  String get noteSugSpontaneousStay => 'Stay here — spontaneous';
+
+  @override
+  String get noteSugTempoUp => 'Tempo up';
+
+  @override
+  String get noteSugTempoDown => 'Tempo down';
+
+  @override
+  String get noteSugKeyChange => 'Key change coming';
+
+  @override
+  String get noteSugMoreMonitor => 'More me in monitors';
+
+  @override
+  String get noteSugLessMonitor => 'Less me in monitors';
+
+  @override
+  String get noteSugClickLouder => 'Click / guide louder';
+
+  @override
+  String get noteSugLostClick => 'Lost the click';
+
+  @override
+  String get noteSugWrongChart => 'Wrong chart / arrangement';
+
+  @override
+  String get noteSugReadyNextSong => 'Ready for next song';
+
+  @override
+  String get noteSugStartSong => 'Start the song';
+
+  @override
+  String get noteSugStartWelcome => 'Start welcome';
+
+  @override
+  String get noteSugWrapWelcome => 'Wrap welcome';
+
+  @override
+  String get noteSugOpenDoors => 'Open doors';
+
+  @override
+  String get noteSugHospitalityReady => 'Hospitality team ready';
+
+  @override
+  String get noteSugReaderReady => 'Reader ready';
+
+  @override
+  String get noteSugPassageOnScreen => 'Passage on screen';
+
+  @override
+  String get noteSugAdvanceVerse => 'Advance verse';
+
+  @override
+  String get noteSugSoftUnderscore => 'Soft underscore';
+
+  @override
+  String get noteSugAfterReading => 'After reading — next';
+
+  @override
+  String get noteSugPastorWalkingUp => 'Pastor walking up';
+
+  @override
+  String get noteSugPastorMicLive => 'Pastor mic live';
+
+  @override
+  String get noteSugSermonSlidesReady => 'Sermon slides ready';
+
+  @override
+  String get noteSugNextSermonSlide => 'Next sermon slide';
+
+  @override
+  String get noteSugTimerCheck => 'Timer check';
+
+  @override
+  String get noteSugAltarCallComing => 'Altar call coming';
+
+  @override
+  String get noteSugClosingPrayer => 'Closing prayer';
+
+  @override
+  String get noteSugSoftMusicUnder => 'Soft music underneath';
+
+  @override
+  String get noteSugMessageLights => 'Message lighting';
+
+  @override
+  String get noteSugAnnouncementsStart => 'Announcements starting';
+
+  @override
+  String get noteSugNextAnnouncement => 'Next announcement';
+
+  @override
+  String get noteSugWrapAnnouncements => 'Wrap announcements';
+
+  @override
+  String get noteSugGivingMoment => 'Giving / offering';
+
+  @override
+  String get noteSugConnectionReminder => 'Connection reminder';
+
+  @override
+  String get servicesElementEmpty => 'Nothing prepared for this moment';
+
+  @override
+  String get servicesElementEmptyDesc =>
+      'No passage, content, or item notes were added yet.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -885,6 +1238,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsMusicianModeDesc =>
       'Opens the service directly on the first song with continuous side navigation.';
+
+  @override
+  String get settingsServiceOrderSidePanel => 'Service order side panel';
+
+  @override
+  String get settingsServiceOrderSidePanelDesc =>
+      'On tablets, show the service order beside item detail in non-musician mode.';
 
   @override
   String get settingsKeepAwake => 'Keep Screen Awake';

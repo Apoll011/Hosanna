@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosanna/app/providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
 
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -80,12 +79,11 @@ class _SongReaderState extends ConsumerState<SongReader>
   late final AnimationController _swipeController;
 
   // --- Canvas Annotation state ---------------------------------------------
-  RealtimeChannel? _annotationChannel;
+  AnnotationSyncHandle? _annotationSubscription;
   bool _hasPendingRemoteUpdate = false;
   Uint8List? _pendingRemoteBytes;
 
-  final GlobalKey<FlueraCanvasState> _canvasKey =
-      GlobalKey<FlueraCanvasState>();
+  GlobalKey<FlueraCanvasState> _canvasKey = GlobalKey<FlueraCanvasState>();
   late final InfiniteCanvasController _canvasController;
   CanvasTool _canvasTool = CanvasTool.draw;
   Color _canvasColor = const Color(0xFFE53935);
@@ -113,10 +111,17 @@ class _SongReaderState extends ConsumerState<SongReader>
   double get _swipeThreshold => math.max(88.0, _viewportWidth * 0.18);
 
   DateTime? _remoteUpdatedAt;
+  int? _remoteRevision;
+
+  /// Cached so dispose / post-await work never looks up ancestors via [ref].
+  late final ServiceAnnotationRepository _annotationRepo;
+  bool _syncAnnotations = false;
 
   @override
   void initState() {
     super.initState();
+    _annotationRepo = ref.read(serviceAnnotationRepositoryProvider);
+    _syncAnnotations = ref.read(settingsControllerProvider).syncAnnotations;
     _swipeController = AnimationController(vsync: this);
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
@@ -130,28 +135,31 @@ class _SongReaderState extends ConsumerState<SongReader>
     final key = '${serviceId}_$songId';
     _loadedSongKey = key;
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
+    final syncEnabled = _syncAnnotations;
+    final repo = _annotationRepo;
 
     Uint8List? bytes;
     _remoteUpdatedAt = null;
+    _remoteRevision = null;
 
     if (syncEnabled) {
       final remote = await repo.fetchRemoteAnnotation(
         serviceId: serviceId,
         songId: songId,
+        preferServer: true,
       );
       if (remote != null) {
         bytes = remote.bytes;
-        _remoteUpdatedAt = remote.updatedAt;
+        _rememberRemote(remote);
       }
     }
 
     bytes ??= await repo.loadAnnotation(serviceId: serviceId, songId: songId);
 
-    if (!mounted || _loadedSongKey != key) return;
+    if (!context.mounted || _loadedSongKey != key) return;
 
     _applyLoadedBytes(bytes);
+    if (!context.mounted || _loadedSongKey != key) return;
     _subscribeIfNeeded(
       serviceId: serviceId,
       songId: songId,
@@ -160,22 +168,39 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   void _applyLoadedBytes(Uint8List? bytes) {
-    final canvasState = _canvasKey.currentState;
-    if (canvasState != null) {
-      if (bytes != null && bytes.isNotEmpty) {
-        try {
-          canvasState.loadFromBytes(bytes);
-        } catch (_) {
-          canvasState.clear();
-        }
-      } else {
-        canvasState.clear();
+    if (!context.mounted) return;
+    final alreadyMounted = _canvasKey.currentState != null;
+    setState(() {
+      _initialBytes = bytes;
+      // Only replace the key when a canvas already exists. Otherwise the first
+      // build picks up initialBytes naturally. Replacing a GlobalKey forces a
+      // new State so initState reloads initialBytes (needed for live sync;
+      // loadFromBytes alone can leave Impeller layers stale).
+      if (alreadyMounted) {
+        _canvasKey = GlobalKey<FlueraCanvasState>();
       }
-    } else {
-      setState(() {
-        _initialBytes = bytes;
-      });
+    });
+  }
+
+  void _rememberRemote(RemoteAnnotation remote) {
+    _remoteUpdatedAt = remote.updatedAt.toUtc();
+    if (remote.revision != null) {
+      _remoteRevision = remote.revision;
     }
+  }
+
+  /// True when [remote] is strictly newer than what we already applied.
+  bool _isNewerRemote(RemoteAnnotation remote) {
+    final rev = remote.revision;
+    if (rev != null && _remoteRevision != null) {
+      return rev > _remoteRevision!;
+    }
+    if (rev != null && _remoteRevision == null && _remoteUpdatedAt == null) {
+      return true;
+    }
+    final remoteAt = remote.updatedAt.toUtc();
+    if (_remoteUpdatedAt == null) return true;
+    return remoteAt.isAfter(_remoteUpdatedAt!);
   }
 
   void _subscribeIfNeeded({
@@ -185,29 +210,20 @@ class _SongReaderState extends ConsumerState<SongReader>
   }) {
     _unsubscribeAnnotations();
     if (!syncEnabled) return;
+    if (!context.mounted) return;
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    _annotationChannel = repo.subscribeToAnnotationUpdates(
+    _annotationSubscription = _annotationRepo.subscribeToAnnotationUpdates(
       serviceId: serviceId,
       songId: songId,
-      onRemoteChange: () => _handleRemoteChange(serviceId, songId),
+      onRemoteUpdate: (remote) => _handleRemoteUpdate(remote),
     );
   }
 
-  Future<void> _handleRemoteChange(String serviceId, String songId) async {
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    final remote = await repo.fetchRemoteAnnotation(
-      serviceId: serviceId,
-      songId: songId,
-    );
-    if (remote == null || !mounted) return;
-    debugPrint("$_remoteUpdatedAt");
-    // Stale event (arrived out of order) or our own echo — ignore.
-    if (_remoteUpdatedAt != null &&
-        !remote.updatedAt.isAfter(_remoteUpdatedAt!)) {
-      return;
-    }
-    _remoteUpdatedAt = remote.updatedAt;
+  void _handleRemoteUpdate(RemoteAnnotation remote) {
+    if (!context.mounted) return;
+    if (!_isNewerRemote(remote)) return;
+
+    _rememberRemote(remote);
 
     if (widget.isAnnotating) {
       setState(() {
@@ -220,10 +236,10 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   void _unsubscribeAnnotations() {
-    final channel = _annotationChannel;
-    _annotationChannel = null;
-    if (channel != null) {
-      ref.read(serviceAnnotationRepositoryProvider).unsubscribe(channel);
+    final sub = _annotationSubscription;
+    _annotationSubscription = null;
+    if (sub != null) {
+      unawaited(_annotationRepo.unsubscribe(sub));
     }
   }
 
@@ -264,7 +280,6 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (oldWidget.serviceId != widget.serviceId ||
         oldWidget.songId != widget.songId) {
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
-      _canvasKey.currentState?.clear();
       _loadAnnotationForCurrentSong();
     } else if (oldWidget.isAnnotating && !widget.isAnnotating) {
       _saveCurrentAnnotation();
@@ -312,11 +327,10 @@ class _SongReaderState extends ConsumerState<SongReader>
       return;
     }
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
+    final repo = _annotationRepo;
     repo.saveAnnotation(serviceId: serviceId, songId: songId, bytes: bytes);
 
-    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
-    if (!syncEnabled) return;
+    if (!_syncAnnotations) return;
 
     _pushAnnotationSafely(
       repo: repo,
@@ -333,12 +347,13 @@ class _SongReaderState extends ConsumerState<SongReader>
     required Uint8List bytes,
   }) async {
     try {
-      final updatedAt = await repo.pushAnnotation(
+      final pushed = await repo.pushAnnotation(
         serviceId: serviceId,
         songId: songId,
         bytes: bytes,
       );
-      _remoteUpdatedAt = updatedAt;
+      _remoteUpdatedAt = pushed.updatedAt.toUtc();
+      _remoteRevision = pushed.revision;
     } catch (_) {
       // Offline or push failed — local cache already has the latest bytes;
       // the next successful save retries the sync.
@@ -568,6 +583,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       settingsControllerProvider.select((s) => s.syncAnnotations),
       (previous, next) {
         if (previous == next) return;
+        _syncAnnotations = next;
         final serviceId = widget.serviceId;
         final songId = widget.songId;
         if (serviceId == null || songId == null) return;

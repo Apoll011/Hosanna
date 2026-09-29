@@ -12,10 +12,15 @@ import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
+import '../data/service_notes_watch.dart';
+import 'service_element_meta.dart';
+import 'service_order_page.dart';
+import 'widgets/horizontal_swipe_navigator.dart';
+import 'widgets/service_notes_panel.dart';
 
-/// Musician view of a service: the first song (or element) is shown in a
-/// full-screen song view, and the rest of the service order lives in a
-/// slide-over menu, mirroring the React `MusicianServiceView`.
+/// Entry point for a service. Honours [AppSettings.musicianMode]: musician
+/// view opens the first song with a drawer order; otherwise the run-of-show
+/// [ServiceOrderPage] is shown.
 class ServiceDetailPage extends ConsumerStatefulWidget {
   const ServiceDetailPage({super.key, required this.serviceId});
 
@@ -46,6 +51,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final musicianMode = ref.watch(settingsControllerProvider).musicianMode;
+    if (!musicianMode) {
+      return ServiceOrderPage(serviceId: widget.serviceId);
+    }
+
     final l10n = AppLocalizations.of(context);
     final serviceAsync = ref.watch(serviceByIdProvider(widget.serviceId));
     final service = serviceAsync.valueOrNull;
@@ -72,21 +82,76 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                 context.pop();
               },
             ),
-      body: serviceAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => ErrorState(
-          title: l10n.commonError,
-          description: l10n.commonErrorDesc,
+      body: ServiceNotesIncomingListener(
+        serviceId: widget.serviceId,
+        onOpenNotes: () => _openNotes(
+          context,
+          elementId: _currentElementId,
+          elementType: _currentElementType(serviceAsync.valueOrNull),
         ),
-        data: (service) => service == null
-            ? EmptyState(
-                icon: Icons.event_busy_outlined,
-                title: l10n.servicesNotFound,
-                description: l10n.servicesNotFoundDesc,
-              )
-            : _body(service: service),
+        child: serviceAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => ErrorState(
+            title: l10n.commonError,
+            description: l10n.commonErrorDesc,
+          ),
+          data: (service) => service == null
+              ? EmptyState(
+                  icon: Icons.event_busy_outlined,
+                  title: l10n.servicesNotFound,
+                  description: l10n.servicesNotFoundDesc,
+                )
+              : _body(service: service),
+        ),
       ),
     );
+  }
+
+  Future<void> _openNotes(
+    BuildContext context, {
+    String? elementId,
+    String? elementType,
+  }) async {
+    ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
+    final service = ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
+    final l10n = AppLocalizations.of(context);
+    final labels = <String, String>{};
+    if (service != null) {
+      final colors = Theme.of(context).colorScheme;
+      for (final e in _sorted(service)) {
+        labels[e.id] = e.title.trim().isNotEmpty
+            ? e.title.trim()
+            : serviceElementMeta(l10n, colors, e.type).label;
+      }
+    }
+    final resolvedElementId = elementId ?? _currentElementId;
+    await showServiceNotesSheet(
+      context,
+      serviceId: widget.serviceId,
+      elementId: resolvedElementId,
+      elementType: elementType,
+      elementLabels: labels,
+    );
+    if (mounted) {
+      ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
+    }
+  }
+
+  String? _currentElementType(ServiceRow? service) {
+    if (service == null) return null;
+    final elements = _sorted(service);
+    if (elements.isEmpty) return null;
+    final id = _currentElementId;
+    if (id != null) {
+      for (final e in elements) {
+        if (e.id == id) return e.type;
+      }
+    }
+    return elements
+            .where((e) => e.type == 'song' && e.songId != null)
+            .firstOrNull
+            ?.type ??
+        elements.first.type;
   }
 
   List<ServiceElement> _sorted(ServiceRow service) {
@@ -118,23 +183,65 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     );
     _currentElementId ??= current.id;
 
-    // Song elements (in service order) for prev/next navigation.
+    final elementIndex = elements.indexWhere((e) => e.id == current.id);
+    final isSong = current.type == 'song' && current.songId != null;
+
+    // On songs: swipe only between songs. On non-songs: swipe through every
+    // element until a song is reached, then song-only nav resumes.
     final songElements = elements
         .where((e) => e.type == 'song' && e.songId != null)
         .toList();
     final songIndex = songElements.indexWhere((e) => e.id == current.id);
 
+    final bool canPrev;
+    final bool canNext;
+    final String positionLabel;
+    final VoidCallback onPrev;
+    final VoidCallback onNext;
+
+    if (isSong) {
+      canPrev = songIndex > 0;
+      canNext = songIndex >= 0 && songIndex < songElements.length - 1;
+      positionLabel = '${songIndex + 1} / ${songElements.length}';
+      onPrev = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = songElements[songIndex - 1].id;
+          });
+      onNext = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = songElements[songIndex + 1].id;
+          });
+    } else {
+      canPrev = elementIndex > 0;
+      canNext = elementIndex >= 0 && elementIndex < elements.length - 1;
+      positionLabel = '${elementIndex + 1} / ${elements.length}';
+      onPrev = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = elements[elementIndex - 1].id;
+          });
+      onNext = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = elements[elementIndex + 1].id;
+          });
+    }
+
     return Column(
       children: [
         _MusicianTopBar(
+          serviceId: widget.serviceId,
           serviceName: service.name,
           itemLabel: l10n.servicesItemOf(
-            elements.indexWhere((e) => e.id == current.id) + 1,
+            elementIndex + 1,
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
+          onOpenNotes: () => _openNotes(
+            context,
+            elementId: current.id,
+            elementType: current.type,
+          ),
           onLeave: () => context.pop(),
-          isSong: current.type == 'song',
+          isSong: isSong,
           isAnnotating: _isAnnotating,
           onToggleAnnotation: () {
             setState(() {
@@ -143,24 +250,27 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           },
         ),
         Expanded(
-          child: current.type == 'song' && current.songId != null
+          child: isSong
               ? _SongElementView(
                   serviceId: widget.serviceId,
                   songId: current.songId!,
                   notes: current.notes,
                   isAnnotating: _isAnnotating,
-                  canPrev: songIndex > 0,
-                  canNext:
-                      songIndex >= 0 && songIndex < songElements.length - 1,
-                  positionLabel: '${songIndex + 1} / ${songElements.length}',
-                  onPrev: () => setState(() {
-                    _currentElementId = songElements[songIndex - 1].id;
-                  }),
-                  onNext: () => setState(() {
-                    _currentElementId = songElements[songIndex + 1].id;
-                  }),
+                  canPrev: canPrev,
+                  canNext: canNext,
+                  positionLabel: positionLabel,
+                  onPrev: onPrev,
+                  onNext: onNext,
                 )
-              : _NonSongElementView(element: current),
+              : _NonSongElementView(
+                  serviceId: widget.serviceId,
+                  element: current,
+                  canPrev: canPrev,
+                  canNext: canNext,
+                  positionLabel: positionLabel,
+                  onPrev: onPrev,
+                  onNext: onNext,
+                ),
         ),
       ],
     );
@@ -169,18 +279,22 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
 class _MusicianTopBar extends StatelessWidget {
   const _MusicianTopBar({
+    required this.serviceId,
     required this.serviceName,
     required this.itemLabel,
     required this.onOpenOrder,
+    required this.onOpenNotes,
     required this.onLeave,
     required this.isSong,
     this.isAnnotating = false,
     this.onToggleAnnotation,
   });
 
+  final String serviceId;
   final String serviceName;
   final String itemLabel;
   final VoidCallback onOpenOrder;
+  final VoidCallback onOpenNotes;
   final VoidCallback onLeave;
   final bool isSong;
   final bool isAnnotating;
@@ -222,6 +336,14 @@ class _MusicianTopBar extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              icon: NotesUnreadBadge(
+                serviceId: serviceId,
+                child: const Icon(Icons.sticky_note_2_outlined),
+              ),
+              tooltip: l10n.servicesNotes,
+              onPressed: onOpenNotes,
             ),
             if (isSong) ...[
               IconButton(
@@ -311,6 +433,7 @@ class _SongElementView extends ConsumerWidget {
               description: l10n.songsNotFoundDesc,
             )
           : SongReader(
+              key: ValueKey('song-reader-$songId'),
               content: song.content,
               notes: notes,
               serviceId: serviceId,
@@ -327,101 +450,145 @@ class _SongElementView extends ConsumerWidget {
 }
 
 class _NonSongElementView extends StatelessWidget {
-  const _NonSongElementView({required this.element});
+  const _NonSongElementView({
+    required this.serviceId,
+    required this.element,
+    required this.canPrev,
+    required this.canNext,
+    required this.positionLabel,
+    required this.onPrev,
+    required this.onNext,
+  });
 
+  final String serviceId;
   final ServiceElement element;
+  final bool canPrev;
+  final bool canNext;
+  final String positionLabel;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
+    final hasPassage = element.passage != null && element.passage!.isNotEmpty;
+    final hasContent = element.content != null && element.content!.isNotEmpty;
+    final hasItemNotes = element.notes != null && element.notes!.isNotEmpty;
+    final hasBody = hasPassage || hasContent || hasItemNotes;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: meta.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: meta.color.withValues(alpha: 0.3)),
-                ),
-                child: Icon(meta.icon, color: meta.color, size: 28),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: meta.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  meta.label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: meta.color,
-                    fontWeight: FontWeight.w700,
+    return HorizontalSwipeNavigator(
+      canPrev: canPrev,
+      canNext: canNext,
+      positionLabel: positionLabel,
+      onPrev: canPrev ? onPrev : null,
+      onNext: canNext ? onNext : null,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 88),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: meta.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: meta.color.withValues(alpha: 0.3)),
                   ),
+                  child: Icon(meta.icon, color: meta.color, size: 28),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                element.title.isNotEmpty ? element.title : meta.label,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (element.passage != null && element.passage!.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
+                    horizontal: 12,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                    color: meta.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    element.passage!,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.primary,
+                    meta.label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: meta.color,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-              ],
-              if (element.content != null && element.content!.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                Text(
+                  element.title.isNotEmpty ? element.title : meta.label,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  child: Text(
-                    element.content!,
-                    style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                if (hasPassage) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Text(
+                      element.passage!,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
+                ],
+                if (hasContent) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Text(
+                      element.content!,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+                if (hasItemNotes) ...[
+                  const SizedBox(height: 16),
+                  _NotesCard(notes: element.notes!),
+                ],
+                if (!hasBody) ...[
+                  const SizedBox(height: 24),
+                  EmptyState(
+                    icon: Icons.notes_outlined,
+                    title: l10n.servicesElementEmpty,
+                    description: l10n.servicesElementEmptyDesc,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => showServiceNotesSheet(
+                    context,
+                    serviceId: serviceId,
+                    elementId: element.id,
+                    elementType: element.type,
+                  ),
+                  icon: const Icon(Icons.sticky_note_2_outlined),
+                  label: Text(l10n.servicesTeamNotes),
                 ),
               ],
-              if (element.notes != null && element.notes!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _NotesCard(notes: element.notes!),
-              ],
-            ],
+            ),
           ),
         ),
       ),
@@ -576,7 +743,7 @@ class _OrderItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
 
     final songAsync = element.songId == null
         ? null
@@ -652,53 +819,6 @@ class _OrderItem extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _ElementMeta {
-  const _ElementMeta(this.label, this.icon, this.color);
-
-  final String label;
-  final IconData icon;
-  final Color color;
-}
-
-_ElementMeta _elementMeta(
-  AppLocalizations l10n,
-  ColorScheme colors,
-  String type,
-) {
-  return switch (type) {
-    'song' => _ElementMeta(
-      l10n.servicesElementSong,
-      Icons.music_note,
-      colors.primary,
-    ),
-    'welcome' => _ElementMeta(
-      l10n.servicesElementWelcome,
-      Icons.waving_hand_outlined,
-      colors.secondary,
-    ),
-    'scripture' => _ElementMeta(
-      l10n.servicesElementScripture,
-      Icons.menu_book_outlined,
-      colors.tertiary,
-    ),
-    'message' => _ElementMeta(
-      l10n.servicesElementMessage,
-      Icons.chat_bubble_outline,
-      colors.error,
-    ),
-    'announcement' => _ElementMeta(
-      l10n.servicesElementAnnouncement,
-      Icons.campaign_outlined,
-      colors.primary,
-    ),
-    _ => _ElementMeta(
-      l10n.servicesElementDefault,
-      Icons.label_outline,
-      colors.onSurfaceVariant,
-    ),
-  };
 }
 
 extension<T> on Iterable<T> {
