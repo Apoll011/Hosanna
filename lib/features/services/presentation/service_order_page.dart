@@ -168,7 +168,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     final elements = _sorted(service);
     final index = elements.indexWhere((e) => e.id == element.id);
     if (index < 0) return;
-    final completedId = await Navigator.of(context).push<String>(
+    await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => _ElementViewerPage(
           serviceId: widget.serviceId,
@@ -178,13 +178,9 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         ),
       ),
     );
-    if (!mounted || completedId == null) return;
+    if (!mounted) return;
     setState(() {
-      _completedIds.add(completedId);
-      final idx = elements.indexWhere((e) => e.id == completedId);
-      final next = elements
-          .skip(idx < 0 ? 0 : idx + 1)
-          .where((e) => !_completedIds.contains(e.id));
+      final next = elements.where((e) => !_completedIds.contains(e.id));
       if (next.isNotEmpty) {
         _currentElementId = next.first.id;
       }
@@ -588,6 +584,16 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     }
   }
 
+  void _markCompleted() {
+    final id = _element.id;
+    widget.completedIds.add(id);
+    if (_index < widget.elements.length - 1) {
+      _goTo(_index + 1);
+    } else if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -643,7 +649,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: FilledButton(
-                  onPressed: () => Navigator.pop(context, element.id),
+                  onPressed: _markCompleted,
                   child: Text(l10n.servicesMarkCompleted),
                 ),
               ),
