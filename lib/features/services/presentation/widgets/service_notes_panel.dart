@@ -6,13 +6,13 @@ import '../../../../core/network/api_exception.dart';
 import '../../../auth/domain/auth_controller.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
-import '../../data/service_notes_controller.dart';
+import '../../data/service_notes_watch.dart';
 import '../../domain/service_note.dart';
 
-/// Team notes feed for a service (or a single element).
+/// Team notes feed for a service (optionally filtered to one element).
 ///
-/// Fetches via [serviceNotesProvider], polls while mounted, and supports
-/// create / edit / delete for notes authored by the current user.
+/// Backed by [serviceNotesWatchProvider], which polls for new notes while the
+/// service screen is open.
 class ServiceNotesPanel extends ConsumerWidget {
   const ServiceNotesPanel({
     super.key,
@@ -21,6 +21,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     this.serviceScope = false,
     this.embedded = false,
     this.title,
+    this.markReadWhenBuilt = true,
   });
 
   final String serviceId;
@@ -31,18 +32,74 @@ class ServiceNotesPanel extends ConsumerWidget {
   final bool embedded;
   final String? title;
 
-  ServiceNotesQuery get _query => ServiceNotesQuery(
-        serviceId: serviceId,
-        elementId: elementId,
-        serviceScope: serviceScope,
-      );
+  /// Clear the unread badge while this panel is the active surface.
+  final bool markReadWhenBuilt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final notesAsync = ref.watch(serviceNotesProvider(_query));
+    final watch = ref.watch(serviceNotesWatchProvider(serviceId));
     final userId = ref.watch(authSessionProvider)?.user.id;
+    final notes = _filterNotes(watch.notes);
+
+    if (markReadWhenBuilt && watch.unreadCount > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(serviceNotesWatchProvider(serviceId).notifier).markAllRead();
+      });
+    }
+    Widget body;
+    if (watch.isLoading && watch.notes.isEmpty) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (watch.error != null && watch.notes.isEmpty) {
+      body = _NotesError(
+        error: watch.error!,
+        onRetry: () =>
+            ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
+      );
+    } else if (notes.isEmpty) {
+      body = RefreshIndicator(
+        onRefresh: () =>
+            ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.35,
+              child: EmptyState(
+                icon: Icons.sticky_note_2_outlined,
+                title: l10n.servicesNotesEmpty,
+                description: l10n.servicesNotesEmptyDesc,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      body = RefreshIndicator(
+        onRefresh: () =>
+            ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+          itemCount: notes.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final note = notes[index];
+            return _NoteCard(
+              note: note,
+              isMine: note.isAuthoredBy(userId),
+              onEdit: note.isAuthoredBy(userId)
+                  ? () => _openComposer(context, ref, existing: note)
+                  : null,
+              onDelete: note.isAuthoredBy(userId)
+                  ? () => _confirmDelete(context, ref, note)
+                  : null,
+            );
+          },
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,73 +114,25 @@ class ServiceNotesPanel extends ConsumerWidget {
               ),
             ),
           ),
-        Expanded(
-          child: notesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => _NotesError(
-              error: e,
-              onRetry: () =>
-                  ref.read(serviceNotesProvider(_query).notifier).refresh(),
-            ),
-            data: (notes) {
-              if (notes.isEmpty) {
-                return RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(serviceNotesProvider(_query).notifier).refresh(),
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.sizeOf(context).height * 0.35,
-                        child: EmptyState(
-                          icon: Icons.sticky_note_2_outlined,
-                          title: l10n.servicesNotesEmpty,
-                          description: l10n.servicesNotesEmptyDesc,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return RefreshIndicator(
-                onRefresh: () =>
-                    ref.read(serviceNotesProvider(_query).notifier).refresh(),
-                child: ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                  itemCount: notes.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final note = notes[index];
-                    return _NoteCard(
-                      note: note,
-                      isMine: note.isAuthoredBy(userId),
-                      onEdit: note.isAuthoredBy(userId)
-                          ? () => _openComposer(
-                                context,
-                                ref,
-                                existing: note,
-                              )
-                          : null,
-                      onDelete: note.isAuthoredBy(userId)
-                          ? () => _confirmDelete(context, ref, note)
-                          : null,
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ),
+        Expanded(child: body),
       ],
     );
+  }
+
+  List<ServiceNote> _filterNotes(List<ServiceNote> notes) {
+    if (serviceScope) {
+      return [for (final n in notes) if (n.elementId == null) n];
+    }
+    if (elementId != null) {
+      return [for (final n in notes) if (n.elementId == elementId) n];
+    }
+    return notes;
   }
 
   Future<void> _openComposer(
     BuildContext context,
     WidgetRef ref, {
     ServiceNote? existing,
-    String? defaultElementId,
   }) async {
     final result = await showModalBottomSheet<_NoteDraft>(
       context: context,
@@ -137,13 +146,13 @@ class ServiceNotesPanel extends ConsumerWidget {
     );
     if (result == null || !context.mounted) return;
 
-    final notifier = ref.read(serviceNotesProvider(_query).notifier);
+    final notifier = ref.read(serviceNotesWatchProvider(serviceId).notifier);
     final l10n = AppLocalizations.of(context);
     try {
       if (existing == null) {
         await notifier.add(
           body: result.body,
-          elementId: defaultElementId ?? elementId,
+          elementId: elementId,
           isPrivate: result.isPrivate,
         );
       } else {
@@ -186,7 +195,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     );
     if (ok != true || !context.mounted) return;
     try {
-      await ref.read(serviceNotesProvider(_query).notifier).remove(note.id);
+      await ref.read(serviceNotesWatchProvider(serviceId).notifier).remove(note.id);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -196,18 +205,16 @@ class ServiceNotesPanel extends ConsumerWidget {
   }
 }
 
-/// Floating action that opens the note composer for [panel]'s query.
+/// Floating action that opens the note composer for [serviceId].
 class ServiceNotesFab extends ConsumerWidget {
   const ServiceNotesFab({
     super.key,
     required this.serviceId,
     this.elementId,
-    this.serviceScope = false,
   });
 
   final String serviceId;
   final String? elementId;
-  final bool serviceScope;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -220,11 +227,6 @@ class ServiceNotesFab extends ConsumerWidget {
   }
 
   Future<void> _compose(BuildContext context, WidgetRef ref) async {
-    final query = ServiceNotesQuery(
-      serviceId: serviceId,
-      elementId: elementId,
-      serviceScope: serviceScope,
-    );
     final result = await showModalBottomSheet<_NoteDraft>(
       context: context,
       isScrollControlled: true,
@@ -238,7 +240,7 @@ class ServiceNotesFab extends ConsumerWidget {
     if (result == null || !context.mounted) return;
     final l10n = AppLocalizations.of(context);
     try {
-      await ref.read(serviceNotesProvider(query).notifier).add(
+      await ref.read(serviceNotesWatchProvider(serviceId).notifier).add(
             body: result.body,
             elementId: elementId,
             isPrivate: result.isPrivate,
@@ -280,6 +282,98 @@ Future<void> showServiceNotesSheet(
       );
     },
   );
+}
+
+/// Listens for newly arrived remote notes and shows a floating snackbar.
+class ServiceNotesIncomingListener extends ConsumerWidget {
+  const ServiceNotesIncomingListener({
+    super.key,
+    required this.serviceId,
+    required this.child,
+    this.onOpenNotes,
+    this.suppressToast = false,
+  });
+
+  final String serviceId;
+  final Widget child;
+  final VoidCallback? onOpenNotes;
+
+  /// When true (e.g. Notes tab visible), still refresh but skip the banner.
+  final bool suppressToast;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(serviceNotesWatchProvider(serviceId), (previous, next) {
+      if (previous == null) return;
+      if (next.incomingTicket == previous.incomingTicket) return;
+      final note = next.lastIncoming;
+      if (note == null) return;
+
+      final notifier = ref.read(serviceNotesWatchProvider(serviceId).notifier);
+      if (suppressToast) {
+        notifier
+          ..consumeIncoming()
+          ..markAllRead();
+        return;
+      }
+
+      final l10n = AppLocalizations.of(context);
+      final author = note.author?.name.trim();
+      final who = (author == null || author.isEmpty)
+          ? l10n.servicesNotesSomeone
+          : author;
+      final preview = note.body.trim();
+      final body = preview.length > 80 ? '${preview.substring(0, 80)}…' : preview;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        notifier.consumeIncoming();
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
+              content: Text('$who: $body'),
+              action: onOpenNotes == null
+                  ? null
+                  : SnackBarAction(
+                      label: l10n.servicesNotes,
+                      onPressed: onOpenNotes!,
+                    ),
+            ),
+          );
+      });
+    });
+
+    // Keep the watcher alive while this subtree is mounted.
+    ref.watch(serviceNotesWatchProvider(serviceId));
+    return child;
+  }
+}
+
+/// Badge bubble for the Notes icon / tab.
+class NotesUnreadBadge extends ConsumerWidget {
+  const NotesUnreadBadge({
+    super.key,
+    required this.serviceId,
+    required this.child,
+  });
+
+  final String serviceId;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      serviceNotesWatchProvider(serviceId).select((s) => s.unreadCount),
+    );
+    if (count <= 0) return child;
+    return Badge(
+      label: Text(count > 99 ? '99+' : '$count'),
+      child: child,
+    );
+  }
 }
 
 class _NoteDraft {
@@ -336,9 +430,7 @@ class _NoteComposerSheetState extends State<_NoteComposerSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            widget.isEditing
-                ? l10n.servicesNotesEdit
-                : l10n.servicesNotesAdd,
+            widget.isEditing ? l10n.servicesNotesEdit : l10n.servicesNotesAdd,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -362,9 +454,7 @@ class _NoteComposerSheetState extends State<_NoteComposerSheet> {
             title: Text(l10n.servicesNotesPrivate),
             subtitle: Text(l10n.servicesNotesPrivateDesc),
             value: _isPrivate,
-            onChanged: _submitting
-                ? null
-                : (v) => setState(() => _isPrivate = v),
+            onChanged: _submitting ? null : (v) => setState(() => _isPrivate = v),
           ),
           const SizedBox(height: 8),
           FilledButton(
@@ -418,9 +508,7 @@ class _NoteCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onLongPress: isMine
-            ? () => _showActions(context)
-            : null,
+        onLongPress: isMine ? () => _showActions(context) : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

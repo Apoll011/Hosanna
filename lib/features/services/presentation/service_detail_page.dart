@@ -12,6 +12,7 @@ import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
+import '../data/service_notes_watch.dart';
 import 'service_element_meta.dart';
 import 'service_order_page.dart';
 import 'widgets/horizontal_swipe_navigator.dart';
@@ -81,21 +82,33 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                 context.pop();
               },
             ),
-      body: serviceAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => ErrorState(
-          title: l10n.commonError,
-          description: l10n.commonErrorDesc,
+      body: ServiceNotesIncomingListener(
+        serviceId: widget.serviceId,
+        onOpenNotes: () => _openNotes(context),
+        child: serviceAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => ErrorState(
+            title: l10n.commonError,
+            description: l10n.commonErrorDesc,
+          ),
+          data: (service) => service == null
+              ? EmptyState(
+                  icon: Icons.event_busy_outlined,
+                  title: l10n.servicesNotFound,
+                  description: l10n.servicesNotFoundDesc,
+                )
+              : _body(service: service),
         ),
-        data: (service) => service == null
-            ? EmptyState(
-                icon: Icons.event_busy_outlined,
-                title: l10n.servicesNotFound,
-                description: l10n.servicesNotFoundDesc,
-              )
-            : _body(service: service),
       ),
     );
+  }
+
+  Future<void> _openNotes(BuildContext context) async {
+    ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
+    await showServiceNotesSheet(context, serviceId: widget.serviceId);
+    if (mounted) {
+      ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
+    }
   }
 
   List<ServiceElement> _sorted(ServiceRow service) {
@@ -172,16 +185,14 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     return Column(
       children: [
         _MusicianTopBar(
+          serviceId: widget.serviceId,
           serviceName: service.name,
           itemLabel: l10n.servicesItemOf(
             elementIndex + 1,
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
-          onOpenNotes: () => showServiceNotesSheet(
-            context,
-            serviceId: widget.serviceId,
-          ),
+          onOpenNotes: () => _openNotes(context),
           onLeave: () => context.pop(),
           isSong: isSong,
           isAnnotating: _isAnnotating,
@@ -221,6 +232,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
 class _MusicianTopBar extends StatelessWidget {
   const _MusicianTopBar({
+    required this.serviceId,
     required this.serviceName,
     required this.itemLabel,
     required this.onOpenOrder,
@@ -231,6 +243,7 @@ class _MusicianTopBar extends StatelessWidget {
     this.onToggleAnnotation,
   });
 
+  final String serviceId;
   final String serviceName;
   final String itemLabel;
   final VoidCallback onOpenOrder;
@@ -278,7 +291,10 @@ class _MusicianTopBar extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.sticky_note_2_outlined),
+              icon: NotesUnreadBadge(
+                serviceId: serviceId,
+                child: const Icon(Icons.sticky_note_2_outlined),
+              ),
               tooltip: l10n.servicesNotes,
               onPressed: onOpenNotes,
             ),

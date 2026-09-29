@@ -262,6 +262,7 @@
   "servicesNotesUnauthorized": "Inicia sesión de nuevo para gestionar notas.",
   "servicesNotesNotFound": "Esta nota ya no existe.",
   "servicesNotesElementNotFound": "Ese elemento del servicio no se encontró.",
+  "servicesNotesSomeone": "Alguien",
   "servicesElementEmpty": "Nada preparado para este momento",
   "servicesElementEmptyDesc": "Aún no hay pasaje, contenido ni notas en este elemento.",
 

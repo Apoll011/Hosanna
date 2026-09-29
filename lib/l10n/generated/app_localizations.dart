@@ -1630,6 +1630,12 @@ abstract class AppLocalizations {
   /// **'Esse item do culto não foi encontrado.'**
   String get servicesNotesElementNotFound;
 
+  /// No description provided for @servicesNotesSomeone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alguém'**
+  String get servicesNotesSomeone;
+
   /// No description provided for @servicesElementEmpty.
   ///
   /// In pt, this message translates to:

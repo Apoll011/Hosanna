@@ -16,6 +16,7 @@ import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
+import '../data/service_notes_watch.dart';
 import 'service_element_meta.dart';
 import 'widgets/horizontal_swipe_navigator.dart';
 import 'widgets/service_notes_panel.dart';
@@ -106,52 +107,71 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         final elements = _sorted(service);
         _ensureCurrent(elements);
 
-        return Scaffold(
-          body: Column(
-            children: [
-              _OrderHeader(
-                service: service,
-                elapsed: _elapsed,
-                onLeave: () => context.pop(),
-              ),
-              Expanded(
-                child: IndexedStack(
-                  index: _tabIndex,
-                  children: [
-                    _OrderListTab(
-                      elements: elements,
-                      completedIds: _completedIds,
-                      currentElementId: _currentElementId,
-                      onOpen: (element) => _openElement(context, element),
-                    ),
-                    ServiceNotesPanel(
-                      serviceId: widget.serviceId,
-                      embedded: true,
-                      title: l10n.servicesTeamNotes,
-                    ),
-                  ],
+        return ServiceNotesIncomingListener(
+          serviceId: widget.serviceId,
+          suppressToast: _tabIndex == 1,
+          onOpenNotes: () => setState(() => _tabIndex = 1),
+          child: Scaffold(
+            body: Column(
+              children: [
+                _OrderHeader(
+                  service: service,
+                  elapsed: _elapsed,
+                  onLeave: () => context.pop(),
                 ),
-              ),
-            ],
-          ),
-          floatingActionButton: _tabIndex == 1
-              ? ServiceNotesFab(serviceId: widget.serviceId)
-              : null,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _tabIndex,
-            onDestinationSelected: (i) => setState(() => _tabIndex = i),
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.view_list_outlined),
-                selectedIcon: const Icon(Icons.view_list),
-                label: l10n.servicesOrderTitle,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.sticky_note_2_outlined),
-                selectedIcon: const Icon(Icons.sticky_note_2),
-                label: l10n.servicesNotes,
-              ),
-            ],
+                Expanded(
+                  child: IndexedStack(
+                    index: _tabIndex,
+                    children: [
+                      _OrderListTab(
+                        elements: elements,
+                        completedIds: _completedIds,
+                        currentElementId: _currentElementId,
+                        onOpen: (element) => _openElement(context, element),
+                      ),
+                      ServiceNotesPanel(
+                        serviceId: widget.serviceId,
+                        embedded: true,
+                        title: l10n.servicesTeamNotes,
+                        markReadWhenBuilt: _tabIndex == 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            floatingActionButton: _tabIndex == 1
+                ? ServiceNotesFab(serviceId: widget.serviceId)
+                : null,
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: _tabIndex,
+              onDestinationSelected: (i) {
+                setState(() => _tabIndex = i);
+                if (i == 1) {
+                  ref
+                      .read(serviceNotesWatchProvider(widget.serviceId).notifier)
+                      .markAllRead();
+                }
+              },
+              destinations: [
+                NavigationDestination(
+                  icon: const Icon(Icons.view_list_outlined),
+                  selectedIcon: const Icon(Icons.view_list),
+                  label: l10n.servicesOrderTitle,
+                ),
+                NavigationDestination(
+                  icon: NotesUnreadBadge(
+                    serviceId: widget.serviceId,
+                    child: const Icon(Icons.sticky_note_2_outlined),
+                  ),
+                  selectedIcon: NotesUnreadBadge(
+                    serviceId: widget.serviceId,
+                    child: const Icon(Icons.sticky_note_2),
+                  ),
+                  label: l10n.servicesNotes,
+                ),
+              ],
+            ),
           ),
         );
       },
