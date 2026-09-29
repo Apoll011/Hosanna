@@ -83,8 +83,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   bool _hasPendingRemoteUpdate = false;
   Uint8List? _pendingRemoteBytes;
 
-  final GlobalKey<FlueraCanvasState> _canvasKey =
-      GlobalKey<FlueraCanvasState>();
+  GlobalKey<FlueraCanvasState> _canvasKey = GlobalKey<FlueraCanvasState>();
   late final InfiniteCanvasController _canvasController;
   CanvasTool _canvasTool = CanvasTool.draw;
   Color _canvasColor = const Color(0xFFE53935);
@@ -169,23 +168,18 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   void _applyLoadedBytes(Uint8List? bytes) {
-    if (!mounted) return;
-    final canvasState = _canvasKey.currentState;
-    if (canvasState != null) {
-      if (bytes != null && bytes.isNotEmpty) {
-        try {
-          canvasState.loadFromBytes(bytes);
-        } catch (_) {
-          canvasState.clear();
-        }
-      } else {
-        canvasState.clear();
+    if (!context.mounted) return;
+    final alreadyMounted = _canvasKey.currentState != null;
+    setState(() {
+      _initialBytes = bytes;
+      // Only replace the key when a canvas already exists. Otherwise the first
+      // build picks up initialBytes naturally. Replacing a GlobalKey forces a
+      // new State so initState reloads initialBytes (needed for live sync;
+      // loadFromBytes alone can leave Impeller layers stale).
+      if (alreadyMounted) {
+        _canvasKey = GlobalKey<FlueraCanvasState>();
       }
-    } else if (context.mounted) {
-      setState(() {
-        _initialBytes = bytes;
-      });
-    }
+    });
   }
 
   void _rememberRemote(RemoteAnnotation remote) {
@@ -286,7 +280,6 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (oldWidget.serviceId != widget.serviceId ||
         oldWidget.songId != widget.songId) {
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
-      _canvasKey.currentState?.clear();
       _loadAnnotationForCurrentSong();
     } else if (oldWidget.isAnnotating && !widget.isAnnotating) {
       _saveCurrentAnnotation();

@@ -45,7 +45,7 @@ class ServiceAnnotationRepository {
   final FirebaseFirestore _firestore;
 
   /// Safety net when Firestore snapshots are unavailable (rules, network).
-  static const pollInterval = Duration(seconds: 12);
+  static const pollInterval = Duration(seconds: 3);
 
   // --- Local file cache ----------------------------------------------------
 
@@ -178,10 +178,15 @@ class ServiceAnnotationRepository {
     try {
       final res = await _dio.get(
         _annotationUri(serviceId, songId),
-        // Bust any intermediary caches; annotations change often.
+        queryParameters: {
+          // Bust CDN / proxy caches so live poll sees fresh Postgres bytes.
+          '_ts': DateTime.now().millisecondsSinceEpoch,
+        },
         options: Options(
-          headers: {'Cache-Control': 'no-cache'},
-          extra: {'refresh': DateTime.now().millisecondsSinceEpoch},
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
         ),
       );
       if (res.statusCode == 404) return null;
@@ -322,6 +327,8 @@ class ServiceAnnotationRepository {
     }
 
     final pollTimer = Timer.periodic(pollInterval, (_) => unawaited(poll()));
+    // Don't wait for the first period — check once right away.
+    unawaited(poll());
 
     return AnnotationSyncHandle(
       cancel: () async {
