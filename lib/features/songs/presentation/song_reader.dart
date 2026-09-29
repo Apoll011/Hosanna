@@ -79,7 +79,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   late final AnimationController _swipeController;
 
   // --- Canvas Annotation state ---------------------------------------------
-  AnnotationSubscription? _annotationSubscription;
+  AnnotationSyncHandle? _annotationSubscription;
   bool _hasPendingRemoteUpdate = false;
   Uint8List? _pendingRemoteBytes;
 
@@ -112,6 +112,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   double get _swipeThreshold => math.max(88.0, _viewportWidth * 0.18);
 
   DateTime? _remoteUpdatedAt;
+  int? _remoteRevision;
 
   /// Cached so dispose / post-await work never looks up ancestors via [ref].
   late final ServiceAnnotationRepository _annotationRepo;
@@ -140,15 +141,17 @@ class _SongReaderState extends ConsumerState<SongReader>
 
     Uint8List? bytes;
     _remoteUpdatedAt = null;
+    _remoteRevision = null;
 
     if (syncEnabled) {
       final remote = await repo.fetchRemoteAnnotation(
         serviceId: serviceId,
         songId: songId,
+        preferServer: true,
       );
       if (remote != null) {
         bytes = remote.bytes;
-        _remoteUpdatedAt = remote.updatedAt;
+        _rememberRemote(remote);
       }
     }
 
@@ -185,6 +188,27 @@ class _SongReaderState extends ConsumerState<SongReader>
     }
   }
 
+  void _rememberRemote(RemoteAnnotation remote) {
+    _remoteUpdatedAt = remote.updatedAt.toUtc();
+    if (remote.revision != null) {
+      _remoteRevision = remote.revision;
+    }
+  }
+
+  /// True when [remote] is strictly newer than what we already applied.
+  bool _isNewerRemote(RemoteAnnotation remote) {
+    final rev = remote.revision;
+    if (rev != null && _remoteRevision != null) {
+      return rev > _remoteRevision!;
+    }
+    if (rev != null && _remoteRevision == null && _remoteUpdatedAt == null) {
+      return true;
+    }
+    final remoteAt = remote.updatedAt.toUtc();
+    if (_remoteUpdatedAt == null) return true;
+    return remoteAt.isAfter(_remoteUpdatedAt!);
+  }
+
   void _subscribeIfNeeded({
     required String serviceId,
     required String songId,
@@ -197,25 +221,15 @@ class _SongReaderState extends ConsumerState<SongReader>
     _annotationSubscription = _annotationRepo.subscribeToAnnotationUpdates(
       serviceId: serviceId,
       songId: songId,
-      onRemoteChange: () => _handleRemoteChange(serviceId, songId),
+      onRemoteUpdate: (remote) => _handleRemoteUpdate(remote),
     );
   }
 
-  Future<void> _handleRemoteChange(String serviceId, String songId) async {
-    final remote = await _annotationRepo.fetchRemoteAnnotation(
-      serviceId: serviceId,
-      songId: songId,
-    );
-    if (remote == null || !context.mounted) return;
+  void _handleRemoteUpdate(RemoteAnnotation remote) {
+    if (!context.mounted) return;
+    if (!_isNewerRemote(remote)) return;
 
-    final remoteAt = remote.updatedAt.toUtc();
-    // Stale event or echo of our own push — ignore.
-    // Do not filter solely on updatedById: the same user on another device
-    // must still receive updates.
-    if (_remoteUpdatedAt != null && !remoteAt.isAfter(_remoteUpdatedAt!)) {
-      return;
-    }
-    _remoteUpdatedAt = remoteAt;
+    _rememberRemote(remote);
 
     if (widget.isAnnotating) {
       setState(() {
@@ -340,12 +354,13 @@ class _SongReaderState extends ConsumerState<SongReader>
     required Uint8List bytes,
   }) async {
     try {
-      final updatedAt = await repo.pushAnnotation(
+      final pushed = await repo.pushAnnotation(
         serviceId: serviceId,
         songId: songId,
         bytes: bytes,
       );
-      _remoteUpdatedAt = updatedAt.toUtc();
+      _remoteUpdatedAt = pushed.updatedAt.toUtc();
+      _remoteRevision = pushed.revision;
     } catch (_) {
       // Offline or push failed — local cache already has the latest bytes;
       // the next successful save retries the sync.

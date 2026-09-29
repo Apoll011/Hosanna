@@ -422,6 +422,7 @@ class _SongElementView extends ConsumerWidget {
               description: l10n.songsNotFoundDesc,
             )
           : SongReader(
+              key: ValueKey('song-reader-$songId'),
               content: song.content,
               notes: notes,
               serviceId: serviceId,
