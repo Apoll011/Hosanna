@@ -299,7 +299,7 @@
   "settingsMusicianMode": "Musician Mode in Services",
   "settingsMusicianModeDesc": "Opens the service directly on the first song with continuous side navigation.",
   "settingsServiceOrderSidePanel": "Service order side panel",
-  "settingsServiceOrderSidePanelDesc": "On tablets, keep the service order visible beside the content in non-musician mode.",
+  "settingsServiceOrderSidePanelDesc": "On tablets, show the service order beside item detail in non-musician mode.",
   "settingsKeepAwake": "Keep Screen Awake",
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSyncAnnotations": "Sync annotations",

@@ -988,7 +988,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsServiceOrderSidePanelDesc =>
-      'Em tablets, mantém a ordem do culto visível ao lado do conteúdo no modo não músico.';
+      'Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.';
 
   @override
   String get settingsKeepAwake => 'Manter Ecrã Ligado';

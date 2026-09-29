@@ -1897,7 +1897,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsServiceOrderSidePanelDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Em tablets, mantém a ordem do culto visível ao lado do conteúdo no modo não músico.'**
+  /// **'Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.'**
   String get settingsServiceOrderSidePanelDesc;
 
   /// No description provided for @settingsKeepAwake.

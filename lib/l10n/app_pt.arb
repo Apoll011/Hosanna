@@ -315,7 +315,7 @@
   "settingsMusicianMode": "Modo Músico nos Cultos",
   "settingsMusicianModeDesc": "Abre o culto diretamente no primeiro cântico com navegação lateral contínua.",
   "settingsServiceOrderSidePanel": "Painel lateral da ordem do culto",
-  "settingsServiceOrderSidePanelDesc": "Em tablets, mantém a ordem do culto visível ao lado do conteúdo no modo não músico.",
+  "settingsServiceOrderSidePanelDesc": "Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.",
   "settingsKeepAwake": "Manter Ecrã Ligado",
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
   "settingsSyncAnnotations": "Sincronizar anotações",

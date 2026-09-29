@@ -987,7 +987,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsServiceOrderSidePanelDesc =>
-      'En tablets, mantiene el orden del servicio visible junto al contenido en el modo no músico.';
+      'En tablets, muestra el orden del servicio junto al detalle del elemento en el modo no músico.';
 
   @override
   String get settingsKeepAwake => 'Mantener Pantalla Encendida';

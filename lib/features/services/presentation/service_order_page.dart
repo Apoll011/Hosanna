@@ -119,6 +119,8 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         final elements = _sorted(service);
         _ensureCurrent(elements);
 
+        final showSideRail = useSideRail && _viewerIndex != null;
+
         final mainColumn = Column(
           children: [
             _OrderHeader(
@@ -138,7 +140,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
             _tabIndex = 1;
           }),
           child: Scaffold(
-            body: useSideRail
+            body: showSideRail
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

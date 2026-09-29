@@ -307,7 +307,7 @@
   "settingsMusicianMode": "Modo Músico en los Servicios",
   "settingsMusicianModeDesc": "Abre el servicio directamente en la primera canción con navegación lateral continua.",
   "settingsServiceOrderSidePanel": "Panel lateral del orden del servicio",
-  "settingsServiceOrderSidePanelDesc": "En tablets, mantiene el orden del servicio visible junto al contenido en el modo no músico.",
+  "settingsServiceOrderSidePanelDesc": "En tablets, muestra el orden del servicio junto al detalle del elemento en el modo no músico.",
   "settingsKeepAwake": "Mantener Pantalla Encendida",
   "settingsKeepAwakeDesc": "Evita que la pantalla se suspenda al ver canciones.",
   "settingsSyncAnnotations": "Sincronizar anotaciones",
