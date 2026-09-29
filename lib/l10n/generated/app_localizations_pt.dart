@@ -850,6 +850,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esse item do culto não foi encontrado.';
 
   @override
+  String get servicesElementEmpty => 'Nada preparado para este momento';
+
+  @override
+  String get servicesElementEmptyDesc =>
+      'Ainda não há passagem, conteúdo ou notas neste item.';
+
+  @override
   String get settingsTitle => 'Definições';
 
   @override

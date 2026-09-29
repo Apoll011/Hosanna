@@ -849,6 +849,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ese elemento del servicio no se encontró.';
 
   @override
+  String get servicesElementEmpty => 'Nada preparado para este momento';
+
+  @override
+  String get servicesElementEmptyDesc =>
+      'Aún no hay pasaje, contenido ni notas en este elemento.';
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override

@@ -56,11 +56,15 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
       ref.read(songCurrentDocumentProvider.notifier).state = doc;
 
       // If the currently-selected variant no longer exists in the new document,
-      // fall back to the default.
+      // fall back to the default. Defer the settings write so we don't notify
+      // [songDisplaySettingsProvider] listeners mid-frame (e.g. SongToolbar).
       final currentId = ref.read(songDisplaySettingsProvider).variantId;
       final stillExists = doc.variants.any((v) => v.id == currentId);
-      if (!stillExists) {
-        ref.read(songDisplaySettingsProvider.notifier).setVariantId('default');
+      if (!stillExists && currentId != 'default') {
+        Future<void>(() {
+          if (!mounted) return;
+          ref.read(songDisplaySettingsProvider.notifier).setVariantId('default');
+        });
       }
     });
   }

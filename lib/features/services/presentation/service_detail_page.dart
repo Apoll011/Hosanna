@@ -14,6 +14,7 @@ import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
 import 'service_element_meta.dart';
 import 'service_order_page.dart';
+import 'widgets/horizontal_swipe_navigator.dart';
 import 'widgets/service_notes_panel.dart';
 
 /// Entry point for a service. Honours [AppSettings.musicianMode]: musician
@@ -126,18 +127,54 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     );
     _currentElementId ??= current.id;
 
-    // Song elements (in service order) for prev/next navigation.
+    final elementIndex = elements.indexWhere((e) => e.id == current.id);
+    final isSong = current.type == 'song' && current.songId != null;
+
+    // On songs: swipe only between songs. On non-songs: swipe through every
+    // element until a song is reached, then song-only nav resumes.
     final songElements = elements
         .where((e) => e.type == 'song' && e.songId != null)
         .toList();
     final songIndex = songElements.indexWhere((e) => e.id == current.id);
+
+    final bool canPrev;
+    final bool canNext;
+    final String positionLabel;
+    final VoidCallback onPrev;
+    final VoidCallback onNext;
+
+    if (isSong) {
+      canPrev = songIndex > 0;
+      canNext = songIndex >= 0 && songIndex < songElements.length - 1;
+      positionLabel = '${songIndex + 1} / ${songElements.length}';
+      onPrev = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = songElements[songIndex - 1].id;
+          });
+      onNext = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = songElements[songIndex + 1].id;
+          });
+    } else {
+      canPrev = elementIndex > 0;
+      canNext = elementIndex >= 0 && elementIndex < elements.length - 1;
+      positionLabel = '${elementIndex + 1} / ${elements.length}';
+      onPrev = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = elements[elementIndex - 1].id;
+          });
+      onNext = () => setState(() {
+            _isAnnotating = false;
+            _currentElementId = elements[elementIndex + 1].id;
+          });
+    }
 
     return Column(
       children: [
         _MusicianTopBar(
           serviceName: service.name,
           itemLabel: l10n.servicesItemOf(
-            elements.indexWhere((e) => e.id == current.id) + 1,
+            elementIndex + 1,
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
@@ -146,7 +183,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             serviceId: widget.serviceId,
           ),
           onLeave: () => context.pop(),
-          isSong: current.type == 'song',
+          isSong: isSong,
           isAnnotating: _isAnnotating,
           onToggleAnnotation: () {
             setState(() {
@@ -155,26 +192,26 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           },
         ),
         Expanded(
-          child: current.type == 'song' && current.songId != null
+          child: isSong
               ? _SongElementView(
                   serviceId: widget.serviceId,
                   songId: current.songId!,
                   notes: current.notes,
                   isAnnotating: _isAnnotating,
-                  canPrev: songIndex > 0,
-                  canNext:
-                      songIndex >= 0 && songIndex < songElements.length - 1,
-                  positionLabel: '${songIndex + 1} / ${songElements.length}',
-                  onPrev: () => setState(() {
-                    _currentElementId = songElements[songIndex - 1].id;
-                  }),
-                  onNext: () => setState(() {
-                    _currentElementId = songElements[songIndex + 1].id;
-                  }),
+                  canPrev: canPrev,
+                  canNext: canNext,
+                  positionLabel: positionLabel,
+                  onPrev: onPrev,
+                  onNext: onNext,
                 )
               : _NonSongElementView(
                   serviceId: widget.serviceId,
                   element: current,
+                  canPrev: canPrev,
+                  canNext: canNext,
+                  positionLabel: positionLabel,
+                  onPrev: onPrev,
+                  onNext: onNext,
                 ),
         ),
       ],
@@ -352,112 +389,141 @@ class _NonSongElementView extends StatelessWidget {
   const _NonSongElementView({
     required this.serviceId,
     required this.element,
+    required this.canPrev,
+    required this.canNext,
+    required this.positionLabel,
+    required this.onPrev,
+    required this.onNext,
   });
 
   final String serviceId;
   final ServiceElement element;
+  final bool canPrev;
+  final bool canNext;
+  final String positionLabel;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
+    final hasPassage = element.passage != null && element.passage!.isNotEmpty;
+    final hasContent = element.content != null && element.content!.isNotEmpty;
+    final hasItemNotes = element.notes != null && element.notes!.isNotEmpty;
+    final hasBody = hasPassage || hasContent || hasItemNotes;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: meta.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: meta.color.withValues(alpha: 0.3)),
-                ),
-                child: Icon(meta.icon, color: meta.color, size: 28),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: meta.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  meta.label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: meta.color,
-                    fontWeight: FontWeight.w700,
+    return HorizontalSwipeNavigator(
+      canPrev: canPrev,
+      canNext: canNext,
+      positionLabel: positionLabel,
+      onPrev: canPrev ? onPrev : null,
+      onNext: canNext ? onNext : null,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 88),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: meta.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: meta.color.withValues(alpha: 0.3)),
                   ),
+                  child: Icon(meta.icon, color: meta.color, size: 28),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                element.title.isNotEmpty ? element.title : meta.label,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (element.passage != null && element.passage!.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
+                    horizontal: 12,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                    color: meta.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    element.passage!,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.primary,
+                    meta.label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: meta.color,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-              ],
-              if (element.content != null && element.content!.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                Text(
+                  element.title.isNotEmpty ? element.title : meta.label,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  child: Text(
-                    element.content!,
-                    style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                if (hasPassage) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Text(
+                      element.passage!,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
+                ],
+                if (hasContent) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Text(
+                      element.content!,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+                if (hasItemNotes) ...[
+                  const SizedBox(height: 16),
+                  _NotesCard(notes: element.notes!),
+                ],
+                if (!hasBody) ...[
+                  const SizedBox(height: 24),
+                  EmptyState(
+                    icon: Icons.notes_outlined,
+                    title: l10n.servicesElementEmpty,
+                    description: l10n.servicesElementEmptyDesc,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => showServiceNotesSheet(
+                    context,
+                    serviceId: serviceId,
+                    elementId: element.id,
+                  ),
+                  icon: const Icon(Icons.sticky_note_2_outlined),
+                  label: Text(l10n.servicesTeamNotes),
                 ),
               ],
-              if (element.notes != null && element.notes!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _NotesCard(notes: element.notes!),
-              ],
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () => showServiceNotesSheet(
-                  context,
-                  serviceId: serviceId,
-                  elementId: element.id,
-                ),
-                icon: const Icon(Icons.sticky_note_2_outlined),
-                label: Text(l10n.servicesTeamNotes),
-              ),
-            ],
+            ),
           ),
         ),
       ),

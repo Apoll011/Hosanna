@@ -270,6 +270,8 @@
   "servicesNotesUnauthorized": "Inicie sessão novamente para gerir notas.",
   "servicesNotesNotFound": "Esta nota já não existe.",
   "servicesNotesElementNotFound": "Esse item do culto não foi encontrado.",
+  "servicesElementEmpty": "Nada preparado para este momento",
+  "servicesElementEmptyDesc": "Ainda não há passagem, conteúdo ou notas neste item.",
 
   "settingsTitle": "Definições",
   "settingsAppearance": "Aspeto",

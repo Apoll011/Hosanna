@@ -14,8 +14,10 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../../songs/presentation/song_reader.dart';
+import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
 import 'service_element_meta.dart';
+import 'widgets/horizontal_swipe_navigator.dart';
 import 'widgets/service_notes_panel.dart';
 
 /// Non-musician service view: run-of-show with durations, item detail, and
@@ -127,10 +129,6 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                       embedded: true,
                       title: l10n.servicesTeamNotes,
                     ),
-                    _MoreTab(
-                      onLeave: () => context.pop(),
-                      onOpenNotes: () => setState(() => _tabIndex = 1),
-                    ),
                   ],
                 ),
               ),
@@ -153,11 +151,6 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                 selectedIcon: const Icon(Icons.sticky_note_2),
                 label: l10n.servicesNotes,
               ),
-              NavigationDestination(
-                icon: const Icon(Icons.more_horiz),
-                selectedIcon: const Icon(Icons.more_horiz),
-                label: l10n.servicesMore,
-              ),
             ],
           ),
         );
@@ -173,28 +166,25 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
     if (service == null) return;
     final elements = _sorted(service);
-    final windows =
-        computeElementTimeWindows(elements.map((e) => e.duration));
     final index = elements.indexWhere((e) => e.id == element.id);
-    final completed = await Navigator.of(context).push<bool>(
+    if (index < 0) return;
+    final completedId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (_) => _ElementDetailPage(
+        builder: (_) => _ElementViewerPage(
           serviceId: widget.serviceId,
-          element: element,
-          timeWindow: index >= 0 ? windows[index] : null,
-          isCompleted: _completedIds.contains(element.id),
-          isCurrent: element.id == _currentElementId,
+          elements: elements,
+          initialIndex: index,
+          completedIds: _completedIds,
         ),
       ),
     );
-    if (!mounted || completed != true) return;
+    if (!mounted || completedId == null) return;
     setState(() {
-      _completedIds.add(element.id);
-      final service = ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
-      if (service == null) return;
-      final elements = _sorted(service);
-      final idx = elements.indexWhere((e) => e.id == element.id);
-      final next = elements.skip(idx + 1).where((e) => !_completedIds.contains(e.id));
+      _completedIds.add(completedId);
+      final idx = elements.indexWhere((e) => e.id == completedId);
+      final next = elements
+          .skip(idx < 0 ? 0 : idx + 1)
+          .where((e) => !_completedIds.contains(e.id));
       if (next.isNotEmpty) {
         _currentElementId = next.first.id;
       }
@@ -524,258 +514,275 @@ class _StatusGlyph extends StatelessWidget {
   }
 }
 
-class _MoreTab extends StatelessWidget {
-  const _MoreTab({required this.onLeave, required this.onOpenNotes});
-
-  final VoidCallback onLeave;
-  final VoidCallback onOpenNotes;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          l10n.servicesMore,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          leading: const Icon(Icons.sticky_note_2_outlined),
-          title: Text(l10n.servicesTeamNotes),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onOpenNotes,
-        ),
-        const SizedBox(height: 10),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          leading: Icon(Icons.logout, color: theme.colorScheme.error),
-          title: Text(l10n.servicesLeaveMode),
-          onTap: onLeave,
-        ),
-      ],
-    );
-  }
-}
-
-class _ElementDetailPage extends ConsumerStatefulWidget {
-  const _ElementDetailPage({
+/// Full-screen viewer for any service element with swipe across the whole order.
+class _ElementViewerPage extends ConsumerStatefulWidget {
+  const _ElementViewerPage({
     required this.serviceId,
-    required this.element,
-    required this.timeWindow,
-    required this.isCompleted,
-    required this.isCurrent,
+    required this.elements,
+    required this.initialIndex,
+    required this.completedIds,
   });
 
   final String serviceId;
-  final ServiceElement element;
-  final ElementTimeWindow? timeWindow;
-  final bool isCompleted;
-  final bool isCurrent;
+  final List<ServiceElement> elements;
+  final int initialIndex;
+  final Set<String> completedIds;
 
   @override
-  ConsumerState<_ElementDetailPage> createState() => _ElementDetailPageState();
+  ConsumerState<_ElementViewerPage> createState() => _ElementViewerPageState();
 }
 
-class _ElementDetailPageState extends ConsumerState<_ElementDetailPage> {
+class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
+  late int _index;
   bool _hidChords = false;
   SongDisplaySettingsController? _displaySettings;
+
+  ServiceElement get _element => widget.elements[_index];
+
+  List<ElementTimeWindow> get _windows =>
+      computeElementTimeWindows(widget.elements.map((e) => e.duration));
 
   @override
   void initState() {
     super.initState();
-    if (widget.element.type == 'song') {
-      _displaySettings = ref.read(songDisplaySettingsProvider.notifier);
-      if (ref.read(songDisplaySettingsProvider).showChords) {
-        _displaySettings!.setShowChords(false, persist: false);
-        _hidChords = true;
-      }
-    }
+    _index = widget.initialIndex.clamp(0, widget.elements.length - 1);
+    _maybeHideChords();
   }
 
   @override
   void dispose() {
-    if (_hidChords && _displaySettings != null) {
-      _displaySettings!.setShowChords(
-        _displaySettings!.persistedShowChords,
-        persist: false,
-      );
-    }
+    _restoreChords();
     super.dispose();
+  }
+
+  void _maybeHideChords() {
+    if (_element.type != 'song') return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hidChords) return;
+      _displaySettings ??= ref.read(songDisplaySettingsProvider.notifier);
+      if (ref.read(songDisplaySettingsProvider).showChords) {
+        _displaySettings!.setShowChords(false, persist: false);
+        _hidChords = true;
+      }
+    });
+  }
+
+  void _restoreChords() {
+    if (!_hidChords || _displaySettings == null) return;
+    _displaySettings!.setShowChords(
+      _displaySettings!.persistedShowChords,
+      persist: false,
+    );
+    _hidChords = false;
+  }
+
+  void _goTo(int nextIndex) {
+    if (nextIndex < 0 || nextIndex >= widget.elements.length) return;
+    final wasSong = _element.type == 'song';
+    setState(() => _index = nextIndex);
+    final isSong = _element.type == 'song';
+    if (wasSong && !isSong) {
+      _restoreChords();
+    } else if (isSong) {
+      _maybeHideChords();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final element = widget.element;
-    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
-
-    if (element.type == 'song' && element.songId != null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.servicesItemDetail),
-          actions: [
-            IconButton(
-              tooltip: l10n.servicesNotes,
-              icon: const Icon(Icons.sticky_note_2_outlined),
-              onPressed: () => showServiceNotesSheet(
-                context,
-                serviceId: widget.serviceId,
-                elementId: element.id,
-              ),
-            ),
-          ],
-        ),
-        body: _SongDetailBody(
-          serviceId: widget.serviceId,
-          songId: element.songId!,
-          notes: element.notes,
-        ),
-        bottomNavigationBar: widget.isCompleted
-            ? null
-            : SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(l10n.servicesMarkCompleted),
-                  ),
-                ),
-              ),
-      );
-    }
+    final element = _element;
+    final isSong = element.type == 'song' && element.songId != null;
+    final canPrev = _index > 0;
+    final canNext = _index < widget.elements.length - 1;
+    final positionLabel = '${_index + 1} / ${widget.elements.length}';
+    final isCompleted = widget.completedIds.contains(element.id);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.servicesItemDetail),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: meta.color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(meta.icon, color: meta.color, size: 30),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  element.title.isNotEmpty ? element.title : meta.label,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  meta.label,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (widget.timeWindow != null && widget.timeWindow!.hasDuration) ...[
-            const SizedBox(height: 12),
-            _InfoCard(
-              label: l10n.servicesEstimatedDuration,
-              child: Text(
-                widget.timeWindow!.label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-          if (element.passage != null && element.passage!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _InfoCard(
-              label: l10n.servicesPassage,
-              child: Text(
-                element.passage!,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-          if (element.content != null && element.content!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _InfoCard(
-              label: l10n.servicesItems,
-              child: Text(element.content!, style: theme.textTheme.bodyMedium),
-            ),
-          ],
-          if (element.notes != null && element.notes!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _InfoCard(
-              label: l10n.servicesItemNotes,
-              child: Text(
-                element.notes!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Material(
-            color: theme.colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: theme.colorScheme.outlineVariant),
-            ),
-            child: ListTile(
-              title: Text(l10n.servicesLeaderNotes),
-              subtitle: Text(l10n.servicesLeaderNotesHint),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showServiceNotesSheet(
-                context,
-                serviceId: widget.serviceId,
-                elementId: element.id,
-              ),
+        actions: [
+          if (isSong) const SongToolbarButton(),
+          IconButton(
+            tooltip: l10n.servicesNotes,
+            icon: const Icon(Icons.sticky_note_2_outlined),
+            onPressed: () => showServiceNotesSheet(
+              context,
+              serviceId: widget.serviceId,
+              elementId: element.id,
             ),
           ),
         ],
       ),
-      bottomNavigationBar: widget.isCompleted
+      body: isSong
+          ? _SongDetailBody(
+              serviceId: widget.serviceId,
+              songId: element.songId!,
+              notes: element.notes,
+              canPrev: canPrev,
+              canNext: canNext,
+              positionLabel: positionLabel,
+              onPrev: () => _goTo(_index - 1),
+              onNext: () => _goTo(_index + 1),
+            )
+          : HorizontalSwipeNavigator(
+              canPrev: canPrev,
+              canNext: canNext,
+              positionLabel: positionLabel,
+              onPrev: canPrev ? () => _goTo(_index - 1) : null,
+              onNext: canNext ? () => _goTo(_index + 1) : null,
+              child: _NonSongDetailBody(
+                serviceId: widget.serviceId,
+                element: element,
+                timeWindow: _windows[_index],
+              ),
+            ),
+      bottomNavigationBar: isCompleted
           ? null
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () => Navigator.pop(context, element.id),
                   child: Text(l10n.servicesMarkCompleted),
                 ),
               ),
             ),
+    );
+  }
+}
+
+class _NonSongDetailBody extends StatelessWidget {
+  const _NonSongDetailBody({
+    required this.serviceId,
+    required this.element,
+    required this.timeWindow,
+  });
+
+  final String serviceId;
+  final ServiceElement element;
+  final ElementTimeWindow timeWindow;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
+    final hasPassage = element.passage != null && element.passage!.isNotEmpty;
+    final hasContent = element.content != null && element.content!.isNotEmpty;
+    final hasItemNotes = element.notes != null && element.notes!.isNotEmpty;
+    final hasBody = hasPassage || hasContent || hasItemNotes;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: meta.color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(meta.icon, color: meta.color, size: 30),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                element.title.isNotEmpty ? element.title : meta.label,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                meta.label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (timeWindow.hasDuration) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesEstimatedDuration,
+            child: Text(
+              timeWindow.label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        if (hasPassage) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesPassage,
+            child: Text(
+              element.passage!,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        if (hasContent) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesItems,
+            child: Text(element.content!, style: theme.textTheme.bodyMedium),
+          ),
+        ],
+        if (hasItemNotes) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesItemNotes,
+            child: Text(
+              element.notes!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+        if (!hasBody) ...[
+          const SizedBox(height: 24),
+          EmptyState(
+            icon: Icons.notes_outlined,
+            title: l10n.servicesElementEmpty,
+            description: l10n.servicesElementEmptyDesc,
+          ),
+        ],
+        const SizedBox(height: 12),
+        Material(
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
+          child: ListTile(
+            title: Text(l10n.servicesLeaderNotes),
+            subtitle: Text(l10n.servicesLeaderNotesHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showServiceNotesSheet(
+              context,
+              serviceId: serviceId,
+              elementId: element.id,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -785,11 +792,21 @@ class _SongDetailBody extends ConsumerWidget {
     required this.serviceId,
     required this.songId,
     required this.notes,
+    required this.canPrev,
+    required this.canNext,
+    required this.positionLabel,
+    required this.onPrev,
+    required this.onNext,
   });
 
   final String serviceId;
   final String songId;
   final String? notes;
+  final bool canPrev;
+  final bool canNext;
+  final String positionLabel;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -808,10 +825,16 @@ class _SongDetailBody extends ConsumerWidget {
               description: l10n.songsNotFoundDesc,
             )
           : SongReader(
+              key: ValueKey(songId),
               content: song.content,
               notes: notes,
               serviceId: serviceId,
               songId: songId,
+              canPrev: canPrev,
+              canNext: canNext,
+              positionLabel: positionLabel,
+              onPrev: onPrev,
+              onNext: onNext,
             ),
     );
   }
@@ -852,3 +875,4 @@ class _InfoCard extends StatelessWidget {
     );
   }
 }
+

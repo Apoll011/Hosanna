@@ -255,6 +255,8 @@
   "servicesNotesUnauthorized": "Sign in again to manage notes.",
   "servicesNotesNotFound": "This note no longer exists.",
   "servicesNotesElementNotFound": "That service item was not found.",
+  "servicesElementEmpty": "Nothing prepared for this moment",
+  "servicesElementEmptyDesc": "No passage, content, or item notes were added yet.",
   "settingsTitle": "Settings",
   "settingsAppearance": "Appearance",
   "settingsTheme": "Theme",

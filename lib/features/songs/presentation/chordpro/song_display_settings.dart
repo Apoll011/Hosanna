@@ -143,7 +143,10 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   void resetTransposition() =>
       state = state.copyWith(transpose: 0, capo: 0);
 
-  void setVariantId(String id) => state = state.copyWith(variantId: id);
+  void setVariantId(String id) {
+    if (state.variantId == id) return;
+    state = state.copyWith(variantId: id);
+  }
 
   void toggleShowChords() {
     setShowChords(!state.showChords);
