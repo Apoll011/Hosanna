@@ -121,16 +121,44 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
 
         final showSideRail = useSideRail && _viewerIndex != null;
 
-        final mainColumn = Column(
-          children: [
-            _OrderHeader(
-              service: service,
-              elapsed: _elapsed,
-              onLeave: () => context.pop(),
-            ),
-            Expanded(child: _buildMainPane(l10n, elements, useSideRail)),
-          ],
-        );
+        final mainPane = _buildMainPane(l10n, elements, useSideRail);
+
+        final body = showSideRail
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: _sideRailWidth,
+                    child: _ServiceOrderSideRail(
+                      elements: elements,
+                      completedIds: _completedIds,
+                      currentElementId: _currentElementId,
+                      startedAt: _startedAt,
+                      onSelect: (element) =>
+                          _openElement(context, element, useSideRail: true),
+                    ),
+                  ),
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                  // Clip so horizontal swipe transforms in the viewer
+                  // cannot paint over the side rail. No order header —
+                  // timer lives at the bottom of the rail.
+                  Expanded(child: ClipRect(child: mainPane)),
+                ],
+              )
+            : Column(
+                children: [
+                  _OrderHeader(
+                    service: service,
+                    elapsed: _elapsed,
+                    onLeave: () => context.pop(),
+                  ),
+                  Expanded(child: mainPane),
+                ],
+              );
 
         return ServiceNotesIncomingListener(
           serviceId: widget.serviceId,
@@ -140,33 +168,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
             _tabIndex = 1;
           }),
           child: Scaffold(
-            body: showSideRail
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        width: _sideRailWidth,
-                        child: _ServiceOrderSideRail(
-                          elements: elements,
-                          completedIds: _completedIds,
-                          currentElementId: _currentElementId,
-                          onSelect: (element) =>
-                              _openElement(context, element, useSideRail: true),
-                        ),
-                      ),
-                      VerticalDivider(
-                        width: 1,
-                        thickness: 1,
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
-                      // Clip so horizontal swipe transforms in the viewer
-                      // cannot paint over the side rail.
-                      Expanded(
-                        child: ClipRect(child: mainColumn),
-                      ),
-                    ],
-                  )
-                : mainColumn,
+            body: body,
             floatingActionButton: _tabIndex == 1 && _viewerIndex == null
                 ? ServiceNotesFab(
                     serviceId: widget.serviceId,
@@ -230,6 +232,9 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         elements: elements,
         initialIndex: viewerIndex,
         completedIds: _completedIds,
+        startedAt: _startedAt,
+        // Side rail owns the clock; app bar only needs a live orb.
+        compactTimerStyle: _ServiceTimerStyle.orbOnly,
         embedded: true,
         onIndexChanged: (i) {
           setState(() {
@@ -305,6 +310,9 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
           elements: elements,
           initialIndex: index,
           completedIds: _completedIds,
+          startedAt: _startedAt,
+          // No side rail — orb + elapsed beside the song toolbar.
+          compactTimerStyle: _ServiceTimerStyle.orbWithTime,
         ),
       ),
     );
@@ -439,6 +447,178 @@ class _OrderHeader extends StatelessWidget {
   }
 }
 
+/// Live elapsed clock styles used across order / detail layouts.
+enum _ServiceTimerStyle {
+  /// Side-rail footer: orb + elapsed time.
+  rail,
+
+  /// App bar when the rail already shows the clock.
+  orbOnly,
+
+  /// App bar when there is no rail timer.
+  orbWithTime,
+}
+
+/// Live elapsed clock. See [_ServiceTimerStyle].
+class _ServiceTimerStrip extends StatefulWidget {
+  const _ServiceTimerStrip({
+    required this.startedAt,
+    required this.style,
+  });
+
+  final DateTime? startedAt;
+  final _ServiceTimerStyle style;
+
+  @override
+  State<_ServiceTimerStrip> createState() => _ServiceTimerStripState();
+}
+
+class _ServiceTimerStripState extends State<_ServiceTimerStrip> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  Duration get _elapsed {
+    final start = widget.startedAt;
+    if (start == null) return Duration.zero;
+    return DateTime.now().difference(start);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final label = formatServiceDuration(_elapsed.inSeconds);
+
+    switch (widget.style) {
+      case _ServiceTimerStyle.orbOnly:
+        return Tooltip(
+          message: '${l10n.servicesInProgress} · $label',
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: _LiveGreenOrb(size: 10),
+          ),
+        );
+      case _ServiceTimerStyle.orbWithTime:
+        return Tooltip(
+          message: l10n.servicesInProgress,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _LiveGreenOrb(size: 10),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        );
+      case _ServiceTimerStyle.rail:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              const _LiveGreenOrb(size: 10),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.timer_outlined,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        );
+    }
+  }
+}
+
+class _LiveGreenOrb extends StatefulWidget {
+  const _LiveGreenOrb({this.size = 10});
+
+  final double size;
+
+  @override
+  State<_LiveGreenOrb> createState() => _LiveGreenOrbState();
+}
+
+class _LiveGreenOrbState extends State<_LiveGreenOrb>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) {
+        final t = _pulse.value;
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color.lerp(
+              const Color(0xFF16A34A),
+              const Color(0xFF4ADE80),
+              t,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF16A34A).withValues(alpha: 0.35 + t * 0.35),
+                blurRadius: 4 + t * 4,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _OrderListTab extends ConsumerWidget {
   const _OrderListTab({
     required this.elements,
@@ -505,12 +685,14 @@ class _ServiceOrderSideRail extends StatelessWidget {
     required this.completedIds,
     required this.currentElementId,
     required this.onSelect,
+    this.startedAt,
   });
 
   final List<ServiceElement> elements;
   final Set<String> completedIds;
   final String? currentElementId;
   final ValueChanged<ServiceElement> onSelect;
+  final DateTime? startedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -586,6 +768,14 @@ class _ServiceOrderSideRail extends StatelessWidget {
                         );
                       },
                     ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: _ServiceTimerStrip(
+                  startedAt: startedAt,
+                  style: _ServiceTimerStyle.rail,
+                ),
             ),
           ],
         ),
@@ -856,6 +1046,8 @@ class _ElementViewerPage extends ConsumerStatefulWidget {
     required this.elements,
     required this.initialIndex,
     required this.completedIds,
+    this.startedAt,
+    this.compactTimerStyle,
     this.embedded = false,
     this.onIndexChanged,
     this.onClose,
@@ -865,6 +1057,10 @@ class _ElementViewerPage extends ConsumerStatefulWidget {
   final List<ServiceElement> elements;
   final int initialIndex;
   final Set<String> completedIds;
+  final DateTime? startedAt;
+
+  /// When set, show a compact live timer in the app bar (no "In progress" chip).
+  final _ServiceTimerStyle? compactTimerStyle;
   final bool embedded;
   final ValueChanged<int>? onIndexChanged;
   final VoidCallback? onClose;
@@ -987,6 +1183,16 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
         title: Text(l10n.servicesItemDetail),
         actions: [
           if (isSong) const SongToolbarButton(),
+          if (widget.compactTimerStyle != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 2, right: 4),
+              child: Center(
+                child: _ServiceTimerStrip(
+                  startedAt: widget.startedAt,
+                  style: widget.compactTimerStyle!,
+                ),
+              ),
+            ),
           IconButton(
             tooltip: l10n.servicesNotes,
             icon: const Icon(Icons.sticky_note_2_outlined),
