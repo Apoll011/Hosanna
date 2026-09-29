@@ -12,10 +12,13 @@ import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/song_reader.dart';
 import '../../songs/presentation/song_toolbar.dart';
 import '../data/service_repository.dart';
+import 'service_element_meta.dart';
+import 'service_order_page.dart';
+import 'widgets/service_notes_panel.dart';
 
-/// Musician view of a service: the first song (or element) is shown in a
-/// full-screen song view, and the rest of the service order lives in a
-/// slide-over menu, mirroring the React `MusicianServiceView`.
+/// Entry point for a service. Honours [AppSettings.musicianMode]: musician
+/// view opens the first song with a drawer order; otherwise the run-of-show
+/// [ServiceOrderPage] is shown.
 class ServiceDetailPage extends ConsumerStatefulWidget {
   const ServiceDetailPage({super.key, required this.serviceId});
 
@@ -46,6 +49,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final musicianMode = ref.watch(settingsControllerProvider).musicianMode;
+    if (!musicianMode) {
+      return ServiceOrderPage(serviceId: widget.serviceId);
+    }
+
     final l10n = AppLocalizations.of(context);
     final serviceAsync = ref.watch(serviceByIdProvider(widget.serviceId));
     final service = serviceAsync.valueOrNull;
@@ -133,6 +141,10 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
+          onOpenNotes: () => showServiceNotesSheet(
+            context,
+            serviceId: widget.serviceId,
+          ),
           onLeave: () => context.pop(),
           isSong: current.type == 'song',
           isAnnotating: _isAnnotating,
@@ -160,7 +172,10 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                     _currentElementId = songElements[songIndex + 1].id;
                   }),
                 )
-              : _NonSongElementView(element: current),
+              : _NonSongElementView(
+                  serviceId: widget.serviceId,
+                  element: current,
+                ),
         ),
       ],
     );
@@ -172,6 +187,7 @@ class _MusicianTopBar extends StatelessWidget {
     required this.serviceName,
     required this.itemLabel,
     required this.onOpenOrder,
+    required this.onOpenNotes,
     required this.onLeave,
     required this.isSong,
     this.isAnnotating = false,
@@ -181,6 +197,7 @@ class _MusicianTopBar extends StatelessWidget {
   final String serviceName;
   final String itemLabel;
   final VoidCallback onOpenOrder;
+  final VoidCallback onOpenNotes;
   final VoidCallback onLeave;
   final bool isSong;
   final bool isAnnotating;
@@ -222,6 +239,11 @@ class _MusicianTopBar extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.sticky_note_2_outlined),
+              tooltip: l10n.servicesNotes,
+              onPressed: onOpenNotes,
             ),
             if (isSong) ...[
               IconButton(
@@ -327,15 +349,19 @@ class _SongElementView extends ConsumerWidget {
 }
 
 class _NonSongElementView extends StatelessWidget {
-  const _NonSongElementView({required this.element});
+  const _NonSongElementView({
+    required this.serviceId,
+    required this.element,
+  });
 
+  final String serviceId;
   final ServiceElement element;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -421,6 +447,16 @@ class _NonSongElementView extends StatelessWidget {
                 const SizedBox(height: 16),
                 _NotesCard(notes: element.notes!),
               ],
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => showServiceNotesSheet(
+                  context,
+                  serviceId: serviceId,
+                  elementId: element.id,
+                ),
+                icon: const Icon(Icons.sticky_note_2_outlined),
+                label: Text(l10n.servicesTeamNotes),
+              ),
             ],
           ),
         ),
@@ -576,7 +612,7 @@ class _OrderItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final meta = _elementMeta(l10n, theme.colorScheme, element.type);
+    final meta = serviceElementMeta(l10n, theme.colorScheme, element.type);
 
     final songAsync = element.songId == null
         ? null
@@ -652,53 +688,6 @@ class _OrderItem extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _ElementMeta {
-  const _ElementMeta(this.label, this.icon, this.color);
-
-  final String label;
-  final IconData icon;
-  final Color color;
-}
-
-_ElementMeta _elementMeta(
-  AppLocalizations l10n,
-  ColorScheme colors,
-  String type,
-) {
-  return switch (type) {
-    'song' => _ElementMeta(
-      l10n.servicesElementSong,
-      Icons.music_note,
-      colors.primary,
-    ),
-    'welcome' => _ElementMeta(
-      l10n.servicesElementWelcome,
-      Icons.waving_hand_outlined,
-      colors.secondary,
-    ),
-    'scripture' => _ElementMeta(
-      l10n.servicesElementScripture,
-      Icons.menu_book_outlined,
-      colors.tertiary,
-    ),
-    'message' => _ElementMeta(
-      l10n.servicesElementMessage,
-      Icons.chat_bubble_outline,
-      colors.error,
-    ),
-    'announcement' => _ElementMeta(
-      l10n.servicesElementAnnouncement,
-      Icons.campaign_outlined,
-      colors.primary,
-    ),
-    _ => _ElementMeta(
-      l10n.servicesElementDefault,
-      Icons.label_outline,
-      colors.onSurfaceVariant,
-    ),
-  };
 }
 
 extension<T> on Iterable<T> {

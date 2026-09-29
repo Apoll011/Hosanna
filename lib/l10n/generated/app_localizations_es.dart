@@ -771,6 +771,84 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesElementDefault => 'Elemento';
 
   @override
+  String get servicesMore => 'Más';
+
+  @override
+  String get servicesInProgress => 'En curso';
+
+  @override
+  String get servicesItemDetail => 'Detalle del elemento';
+
+  @override
+  String get servicesEstimatedDuration => 'Duración estimada';
+
+  @override
+  String get servicesPassage => 'Pasaje';
+
+  @override
+  String get servicesMarkCompleted => 'Marcar como completado';
+
+  @override
+  String get servicesLeaderNotes => 'Notas del líder';
+
+  @override
+  String get servicesLeaderNotesHint => 'Añadir notas sobre este momento…';
+
+  @override
+  String get servicesTeamNotes => 'Notas del equipo';
+
+  @override
+  String get servicesNotesEmpty => 'Aún no hay notas';
+
+  @override
+  String get servicesNotesEmptyDesc =>
+      'Comparte actualizaciones con el equipo durante el servicio.';
+
+  @override
+  String get servicesNotesAdd => 'Añadir nota';
+
+  @override
+  String get servicesNotesEdit => 'Editar nota';
+
+  @override
+  String get servicesNotesDelete => 'Eliminar';
+
+  @override
+  String get servicesNotesDeleteTitle => '¿Eliminar nota?';
+
+  @override
+  String get servicesNotesDeleteDesc =>
+      'Esta nota se eliminará para todos los que puedan verla.';
+
+  @override
+  String get servicesNotesHint => 'Escribe una nota para el equipo…';
+
+  @override
+  String get servicesNotesPrivate => 'Nota privada';
+
+  @override
+  String get servicesNotesPrivateDesc => 'Solo tú puedes ver esta nota.';
+
+  @override
+  String get servicesNotesSubscriptionRequired =>
+      'Se requiere una suscripción activa para añadir o editar notas.';
+
+  @override
+  String get servicesNotesForbidden =>
+      'No tienes permiso para cambiar esta nota.';
+
+  @override
+  String get servicesNotesUnauthorized =>
+      'Inicia sesión de nuevo para gestionar notas.';
+
+  @override
+  String get servicesNotesNotFound => 'Esta nota ya no existe.';
+
+  @override
+  String get servicesNotesElementNotFound =>
+      'Ese elemento del servicio no se encontró.';
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override

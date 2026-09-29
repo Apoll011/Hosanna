@@ -146,10 +146,18 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   void setVariantId(String id) => state = state.copyWith(variantId: id);
 
   void toggleShowChords() {
-    final v = !state.showChords;
-    _prefs.setBool(_showChordsKey, v);
-    state = state.copyWith(showChords: v);
+    setShowChords(!state.showChords);
   }
+
+  /// Sets chord visibility. When [persist] is false, only the in-memory
+  /// session state changes (used to open non-musician song views lyrics-first).
+  void setShowChords(bool value, {bool persist = true}) {
+    if (persist) _prefs.setBool(_showChordsKey, value);
+    state = state.copyWith(showChords: value);
+  }
+
+  /// Value stored in prefs, ignoring any temporary in-memory override.
+  bool get persistedShowChords => _prefs.getBool(_showChordsKey) ?? true;
 
   void toggleTwoColumn() {
     final v = !state.twoColumn;

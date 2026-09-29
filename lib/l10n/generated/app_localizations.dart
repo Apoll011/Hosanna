@@ -1486,6 +1486,150 @@ abstract class AppLocalizations {
   /// **'Elemento'**
   String get servicesElementDefault;
 
+  /// No description provided for @servicesMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais'**
+  String get servicesMore;
+
+  /// No description provided for @servicesInProgress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em andamento'**
+  String get servicesInProgress;
+
+  /// No description provided for @servicesItemDetail.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhe do Item'**
+  String get servicesItemDetail;
+
+  /// No description provided for @servicesEstimatedDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração estimada'**
+  String get servicesEstimatedDuration;
+
+  /// No description provided for @servicesPassage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passagem'**
+  String get servicesPassage;
+
+  /// No description provided for @servicesMarkCompleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcar como concluído'**
+  String get servicesMarkCompleted;
+
+  /// No description provided for @servicesLeaderNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas do Líder'**
+  String get servicesLeaderNotes;
+
+  /// No description provided for @servicesLeaderNotesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar notas sobre este momento…'**
+  String get servicesLeaderNotesHint;
+
+  /// No description provided for @servicesTeamNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas da Equipa'**
+  String get servicesTeamNotes;
+
+  /// No description provided for @servicesNotesEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda sem notas'**
+  String get servicesNotesEmpty;
+
+  /// No description provided for @servicesNotesEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Partilhe atualizações com a equipa durante o culto.'**
+  String get servicesNotesEmptyDesc;
+
+  /// No description provided for @servicesNotesAdd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar nota'**
+  String get servicesNotesAdd;
+
+  /// No description provided for @servicesNotesEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar nota'**
+  String get servicesNotesEdit;
+
+  /// No description provided for @servicesNotesDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Eliminar'**
+  String get servicesNotesDelete;
+
+  /// No description provided for @servicesNotesDeleteTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Eliminar nota?'**
+  String get servicesNotesDeleteTitle;
+
+  /// No description provided for @servicesNotesDeleteDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta nota será removida para todos os que a podem ver.'**
+  String get servicesNotesDeleteDesc;
+
+  /// No description provided for @servicesNotesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escreva uma nota para a equipa…'**
+  String get servicesNotesHint;
+
+  /// No description provided for @servicesNotesPrivate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota privada'**
+  String get servicesNotesPrivate;
+
+  /// No description provided for @servicesNotesPrivateDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só você pode ver esta nota.'**
+  String get servicesNotesPrivateDesc;
+
+  /// No description provided for @servicesNotesSubscriptionRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'É necessária uma subscrição ativa para adicionar ou editar notas.'**
+  String get servicesNotesSubscriptionRequired;
+
+  /// No description provided for @servicesNotesForbidden.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não tem permissão para alterar esta nota.'**
+  String get servicesNotesForbidden;
+
+  /// No description provided for @servicesNotesUnauthorized.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inicie sessão novamente para gerir notas.'**
+  String get servicesNotesUnauthorized;
+
+  /// No description provided for @servicesNotesNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta nota já não existe.'**
+  String get servicesNotesNotFound;
+
+  /// No description provided for @servicesNotesElementNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esse item do culto não foi encontrado.'**
+  String get servicesNotesElementNotFound;
+
   /// No description provided for @settingsTitle.
   ///
   /// In pt, this message translates to:

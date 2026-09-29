@@ -765,6 +765,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesElementDefault => 'Element';
 
   @override
+  String get servicesMore => 'More';
+
+  @override
+  String get servicesInProgress => 'In progress';
+
+  @override
+  String get servicesItemDetail => 'Item detail';
+
+  @override
+  String get servicesEstimatedDuration => 'Estimated duration';
+
+  @override
+  String get servicesPassage => 'Passage';
+
+  @override
+  String get servicesMarkCompleted => 'Mark as completed';
+
+  @override
+  String get servicesLeaderNotes => 'Leader notes';
+
+  @override
+  String get servicesLeaderNotesHint => 'Add notes about this moment…';
+
+  @override
+  String get servicesTeamNotes => 'Team notes';
+
+  @override
+  String get servicesNotesEmpty => 'No notes yet';
+
+  @override
+  String get servicesNotesEmptyDesc =>
+      'Share updates with the team during the service.';
+
+  @override
+  String get servicesNotesAdd => 'Add note';
+
+  @override
+  String get servicesNotesEdit => 'Edit note';
+
+  @override
+  String get servicesNotesDelete => 'Delete';
+
+  @override
+  String get servicesNotesDeleteTitle => 'Delete note?';
+
+  @override
+  String get servicesNotesDeleteDesc =>
+      'This note will be removed for everyone who can see it.';
+
+  @override
+  String get servicesNotesHint => 'Write a note for the team…';
+
+  @override
+  String get servicesNotesPrivate => 'Private note';
+
+  @override
+  String get servicesNotesPrivateDesc => 'Only you can see this note.';
+
+  @override
+  String get servicesNotesSubscriptionRequired =>
+      'An active subscription is required to add or edit notes.';
+
+  @override
+  String get servicesNotesForbidden =>
+      'You don’t have permission to change this note.';
+
+  @override
+  String get servicesNotesUnauthorized => 'Sign in again to manage notes.';
+
+  @override
+  String get servicesNotesNotFound => 'This note no longer exists.';
+
+  @override
+  String get servicesNotesElementNotFound => 'That service item was not found.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

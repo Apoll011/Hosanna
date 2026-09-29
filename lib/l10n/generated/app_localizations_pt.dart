@@ -772,6 +772,84 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesElementDefault => 'Elemento';
 
   @override
+  String get servicesMore => 'Mais';
+
+  @override
+  String get servicesInProgress => 'Em andamento';
+
+  @override
+  String get servicesItemDetail => 'Detalhe do Item';
+
+  @override
+  String get servicesEstimatedDuration => 'Duração estimada';
+
+  @override
+  String get servicesPassage => 'Passagem';
+
+  @override
+  String get servicesMarkCompleted => 'Marcar como concluído';
+
+  @override
+  String get servicesLeaderNotes => 'Notas do Líder';
+
+  @override
+  String get servicesLeaderNotesHint => 'Adicionar notas sobre este momento…';
+
+  @override
+  String get servicesTeamNotes => 'Notas da Equipa';
+
+  @override
+  String get servicesNotesEmpty => 'Ainda sem notas';
+
+  @override
+  String get servicesNotesEmptyDesc =>
+      'Partilhe atualizações com a equipa durante o culto.';
+
+  @override
+  String get servicesNotesAdd => 'Adicionar nota';
+
+  @override
+  String get servicesNotesEdit => 'Editar nota';
+
+  @override
+  String get servicesNotesDelete => 'Eliminar';
+
+  @override
+  String get servicesNotesDeleteTitle => 'Eliminar nota?';
+
+  @override
+  String get servicesNotesDeleteDesc =>
+      'Esta nota será removida para todos os que a podem ver.';
+
+  @override
+  String get servicesNotesHint => 'Escreva uma nota para a equipa…';
+
+  @override
+  String get servicesNotesPrivate => 'Nota privada';
+
+  @override
+  String get servicesNotesPrivateDesc => 'Só você pode ver esta nota.';
+
+  @override
+  String get servicesNotesSubscriptionRequired =>
+      'É necessária uma subscrição ativa para adicionar ou editar notas.';
+
+  @override
+  String get servicesNotesForbidden =>
+      'Não tem permissão para alterar esta nota.';
+
+  @override
+  String get servicesNotesUnauthorized =>
+      'Inicie sessão novamente para gerir notas.';
+
+  @override
+  String get servicesNotesNotFound => 'Esta nota já não existe.';
+
+  @override
+  String get servicesNotesElementNotFound =>
+      'Esse item do culto não foi encontrado.';
+
+  @override
   String get settingsTitle => 'Definições';
 
   @override
