@@ -114,9 +114,15 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   DateTime? _remoteUpdatedAt;
 
+  /// Cached so dispose / post-await work never looks up ancestors via [ref].
+  late final ServiceAnnotationRepository _annotationRepo;
+  bool _syncAnnotations = false;
+
   @override
   void initState() {
     super.initState();
+    _annotationRepo = ref.read(serviceAnnotationRepositoryProvider);
+    _syncAnnotations = ref.read(settingsControllerProvider).syncAnnotations;
     _swipeController = AnimationController(vsync: this);
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
@@ -130,8 +136,8 @@ class _SongReaderState extends ConsumerState<SongReader>
     final key = '${serviceId}_$songId';
     _loadedSongKey = key;
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
+    final syncEnabled = _syncAnnotations;
+    final repo = _annotationRepo;
 
     Uint8List? bytes;
     _remoteUpdatedAt = null;
@@ -149,9 +155,11 @@ class _SongReaderState extends ConsumerState<SongReader>
 
     bytes ??= await repo.loadAnnotation(serviceId: serviceId, songId: songId);
 
-    if (!mounted || _loadedSongKey != key) return;
+    // [mounted] stays true while deactivated; [context.mounted] does not.
+    if (!context.mounted || _loadedSongKey != key) return;
 
     _applyLoadedBytes(bytes);
+    if (!context.mounted || _loadedSongKey != key) return;
     _subscribeIfNeeded(
       serviceId: serviceId,
       songId: songId,
@@ -185,9 +193,9 @@ class _SongReaderState extends ConsumerState<SongReader>
   }) {
     _unsubscribeAnnotations();
     if (!syncEnabled) return;
+    if (!context.mounted) return;
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    _annotationChannel = repo.subscribeToAnnotationUpdates(
+    _annotationChannel = _annotationRepo.subscribeToAnnotationUpdates(
       serviceId: serviceId,
       songId: songId,
       onRemoteChange: () => _handleRemoteChange(serviceId, songId),
@@ -195,12 +203,11 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   Future<void> _handleRemoteChange(String serviceId, String songId) async {
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
-    final remote = await repo.fetchRemoteAnnotation(
+    final remote = await _annotationRepo.fetchRemoteAnnotation(
       serviceId: serviceId,
       songId: songId,
     );
-    if (remote == null || !mounted) return;
+    if (remote == null || !context.mounted) return;
     debugPrint("$_remoteUpdatedAt");
     // Stale event (arrived out of order) or our own echo — ignore.
     if (_remoteUpdatedAt != null &&
@@ -223,7 +230,7 @@ class _SongReaderState extends ConsumerState<SongReader>
     final channel = _annotationChannel;
     _annotationChannel = null;
     if (channel != null) {
-      ref.read(serviceAnnotationRepositoryProvider).unsubscribe(channel);
+      _annotationRepo.unsubscribe(channel);
     }
   }
 
@@ -312,11 +319,10 @@ class _SongReaderState extends ConsumerState<SongReader>
       return;
     }
 
-    final repo = ref.read(serviceAnnotationRepositoryProvider);
+    final repo = _annotationRepo;
     repo.saveAnnotation(serviceId: serviceId, songId: songId, bytes: bytes);
 
-    final syncEnabled = ref.read(settingsControllerProvider).syncAnnotations;
-    if (!syncEnabled) return;
+    if (!_syncAnnotations) return;
 
     _pushAnnotationSafely(
       repo: repo,
@@ -568,6 +574,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       settingsControllerProvider.select((s) => s.syncAnnotations),
       (previous, next) {
         if (previous == next) return;
+        _syncAnnotations = next;
         final serviceId = widget.serviceId;
         final songId = widget.songId;
         if (serviceId == null || songId == null) return;

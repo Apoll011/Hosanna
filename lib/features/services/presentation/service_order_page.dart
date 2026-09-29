@@ -1112,13 +1112,14 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
 
   void _maybeHideChords() {
     if (_element.type != 'song') return;
+    // Resolve provider while still active — post-frame may run after deactivate.
+    _displaySettings ??= ref.read(songDisplaySettingsProvider.notifier);
+    final showingChords = ref.read(songDisplaySettingsProvider).showChords;
+    if (!showingChords) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _hidChords) return;
-      _displaySettings ??= ref.read(songDisplaySettingsProvider.notifier);
-      if (ref.read(songDisplaySettingsProvider).showChords) {
-        _displaySettings!.setShowChords(false, persist: false);
-        _hidChords = true;
-      }
+      _displaySettings?.setShowChords(false, persist: false);
+      _hidChords = true;
     });
   }
 
