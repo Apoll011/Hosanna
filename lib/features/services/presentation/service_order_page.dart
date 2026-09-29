@@ -168,7 +168,10 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                   )
                 : mainColumn,
             floatingActionButton: _tabIndex == 1 && _viewerIndex == null
-                ? ServiceNotesFab(serviceId: widget.serviceId)
+                ? ServiceNotesFab(
+                    serviceId: widget.serviceId,
+                    elementType: _ambientElementType(elements),
+                  )
                 : null,
             bottomNavigationBar: _viewerIndex != null
                 ? null
@@ -253,9 +256,25 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
           embedded: true,
           title: l10n.servicesTeamNotes,
           markReadWhenBuilt: _tabIndex == 1,
+          elementType: _ambientElementType(elements),
         ),
       ],
     );
+  }
+
+  /// Current or first incomplete element — used to rank quick-send notes.
+  String? _ambientElementType(List<ServiceElement> elements) {
+    if (elements.isEmpty) return null;
+    final currentId = _currentElementId;
+    if (currentId != null) {
+      for (final e in elements) {
+        if (e.id == currentId) return e.type;
+      }
+    }
+    for (final e in elements) {
+      if (!_completedIds.contains(e.id)) return e.type;
+    }
+    return elements.last.type;
   }
 
   Future<void> _openElement(
@@ -975,6 +994,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
               context,
               serviceId: widget.serviceId,
               elementId: element.id,
+              elementType: element.type,
             ),
           ),
         ],
@@ -1144,6 +1164,7 @@ class _NonSongDetailBody extends StatelessWidget {
               context,
               serviceId: serviceId,
               elementId: element.id,
+              elementType: element.type,
             ),
           ),
         ),

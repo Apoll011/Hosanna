@@ -852,6 +852,273 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesNotesSomeone => 'Alguien';
 
   @override
+  String get servicesNotesQuickSend => 'Envío rápido';
+
+  @override
+  String get noteSugReadyToStart => 'Listos para empezar';
+
+  @override
+  String get noteSugStandbyNext => 'Standby para el siguiente';
+
+  @override
+  String get noteSugGoNextItem => 'Pasamos al siguiente';
+
+  @override
+  String get noteSugHoldWait => 'Esperad';
+
+  @override
+  String get noteSugWrapUp => 'Cerrar este momento';
+
+  @override
+  String get noteSugBehindSchedule => 'Vamos atrasados';
+
+  @override
+  String get noteSugAheadSchedule => 'Vamos adelantados';
+
+  @override
+  String get noteSugSkipItem => 'Saltar este elemento';
+
+  @override
+  String get noteSugExtendMoment => 'Prolongar este momento';
+
+  @override
+  String get noteSugChangeOfPlan => 'Cambio de plan';
+
+  @override
+  String get noteSugLookingGood => 'Va muy bien';
+
+  @override
+  String get noteSugNeedHelp => 'Necesito ayuda en el escenario';
+
+  @override
+  String get noteSugQuietMoment => 'Momento de silencio';
+
+  @override
+  String get noteSugPrayTogether => 'Oremos juntos';
+
+  @override
+  String get noteSugDoorsClosing => 'Cerrando puertas';
+
+  @override
+  String get noteSugGuestsReady => 'Recepción / invitados listos';
+
+  @override
+  String get noteSugMicLive => 'Micrófono en vivo';
+
+  @override
+  String get noteSugMicMute => 'Silenciar ese micrófono';
+
+  @override
+  String get noteSugMicCheck => 'Hace falta prueba de micrófono';
+
+  @override
+  String get noteSugFeedbackMute => 'Acoplamiento — silenciar ya';
+
+  @override
+  String get noteSugSpareMic => 'Traer micrófono de reserva';
+
+  @override
+  String get noteSugSlidesReady => 'Diapositivas listas';
+
+  @override
+  String get noteSugNextSlide => 'Siguiente diapositiva';
+
+  @override
+  String get noteSugWrongSlide => 'Diapositiva incorrecta';
+
+  @override
+  String get noteSugBlankScreen => 'Pantalla en negro';
+
+  @override
+  String get noteSugLyricsReady => 'Letras listas';
+
+  @override
+  String get noteSugAdvanceLyrics => 'Avanzar letras';
+
+  @override
+  String get noteSugRepeatChorusSlide => 'Repetir coro en pantalla';
+
+  @override
+  String get noteSugLightsUp => 'Luces más altas';
+
+  @override
+  String get noteSugLightsDown => 'Luces más bajas';
+
+  @override
+  String get noteSugLightsAdjust => 'Ajustar luces';
+
+  @override
+  String get noteSugVideoPlay => 'Reproducir vídeo';
+
+  @override
+  String get noteSugVideoIssue => 'Problema con el vídeo';
+
+  @override
+  String get noteSugStreamIssue => 'Problema con el stream';
+
+  @override
+  String get noteSugHouseVolumeDown => 'Bajar volumen de sala';
+
+  @override
+  String get noteSugHouseVolumeUp => 'Subir volumen de sala';
+
+  @override
+  String get noteSugVocalsUp => 'Subir voces';
+
+  @override
+  String get noteSugBandDown => 'Bajar banda en la mezcla';
+
+  @override
+  String get noteSugVerse1 => 'Estrofa 1';
+
+  @override
+  String get noteSugVerse2 => 'Estrofa 2';
+
+  @override
+  String get noteSugVerse3 => 'Estrofa 3';
+
+  @override
+  String get noteSugChorus => 'Coro';
+
+  @override
+  String get noteSugBridge => 'Puente';
+
+  @override
+  String get noteSugPreChorus => 'Precoro';
+
+  @override
+  String get noteSugTag => 'Tag';
+
+  @override
+  String get noteSugInstrumental => 'Instrumental';
+
+  @override
+  String get noteSugRepeatSection => 'Repetir esta sección';
+
+  @override
+  String get noteSugEndSong => 'Terminar canción';
+
+  @override
+  String get noteSugBuildUp => 'Subir la intensidad';
+
+  @override
+  String get noteSugBringDown => 'Bajar la intensidad';
+
+  @override
+  String get noteSugDrumsVocals => 'Solo batería + voces';
+
+  @override
+  String get noteSugSoftPads => 'Solo pads suaves';
+
+  @override
+  String get noteSugCutVocals => 'Cortar voces';
+
+  @override
+  String get noteSugBandTakeIt => 'Banda asume';
+
+  @override
+  String get noteSugSpontaneousStay => 'Quedarnos aquí — espontáneo';
+
+  @override
+  String get noteSugTempoUp => 'Subir el tempo';
+
+  @override
+  String get noteSugTempoDown => 'Bajar el tempo';
+
+  @override
+  String get noteSugKeyChange => 'Cambio de tono próximo';
+
+  @override
+  String get noteSugMoreMonitor => 'Más de mí en monitores';
+
+  @override
+  String get noteSugLessMonitor => 'Menos de mí en monitores';
+
+  @override
+  String get noteSugClickLouder => 'Click / guía más alto';
+
+  @override
+  String get noteSugLostClick => 'Perdí el click';
+
+  @override
+  String get noteSugWrongChart => 'Cifrado / arreglo incorrecto';
+
+  @override
+  String get noteSugReadyNextSong => 'Listos para la siguiente canción';
+
+  @override
+  String get noteSugStartSong => 'Empezar la canción';
+
+  @override
+  String get noteSugStartWelcome => 'Empezar bienvenida';
+
+  @override
+  String get noteSugWrapWelcome => 'Cerrar bienvenida';
+
+  @override
+  String get noteSugOpenDoors => 'Abrir puertas';
+
+  @override
+  String get noteSugHospitalityReady => 'Equipo de hospitalidad listo';
+
+  @override
+  String get noteSugReaderReady => 'Lector listo';
+
+  @override
+  String get noteSugPassageOnScreen => 'Pasaje en pantalla';
+
+  @override
+  String get noteSugAdvanceVerse => 'Avanzar versículo';
+
+  @override
+  String get noteSugSoftUnderscore => 'Fondo musical suave';
+
+  @override
+  String get noteSugAfterReading => 'Después de la lectura — siguiente';
+
+  @override
+  String get noteSugPastorWalkingUp => 'Pastor subiendo';
+
+  @override
+  String get noteSugPastorMicLive => 'Micrófono del pastor en vivo';
+
+  @override
+  String get noteSugSermonSlidesReady => 'Diapositivas del mensaje listas';
+
+  @override
+  String get noteSugNextSermonSlide => 'Siguiente diapositiva del mensaje';
+
+  @override
+  String get noteSugTimerCheck => 'Revisar el tiempo';
+
+  @override
+  String get noteSugAltarCallComing => 'Llamado al altar próximo';
+
+  @override
+  String get noteSugClosingPrayer => 'Oración final';
+
+  @override
+  String get noteSugSoftMusicUnder => 'Música suave debajo';
+
+  @override
+  String get noteSugMessageLights => 'Iluminación del mensaje';
+
+  @override
+  String get noteSugAnnouncementsStart => 'Anuncios empezando';
+
+  @override
+  String get noteSugNextAnnouncement => 'Siguiente anuncio';
+
+  @override
+  String get noteSugWrapAnnouncements => 'Cerrar anuncios';
+
+  @override
+  String get noteSugGivingMoment => 'Ofrenda / dádivas';
+
+  @override
+  String get noteSugConnectionReminder => 'Recordatorio de conexión';
+
+  @override
   String get servicesElementEmpty => 'Nada preparado para este momento';
 
   @override

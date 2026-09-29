@@ -84,7 +84,10 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             ),
       body: ServiceNotesIncomingListener(
         serviceId: widget.serviceId,
-        onOpenNotes: () => _openNotes(context),
+        onOpenNotes: () => _openNotes(
+          context,
+          elementType: _currentElementType(serviceAsync.valueOrNull),
+        ),
         child: serviceAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => ErrorState(
@@ -103,12 +106,33 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     );
   }
 
-  Future<void> _openNotes(BuildContext context) async {
+  Future<void> _openNotes(BuildContext context, {String? elementType}) async {
     ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
-    await showServiceNotesSheet(context, serviceId: widget.serviceId);
+    await showServiceNotesSheet(
+      context,
+      serviceId: widget.serviceId,
+      elementType: elementType,
+    );
     if (mounted) {
       ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
     }
+  }
+
+  String? _currentElementType(ServiceRow? service) {
+    if (service == null) return null;
+    final elements = _sorted(service);
+    if (elements.isEmpty) return null;
+    final id = _currentElementId;
+    if (id != null) {
+      for (final e in elements) {
+        if (e.id == id) return e.type;
+      }
+    }
+    return elements
+            .where((e) => e.type == 'song' && e.songId != null)
+            .firstOrNull
+            ?.type ??
+        elements.first.type;
   }
 
   List<ServiceElement> _sorted(ServiceRow service) {
@@ -192,7 +216,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
-          onOpenNotes: () => _openNotes(context),
+          onOpenNotes: () => _openNotes(context, elementType: current.type),
           onLeave: () => context.pop(),
           isSong: isSong,
           isAnnotating: _isAnnotating,
@@ -534,6 +558,7 @@ class _NonSongElementView extends StatelessWidget {
                     context,
                     serviceId: serviceId,
                     elementId: element.id,
+                    elementType: element.type,
                   ),
                   icon: const Icon(Icons.sticky_note_2_outlined),
                   label: Text(l10n.servicesTeamNotes),

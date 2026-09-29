@@ -1636,6 +1636,540 @@ abstract class AppLocalizations {
   /// **'Alguém'**
   String get servicesNotesSomeone;
 
+  /// No description provided for @servicesNotesQuickSend.
+  ///
+  /// In pt, this message translates to:
+  /// **'Envio rápido'**
+  String get servicesNotesQuickSend;
+
+  /// No description provided for @noteSugReadyToStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prontos para começar'**
+  String get noteSugReadyToStart;
+
+  /// No description provided for @noteSugStandbyNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Standby para o próximo'**
+  String get noteSugStandbyNext;
+
+  /// No description provided for @noteSugGoNextItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'A passar para o próximo'**
+  String get noteSugGoNextItem;
+
+  /// No description provided for @noteSugHoldWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aguardar'**
+  String get noteSugHoldWait;
+
+  /// No description provided for @noteSugWrapUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrar este momento'**
+  String get noteSugWrapUp;
+
+  /// No description provided for @noteSugBehindSchedule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estamos atrasados'**
+  String get noteSugBehindSchedule;
+
+  /// No description provided for @noteSugAheadSchedule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estamos adiantados'**
+  String get noteSugAheadSchedule;
+
+  /// No description provided for @noteSugSkipItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saltar este item'**
+  String get noteSugSkipItem;
+
+  /// No description provided for @noteSugExtendMoment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prolongar este momento'**
+  String get noteSugExtendMoment;
+
+  /// No description provided for @noteSugChangeOfPlan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mudança de plano'**
+  String get noteSugChangeOfPlan;
+
+  /// No description provided for @noteSugLookingGood.
+  ///
+  /// In pt, this message translates to:
+  /// **'Está a correr bem'**
+  String get noteSugLookingGood;
+
+  /// No description provided for @noteSugNeedHelp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preciso de ajuda no palco'**
+  String get noteSugNeedHelp;
+
+  /// No description provided for @noteSugQuietMoment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Momento de silêncio'**
+  String get noteSugQuietMoment;
+
+  /// No description provided for @noteSugPrayTogether.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vamos orar'**
+  String get noteSugPrayTogether;
+
+  /// No description provided for @noteSugDoorsClosing.
+  ///
+  /// In pt, this message translates to:
+  /// **'A fechar portas'**
+  String get noteSugDoorsClosing;
+
+  /// No description provided for @noteSugGuestsReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recepção / convidados prontos'**
+  String get noteSugGuestsReady;
+
+  /// No description provided for @noteSugMicLive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Microfone ao vivo'**
+  String get noteSugMicLive;
+
+  /// No description provided for @noteSugMicMute.
+  ///
+  /// In pt, this message translates to:
+  /// **'Silenciar esse microfone'**
+  String get noteSugMicMute;
+
+  /// No description provided for @noteSugMicCheck.
+  ///
+  /// In pt, this message translates to:
+  /// **'Precisa de teste de microfone'**
+  String get noteSugMicCheck;
+
+  /// No description provided for @noteSugFeedbackMute.
+  ///
+  /// In pt, this message translates to:
+  /// **'Feedback — silenciar já'**
+  String get noteSugFeedbackMute;
+
+  /// No description provided for @noteSugSpareMic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trazer microfone de reserva'**
+  String get noteSugSpareMic;
+
+  /// No description provided for @noteSugSlidesReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Slides prontos'**
+  String get noteSugSlidesReady;
+
+  /// No description provided for @noteSugNextSlide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo slide'**
+  String get noteSugNextSlide;
+
+  /// No description provided for @noteSugWrongSlide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Slide errado'**
+  String get noteSugWrongSlide;
+
+  /// No description provided for @noteSugBlankScreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ecrã em preto'**
+  String get noteSugBlankScreen;
+
+  /// No description provided for @noteSugLyricsReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letras prontas'**
+  String get noteSugLyricsReady;
+
+  /// No description provided for @noteSugAdvanceLyrics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançar letras'**
+  String get noteSugAdvanceLyrics;
+
+  /// No description provided for @noteSugRepeatChorusSlide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repetir refrão no ecrã'**
+  String get noteSugRepeatChorusSlide;
+
+  /// No description provided for @noteSugLightsUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Luzes mais altas'**
+  String get noteSugLightsUp;
+
+  /// No description provided for @noteSugLightsDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Luzes mais baixas'**
+  String get noteSugLightsDown;
+
+  /// No description provided for @noteSugLightsAdjust.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajustar luzes'**
+  String get noteSugLightsAdjust;
+
+  /// No description provided for @noteSugVideoPlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reproduzir vídeo'**
+  String get noteSugVideoPlay;
+
+  /// No description provided for @noteSugVideoIssue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Problema com o vídeo'**
+  String get noteSugVideoIssue;
+
+  /// No description provided for @noteSugStreamIssue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Problema com a transmissão'**
+  String get noteSugStreamIssue;
+
+  /// No description provided for @noteSugHouseVolumeDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixar volume da sala'**
+  String get noteSugHouseVolumeDown;
+
+  /// No description provided for @noteSugHouseVolumeUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subir volume da sala'**
+  String get noteSugHouseVolumeUp;
+
+  /// No description provided for @noteSugVocalsUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subir vozes'**
+  String get noteSugVocalsUp;
+
+  /// No description provided for @noteSugBandDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixar banda na mistura'**
+  String get noteSugBandDown;
+
+  /// No description provided for @noteSugVerse1.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estrofe 1'**
+  String get noteSugVerse1;
+
+  /// No description provided for @noteSugVerse2.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estrofe 2'**
+  String get noteSugVerse2;
+
+  /// No description provided for @noteSugVerse3.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estrofe 3'**
+  String get noteSugVerse3;
+
+  /// No description provided for @noteSugChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refrão'**
+  String get noteSugChorus;
+
+  /// No description provided for @noteSugBridge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponte'**
+  String get noteSugBridge;
+
+  /// No description provided for @noteSugPreChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pré-refrão'**
+  String get noteSugPreChorus;
+
+  /// No description provided for @noteSugTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tag'**
+  String get noteSugTag;
+
+  /// No description provided for @noteSugInstrumental.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instrumental'**
+  String get noteSugInstrumental;
+
+  /// No description provided for @noteSugRepeatSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repetir esta secção'**
+  String get noteSugRepeatSection;
+
+  /// No description provided for @noteSugEndSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Terminar música'**
+  String get noteSugEndSong;
+
+  /// No description provided for @noteSugBuildUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subir a intensidade'**
+  String get noteSugBuildUp;
+
+  /// No description provided for @noteSugBringDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixar a intensidade'**
+  String get noteSugBringDown;
+
+  /// No description provided for @noteSugDrumsVocals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só bateria + vozes'**
+  String get noteSugDrumsVocals;
+
+  /// No description provided for @noteSugSoftPads.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só pads suaves'**
+  String get noteSugSoftPads;
+
+  /// No description provided for @noteSugCutVocals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cortar vozes'**
+  String get noteSugCutVocals;
+
+  /// No description provided for @noteSugBandTakeIt.
+  ///
+  /// In pt, this message translates to:
+  /// **'Banda assume'**
+  String get noteSugBandTakeIt;
+
+  /// No description provided for @noteSugSpontaneousStay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ficar aqui — espontâneo'**
+  String get noteSugSpontaneousStay;
+
+  /// No description provided for @noteSugTempoUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acelerar o tempo'**
+  String get noteSugTempoUp;
+
+  /// No description provided for @noteSugTempoDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir o tempo'**
+  String get noteSugTempoDown;
+
+  /// No description provided for @noteSugKeyChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mudança de tom a chegar'**
+  String get noteSugKeyChange;
+
+  /// No description provided for @noteSugMoreMonitor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais de mim nos monitores'**
+  String get noteSugMoreMonitor;
+
+  /// No description provided for @noteSugLessMonitor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Menos de mim nos monitores'**
+  String get noteSugLessMonitor;
+
+  /// No description provided for @noteSugClickLouder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Click / guia mais alto'**
+  String get noteSugClickLouder;
+
+  /// No description provided for @noteSugLostClick.
+  ///
+  /// In pt, this message translates to:
+  /// **'Perdi o click'**
+  String get noteSugLostClick;
+
+  /// No description provided for @noteSugWrongChart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cifra / arranjo errado'**
+  String get noteSugWrongChart;
+
+  /// No description provided for @noteSugReadyNextSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prontos para a próxima música'**
+  String get noteSugReadyNextSong;
+
+  /// No description provided for @noteSugStartSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar a música'**
+  String get noteSugStartSong;
+
+  /// No description provided for @noteSugStartWelcome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar boas-vindas'**
+  String get noteSugStartWelcome;
+
+  /// No description provided for @noteSugWrapWelcome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrar boas-vindas'**
+  String get noteSugWrapWelcome;
+
+  /// No description provided for @noteSugOpenDoors.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir portas'**
+  String get noteSugOpenDoors;
+
+  /// No description provided for @noteSugHospitalityReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Equipa de hospitalidade pronta'**
+  String get noteSugHospitalityReady;
+
+  /// No description provided for @noteSugReaderReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Leitor pronto'**
+  String get noteSugReaderReady;
+
+  /// No description provided for @noteSugPassageOnScreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passagem no ecrã'**
+  String get noteSugPassageOnScreen;
+
+  /// No description provided for @noteSugAdvanceVerse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançar versículo'**
+  String get noteSugAdvanceVerse;
+
+  /// No description provided for @noteSugSoftUnderscore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fundo musical suave'**
+  String get noteSugSoftUnderscore;
+
+  /// No description provided for @noteSugAfterReading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Após a leitura — próximo'**
+  String get noteSugAfterReading;
+
+  /// No description provided for @noteSugPastorWalkingUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pastor a subir'**
+  String get noteSugPastorWalkingUp;
+
+  /// No description provided for @noteSugPastorMicLive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Microfone do pastor ao vivo'**
+  String get noteSugPastorMicLive;
+
+  /// No description provided for @noteSugSermonSlidesReady.
+  ///
+  /// In pt, this message translates to:
+  /// **'Slides da mensagem prontos'**
+  String get noteSugSermonSlidesReady;
+
+  /// No description provided for @noteSugNextSermonSlide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo slide da mensagem'**
+  String get noteSugNextSermonSlide;
+
+  /// No description provided for @noteSugTimerCheck.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar tempo'**
+  String get noteSugTimerCheck;
+
+  /// No description provided for @noteSugAltarCallComing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apelo a chegar'**
+  String get noteSugAltarCallComing;
+
+  /// No description provided for @noteSugClosingPrayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Oração final'**
+  String get noteSugClosingPrayer;
+
+  /// No description provided for @noteSugSoftMusicUnder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Música suave por baixo'**
+  String get noteSugSoftMusicUnder;
+
+  /// No description provided for @noteSugMessageLights.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iluminação da mensagem'**
+  String get noteSugMessageLights;
+
+  /// No description provided for @noteSugAnnouncementsStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anúncios a começar'**
+  String get noteSugAnnouncementsStart;
+
+  /// No description provided for @noteSugNextAnnouncement.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo anúncio'**
+  String get noteSugNextAnnouncement;
+
+  /// No description provided for @noteSugWrapAnnouncements.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrar anúncios'**
+  String get noteSugWrapAnnouncements;
+
+  /// No description provided for @noteSugGivingMoment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Oferta / dádivas'**
+  String get noteSugGivingMoment;
+
+  /// No description provided for @noteSugConnectionReminder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lembrete de ligação'**
+  String get noteSugConnectionReminder;
+
   /// No description provided for @servicesElementEmpty.
   ///
   /// In pt, this message translates to:

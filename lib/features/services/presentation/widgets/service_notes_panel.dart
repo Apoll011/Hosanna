@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/settings_controller.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../auth/domain/auth_controller.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../data/service_notes_watch.dart';
 import '../../domain/service_note.dart';
+import '../../domain/service_note_suggestions.dart';
 
 /// Team notes feed for a service (optionally filtered to one element).
 ///
@@ -18,14 +20,19 @@ class ServiceNotesPanel extends ConsumerWidget {
     super.key,
     required this.serviceId,
     this.elementId,
+    this.elementType,
     this.serviceScope = false,
     this.embedded = false,
     this.title,
     this.markReadWhenBuilt = true,
+    this.suggestionContext,
   });
 
   final String serviceId;
   final String? elementId;
+
+  /// Type of the focused / ambient element (`song`, `message`, …).
+  final String? elementType;
   final bool serviceScope;
 
   /// When true, omits the outer title chrome (useful inside a tab).
@@ -35,6 +42,21 @@ class ServiceNotesPanel extends ConsumerWidget {
   /// Clear the unread badge while this panel is the active surface.
   final bool markReadWhenBuilt;
 
+  /// Optional override; otherwise derived from settings + [elementType].
+  final NoteSuggestionContext? suggestionContext;
+
+  NoteSuggestionContext _resolveSuggestions(WidgetRef ref) {
+    if (suggestionContext != null) return suggestionContext!;
+    final musicianMode = ref.watch(settingsControllerProvider).musicianMode;
+    return NoteSuggestionContext(
+      musicianMode: musicianMode,
+      elementType: elementType,
+      scope: elementId != null
+          ? NoteSuggestionScope.element
+          : NoteSuggestionScope.service,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -42,6 +64,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     final watch = ref.watch(serviceNotesWatchProvider(serviceId));
     final userId = ref.watch(authSessionProvider)?.user.id;
     final notes = _filterNotes(watch.notes);
+    final suggestions = _resolveSuggestions(ref);
 
     if (markReadWhenBuilt && watch.unreadCount > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -90,7 +113,12 @@ class ServiceNotesPanel extends ConsumerWidget {
               note: note,
               isMine: note.isAuthoredBy(userId),
               onEdit: note.isAuthoredBy(userId)
-                  ? () => _openComposer(context, ref, existing: note)
+                  ? () => _openComposer(
+                        context,
+                        ref,
+                        existing: note,
+                        suggestions: suggestions,
+                      )
                   : null,
               onDelete: note.isAuthoredBy(userId)
                   ? () => _confirmDelete(context, ref, note)
@@ -133,6 +161,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref, {
     ServiceNote? existing,
+    required NoteSuggestionContext suggestions,
   }) async {
     final result = await showModalBottomSheet<_NoteDraft>(
       context: context,
@@ -142,6 +171,7 @@ class ServiceNotesPanel extends ConsumerWidget {
         initialBody: existing?.body ?? '',
         initialPrivate: existing?.isPrivate ?? false,
         isEditing: existing != null,
+        suggestionContext: suggestions,
       ),
     );
     if (result == null || !context.mounted) return;
@@ -195,7 +225,9 @@ class ServiceNotesPanel extends ConsumerWidget {
     );
     if (ok != true || !context.mounted) return;
     try {
-      await ref.read(serviceNotesWatchProvider(serviceId).notifier).remove(note.id);
+      await ref
+          .read(serviceNotesWatchProvider(serviceId).notifier)
+          .remove(note.id);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -211,10 +243,14 @@ class ServiceNotesFab extends ConsumerWidget {
     super.key,
     required this.serviceId,
     this.elementId,
+    this.elementType,
+    this.suggestionContext,
   });
 
   final String serviceId;
   final String? elementId;
+  final String? elementType;
+  final NoteSuggestionContext? suggestionContext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -226,15 +262,28 @@ class ServiceNotesFab extends ConsumerWidget {
     );
   }
 
+  NoteSuggestionContext _resolve(WidgetRef ref) {
+    if (suggestionContext != null) return suggestionContext!;
+    return NoteSuggestionContext(
+      musicianMode: ref.read(settingsControllerProvider).musicianMode,
+      elementType: elementType,
+      scope: elementId != null
+          ? NoteSuggestionScope.element
+          : NoteSuggestionScope.service,
+    );
+  }
+
   Future<void> _compose(BuildContext context, WidgetRef ref) async {
+    final suggestions = _resolve(ref);
     final result = await showModalBottomSheet<_NoteDraft>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => const _NoteComposerSheet(
+      builder: (context) => _NoteComposerSheet(
         initialBody: '',
         initialPrivate: false,
         isEditing: false,
+        suggestionContext: suggestions,
       ),
     );
     if (result == null || !context.mounted) return;
@@ -259,6 +308,8 @@ Future<void> showServiceNotesSheet(
   BuildContext context, {
   required String serviceId,
   String? elementId,
+  String? elementType,
+  NoteSuggestionContext? suggestionContext,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -273,10 +324,14 @@ Future<void> showServiceNotesSheet(
           body: ServiceNotesPanel(
             serviceId: serviceId,
             elementId: elementId,
+            elementType: elementType,
+            suggestionContext: suggestionContext,
           ),
           floatingActionButton: ServiceNotesFab(
             serviceId: serviceId,
             elementId: elementId,
+            elementType: elementType,
+            suggestionContext: suggestionContext,
           ),
         ),
       );
@@ -323,7 +378,8 @@ class ServiceNotesIncomingListener extends ConsumerWidget {
           ? l10n.servicesNotesSomeone
           : author;
       final preview = note.body.trim();
-      final body = preview.length > 80 ? '${preview.substring(0, 80)}…' : preview;
+      final body =
+          preview.length > 80 ? '${preview.substring(0, 80)}…' : preview;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) return;
@@ -387,11 +443,13 @@ class _NoteComposerSheet extends StatefulWidget {
     required this.initialBody,
     required this.initialPrivate,
     required this.isEditing,
+    required this.suggestionContext,
   });
 
   final String initialBody;
   final bool initialPrivate;
   final bool isEditing;
+  final NoteSuggestionContext suggestionContext;
 
   @override
   State<_NoteComposerSheet> createState() => _NoteComposerSheetState();
@@ -415,63 +473,165 @@ class _NoteComposerSheetState extends State<_NoteComposerSheet> {
     super.dispose();
   }
 
+  void _send(String body, {bool isPrivate = false}) {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty || trimmed.length > 10000 || _submitting) return;
+    setState(() => _submitting = true);
+    Navigator.pop(
+      context,
+      _NoteDraft(body: trimmed, isPrivate: isPrivate),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     final trimmed = _controller.text.trim();
-    final canSave = trimmed.isNotEmpty && trimmed.length <= 10000 && !_submitting;
+    final canSave =
+        trimmed.isNotEmpty && trimmed.length <= 10000 && !_submitting;
+
+    final suggestionIds = widget.isEditing
+        ? const <String>[]
+        : selectNoteSuggestionIds(widget.suggestionContext);
+    final suggestionLabels = <(String, String)>[];
+    for (final id in suggestionIds) {
+      final label = labelForNoteSuggestion(l10n, id);
+      if (label != null) suggestionLabels.add((id, label));
+    }
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, 20 + bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            widget.isEditing ? l10n.servicesNotesEdit : l10n.servicesNotesAdd,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            maxLines: 5,
-            maxLength: 10000,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: l10n.servicesNotesHint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              widget.isEditing ? l10n.servicesNotesEdit : l10n.servicesNotesAdd,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.servicesNotesPrivate),
-            subtitle: Text(l10n.servicesNotesPrivateDesc),
-            value: _isPrivate,
-            onChanged: _submitting ? null : (v) => setState(() => _isPrivate = v),
-          ),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: canSave
-                ? () {
-                    setState(() => _submitting = true);
-                    Navigator.pop(
-                      context,
-                      _NoteDraft(body: trimmed, isPrivate: _isPrivate),
-                    );
-                  }
-                : null,
-            child: Text(
-              widget.isEditing ? l10n.commonSave : l10n.servicesNotesAdd,
+          if (suggestionLabels.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                l10n.servicesNotesQuickSend,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: suggestionLabels.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final label = suggestionLabels[index].$2;
+                  return _SuggestionChip(
+                    label: label,
+                    enabled: !_submitting,
+                    onTap: () => _send(label),
+                  );
+                },
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  maxLines: 5,
+                  maxLength: 10000,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: l10n.servicesNotesHint,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.servicesNotesPrivate),
+                  subtitle: Text(l10n.servicesNotesPrivateDesc),
+                  value: _isPrivate,
+                  onChanged: _submitting
+                      ? null
+                      : (v) => setState(() => _isPrivate = v),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: canSave
+                      ? () => _send(trimmed, isPrivate: _isPrivate)
+                      : null,
+                  child: Text(
+                    widget.isEditing
+                        ? l10n.commonSave
+                        : l10n.servicesNotesAdd,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SuggestionChip extends StatelessWidget {
+  const _SuggestionChip({
+    required this.label,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Material(
+      color: colors.surfaceContainerHighest.withValues(alpha: 0.85),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: colors.outlineVariant),
+      ),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: enabled
+                  ? colors.onSurface
+                  : colors.onSurface.withValues(alpha: 0.38),
+            ),
+          ),
+        ),
       ),
     );
   }
