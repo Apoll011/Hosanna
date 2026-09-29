@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,7 +8,10 @@ import '../../auth/domain/auth_controller.dart';
 import '../domain/service_note.dart';
 import 'service_notes_repository.dart';
 
-/// Live notes for a service: polls while watched and tracks unread remote notes.
+/// Live notes for a service.
+///
+/// Primary path: Firestore signal at `services/{id}/realtime/notes` (written
+/// by the API after note CUD). Fallback: slow REST poll every 60s.
 @immutable
 class ServiceNotesWatchState {
   const ServiceNotesWatchState({
@@ -59,7 +63,8 @@ class ServiceNotesWatchController
     _bootstrap();
   }
 
-  static const _pollInterval = Duration(seconds: 8);
+  /// Slow safety net when Firestore is unavailable or a ping is missed.
+  static const _pollInterval = Duration(seconds: 60);
 
   final ServiceNotesRepository _repo;
   final String? _currentUserId;
@@ -68,22 +73,58 @@ class ServiceNotesWatchController
   final Set<String> _knownIds = {};
   var _seeded = false;
   Timer? _poll;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _signalSub;
+  var _skipNextSignal = true;
   var _disposed = false;
+
+  DocumentReference<Map<String, dynamic>> get _signalDoc =>
+      FirebaseFirestore.instance
+          .collection('services')
+          .doc(_serviceId)
+          .collection('realtime')
+          .doc('notes');
 
   Future<void> _bootstrap() async {
     await refresh();
     if (_disposed) return;
+    _listenForSignals();
     _poll = Timer.periodic(_pollInterval, (_) => refresh(silent: true));
   }
 
-  Future<void> refresh({bool silent = false}) async {
+  void _listenForSignals() {
+    try {
+      _signalSub = _signalDoc.snapshots().listen(
+        (snap) {
+          if (_disposed) return;
+          // First event is the current doc (or missing) — seed only.
+          if (_skipNextSignal) {
+            _skipNextSignal = false;
+            return;
+          }
+          if (!snap.exists) return;
+          final data = snap.data();
+          final authorId = data?['authorId'] as String?;
+          // Own writes already updated local state; still refresh for consistency
+          // but applyNotes will not toast for the current user.
+          unawaited(refresh(silent: true, preferToast: authorId != _currentUserId));
+        },
+        onError: (Object e, StackTrace st) {
+          debugPrint('Notes Firestore signal listen failed: $e');
+        },
+      );
+    } catch (e) {
+      debugPrint('Notes Firestore signal subscribe failed: $e');
+    }
+  }
+
+  Future<void> refresh({bool silent = false, bool preferToast = true}) async {
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     try {
       final notes = await _repo.listNotes(serviceId: _serviceId);
       if (_disposed) return;
-      _applyNotes(notes);
+      _applyNotes(notes, preferToast: preferToast);
     } catch (e) {
       if (_disposed) return;
       if (!silent) {
@@ -92,7 +133,7 @@ class ServiceNotesWatchController
     }
   }
 
-  void _applyNotes(List<ServiceNote> notes) {
+  void _applyNotes(List<ServiceNote> notes, {bool preferToast = true}) {
     final ids = notes.map((n) => n.id).toSet();
 
     if (!_seeded) {
@@ -109,16 +150,17 @@ class ServiceNotesWatchController
       return;
     }
 
-    final newcomers = notes
-        .where((n) => !_knownIds.contains(n.id))
-        .where((n) => n.author?.id != _currentUserId)
-        .toList();
+    final newcomers = preferToast
+        ? notes
+            .where((n) => !_knownIds.contains(n.id))
+            .where((n) => n.author?.id != _currentUserId)
+            .toList()
+        : const <ServiceNote>[];
 
     _knownIds
       ..clear()
       ..addAll(ids);
 
-    // Drop unread for notes that disappeared (deleted).
     final nextUnread = state.unreadCount + newcomers.length;
 
     state = state.copyWith(
@@ -197,6 +239,7 @@ class ServiceNotesWatchController
   void dispose() {
     _disposed = true;
     _poll?.cancel();
+    unawaited(_signalSub?.cancel() ?? Future<void>.value());
     super.dispose();
   }
 }

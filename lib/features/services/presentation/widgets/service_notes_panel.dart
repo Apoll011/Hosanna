@@ -11,8 +11,8 @@ import '../../domain/service_note.dart';
 
 /// Team notes feed for a service (optionally filtered to one element).
 ///
-/// Backed by [serviceNotesWatchProvider], which polls for new notes while the
-/// service screen is open.
+/// Backed by [serviceNotesWatchProvider]: Firestore note pings plus a slow
+/// REST poll fallback while the service screen is open.
 class ServiceNotesPanel extends ConsumerWidget {
   const ServiceNotesPanel({
     super.key,
