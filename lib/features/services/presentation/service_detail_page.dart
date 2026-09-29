@@ -86,6 +86,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         serviceId: widget.serviceId,
         onOpenNotes: () => _openNotes(
           context,
+          elementId: _currentElementId,
           elementType: _currentElementType(serviceAsync.valueOrNull),
         ),
         child: serviceAsync.when(
@@ -106,7 +107,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     );
   }
 
-  Future<void> _openNotes(BuildContext context, {String? elementType}) async {
+  Future<void> _openNotes(
+    BuildContext context, {
+    String? elementId,
+    String? elementType,
+  }) async {
     ref.read(serviceNotesWatchProvider(widget.serviceId).notifier).markAllRead();
     final service = ref.read(serviceByIdProvider(widget.serviceId)).valueOrNull;
     final l10n = AppLocalizations.of(context);
@@ -119,9 +124,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             : serviceElementMeta(l10n, colors, e.type).label;
       }
     }
+    final resolvedElementId = elementId ?? _currentElementId;
     await showServiceNotesSheet(
       context,
       serviceId: widget.serviceId,
+      elementId: resolvedElementId,
       elementType: elementType,
       elementLabels: labels,
     );
@@ -228,7 +235,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             elements.length,
           ),
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
-          onOpenNotes: () => _openNotes(context, elementType: current.type),
+          onOpenNotes: () => _openNotes(
+            context,
+            elementId: current.id,
+            elementType: current.type,
+          ),
           onLeave: () => context.pop(),
           isSong: isSong,
           isAnnotating: _isAnnotating,

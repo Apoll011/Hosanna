@@ -1145,6 +1145,26 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     }
   }
 
+  Map<String, String> _elementLabels(AppLocalizations l10n, ColorScheme colors) {
+    return {
+      for (final e in widget.elements)
+        e.id: e.title.trim().isNotEmpty
+            ? e.title.trim()
+            : serviceElementMeta(l10n, colors, e.type).label,
+    };
+  }
+
+  Future<void> _openNotesFor(ServiceElement element) {
+    final l10n = AppLocalizations.of(context);
+    return showServiceNotesSheet(
+      context,
+      serviceId: widget.serviceId,
+      elementId: element.id,
+      elementType: element.type,
+      elementLabels: _elementLabels(l10n, Theme.of(context).colorScheme),
+    );
+  }
+
   void _markCompleted() {
     final id = _element.id;
     widget.completedIds.add(id);
@@ -1197,12 +1217,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
       isSong: isSong,
       compactTimerStyle: widget.compactTimerStyle,
       startedAt: widget.startedAt,
-      onOpenNotes: () => showServiceNotesSheet(
-        context,
-        serviceId: widget.serviceId,
-        elementId: element.id,
-        elementType: element.type,
-      ),
+      onOpenNotes: () => _openNotesFor(element),
     );
 
     final bottomBar = isCompleted
@@ -1256,12 +1271,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
           IconButton(
             tooltip: l10n.servicesNotes,
             icon: const Icon(Icons.sticky_note_2_outlined),
-            onPressed: () => showServiceNotesSheet(
-              context,
-              serviceId: widget.serviceId,
-              elementId: element.id,
-              elementType: element.type,
-            ),
+            onPressed: () => _openNotesFor(element),
           ),
         ],
       ),
@@ -1466,6 +1476,11 @@ class _NonSongDetailBody extends StatelessWidget {
               serviceId: serviceId,
               elementId: element.id,
               elementType: element.type,
+              elementLabels: {
+                element.id: element.title.trim().isNotEmpty
+                    ? element.title.trim()
+                    : meta.label,
+              },
             ),
           ),
         ),

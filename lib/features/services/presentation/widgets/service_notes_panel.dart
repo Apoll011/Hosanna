@@ -156,13 +156,16 @@ class ServiceNotesPanel extends ConsumerWidget {
   }
 
   List<ServiceNote> _filterNotes(List<ServiceNote> notes) {
+    Iterable<ServiceNote> filtered = notes;
     if (serviceScope) {
-      return [for (final n in notes) if (n.elementId == null) n];
+      filtered = notes.where((n) => n.elementId == null);
+    } else if (elementId != null) {
+      filtered = notes.where((n) => n.elementId == elementId);
     }
-    if (elementId != null) {
-      return [for (final n in notes) if (n.elementId == elementId) n];
-    }
-    return notes;
+    final list = filtered.toList();
+    // Latest first.
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
   String _labelForNote(AppLocalizations l10n, ServiceNote note) {
@@ -170,7 +173,8 @@ class ServiceNotesPanel extends ConsumerWidget {
     if (id == null) return l10n.servicesGeneralNotes;
     final named = elementLabels[id]?.trim();
     if (named != null && named.isNotEmpty) return named;
-    return l10n.servicesItemDetail;
+    // Element-scoped note whose title we don't have — never call it "general".
+    return l10n.servicesItemNotes;
   }
 
   Future<void> _openComposer(
@@ -320,6 +324,9 @@ class ServiceNotesFab extends ConsumerWidget {
 }
 
 /// Opens the notes panel as a modal sheet (used from musician mode).
+///
+/// When [elementId] is set, only that element's notes are listed and new notes
+/// are attached to it. Omit it for the service-wide feed.
 Future<void> showServiceNotesSheet(
   BuildContext context, {
   required String serviceId,
@@ -327,6 +334,7 @@ Future<void> showServiceNotesSheet(
   String? elementType,
   Map<String, String> elementLabels = const {},
   NoteSuggestionContext? suggestionContext,
+  String? title,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -335,6 +343,13 @@ Future<void> showServiceNotesSheet(
     showDragHandle: true,
     builder: (context) {
       final height = MediaQuery.sizeOf(context).height * 0.85;
+      final l10n = AppLocalizations.of(context);
+      final resolvedTitle = title ??
+          (elementId != null
+              ? (elementLabels[elementId]?.trim().isNotEmpty == true
+                    ? elementLabels[elementId]!.trim()
+                    : l10n.servicesItemNotes)
+              : l10n.servicesTeamNotes);
       return SizedBox(
         height: height,
         child: Scaffold(
@@ -344,6 +359,7 @@ Future<void> showServiceNotesSheet(
             elementType: elementType,
             elementLabels: elementLabels,
             suggestionContext: suggestionContext,
+            title: resolvedTitle,
           ),
           floatingActionButton: ServiceNotesFab(
             serviceId: serviceId,
