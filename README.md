@@ -60,7 +60,16 @@ lib/
 Key libraries: **Riverpod** (state/DI), **dio** (HTTP), **Drift** (SQLite,
 reactive `watch()` streams), **go_router** (navigation), **intl** +
 **flutter_localizations** (l10n), **flutter_secure_storage** (session/bearer),
+**cloud_firestore** (notes pings + live song annotation metadata),
 **wakelock_plus** (keep-awake), **webview_flutter** (Turnstile).
+
+### Song annotation sync (Firebase)
+
+When **Settings → Sync annotations** is on, FlueraCanvas annotations for a
+service song sync via Firestore (`services/{serviceId}/annotations/{songId}`),
+with the Hosanna API mediating writes (Admin → Firestore; large canvases stay
+in Postgres). A local `.fcv` file remains the offline cache. See the server doc
+`Hosanna-server/docs/ANNOTATIONS_FIREBASE.md` for env vars and rules deploy.
 
 ## Google sign-in (native)
 

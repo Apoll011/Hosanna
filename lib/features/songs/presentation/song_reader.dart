@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosanna/app/providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
 
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -80,7 +79,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   late final AnimationController _swipeController;
 
   // --- Canvas Annotation state ---------------------------------------------
-  RealtimeChannel? _annotationChannel;
+  AnnotationSubscription? _annotationSubscription;
   bool _hasPendingRemoteUpdate = false;
   Uint8List? _pendingRemoteBytes;
 
@@ -195,7 +194,7 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (!syncEnabled) return;
     if (!context.mounted) return;
 
-    _annotationChannel = _annotationRepo.subscribeToAnnotationUpdates(
+    _annotationSubscription = _annotationRepo.subscribeToAnnotationUpdates(
       serviceId: serviceId,
       songId: songId,
       onRemoteChange: () => _handleRemoteChange(serviceId, songId),
@@ -208,13 +207,15 @@ class _SongReaderState extends ConsumerState<SongReader>
       songId: songId,
     );
     if (remote == null || !context.mounted) return;
-    debugPrint("$_remoteUpdatedAt");
-    // Stale event (arrived out of order) or our own echo — ignore.
-    if (_remoteUpdatedAt != null &&
-        !remote.updatedAt.isAfter(_remoteUpdatedAt!)) {
+
+    final remoteAt = remote.updatedAt.toUtc();
+    // Stale event or echo of our own push — ignore.
+    // Do not filter solely on updatedById: the same user on another device
+    // must still receive updates.
+    if (_remoteUpdatedAt != null && !remoteAt.isAfter(_remoteUpdatedAt!)) {
       return;
     }
-    _remoteUpdatedAt = remote.updatedAt;
+    _remoteUpdatedAt = remoteAt;
 
     if (widget.isAnnotating) {
       setState(() {
@@ -227,10 +228,10 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   void _unsubscribeAnnotations() {
-    final channel = _annotationChannel;
-    _annotationChannel = null;
-    if (channel != null) {
-      _annotationRepo.unsubscribe(channel);
+    final sub = _annotationSubscription;
+    _annotationSubscription = null;
+    if (sub != null) {
+      unawaited(_annotationRepo.unsubscribe(sub));
     }
   }
 
@@ -344,7 +345,7 @@ class _SongReaderState extends ConsumerState<SongReader>
         songId: songId,
         bytes: bytes,
       );
-      _remoteUpdatedAt = updatedAt;
+      _remoteUpdatedAt = updatedAt.toUtc();
     } catch (_) {
       // Offline or push failed — local cache already has the latest bytes;
       // the next successful save retries the sync.
