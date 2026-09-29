@@ -1,52 +1,55 @@
-# Hosanna Design System (current baseline)
+# Hosanna Design System — Concise Blue Redesign
 
 ## Product
 
-Hosanna is a church musician app: offline-first song library (ChordPro), services/run-of-show, metronome, circle of fifths, org sync. Primary post-login surface is the **song library**. Brand: **Hosanna**. Bundle id `com.embrace.hosanna`.
+Hosanna is a church musician app: offline-first song library (ChordPro), services/run-of-show, metronome, circle of fifths, org sync. Primary post-login surface is the **song library**. Brand: **Hosanna**.
 
 ## Brand
 
-- **Logo:** `assets/logo.png` via `HosannaLogo` (rounded square). Must appear in nav header, splash, sign-in, onboarding — never substitute initials/emoji/generic marks.
-- **Name:** "Hosanna" in primary-colored titleMedium w800 in nav.
-- **Seed / primary:** `#0284C7` (sky blue). Full palette from Material 3 `ColorScheme.fromSeed`.
-- **Typography:** Material 3 defaults (no custom display font today). Prefer clean sans for musician readability on stage.
+- **Logo:** Brand Asset key `assets-logo.png` — rounded square mark. MUST render in nav header, splash, sign-in — never initials, emoji, generic marks, invented SVG, or text-only substitutes.
+- **Name:** "Hosanna" beside logo in nav when expanded.
+- **Primary:** `#0284C7` (sky blue) — the only chromatic brand color in chrome.
 
-## Color roles (current)
+## Concise color palette (HARD CONSTRAINT)
 
-| Role | Intent |
-|------|--------|
-| primary `#0284C7` family | Brand actions, selected nav, titles |
-| surface / surfaceContainer* | Scaffold, pill nav, sidebar |
-| onSurface / onSurfaceVariant | Body / secondary text |
-| error | Favorites heart when active; errors |
-| tertiary | Recents, metronome accents, offline sync |
+Use ONLY these tokens — no secondary purple, teal tertiary accents on nav icons, or rainbow icon colors.
 
-**Redesign goal (user):** more **concise** palette — fewer competing accents (primary/secondary/tertiary/feature hex stacks), clearer hierarchy, better UX density for lists and musician flows.
+| Token | Hex | Use |
+|-------|-----|-----|
+| primary | `#0284C7` | Brand, selected nav, key actions, logo title |
+| primary-soft | `#E0F2FE` | Selected row / primary container tint |
+| on-primary | `#FFFFFF` | Text on primary |
+| surface | `#FFFFFF` | Main scaffold |
+| surface-muted | `#F8FAFC` | Sidebar / drawer background |
+| surface-elevated | `#F1F5F9` | Floating nav pill, chips |
+| border | `#E2E8F0` | Hairline dividers |
+| text | `#0F172A` | Primary text |
+| text-muted | `#64748B` | Secondary text, inactive icons |
+| danger | `#DC2626` | Favorite-on + errors only |
 
-## Layout patterns
+## Typography
 
-- **Phone:** hamburger drawer + floating pill bottom nav (Songs | Services only). Tools & settings via drawer.
-- **Tablet ≥750:** collapsible sidebar (76/288) + content; floating nav overlays content pane when relevant.
-- **Full-screen:** song detail, service detail (no shell chrome).
-- Lists use Material `ListTile`; empty states use soft primary circle + tonal CTA.
-- Bottom content padding clears ~92px floating nav.
+- System / clean geometric sans (e.g. Plus Jakarta Sans or Inter-like). No decorative serifs.
+- Titles: semibold–extrabold; list titles 15–16px; captions 12–13px muted.
+
+## Layout (preserve IA)
+
+- **Phone:** hamburger drawer + floating pill bottom nav (Songs | Services). Tools & settings via drawer.
+- **Tablet ≥750:** persistent sidebar 288px (collapsed 76) + content; floating nav overlays content pane on Songs/Services.
+- Lists: denser, clearer hierarchy — song number badge, title, one-line meta, favorite.
+- Bottom content clears ~92px floating nav on phone.
+
+## UX redesign goals
+
+- Clearer visual hierarchy (less competing icon colors).
+- Tighter list rows for stage scanning.
+- Stronger selected states with primary-soft, not rainbow accents.
+- Calm, readable musician UI — no marketing hero clutter.
 
 ## Motion
 
-- Sidebar/drawer collapse: 250ms `easeOutCubic`
-- Prefer intentional, calm motion for stage use — avoid flashy gradients/glow
+- Sidebar/drawer: 250ms ease-out. Prefer calm transitions.
 
-## Key screens for redesign priority
+## Component reuse
 
-1. Song library (+ shell/nav)
-2. Service list
-3. Sign-in
-4. Service detail / song reader (musician focus)
-5. Metronome / settings (secondary)
-
-## Constraints for Superdesign HTML drafts
-
-- Mobile-first phone frame unless asked for tablet.
-- Use ONLY fonts/colors/spacing declared in the active design-system for the draft round.
-- Real logo Brand Asset URL in every logo position.
-- Preserve information architecture: Library sections, Services, Tools, Settings — improve clarity, don't invent unrelated marketing sections.
+Prefer `<sd-component>` `HosannaNavContent` and `FloatingNavBar`. Logo inside nav component already embeds the Brand Asset URL.
