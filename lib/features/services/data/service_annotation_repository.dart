@@ -45,7 +45,9 @@ class ServiceAnnotationRepository {
   final FirebaseFirestore _firestore;
 
   /// Safety net when Firestore snapshots are unavailable (rules, network).
-  static const pollInterval = Duration(seconds: 3);
+  /// Kept deliberately slow — Firestore snapshots are the primary path.
+  static const pollInterval = Duration(seconds: 20);
+  static const pollBackoffMax = Duration(seconds: 60);
 
   // --- Local file cache ----------------------------------------------------
 
@@ -283,6 +285,10 @@ class ServiceAnnotationRepository {
   }) {
     var skipFirstSnapshot = true;
     var disposed = false;
+    DateTime? lastSeenUpdatedAt;
+    int? lastSeenRevision;
+    var unchangedPolls = 0;
+    Timer? pollTimer;
 
     Future<void> emitFromSnap(
       DocumentSnapshot<Map<String, dynamic>> snap,
@@ -293,18 +299,55 @@ class ServiceAnnotationRepository {
         songId: songId,
       );
       if (disposed || remote == null) return;
+      lastSeenUpdatedAt = remote.updatedAt;
+      lastSeenRevision = remote.revision;
+      unchangedPolls = 0;
       onRemoteUpdate(remote);
     }
 
-    Future<void> poll() async {
+    bool isNewer(RemoteAnnotation remote) {
+      final prevAt = lastSeenUpdatedAt;
+      final prevRev = lastSeenRevision;
+      if (prevAt == null && prevRev == null) return true;
+      if (remote.revision != null &&
+          prevRev != null &&
+          remote.revision! > prevRev) {
+        return true;
+      }
+      if (prevAt != null && remote.updatedAt.isAfter(prevAt)) return true;
+      return false;
+    }
+
+    late final void Function([Duration delay]) schedulePoll;
+    late final Future<void> Function() poll;
+
+    schedulePoll = ([Duration delay = pollInterval]) {
+      pollTimer?.cancel();
+      if (disposed) return;
+      pollTimer = Timer(delay, () => unawaited(poll()));
+    };
+
+    poll = () async {
       if (disposed) return;
       final remote = await _fetchViaRest(
         serviceId: serviceId,
         songId: songId,
       );
-      if (disposed || remote == null) return;
+      if (disposed) return;
+      if (remote == null || !isNewer(remote)) {
+        unchangedPolls++;
+        final factor = (1 << unchangedPolls.clamp(0, 2));
+        final nextMs = (pollInterval.inMilliseconds * factor)
+            .clamp(pollInterval.inMilliseconds, pollBackoffMax.inMilliseconds);
+        schedulePoll(Duration(milliseconds: nextMs));
+        return;
+      }
+      lastSeenUpdatedAt = remote.updatedAt;
+      lastSeenRevision = remote.revision;
+      unchangedPolls = 0;
       onRemoteUpdate(remote);
-    }
+      schedulePoll();
+    };
 
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? sub;
     try {
@@ -316,6 +359,7 @@ class ServiceAnnotationRepository {
           }
           if (!snap.exists) return;
           // Apply the snapshot itself (no second get) so we don't race the cache.
+          unchangedPolls = 0;
           unawaited(emitFromSnap(snap));
         },
         onError: (Object e, StackTrace st) {
@@ -326,14 +370,13 @@ class ServiceAnnotationRepository {
       debugPrint('Annotation Firestore subscribe failed: $e');
     }
 
-    final pollTimer = Timer.periodic(pollInterval, (_) => unawaited(poll()));
-    // Don't wait for the first period — check once right away.
+    // Initial poll, then self-scheduling with backoff when unchanged.
     unawaited(poll());
 
     return AnnotationSyncHandle(
       cancel: () async {
         disposed = true;
-        pollTimer.cancel();
+        pollTimer?.cancel();
         await sub?.cancel();
       },
     );

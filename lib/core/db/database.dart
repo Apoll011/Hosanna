@@ -49,4 +49,15 @@ class AppDatabase extends _$AppDatabase {
     final info = await customSelect("PRAGMA table_info('$table')").get();
     return info.any((row) => row.read<String>('name') == name);
   }
+
+  /// Wipes all replicated tenant tables. Used when switching organizations so
+  /// the previous church's rows cannot leak into the next sync/push cycle.
+  Future<void> clearAllReplicatedData() async {
+    await transaction(() async {
+      await delete(songs).go();
+      await delete(folders).go();
+      await delete(collections).go();
+      await delete(services).go();
+    });
+  }
 }

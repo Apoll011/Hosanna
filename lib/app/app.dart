@@ -137,12 +137,21 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     final nextOrg = next.organization?.id;
     if (!next.isAuthenticated || nextOrg == null || nextOrg == prevOrg) return;
 
-    // Defer so `syncAll` (which mutates SyncController state) never runs
+    // Defer so sync (which mutates SyncController state) never runs
     // synchronously inside the provider notification, which would rebuild
     // widgets while the tree is mid-build. Read via the captured container so
     // this stays valid even if the element has since been deactivated.
+    //
+    // When switching orgs, wipe local rows + checkpoints first so the previous
+    // church's data cannot linger or be pushed to the new tenant.
     Future.microtask(() {
-      _container?.read(syncControllerProvider.notifier).syncAll();
+      final sync = _container?.read(syncControllerProvider.notifier);
+      if (sync == null) return;
+      if (prevOrg != null) {
+        sync.resetForOrganizationSwitch();
+      } else {
+        sync.syncAll();
+      }
     });
   }
 

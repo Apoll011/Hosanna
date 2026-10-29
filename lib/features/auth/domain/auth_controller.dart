@@ -23,6 +23,7 @@ class AuthState {
     this.session,
     this.organization,
     this.resolvingOrganization = false,
+    this.hasActiveSubscription = true,
   });
 
   final AuthStatus status;
@@ -34,6 +35,9 @@ class AuthState {
   /// of briefly flashing the "join an org" onboarding page.
   final bool resolvingOrganization;
 
+  /// False when the active org has no entitled subscription/trial (read-only).
+  final bool hasActiveSubscription;
+
   bool get isAuthenticated => status == AuthStatus.authenticated;
 
   AuthState copyWith({
@@ -41,6 +45,7 @@ class AuthState {
     AuthSession? session,
     Organization? organization,
     bool? resolvingOrganization,
+    bool? hasActiveSubscription,
     bool clearSession = false,
   }) {
     return AuthState(
@@ -48,6 +53,8 @@ class AuthState {
       session: clearSession ? null : (session ?? this.session),
       organization: clearSession ? null : (organization ?? this.organization),
       resolvingOrganization: resolvingOrganization ?? this.resolvingOrganization,
+      hasActiveSubscription:
+          hasActiveSubscription ?? this.hasActiveSubscription,
     );
   }
 }
@@ -354,6 +361,15 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> _refreshEntitlement() async {
+    try {
+      final entitled = await _repository.fetchSubscriptionEntitlement();
+      state = state.copyWith(hasActiveSubscription: entitled);
+    } catch (_) {
+      // Non-fatal — keep previous entitlement flag.
+    }
+  }
+
   // ── Internals ────────────────────────────────────────────────────────────
 
   void _requireCaptchaIfNeeded(String? captchaToken) {
@@ -413,6 +429,7 @@ class AuthController extends StateNotifier<AuthState> {
           organization: org,
           resolvingOrganization: false,
         );
+        await _refreshEntitlement();
       } else {
         state = state.copyWith(resolvingOrganization: false);
       }

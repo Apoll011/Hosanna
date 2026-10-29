@@ -391,9 +391,8 @@ class HosannaNavContent extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      Flexible(
-                        child: _RevealBlock(
-                          visible: !collapsed,
+                      if (!collapsed) ...[
+                        Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 12),
                             child: Column(
@@ -416,18 +415,12 @@ class HosannaNavContent extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      ),
-                      _RevealBlock(
-                        visible: !collapsed,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Icon(
-                            Icons.settings_outlined,
-                            size: 22,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                        Icon(
+                          Icons.settings_outlined,
+                          size: 22,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

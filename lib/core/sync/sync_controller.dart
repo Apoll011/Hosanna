@@ -36,12 +36,14 @@ class SyncState {
 }
 
 class SyncController extends StateNotifier<SyncState> {
-  SyncController(this._engine, this._prefs) : super(const SyncState());
+  SyncController(this._engine, this._prefs, this._clearLocalData)
+      : super(const SyncState());
 
   static const _lastSyncedKey = 'sync.lastSyncedAt';
 
   final ReplicationEngine _engine;
   final SharedPreferences _prefs;
+  final Future<void> Function() _clearLocalData;
 
   DateTime? get lastSyncedAt => state.lastSyncedAt;
 
@@ -63,6 +65,35 @@ class SyncController extends StateNotifier<SyncState> {
       await _engine.pullAll();
       await _engine.pushAll();
 
+      final now = DateTime.now();
+      await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);
+      state = state.copyWith(status: SyncStatus.synced, lastSyncedAt: now);
+    } on ApiException catch (e) {
+      state = state.copyWith(
+        status: e.isNetworkError ? SyncStatus.offline : SyncStatus.error,
+        errorMessage: e.message,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: SyncStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  /// Clears local tenant data + checkpoints, then pulls (and only then pushes)
+  /// for the newly active organization. Call this on org switch.
+  Future<void> resetForOrganizationSwitch() async {
+    if (state.isSyncing) return;
+    state = state.copyWith(status: SyncStatus.syncing, clearError: true);
+    try {
+      await _clearLocalData();
+      await _engine.clearAllCheckpoints();
+      await _prefs.remove(_lastSyncedKey);
+      await _engine.pullAll();
+      // Push only after a clean pull so dirty rows from the previous org
+      // cannot be uploaded against the new tenant.
+      await _engine.pushAll();
       final now = DateTime.now();
       await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);
       state = state.copyWith(status: SyncStatus.synced, lastSyncedAt: now);
@@ -100,9 +131,11 @@ final replicationEngineProvider = Provider<ReplicationEngine>((ref) {
 
 final syncControllerProvider = StateNotifierProvider<SyncController, SyncState>(
   (ref) {
+    final db = ref.watch(databaseProvider);
     return SyncController(
       ref.watch(replicationEngineProvider),
       ref.watch(sharedPreferencesProvider),
+      () => db.clearAllReplicatedData(),
     );
   },
 );

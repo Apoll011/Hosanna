@@ -272,6 +272,27 @@
   "servicesNotesElementNotFound": "Esse item do culto não foi encontrado.",
   "servicesNotesSomeone": "Alguém",
   "servicesNotesQuickSend": "Envio rápido",
+  "servicesNotesStale": "As notas podem estar desatualizadas",
+  "servicesNotesStaleRetry": "Toque para atualizar",
+  "servicesNotesServiceSection": "Culto inteiro",
+  "servicesNotesServiceSectionDesc": "Notas visíveis para todo o culto, não ligadas a este item.",
+  "servicesNotesAddService": "Adicionar nota do culto",
+  "servicesNotesAddItem": "Adicionar nota do item",
+  "servicesStartService": "Iniciar culto",
+  "servicesStartServiceDesc": "Inicie o temporizador quando o culto começar.",
+  "servicesScheduledWindow": "Agendado {window}",
+  "@servicesScheduledWindow": {
+    "placeholders": {
+      "window": { "type": "String" }
+    }
+  },
+  "servicesItemRunning": "Este item · {elapsed}",
+  "@servicesItemRunning": {
+    "placeholders": {
+      "elapsed": { "type": "String" }
+    }
+  },
+  "servicesNotStarted": "Não iniciado",
   "noteSugReadyToStart": "Prontos para começar",
   "noteSugStandbyNext": "Standby para o próximo",
   "noteSugGoNextItem": "A passar para o próximo",
@@ -377,6 +398,11 @@
   "settingsTabAccount": "Conta",
   "settingsTabWorkspace": "Organização",
   "settingsTabPreferences": "Preferências",
+  "settingsTabService": "Culto",
+  "settingsTabAppearance": "Aparência",
+  "settingsSubscriptionInactive": "Sem subscrição ativa",
+  "settingsSubscriptionInactiveDesc": "Esta organização está só de leitura até haver uma subscrição ou período de avaliação ativo. Ainda pode consultar o conteúdo sincronizado.",
+  "settingsOrgSwitching": "A mudar de organização…",
   "settingsActive": "Ativa",
   "settingsSwitchOrg": "Alternar Organização",
   "settingsOrganization": "Organização",
@@ -401,10 +427,10 @@
   "settingsSaving": "A guardar…",
   "settingsNameEmpty": "O nome não pode estar vazio.",
   "settingsEmailInvalid": "Introduza um e-mail válido.",
-  "settingsMusicianMode": "Modo Músico nos Cultos",
-  "settingsMusicianModeDesc": "Abre o culto diretamente no primeiro cântico com navegação lateral contínua.",
+  "settingsMusicianMode": "Modo músico",
+  "settingsMusicianModeDesc": "Abre os cultos no primeiro cântico com acordes e anotações. Desative para a vista de ordem do culto com letras e tempos.",
   "settingsServiceOrderSidePanel": "Painel lateral da ordem do culto",
-  "settingsServiceOrderSidePanelDesc": "Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.",
+  "settingsServiceOrderSidePanelDesc": "Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.",
   "settingsKeepAwake": "Manter Ecrã Ligado",
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
   "settingsSyncAnnotations": "Sincronizar anotações",

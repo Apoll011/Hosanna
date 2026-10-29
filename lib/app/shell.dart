@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/auth/domain/auth_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
@@ -71,6 +72,47 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
       (d) => d.branch == currentBranch,
     );
     final showNavBar = !kBranchesWithoutNavBar.contains(currentBranch);
+    final auth = ref.watch(authControllerProvider);
+    final showSubWarning =
+        auth.isAuthenticated && !auth.hasActiveSubscription;
+
+    Widget withSubscriptionBanner(Widget child) {
+      if (!showSubWarning) return child;
+      final theme = Theme.of(context);
+      return Column(
+        children: [
+          Material(
+            color: theme.colorScheme.errorContainer,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.settingsSubscriptionInactiveDesc,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: child),
+        ],
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -79,39 +121,41 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
         if (isTablet) {
           return Scaffold(
             key: ref.watch(shellScaffoldKeyProvider),
-            body: Row(
-              children: [
-                _TabletSidebar(
-                  collapsed: sidebarCollapsed,
-                  currentBranch: widget.navigationShell.currentIndex,
-                  onNavigate: _goBranch,
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(child: widget.navigationShell),
-                      if (showNavBar)
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: _FloatingNavBar(
-                            selectedIndex: selectedDestination,
-                            onSelected: (index) =>
-                                _goBranch(destinations[index].branch),
-                            destinations: destinations,
-                          ),
-                        ),
-                    ],
+            body: withSubscriptionBanner(
+              Row(
+                children: [
+                  _TabletSidebar(
+                    collapsed: sidebarCollapsed,
+                    currentBranch: widget.navigationShell.currentIndex,
+                    onNavigate: _goBranch,
                   ),
-                ),
-              ],
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: widget.navigationShell),
+                        if (showNavBar)
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: _FloatingNavBar(
+                              selectedIndex: selectedDestination,
+                              onSelected: (index) =>
+                                  _goBranch(destinations[index].branch),
+                              destinations: destinations,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         return Scaffold(
           key: ref.watch(shellScaffoldKeyProvider),
-          body: widget.navigationShell,
+          body: withSubscriptionBanner(widget.navigationShell),
           drawer: HosannaDrawer(
             currentBranch: widget.navigationShell.currentIndex,
             onNavigate: _goBranch,

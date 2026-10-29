@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../app/settings_controller.dart';
+import '../../../app/shell.dart';
 import '../../../core/db/database.dart';
 import '../../../core/db/tables.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -49,6 +50,12 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     super.dispose();
   }
 
+  bool _useSideRail(BuildContext context) {
+    final settings = ref.watch(settingsControllerProvider);
+    if (!settings.serviceOrderSidePanel) return false;
+    return MediaQuery.sizeOf(context).width >= kTabletBreakpoint;
+  }
+
   @override
   Widget build(BuildContext context) {
     final musicianMode = ref.watch(settingsControllerProvider).musicianMode;
@@ -59,12 +66,13 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     final l10n = AppLocalizations.of(context);
     final serviceAsync = ref.watch(serviceByIdProvider(widget.serviceId));
     final service = serviceAsync.valueOrNull;
+    final useSideRail = _useSideRail(context);
 
     return Scaffold(
       key: _scaffoldKey,
       // Edge-drag open fights horizontal prev/next swipes in the song reader.
       drawerEnableOpenDragGesture: false,
-      drawer: service == null
+      drawer: (service == null || useSideRail)
           ? null
           : _OrderDrawer(
               service: service,
@@ -95,13 +103,37 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),
-          data: (service) => service == null
-              ? EmptyState(
-                  icon: Icons.event_busy_outlined,
-                  title: l10n.servicesNotFound,
-                  description: l10n.servicesNotFoundDesc,
-                )
-              : _body(service: service),
+          data: (service) {
+            if (service == null) {
+              return EmptyState(
+                icon: Icons.event_busy_outlined,
+                title: l10n.servicesNotFound,
+                description: l10n.servicesNotFoundDesc,
+              );
+            }
+            final main = _body(service: service, useSideRail: useSideRail);
+            if (!useSideRail) return main;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 220,
+                  child: _OrderSideRail(
+                    service: service,
+                    currentElementId: _currentElementId,
+                    onSelect: (id) => setState(() => _currentElementId = id),
+                    onLeave: () => context.pop(),
+                  ),
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                Expanded(child: ClipRect(child: main)),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -160,7 +192,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     return elements;
   }
 
-  Widget _body({required ServiceRow service}) {
+  Widget _body({required ServiceRow service, required bool useSideRail}) {
     final l10n = AppLocalizations.of(context);
     final elements = _sorted(service);
 
@@ -234,6 +266,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             elementIndex + 1,
             elements.length,
           ),
+          showOrderButton: !useSideRail,
           onOpenOrder: () => _scaffoldKey.currentState?.openDrawer(),
           onOpenNotes: () => _openNotes(
             context,
@@ -286,6 +319,7 @@ class _MusicianTopBar extends StatelessWidget {
     required this.onOpenNotes,
     required this.onLeave,
     required this.isSong,
+    this.showOrderButton = true,
     this.isAnnotating = false,
     this.onToggleAnnotation,
   });
@@ -293,6 +327,7 @@ class _MusicianTopBar extends StatelessWidget {
   final String serviceId;
   final String serviceName;
   final String itemLabel;
+  final bool showOrderButton;
   final VoidCallback onOpenOrder;
   final VoidCallback onOpenNotes;
   final VoidCallback onLeave;
@@ -311,11 +346,12 @@ class _MusicianTopBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.menu),
-              tooltip: l10n.servicesOrderTitle,
-              onPressed: onOpenOrder,
-            ),
+            if (showOrderButton)
+              IconButton(
+                icon: const Icon(Icons.menu),
+                tooltip: l10n.servicesOrderTitle,
+                onPressed: onOpenOrder,
+              ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,6 +673,94 @@ class _NotesCard extends StatelessWidget {
   }
 }
 
+class _OrderListBody extends StatelessWidget {
+  const _OrderListBody({
+    required this.service,
+    required this.currentElementId,
+    required this.onSelect,
+    required this.onLeave,
+    this.showClose = false,
+  });
+
+  final ServiceRow service;
+  final String? currentElementId;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onLeave;
+  final bool showClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final elements = List<ServiceElement>.from(service.elements)
+      ..sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.servicesOrderTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.servicesMoments(elements.length),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (showClose)
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              for (var i = 0; i < elements.length; i++)
+                _OrderItem(
+                  index: i,
+                  element: elements[i],
+                  selected: elements[i].id == currentElementId,
+                  onTap: () => onSelect(elements[i].id),
+                ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.colorScheme.error,
+            ),
+            icon: const Icon(Icons.logout),
+            label: Text(l10n.servicesLeaveMode),
+            onPressed: onLeave,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _OrderDrawer extends StatelessWidget {
   const _OrderDrawer({
     required this.service,
@@ -652,74 +776,45 @@ class _OrderDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final elements = List<ServiceElement>.from(service.elements)
-      ..sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
-
     return Drawer(
       child: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.servicesOrderTitle,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.servicesMoments(elements.length),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(12),
-                children: [
-                  for (var i = 0; i < elements.length; i++)
-                    _OrderItem(
-                      index: i,
-                      element: elements[i],
-                      selected: elements[i].id == currentElementId,
-                      onTap: () => onSelect(elements[i].id),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-                icon: const Icon(Icons.logout),
-                label: Text(l10n.servicesLeaveMode),
-                onPressed: onLeave,
-              ),
-            ),
-          ],
+        child: _OrderListBody(
+          service: service,
+          currentElementId: currentElementId,
+          onSelect: onSelect,
+          onLeave: onLeave,
+          showClose: true,
+        ),
+      ),
+    );
+  }
+}
+
+class _OrderSideRail extends StatelessWidget {
+  const _OrderSideRail({
+    required this.service,
+    required this.currentElementId,
+    required this.onSelect,
+    required this.onLeave,
+  });
+
+  final ServiceRow service;
+  final String? currentElementId;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onLeave;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      child: SafeArea(
+        right: false,
+        child: _OrderListBody(
+          service: service,
+          currentElementId: currentElementId,
+          onSelect: onSelect,
+          onLeave: onLeave,
         ),
       ),
     );

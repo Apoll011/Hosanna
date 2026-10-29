@@ -163,6 +163,14 @@ class ReplicationEngine {
     await adapter.markPushed(changes.map((c) => c.id));
   }
 
+  /// Drops every resource checkpoint so the next pull starts from scratch
+  /// (required after switching organizations).
+  Future<void> clearAllCheckpoints() async {
+    for (final adapter in _adapters) {
+      await _prefs.remove(_checkpointKey(adapter.resourceName));
+    }
+  }
+
   Future<ReplicationCheckpoint?> _loadCheckpoint(String resource) async {
     final raw = _prefs.getString(_checkpointKey(resource));
     if (raw == null || raw.isEmpty) return null;
