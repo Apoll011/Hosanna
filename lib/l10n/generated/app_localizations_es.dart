@@ -855,6 +855,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesNotesQuickSend => 'Envío rápido';
 
   @override
+  String get servicesNotesStale => 'Las notas pueden estar desactualizadas';
+
+  @override
+  String get servicesNotesStaleRetry => 'Toca para actualizar';
+
+  @override
+  String get servicesNotesServiceSection => 'Servicio completo';
+
+  @override
+  String get servicesNotesServiceSectionDesc =>
+      'Notas visibles para todo el servicio, no ligadas a este elemento.';
+
+  @override
+  String get servicesNotesAddService => 'Añadir nota del servicio';
+
+  @override
+  String get servicesNotesAddItem => 'Añadir nota del elemento';
+
+  @override
+  String get servicesStartService => 'Iniciar servicio';
+
+  @override
+  String get servicesStartServiceDesc =>
+      'Inicia el temporizador cuando comience el servicio.';
+
+  @override
+  String servicesScheduledWindow(String window) {
+    return 'Programado $window';
+  }
+
+  @override
+  String servicesItemRunning(String elapsed) {
+    return 'Este elemento · $elapsed';
+  }
+
+  @override
+  String get servicesNotStarted => 'No iniciado';
+
+  @override
   String get noteSugReadyToStart => 'Listos para empezar';
 
   @override
@@ -1168,6 +1207,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTabPreferences => 'Preferencias';
 
   @override
+  String get settingsTabService => 'Servicio';
+
+  @override
+  String get settingsTabAppearance => 'Apariencia';
+
+  @override
+  String get settingsSubscriptionInactive => 'Sin suscripción activa';
+
+  @override
+  String get settingsSubscriptionInactiveDesc =>
+      'Esta organización es de solo lectura hasta que haya una suscripción o prueba activa. Aún puedes consultar el contenido sincronizado.';
+
+  @override
+  String get settingsOrgSwitching => 'Cambiando de organización…';
+
+  @override
   String get settingsActive => 'Activa';
 
   @override
@@ -1242,11 +1297,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsEmailInvalid => 'Introduce un correo válido.';
 
   @override
-  String get settingsMusicianMode => 'Modo Músico en los Servicios';
+  String get settingsMusicianMode => 'Modo músico';
 
   @override
   String get settingsMusicianModeDesc =>
-      'Abre el servicio directamente en la primera canción con navegación lateral continua.';
+      'Abre los servicios en la primera canción con acordes y anotaciones. Desactívalo para la vista de orden del servicio con letras y tiempos.';
 
   @override
   String get settingsServiceOrderSidePanel =>
@@ -1254,7 +1309,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsServiceOrderSidePanelDesc =>
-      'En tablets, muestra el orden del servicio junto al detalle del elemento en el modo no músico.';
+      'En tablets, mantiene el orden del servicio visible junto al elemento actual en los modos músico y no músico.';
 
   @override
   String get settingsKeepAwake => 'Mantener Pantalla Encendida';

@@ -1642,6 +1642,72 @@ abstract class AppLocalizations {
   /// **'Envio rápido'**
   String get servicesNotesQuickSend;
 
+  /// No description provided for @servicesNotesStale.
+  ///
+  /// In pt, this message translates to:
+  /// **'As notas podem estar desatualizadas'**
+  String get servicesNotesStale;
+
+  /// No description provided for @servicesNotesStaleRetry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque para atualizar'**
+  String get servicesNotesStaleRetry;
+
+  /// No description provided for @servicesNotesServiceSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Culto inteiro'**
+  String get servicesNotesServiceSection;
+
+  /// No description provided for @servicesNotesServiceSectionDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas visíveis para todo o culto, não ligadas a este item.'**
+  String get servicesNotesServiceSectionDesc;
+
+  /// No description provided for @servicesNotesAddService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar nota do culto'**
+  String get servicesNotesAddService;
+
+  /// No description provided for @servicesNotesAddItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar nota do item'**
+  String get servicesNotesAddItem;
+
+  /// No description provided for @servicesStartService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iniciar culto'**
+  String get servicesStartService;
+
+  /// No description provided for @servicesStartServiceDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inicie o temporizador quando o culto começar.'**
+  String get servicesStartServiceDesc;
+
+  /// No description provided for @servicesScheduledWindow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agendado {window}'**
+  String servicesScheduledWindow(String window);
+
+  /// No description provided for @servicesItemRunning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este item · {elapsed}'**
+  String servicesItemRunning(String elapsed);
+
+  /// No description provided for @servicesNotStarted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não iniciado'**
+  String get servicesNotStarted;
+
   /// No description provided for @noteSugReadyToStart.
   ///
   /// In pt, this message translates to:
@@ -2266,6 +2332,36 @@ abstract class AppLocalizations {
   /// **'Preferências'**
   String get settingsTabPreferences;
 
+  /// No description provided for @settingsTabService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Culto'**
+  String get settingsTabService;
+
+  /// No description provided for @settingsTabAppearance.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aparência'**
+  String get settingsTabAppearance;
+
+  /// No description provided for @settingsSubscriptionInactive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem subscrição ativa'**
+  String get settingsSubscriptionInactive;
+
+  /// No description provided for @settingsSubscriptionInactiveDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta organização está só de leitura até haver uma subscrição ou período de avaliação ativo. Ainda pode consultar o conteúdo sincronizado.'**
+  String get settingsSubscriptionInactiveDesc;
+
+  /// No description provided for @settingsOrgSwitching.
+  ///
+  /// In pt, this message translates to:
+  /// **'A mudar de organização…'**
+  String get settingsOrgSwitching;
+
   /// No description provided for @settingsActive.
   ///
   /// In pt, this message translates to:
@@ -2413,13 +2509,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMusicianMode.
   ///
   /// In pt, this message translates to:
-  /// **'Modo Músico nos Cultos'**
+  /// **'Modo músico'**
   String get settingsMusicianMode;
 
   /// No description provided for @settingsMusicianModeDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.'**
+  /// **'Abre os cultos no primeiro cântico com acordes e anotações. Desative para a vista de ordem do culto com letras e tempos.'**
   String get settingsMusicianModeDesc;
 
   /// No description provided for @settingsServiceOrderSidePanel.
@@ -2431,7 +2527,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsServiceOrderSidePanelDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.'**
+  /// **'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.'**
   String get settingsServiceOrderSidePanelDesc;
 
   /// No description provided for @settingsKeepAwake.

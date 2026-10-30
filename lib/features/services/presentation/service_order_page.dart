@@ -39,8 +39,10 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
   String? _currentElementId;
   /// When set (tablet side-rail layout), item detail is shown inline.
   int? _viewerIndex;
+  /// Null until the user explicitly starts the service timer.
   DateTime? _startedAt;
-  Timer? _ticker;
+  /// When the focused item became current (for per-item elapsed).
+  DateTime? _itemStartedAt;
 
   static const _sideRailWidth = 220.0;
 
@@ -50,17 +52,20 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     if (ref.read(settingsControllerProvider).keepScreenAwake) {
       WakelockPlus.enable();
     }
-    _startedAt = DateTime.now();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void dispose() {
-    _ticker?.cancel();
     WakelockPlus.disable();
     super.dispose();
+  }
+
+  void _startService() {
+    if (_startedAt != null) return;
+    setState(() {
+      _startedAt = DateTime.now();
+      _itemStartedAt = DateTime.now();
+    });
   }
 
   List<ServiceElement> _sorted(ServiceRow service) {
@@ -76,12 +81,6 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     if (stillValid) return;
     final firstOpen = elements.where((e) => !_completedIds.contains(e.id));
     _currentElementId = (firstOpen.isEmpty ? elements.first : firstOpen.first).id;
-  }
-
-  Duration get _elapsed {
-    final start = _startedAt;
-    if (start == null) return Duration.zero;
-    return DateTime.now().difference(start);
   }
 
   bool _useSideRail(BuildContext context) {
@@ -134,6 +133,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                       completedIds: _completedIds,
                       currentElementId: _currentElementId,
                       startedAt: _startedAt,
+                      onStart: _startService,
                       onSelect: (element) =>
                           _openElement(context, element, useSideRail: true),
                     ),
@@ -153,7 +153,8 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                 children: [
                   _OrderHeader(
                     service: service,
-                    elapsed: _elapsed,
+                    startedAt: _startedAt,
+                    onStart: _startService,
                     onLeave: () => context.pop(),
                   ),
                   Expanded(child: mainPane),
@@ -228,20 +229,21 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         viewerIndex >= 0 &&
         viewerIndex < elements.length) {
       return _ElementViewerPage(
-        // Force a clean subtree when the focused element changes from the
-        // side rail — avoids stacked swipe transforms / nested scaffold ghosts.
-        key: ValueKey(elements[viewerIndex].id),
         serviceId: widget.serviceId,
         elements: elements,
         initialIndex: viewerIndex,
         completedIds: _completedIds,
         startedAt: _startedAt,
+        itemStartedAt: _itemStartedAt,
         compactTimerStyle: _ServiceTimerStyle.orbOnly,
         embedded: true,
         onIndexChanged: (i) {
           setState(() {
             _viewerIndex = i;
             _currentElementId = elements[i].id;
+            if (_startedAt != null) {
+              _itemStartedAt = DateTime.now();
+            }
           });
         },
         onClose: () => setState(() => _viewerIndex = null),
@@ -311,10 +313,16 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         _viewerIndex = index;
         _currentElementId = element.id;
         _tabIndex = 0;
+        if (_startedAt != null) {
+          _itemStartedAt = DateTime.now();
+        }
       });
       return;
     }
 
+    if (_startedAt != null) {
+      _itemStartedAt = DateTime.now();
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => _ElementViewerPage(
@@ -323,6 +331,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
           initialIndex: index,
           completedIds: _completedIds,
           startedAt: _startedAt,
+          itemStartedAt: _itemStartedAt,
           // No side rail — orb + elapsed beside the song toolbar.
           compactTimerStyle: _ServiceTimerStyle.orbWithTime,
         ),
@@ -341,12 +350,14 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
 class _OrderHeader extends StatelessWidget {
   const _OrderHeader({
     required this.service,
-    required this.elapsed,
+    required this.startedAt,
+    required this.onStart,
     required this.onLeave,
   });
 
   final ServiceRow service;
-  final Duration elapsed;
+  final DateTime? startedAt;
+  final VoidCallback onStart;
   final VoidCallback onLeave;
 
   @override
@@ -358,7 +369,7 @@ class _OrderHeader extends StatelessWidget {
         ? ''
         : DateFormat.yMMMd(Localizations.localeOf(context).toString())
             .format(date);
-    final timer = formatServiceDuration(elapsed.inSeconds);
+    final live = startedAt != null;
 
     return SafeArea(
       bottom: false,
@@ -416,41 +427,50 @@ class _OrderHeader extends StatelessWidget {
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+              child: live
+                  ? Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16A34A),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            l10n.servicesInProgress,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        _ServiceTimerStrip(
+                          startedAt: startedAt,
+                          style: _ServiceTimerStyle.orbWithTime,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.servicesStartServiceDesc,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.tonal(
+                          onPressed: onStart,
+                          child: Text(l10n.servicesStartService),
+                        ),
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16A34A),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      l10n.servicesInProgress,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    timer,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -697,6 +717,7 @@ class _ServiceOrderSideRail extends StatelessWidget {
     required this.completedIds,
     required this.currentElementId,
     required this.onSelect,
+    required this.onStart,
     this.startedAt,
   });
 
@@ -704,6 +725,7 @@ class _ServiceOrderSideRail extends StatelessWidget {
   final Set<String> completedIds;
   final String? currentElementId;
   final ValueChanged<ServiceElement> onSelect;
+  final VoidCallback onStart;
   final DateTime? startedAt;
 
   @override
@@ -784,10 +806,15 @@ class _ServiceOrderSideRail extends StatelessWidget {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                child: _ServiceTimerStrip(
-                  startedAt: startedAt,
-                  style: _ServiceTimerStyle.rail,
-                ),
+              child: startedAt == null
+                  ? FilledButton.tonal(
+                      onPressed: onStart,
+                      child: Text(l10n.servicesStartService),
+                    )
+                  : _ServiceTimerStrip(
+                      startedAt: startedAt,
+                      style: _ServiceTimerStyle.rail,
+                    ),
             ),
           ],
         ),
@@ -873,7 +900,7 @@ class _SideRailItem extends ConsumerWidget {
                       ),
                       if (window.hasDuration)
                         Text(
-                          window.label,
+                          l10n.servicesScheduledWindow(window.label),
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontSize: 10,
                             color: selected
@@ -1006,7 +1033,7 @@ class _OrderRow extends ConsumerWidget {
               if (window.hasDuration) ...[
                 const SizedBox(width: 8),
                 Text(
-                  window.label,
+                  l10n.servicesScheduledWindow(window.label),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -1054,12 +1081,12 @@ class _StatusGlyph extends StatelessWidget {
 /// Full-screen (or embedded) viewer for any service element with swipe nav.
 class _ElementViewerPage extends ConsumerStatefulWidget {
   const _ElementViewerPage({
-    super.key,
     required this.serviceId,
     required this.elements,
     required this.initialIndex,
     required this.completedIds,
     this.startedAt,
+    this.itemStartedAt,
     this.compactTimerStyle,
     this.embedded = false,
     this.onIndexChanged,
@@ -1071,6 +1098,7 @@ class _ElementViewerPage extends ConsumerStatefulWidget {
   final int initialIndex;
   final Set<String> completedIds;
   final DateTime? startedAt;
+  final DateTime? itemStartedAt;
 
   /// When set, show a compact live timer in the app bar (no "In progress" chip).
   final _ServiceTimerStyle? compactTimerStyle;
@@ -1085,11 +1113,8 @@ class _ElementViewerPage extends ConsumerStatefulWidget {
 class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   bool _hidChords = false;
   SongDisplaySettingsController? _displaySettings;
-
-  int get _index {
-    if (widget.elements.isEmpty) return 0;
-    return widget.initialIndex.clamp(0, widget.elements.length - 1);
-  }
+  late int _index;
+  DateTime? _itemStartedAt;
 
   ServiceElement get _element => widget.elements[_index];
 
@@ -1099,7 +1124,31 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   @override
   void initState() {
     super.initState();
+    _index = widget.elements.isEmpty
+        ? 0
+        : widget.initialIndex.clamp(0, widget.elements.length - 1);
+    _itemStartedAt = widget.itemStartedAt ??
+        (widget.startedAt != null ? DateTime.now() : null);
     _maybeHideChords();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ElementViewerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIndex != oldWidget.initialIndex &&
+        widget.initialIndex != _index &&
+        widget.elements.isNotEmpty) {
+      _restoreChords();
+      setState(() {
+        _index = widget.initialIndex.clamp(0, widget.elements.length - 1);
+        _itemStartedAt = widget.startedAt != null ? DateTime.now() : null;
+      });
+      _maybeHideChords();
+    } else if (widget.startedAt != null &&
+        oldWidget.startedAt == null &&
+        _itemStartedAt == null) {
+      setState(() => _itemStartedAt = DateTime.now());
+    }
   }
 
   @override
@@ -1109,6 +1158,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   }
 
   void _maybeHideChords() {
+    if (widget.elements.isEmpty) return;
     if (_element.type != 'song') return;
     // Resolve provider while still active — post-frame may run after deactivate.
     _displaySettings ??= ref.read(songDisplaySettingsProvider.notifier);
@@ -1132,9 +1182,16 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
 
   void _goTo(int nextIndex) {
     if (nextIndex < 0 || nextIndex >= widget.elements.length) return;
-    // Parent owns the index (and, when embedded, the [ValueKey]); do not keep
-    // a local copy that can drift during fast side-rail taps.
+    if (nextIndex == _index) return;
+    _restoreChords();
+    setState(() {
+      _index = nextIndex;
+      if (widget.startedAt != null) {
+        _itemStartedAt = DateTime.now();
+      }
+    });
     widget.onIndexChanged?.call(nextIndex);
+    _maybeHideChords();
   }
 
   void _close() {
@@ -1167,7 +1224,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
 
   void _markCompleted() {
     final id = _element.id;
-    widget.completedIds.add(id);
+    setState(() => widget.completedIds.add(id));
     if (_index < widget.elements.length - 1) {
       _goTo(_index + 1);
     } else {
@@ -1179,6 +1236,9 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    if (widget.elements.isEmpty) {
+      return const SizedBox.shrink();
+    }
     final element = _element;
     final isSong = element.type == 'song' && element.songId != null;
     final canPrev = _index > 0;
@@ -1207,6 +1267,8 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
               serviceId: widget.serviceId,
               element: element,
               timeWindow: _windows[_index],
+              itemStartedAt: _itemStartedAt,
+              serviceStarted: widget.startedAt != null,
             ),
           );
 
@@ -1353,11 +1415,15 @@ class _NonSongDetailBody extends StatelessWidget {
     required this.serviceId,
     required this.element,
     required this.timeWindow,
+    this.itemStartedAt,
+    this.serviceStarted = false,
   });
 
   final String serviceId;
   final ServiceElement element;
   final ElementTimeWindow timeWindow;
+  final DateTime? itemStartedAt;
+  final bool serviceStarted;
 
   @override
   Widget build(BuildContext context) {
@@ -1368,6 +1434,9 @@ class _NonSongDetailBody extends StatelessWidget {
     final hasContent = element.content != null && element.content!.isNotEmpty;
     final hasItemNotes = element.notes != null && element.notes!.isNotEmpty;
     final hasBody = hasPassage || hasContent || hasItemNotes;
+    final itemElapsed = itemStartedAt == null
+        ? null
+        : DateTime.now().difference(itemStartedAt!);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
@@ -1413,9 +1482,34 @@ class _NonSongDetailBody extends StatelessWidget {
           _InfoCard(
             label: l10n.servicesEstimatedDuration,
             child: Text(
-              timeWindow.label,
+              l10n.servicesScheduledWindow(timeWindow.label),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        if (serviceStarted && itemElapsed != null) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesInProgress,
+            child: Text(
+              l10n.servicesItemRunning(
+                formatServiceDuration(itemElapsed.inSeconds),
+              ),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ] else if (!serviceStarted) ...[
+          const SizedBox(height: 12),
+          _InfoCard(
+            label: l10n.servicesNotStarted,
+            child: Text(
+              l10n.servicesStartServiceDesc,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),

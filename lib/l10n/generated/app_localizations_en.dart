@@ -847,6 +847,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesNotesQuickSend => 'Quick send';
 
   @override
+  String get servicesNotesStale => 'Notes may be out of date';
+
+  @override
+  String get servicesNotesStaleRetry => 'Tap to refresh';
+
+  @override
+  String get servicesNotesServiceSection => 'Whole service';
+
+  @override
+  String get servicesNotesServiceSectionDesc =>
+      'Notes visible for the entire service, not tied to this item.';
+
+  @override
+  String get servicesNotesAddService => 'Add service note';
+
+  @override
+  String get servicesNotesAddItem => 'Add item note';
+
+  @override
+  String get servicesStartService => 'Start service';
+
+  @override
+  String get servicesStartServiceDesc =>
+      'Start the live timer when the service begins.';
+
+  @override
+  String servicesScheduledWindow(String window) {
+    return 'Scheduled $window';
+  }
+
+  @override
+  String servicesItemRunning(String elapsed) {
+    return 'This item · $elapsed';
+  }
+
+  @override
+  String get servicesNotStarted => 'Not started';
+
+  @override
   String get noteSugReadyToStart => 'Ready to start';
 
   @override
@@ -1160,6 +1199,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTabPreferences => 'Preferences';
 
   @override
+  String get settingsTabService => 'Service';
+
+  @override
+  String get settingsTabAppearance => 'Appearance';
+
+  @override
+  String get settingsSubscriptionInactive => 'No active subscription';
+
+  @override
+  String get settingsSubscriptionInactiveDesc =>
+      'This organization is read-only until a subscription or trial is active. You can still browse synced content.';
+
+  @override
+  String get settingsOrgSwitching => 'Switching organization…';
+
+  @override
   String get settingsActive => 'Active';
 
   @override
@@ -1233,18 +1288,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEmailInvalid => 'Please enter a valid email.';
 
   @override
-  String get settingsMusicianMode => 'Musician Mode in Services';
+  String get settingsMusicianMode => 'Musician mode';
 
   @override
   String get settingsMusicianModeDesc =>
-      'Opens the service directly on the first song with continuous side navigation.';
+      'Open services on the first song with chords and annotation tools. Turn off for a run-of-show view with lyrics and timing.';
 
   @override
   String get settingsServiceOrderSidePanel => 'Service order side panel';
 
   @override
   String get settingsServiceOrderSidePanelDesc =>
-      'On tablets, show the service order beside item detail in non-musician mode.';
+      'On tablets, keep the service order visible beside the current item in both musician and non-musician modes.';
 
   @override
   String get settingsKeepAwake => 'Keep Screen Awake';

@@ -15,6 +15,9 @@ import '../../domain/service_note_suggestions.dart';
 ///
 /// Backed by [serviceNotesWatchProvider]: Firestore note pings plus a slow
 /// REST poll fallback while the service screen is open.
+///
+/// When [elementId] is set and [includeServiceWideSection] is true, the panel
+/// shows item notes on top and whole-service notes underneath.
 class ServiceNotesPanel extends ConsumerWidget {
   const ServiceNotesPanel({
     super.key,
@@ -23,6 +26,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     this.elementType,
     this.elementLabels = const {},
     this.serviceScope = false,
+    this.includeServiceWideSection = false,
     this.embedded = false,
     this.title,
     this.markReadWhenBuilt = true,
@@ -39,6 +43,9 @@ class ServiceNotesPanel extends ConsumerWidget {
   final Map<String, String> elementLabels;
   final bool serviceScope;
 
+  /// When true with a non-null [elementId], also show service-wide notes below.
+  final bool includeServiceWideSection;
+
   /// When true, omits the outer title chrome (useful inside a tab).
   final bool embedded;
   final String? title;
@@ -49,15 +56,21 @@ class ServiceNotesPanel extends ConsumerWidget {
   /// Optional override; otherwise derived from settings + [elementType].
   final NoteSuggestionContext? suggestionContext;
 
-  NoteSuggestionContext _resolveSuggestions(WidgetRef ref) {
-    if (suggestionContext != null) return suggestionContext!;
+  bool get _dualSections =>
+      includeServiceWideSection && elementId != null && !serviceScope;
+
+  NoteSuggestionContext _resolveSuggestions(
+    WidgetRef ref, {
+    required NoteSuggestionScope scope,
+  }) {
+    if (suggestionContext != null && scope == NoteSuggestionScope.element) {
+      return suggestionContext!;
+    }
     final musicianMode = ref.watch(settingsControllerProvider).musicianMode;
     return NoteSuggestionContext(
       musicianMode: musicianMode,
       elementType: elementType,
-      scope: elementId != null
-          ? NoteSuggestionScope.element
-          : NoteSuggestionScope.service,
+      scope: scope,
     );
   }
 
@@ -67,14 +80,32 @@ class ServiceNotesPanel extends ConsumerWidget {
     final theme = Theme.of(context);
     final watch = ref.watch(serviceNotesWatchProvider(serviceId));
     final userId = ref.watch(authSessionProvider)?.user.id;
-    final notes = _filterNotes(watch.notes);
-    final suggestions = _resolveSuggestions(ref);
+    final elementSuggestions = _resolveSuggestions(
+      ref,
+      scope: elementId != null
+          ? NoteSuggestionScope.element
+          : NoteSuggestionScope.service,
+    );
+    final serviceSuggestions = _resolveSuggestions(
+      ref,
+      scope: NoteSuggestionScope.service,
+    );
 
     if (markReadWhenBuilt && watch.unreadCount > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(serviceNotesWatchProvider(serviceId).notifier).markAllRead();
       });
     }
+
+    final elementNotes = _filterNotes(
+      watch.notes,
+      elementId: elementId,
+      serviceScope: serviceScope,
+    );
+    final serviceNotes = _dualSections
+        ? _filterNotes(watch.notes, serviceScope: true)
+        : const <ServiceNote>[];
+
     Widget body;
     if (watch.isLoading && watch.notes.isEmpty) {
       body = const Center(child: CircularProgressIndicator());
@@ -84,7 +115,68 @@ class ServiceNotesPanel extends ConsumerWidget {
         onRetry: () =>
             ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
       );
-    } else if (notes.isEmpty) {
+    } else if (_dualSections) {
+      body = RefreshIndicator(
+        onRefresh: () =>
+            ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+          children: [
+            _NotesSectionHeader(
+              title: title ?? l10n.servicesItemNotes,
+              onAdd: () => _openComposer(
+                context,
+                ref,
+                composeElementId: elementId,
+                suggestions: elementSuggestions,
+              ),
+              addTooltip: l10n.servicesNotesAddItem,
+            ),
+            if (elementNotes.isEmpty)
+              _NotesEmptyInline(l10n: l10n)
+            else
+              for (var i = 0; i < elementNotes.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                _noteCardFor(
+                  context,
+                  ref,
+                  note: elementNotes[i],
+                  userId: userId,
+                  suggestions: elementSuggestions,
+                  composeElementId: elementId,
+                ),
+              ],
+            const SizedBox(height: 24),
+            _NotesSectionHeader(
+              title: l10n.servicesNotesServiceSection,
+              subtitle: l10n.servicesNotesServiceSectionDesc,
+              onAdd: () => _openComposer(
+                context,
+                ref,
+                composeElementId: null,
+                suggestions: serviceSuggestions,
+              ),
+              addTooltip: l10n.servicesNotesAddService,
+            ),
+            if (serviceNotes.isEmpty)
+              _NotesEmptyInline(l10n: l10n)
+            else
+              for (var i = 0; i < serviceNotes.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                _noteCardFor(
+                  context,
+                  ref,
+                  note: serviceNotes[i],
+                  userId: userId,
+                  suggestions: serviceSuggestions,
+                  composeElementId: null,
+                ),
+              ],
+          ],
+        ),
+      );
+    } else if (elementNotes.isEmpty) {
       body = RefreshIndicator(
         onRefresh: () =>
             ref.read(serviceNotesWatchProvider(serviceId).notifier).refresh(),
@@ -109,27 +201,19 @@ class ServiceNotesPanel extends ConsumerWidget {
         child: ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-          itemCount: notes.length,
+          itemCount: elementNotes.length,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
-            final note = notes[index];
-            return _NoteCard(
+            final note = elementNotes[index];
+            return _noteCardFor(
+              context,
+              ref,
               note: note,
-              isMine: note.isAuthoredBy(userId),
-              // Only show scope chips in the global (unfiltered) feed.
+              userId: userId,
+              suggestions: elementSuggestions,
+              composeElementId: elementId,
               elementLabel: elementId == null && !serviceScope
                   ? _labelForNote(l10n, note)
-                  : null,
-              onEdit: note.isAuthoredBy(userId)
-                  ? () => _openComposer(
-                        context,
-                        ref,
-                        existing: note,
-                        suggestions: suggestions,
-                      )
-                  : null,
-              onDelete: note.isAuthoredBy(userId)
-                  ? () => _confirmDelete(context, ref, note)
                   : null,
             );
           },
@@ -140,7 +224,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!embedded || title != null)
+        if ((!embedded || title != null) && !_dualSections)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
             child: Text(
@@ -150,12 +234,82 @@ class ServiceNotesPanel extends ConsumerWidget {
               ),
             ),
           ),
+        if (watch.stale)
+          Material(
+            color: theme.colorScheme.errorContainer,
+            child: InkWell(
+              onTap: () => ref
+                  .read(serviceNotesWatchProvider(serviceId).notifier)
+                  .refresh(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 18,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.servicesNotesStale,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      l10n.servicesNotesStaleRetry,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         Expanded(child: body),
       ],
     );
   }
 
-  List<ServiceNote> _filterNotes(List<ServiceNote> notes) {
+  Widget _noteCardFor(
+    BuildContext context,
+    WidgetRef ref, {
+    required ServiceNote note,
+    required String? userId,
+    required NoteSuggestionContext suggestions,
+    required String? composeElementId,
+    String? elementLabel,
+  }) {
+    return _NoteCard(
+      note: note,
+      isMine: note.isAuthoredBy(userId),
+      elementLabel: elementLabel,
+      onEdit: note.isAuthoredBy(userId)
+          ? () => _openComposer(
+                context,
+                ref,
+                existing: note,
+                composeElementId: composeElementId,
+                suggestions: suggestions,
+              )
+          : null,
+      onDelete: note.isAuthoredBy(userId)
+          ? () => _confirmDelete(context, ref, note)
+          : null,
+    );
+  }
+
+  List<ServiceNote> _filterNotes(
+    List<ServiceNote> notes, {
+    String? elementId,
+    bool serviceScope = false,
+  }) {
     Iterable<ServiceNote> filtered = notes;
     if (serviceScope) {
       filtered = notes.where((n) => n.elementId == null);
@@ -163,7 +317,6 @@ class ServiceNotesPanel extends ConsumerWidget {
       filtered = notes.where((n) => n.elementId == elementId);
     }
     final list = filtered.toList();
-    // Latest first.
     list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return list;
   }
@@ -173,7 +326,6 @@ class ServiceNotesPanel extends ConsumerWidget {
     if (id == null) return l10n.servicesGeneralNotes;
     final named = elementLabels[id]?.trim();
     if (named != null && named.isNotEmpty) return named;
-    // Element-scoped note whose title we don't have — never call it "general".
     return l10n.servicesItemNotes;
   }
 
@@ -181,6 +333,7 @@ class ServiceNotesPanel extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref, {
     ServiceNote? existing,
+    String? composeElementId,
     required NoteSuggestionContext suggestions,
   }) async {
     final result = await showModalBottomSheet<_NoteDraft>(
@@ -202,7 +355,7 @@ class ServiceNotesPanel extends ConsumerWidget {
       if (existing == null) {
         await notifier.add(
           body: result.body,
-          elementId: elementId,
+          elementId: composeElementId,
           isPrivate: result.isPrivate,
         );
       } else {
@@ -254,6 +407,80 @@ class ServiceNotesPanel extends ConsumerWidget {
         SnackBar(content: Text(_friendlyError(l10n, e))),
       );
     }
+  }
+}
+
+class _NotesSectionHeader extends StatelessWidget {
+  const _NotesSectionHeader({
+    required this.title,
+    this.subtitle,
+    required this.onAdd,
+    required this.addTooltip,
+  });
+
+  final String title;
+  final String? subtitle;
+  final VoidCallback onAdd;
+  final String addTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: addTooltip,
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_comment_outlined),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotesEmptyInline extends StatelessWidget {
+  const _NotesEmptyInline({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        l10n.servicesNotesEmpty,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
   }
 }
 
@@ -325,8 +552,8 @@ class ServiceNotesFab extends ConsumerWidget {
 
 /// Opens the notes panel as a modal sheet (used from musician mode).
 ///
-/// When [elementId] is set, only that element's notes are listed and new notes
-/// are attached to it. Omit it for the service-wide feed.
+/// When [elementId] is set, item notes are listed with a service-wide section
+/// underneath. Omit [elementId] for the unfiltered team feed.
 Future<void> showServiceNotesSheet(
   BuildContext context, {
   required String serviceId,
@@ -344,6 +571,7 @@ Future<void> showServiceNotesSheet(
     builder: (context) {
       final height = MediaQuery.sizeOf(context).height * 0.85;
       final l10n = AppLocalizations.of(context);
+      final dual = elementId != null;
       final resolvedTitle = title ??
           (elementId != null
               ? (elementLabels[elementId]?.trim().isNotEmpty == true
@@ -358,15 +586,19 @@ Future<void> showServiceNotesSheet(
             elementId: elementId,
             elementType: elementType,
             elementLabels: elementLabels,
+            includeServiceWideSection: dual,
             suggestionContext: suggestionContext,
             title: resolvedTitle,
           ),
-          floatingActionButton: ServiceNotesFab(
-            serviceId: serviceId,
-            elementId: elementId,
-            elementType: elementType,
-            suggestionContext: suggestionContext,
-          ),
+          // Dual sections expose their own add buttons; keep FAB for global feed.
+          floatingActionButton: dual
+              ? null
+              : ServiceNotesFab(
+                  serviceId: serviceId,
+                  elementId: elementId,
+                  elementType: elementType,
+                  suggestionContext: suggestionContext,
+                ),
         ),
       );
     },

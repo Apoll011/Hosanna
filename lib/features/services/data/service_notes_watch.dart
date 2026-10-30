@@ -21,6 +21,7 @@ class ServiceNotesWatchState {
     this.incomingTicket = 0,
     this.isLoading = true,
     this.error,
+    this.stale = false,
   });
 
   final List<ServiceNote> notes;
@@ -35,6 +36,9 @@ class ServiceNotesWatchState {
   final bool isLoading;
   final Object? error;
 
+  /// True when silent refreshes have been failing (listener/poll).
+  final bool stale;
+
   ServiceNotesWatchState copyWith({
     List<ServiceNote>? notes,
     int? unreadCount,
@@ -44,6 +48,7 @@ class ServiceNotesWatchState {
     bool? isLoading,
     Object? error,
     bool clearError = false,
+    bool? stale,
   }) {
     return ServiceNotesWatchState(
       notes: notes ?? this.notes,
@@ -52,6 +57,7 @@ class ServiceNotesWatchState {
       incomingTicket: incomingTicket ?? this.incomingTicket,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      stale: stale ?? this.stale,
     );
   }
 }
@@ -65,6 +71,10 @@ class ServiceNotesWatchController
 
   /// Slow safety net when Firestore is unavailable or a ping is missed.
   static const _pollInterval = Duration(seconds: 60);
+  static const _refreshDebounce = Duration(milliseconds: 400);
+  static const _maxSilentFailures = 3;
+  static const _resubscribeBase = Duration(seconds: 2);
+  static const _resubscribeMax = Duration(seconds: 60);
 
   final ServiceNotesRepository _repo;
   final String? _currentUserId;
@@ -73,9 +83,15 @@ class ServiceNotesWatchController
   final Set<String> _knownIds = {};
   var _seeded = false;
   Timer? _poll;
+  Timer? _debounce;
+  Timer? _resubscribe;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _signalSub;
   var _skipNextSignal = true;
   var _disposed = false;
+  var _refreshGeneration = 0;
+  var _silentFailures = 0;
+  var _resubscribeAttempt = 0;
+  var _pendingPreferToast = true;
 
   DocumentReference<Map<String, dynamic>> get _signalDoc =>
       FirebaseFirestore.instance
@@ -92,10 +108,15 @@ class ServiceNotesWatchController
   }
 
   void _listenForSignals() {
+    if (_disposed) return;
+    unawaited(_signalSub?.cancel());
+    _signalSub = null;
+    _skipNextSignal = true;
     try {
       _signalSub = _signalDoc.snapshots().listen(
         (snap) {
           if (_disposed) return;
+          _resubscribeAttempt = 0;
           // First event is the current doc (or missing) — seed only.
           if (_skipNextSignal) {
             _skipNextSignal = false;
@@ -106,29 +127,76 @@ class ServiceNotesWatchController
           final authorId = data?['authorId'] as String?;
           // Own writes already updated local state; still refresh for consistency
           // but applyNotes will not toast for the current user.
-          unawaited(refresh(silent: true, preferToast: authorId != _currentUserId));
+          _scheduleRefresh(
+            silent: true,
+            preferToast: authorId != _currentUserId,
+          );
         },
         onError: (Object e, StackTrace st) {
           debugPrint('Notes Firestore signal listen failed: $e');
+          _scheduleResubscribe();
+        },
+        onDone: () {
+          if (_disposed) return;
+          debugPrint('Notes Firestore signal listen closed');
+          _scheduleResubscribe();
         },
       );
     } catch (e) {
       debugPrint('Notes Firestore signal subscribe failed: $e');
+      _scheduleResubscribe();
     }
   }
 
+  void _scheduleResubscribe() {
+    if (_disposed) return;
+    _resubscribe?.cancel();
+    final delay = Duration(
+      milliseconds: (_resubscribeBase.inMilliseconds *
+              (1 << _resubscribeAttempt.clamp(0, 5)))
+          .clamp(
+        _resubscribeBase.inMilliseconds,
+        _resubscribeMax.inMilliseconds,
+      ),
+    );
+    _resubscribeAttempt++;
+    _resubscribe = Timer(delay, () {
+      if (_disposed) return;
+      _listenForSignals();
+    });
+  }
+
+  void _scheduleRefresh({bool silent = false, bool preferToast = true}) {
+    if (_disposed) return;
+    _pendingPreferToast = preferToast;
+    _debounce?.cancel();
+    _debounce = Timer(_refreshDebounce, () {
+      unawaited(refresh(silent: silent, preferToast: _pendingPreferToast));
+    });
+  }
+
   Future<void> refresh({bool silent = false, bool preferToast = true}) async {
+    final generation = ++_refreshGeneration;
     if (!silent) {
-      state = state.copyWith(isLoading: true, clearError: true);
+      state = state.copyWith(isLoading: true, clearError: true, stale: false);
     }
     try {
       final notes = await _repo.listNotes(serviceId: _serviceId);
-      if (_disposed) return;
+      if (_disposed || generation != _refreshGeneration) return;
+      _silentFailures = 0;
       _applyNotes(notes, preferToast: preferToast);
+      if (state.stale) {
+        state = state.copyWith(stale: false);
+      }
     } catch (e) {
-      if (_disposed) return;
+      if (_disposed || generation != _refreshGeneration) return;
       if (!silent) {
-        state = state.copyWith(isLoading: false, error: e);
+        state = state.copyWith(isLoading: false, error: e, stale: false);
+      } else {
+        _silentFailures++;
+        if (_silentFailures >= _maxSilentFailures && !state.stale) {
+          state = state.copyWith(stale: true);
+        }
       }
     }
   }
@@ -146,6 +214,7 @@ class ServiceNotesWatchController
         isLoading: false,
         clearError: true,
         clearIncoming: true,
+        stale: false,
       );
       return;
     }
@@ -173,6 +242,7 @@ class ServiceNotesWatchController
           ? state.incomingTicket
           : state.incomingTicket + 1,
       clearIncoming: false,
+      stale: false,
     );
   }
 
@@ -239,6 +309,8 @@ class ServiceNotesWatchController
   void dispose() {
     _disposed = true;
     _poll?.cancel();
+    _debounce?.cancel();
+    _resubscribe?.cancel();
     unawaited(_signalSub?.cancel() ?? Future<void>.value());
     super.dispose();
   }

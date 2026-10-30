@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
@@ -34,6 +34,8 @@ class FolderBrowserPage extends ConsumerStatefulWidget {
 }
 
 class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
+  static const _viewModeKey = 'folders.viewMode';
+
   final _search = TextEditingController();
   FilterSettings _settings = const FilterSettings();
   bool _searchOpen = false;
@@ -43,6 +45,21 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
   /// reference changes (i.e. after a sync), so filtering stays cheap.
   List<SongRow>? _metaCacheSongs;
   Map<String, SongMeta> _metaBySongId = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = ref.read(sharedPreferencesProvider);
+    _gridView = prefs.getString(_viewModeKey) == 'grid';
+  }
+
+  void _toggleViewMode() {
+    setState(() => _gridView = !_gridView);
+    ref.read(sharedPreferencesProvider).setString(
+          _viewModeKey,
+          _gridView ? 'grid' : 'list',
+        );
+  }
 
   @override
   void dispose() {
@@ -175,7 +192,7 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
             IconButton(
               icon: Icon(_gridView ? Icons.view_list : Icons.grid_view),
               tooltip: _gridView ? l10n.foldersViewList : l10n.foldersViewGrid,
-              onPressed: () => setState(() => _gridView = !_gridView),
+              onPressed: _toggleViewMode,
             ),
           ],
         ),

@@ -17,11 +17,10 @@ import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
 
-enum SettingsTab { account, workspace, preferences }
+enum SettingsTab { account, workspace, service, appearance }
 
-/// Tabbed settings, mirroring the React `SettingsView` (Conta / Organização /
-/// Preferências). Tools (metronome, circle of fifths, PDF export) live in the
-/// navigation drawer, not here.
+/// Tabbed settings: Account / Organization / Service / Appearance.
+/// Tools (metronome, circle of fifths) live in the navigation drawer, not here.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key, this.initialTab = SettingsTab.account});
 
@@ -52,7 +51,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: switch (_tab) {
               SettingsTab.account => const _AccountTab(),
               SettingsTab.workspace => const _WorkspaceTab(),
-              SettingsTab.preferences => const _PreferencesTab(),
+              SettingsTab.service => const _ServiceTab(),
+              SettingsTab.appearance => const _AppearanceTab(),
             },
           ),
         ],
@@ -79,7 +79,8 @@ class _TabBar extends StatelessWidget {
         l10n.settingsTabWorkspace,
         Icons.business_outlined,
       ),
-      (SettingsTab.preferences, l10n.settingsTabPreferences, Icons.tune),
+      (SettingsTab.service, l10n.settingsTabService, Icons.event_note_outlined),
+      (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
     ];
 
     return Container(
@@ -471,6 +472,8 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        const _NotificationsCard(),
       ],
     );
   }
@@ -556,6 +559,42 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (!auth.hasActiveSubscription) ...[
+          _Card(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.settingsSubscriptionInactive,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.settingsSubscriptionInactiveDesc,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         // Organization overview.
         _Card(
           child: Column(
@@ -714,10 +753,73 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
   }
 }
 
-// ── Preferences tab ─────────────────────────────────────────────────────────
+// ── Service tab ─────────────────────────────────────────────────────────────
 
-class _PreferencesTab extends ConsumerWidget {
-  const _PreferencesTab();
+class _ServiceTab extends ConsumerWidget {
+  const _ServiceTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final settings = ref.watch(settingsControllerProvider);
+    final settingsController = ref.read(settingsControllerProvider.notifier);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _Card(
+          child: _SwitchRow(
+            icon: Icons.music_note,
+            iconColor: theme.colorScheme.primary,
+            title: l10n.settingsMusicianMode,
+            subtitle: l10n.settingsMusicianModeDesc,
+            value: settings.musicianMode,
+            onChanged: settingsController.setMusicianMode,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Card(
+          child: _SwitchRow(
+            icon: Icons.view_sidebar_outlined,
+            iconColor: theme.colorScheme.secondary,
+            title: l10n.settingsServiceOrderSidePanel,
+            subtitle: l10n.settingsServiceOrderSidePanelDesc,
+            value: settings.serviceOrderSidePanel,
+            onChanged: settingsController.setServiceOrderSidePanel,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Card(
+          child: _SwitchRow(
+            icon: Icons.screen_lock_portrait_outlined,
+            iconColor: theme.colorScheme.tertiary,
+            title: l10n.settingsKeepAwake,
+            subtitle: l10n.settingsKeepAwakeDesc,
+            value: settings.keepScreenAwake,
+            onChanged: settingsController.setKeepScreenAwake,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Card(
+          child: _SwitchRow(
+            icon: Icons.draw_outlined,
+            iconColor: theme.colorScheme.primary,
+            title: l10n.settingsSyncAnnotations,
+            subtitle: l10n.settingsSyncAnnotationsDesc,
+            value: settings.syncAnnotations,
+            onChanged: settingsController.setSyncAnnotations,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Appearance tab ──────────────────────────────────────────────────────────
+
+class _AppearanceTab extends ConsumerWidget {
+  const _AppearanceTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -731,37 +833,6 @@ class _PreferencesTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Musician mode.
-        _Card(
-          child: _SwitchRow(
-            icon: Icons.music_note,
-            iconColor: theme.colorScheme.primary,
-            title: l10n.settingsMusicianMode,
-            subtitle: l10n.settingsMusicianModeDesc,
-            value: settings.musicianMode,
-            onChanged: settingsController.setMusicianMode,
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Non-musician tablet side order panel.
-        _Card(
-          child: _SwitchRow(
-            icon: Icons.view_sidebar_outlined,
-            iconColor: theme.colorScheme.secondary,
-            title: l10n.settingsServiceOrderSidePanel,
-            subtitle: l10n.settingsServiceOrderSidePanelDesc,
-            value: settings.serviceOrderSidePanel,
-            onChanged: settingsController.setServiceOrderSidePanel,
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Per-device notifications (Better Auth `session.notify`).
-        const _NotificationsCard(),
-        const SizedBox(height: 12),
-
-        // Theme.
         _Card(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,8 +872,6 @@ class _PreferencesTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Language.
         _Card(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
@@ -825,8 +894,6 @@ class _PreferencesTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Font size.
         _Card(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,8 +933,6 @@ class _PreferencesTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Display toggles.
         _Card(
           child: Column(
             children: [
@@ -888,20 +953,6 @@ class _PreferencesTab extends ConsumerWidget {
                 title: Text(l10n.songTwoColumn),
                 value: display.twoColumn,
                 onChanged: (_) => displayController.toggleTwoColumn(),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.settingsKeepAwake),
-                subtitle: Text(l10n.settingsKeepAwakeDesc),
-                value: settings.keepScreenAwake,
-                onChanged: settingsController.setKeepScreenAwake,
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.settingsSyncAnnotations),
-                subtitle: Text(l10n.settingsSyncAnnotationsDesc),
-                value: settings.syncAnnotations,
-                onChanged: settingsController.setSyncAnnotations,
               ),
               const Divider(),
               Padding(
@@ -934,8 +985,6 @@ class _PreferencesTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Per-instrument configuration.
         _InstrumentSettingsCard(
           instrumentId: display.instrument,
           preference: display.currentInstrumentPreference,

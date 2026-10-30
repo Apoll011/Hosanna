@@ -233,6 +233,19 @@ class AuthRepository {
     );
   }
 
+  /// Whether the active organization has an entitled subscription or trial.
+  Future<bool> fetchSubscriptionEntitlement() async {
+    try {
+      final res = await _dio.get<dynamic>('/api/billing/entitlement');
+      final data = res.data;
+      if (data is Map && data['entitled'] == true) return true;
+      return false;
+    } on DioException {
+      // Fail open for network blips — the UI warning is advisory.
+      return true;
+    }
+  }
+
   /// Pending invitations addressed to the signed-in user.
   Future<List<OrganizationInvitation>> listUserInvitations() async {
     final res = await _dio.get<dynamic>(

@@ -257,6 +257,27 @@
   "servicesNotesElementNotFound": "That service item was not found.",
   "servicesNotesSomeone": "Someone",
   "servicesNotesQuickSend": "Quick send",
+  "servicesNotesStale": "Notes may be out of date",
+  "servicesNotesStaleRetry": "Tap to refresh",
+  "servicesNotesServiceSection": "Whole service",
+  "servicesNotesServiceSectionDesc": "Notes visible for the entire service, not tied to this item.",
+  "servicesNotesAddService": "Add service note",
+  "servicesNotesAddItem": "Add item note",
+  "servicesStartService": "Start service",
+  "servicesStartServiceDesc": "Start the live timer when the service begins.",
+  "servicesScheduledWindow": "Scheduled {window}",
+  "@servicesScheduledWindow": {
+    "placeholders": {
+      "window": { "type": "String" }
+    }
+  },
+  "servicesItemRunning": "This item · {elapsed}",
+  "@servicesItemRunning": {
+    "placeholders": {
+      "elapsed": { "type": "String" }
+    }
+  },
+  "servicesNotStarted": "Not started",
   "noteSugReadyToStart": "Ready to start",
   "noteSugStandbyNext": "Standby for next",
   "noteSugGoNextItem": "Moving to next item",
@@ -361,6 +382,11 @@
   "settingsTabAccount": "Account",
   "settingsTabWorkspace": "Organization",
   "settingsTabPreferences": "Preferences",
+  "settingsTabService": "Service",
+  "settingsTabAppearance": "Appearance",
+  "settingsSubscriptionInactive": "No active subscription",
+  "settingsSubscriptionInactiveDesc": "This organization is read-only until a subscription or trial is active. You can still browse synced content.",
+  "settingsOrgSwitching": "Switching organization…",
   "settingsActive": "Active",
   "settingsSwitchOrg": "Switch Organization",
   "settingsOrganization": "Organization",
@@ -385,10 +411,10 @@
   "settingsSaving": "Saving…",
   "settingsNameEmpty": "Name cannot be empty.",
   "settingsEmailInvalid": "Please enter a valid email.",
-  "settingsMusicianMode": "Musician Mode in Services",
-  "settingsMusicianModeDesc": "Opens the service directly on the first song with continuous side navigation.",
+  "settingsMusicianMode": "Musician mode",
+  "settingsMusicianModeDesc": "Open services on the first song with chords and annotation tools. Turn off for a run-of-show view with lyrics and timing.",
   "settingsServiceOrderSidePanel": "Service order side panel",
-  "settingsServiceOrderSidePanelDesc": "On tablets, show the service order beside item detail in non-musician mode.",
+  "settingsServiceOrderSidePanelDesc": "On tablets, keep the service order visible beside the current item in both musician and non-musician modes.",
   "settingsKeepAwake": "Keep Screen Awake",
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSyncAnnotations": "Sync annotations",

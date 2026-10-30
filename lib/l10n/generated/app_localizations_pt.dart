@@ -856,6 +856,45 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servicesNotesQuickSend => 'Envio rápido';
 
   @override
+  String get servicesNotesStale => 'As notas podem estar desatualizadas';
+
+  @override
+  String get servicesNotesStaleRetry => 'Toque para atualizar';
+
+  @override
+  String get servicesNotesServiceSection => 'Culto inteiro';
+
+  @override
+  String get servicesNotesServiceSectionDesc =>
+      'Notas visíveis para todo o culto, não ligadas a este item.';
+
+  @override
+  String get servicesNotesAddService => 'Adicionar nota do culto';
+
+  @override
+  String get servicesNotesAddItem => 'Adicionar nota do item';
+
+  @override
+  String get servicesStartService => 'Iniciar culto';
+
+  @override
+  String get servicesStartServiceDesc =>
+      'Inicie o temporizador quando o culto começar.';
+
+  @override
+  String servicesScheduledWindow(String window) {
+    return 'Agendado $window';
+  }
+
+  @override
+  String servicesItemRunning(String elapsed) {
+    return 'Este item · $elapsed';
+  }
+
+  @override
+  String get servicesNotStarted => 'Não iniciado';
+
+  @override
   String get noteSugReadyToStart => 'Prontos para começar';
 
   @override
@@ -1169,6 +1208,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTabPreferences => 'Preferências';
 
   @override
+  String get settingsTabService => 'Culto';
+
+  @override
+  String get settingsTabAppearance => 'Aparência';
+
+  @override
+  String get settingsSubscriptionInactive => 'Sem subscrição ativa';
+
+  @override
+  String get settingsSubscriptionInactiveDesc =>
+      'Esta organização está só de leitura até haver uma subscrição ou período de avaliação ativo. Ainda pode consultar o conteúdo sincronizado.';
+
+  @override
+  String get settingsOrgSwitching => 'A mudar de organização…';
+
+  @override
   String get settingsActive => 'Ativa';
 
   @override
@@ -1243,11 +1298,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsEmailInvalid => 'Introduza um e-mail válido.';
 
   @override
-  String get settingsMusicianMode => 'Modo Músico nos Cultos';
+  String get settingsMusicianMode => 'Modo músico';
 
   @override
   String get settingsMusicianModeDesc =>
-      'Abre o culto diretamente no primeiro cântico com navegação lateral contínua.';
+      'Abre os cultos no primeiro cântico com acordes e anotações. Desative para a vista de ordem do culto com letras e tempos.';
 
   @override
   String get settingsServiceOrderSidePanel =>
@@ -1255,7 +1310,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsServiceOrderSidePanelDesc =>
-      'Em tablets, mostra a ordem do culto ao lado do detalhe do item no modo não músico.';
+      'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.';
 
   @override
   String get settingsKeepAwake => 'Manter Ecrã Ligado';

@@ -140,7 +140,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   return SettingsPage(
                     initialTab: switch (tab) {
                       'workspace' => SettingsTab.workspace,
-                      'preferences' => SettingsTab.preferences,
+                      'service' || 'preferences' => SettingsTab.service,
+                      'appearance' => SettingsTab.appearance,
                       _ => SettingsTab.account,
                     },
                   );
