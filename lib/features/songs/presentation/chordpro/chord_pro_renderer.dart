@@ -588,6 +588,46 @@ class _MetadataHeader extends StatelessWidget {
                 ],
               ),
             ),
+          if ((metadata['keyNote'] != null &&
+                  metadata['keyNote']!.trim().isNotEmpty) ||
+              (metadata['key_note'] != null &&
+                  metadata['key_note']!.trim().isNotEmpty))
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.music_note,
+                      size: 15,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        (metadata['keyNote'] ?? metadata['key_note']!).trim(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (metadata['copyright'] != null &&
               metadata['copyright']!.isNotEmpty)
             Padding(
@@ -650,6 +690,8 @@ class _LineRenderer extends StatelessWidget {
         return _CommentItalicRenderer(line: line);
       case 'comment_box':
         return _CommentBoxRenderer(line: line);
+      case 'key_note':
+        return _KeyNoteRenderer(line: line);
       case 'chord-section':
         return _ChordSectionRenderer(
           line: line,
@@ -761,6 +803,48 @@ class _CommentBoxRenderer extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: const Color(0xFF92400E),
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeyNoteRenderer extends StatelessWidget {
+  const _KeyNoteRenderer({required this.line});
+
+  final LineAst line;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.music_note,
+            size: 14,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              line.text ?? '',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

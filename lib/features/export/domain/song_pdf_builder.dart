@@ -239,6 +239,29 @@ pw.Widget _metadataHeader({
               children: pills,
             ),
           ),
+        if ((metadata['keyNote']?.isNotEmpty ?? false) ||
+            (metadata['key_note']?.isNotEmpty ?? false))
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 8),
+            child: pw.Container(
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: const pw.BoxDecoration(
+                color: _surfaceContainer,
+                borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
+              ),
+              child: pw.Text(
+                _sanitize(
+                  (metadata['keyNote'] ?? metadata['key_note']!).trim(),
+                ),
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  font: fonts.base,
+                  color: _onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
         if (metadata['copyright']?.isNotEmpty ?? false)
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 8),
@@ -857,6 +880,8 @@ pw.Widget _lineWidget(
       return _commentItalicWidget(line, fonts);
     case 'comment_box':
       return _commentBoxWidget(line, fonts);
+    case 'key_note':
+      return _keyNoteWidget(line, fonts);
     case 'chord-section':
       return _chordSectionWidget(line, options, transpose, fonts);
     case 'tab':
@@ -907,6 +932,25 @@ pw.Widget _commentBoxWidget(LineAst line, _Fonts fonts) {
     child: pw.Text(
       _sanitize(line.text ?? ''),
       style: pw.TextStyle(fontSize: 10, color: _commentText),
+    ),
+  );
+}
+
+pw.Widget _keyNoteWidget(LineAst line, _Fonts fonts) {
+  return pw.Container(
+    margin: const pw.EdgeInsets.symmetric(vertical: 2),
+    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: const pw.BoxDecoration(
+      color: _surfaceContainer,
+      borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+    ),
+    child: pw.Text(
+      _sanitize(line.text ?? ''),
+      style: pw.TextStyle(
+        fontSize: 9,
+        font: fonts.base,
+        color: _onSurfaceVariant,
+      ),
     ),
   );
 }

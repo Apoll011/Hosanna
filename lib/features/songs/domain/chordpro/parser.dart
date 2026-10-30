@@ -34,7 +34,7 @@ class LineAst {
   });
 
   final String
-  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section
+  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
@@ -197,6 +197,12 @@ const Map<String, String> _aliasMap = {
   'time signature': 'time',
   'original_key': 'original_key',
   'original key': 'original_key',
+  'key_note': 'key_note',
+  'key note': 'key_note',
+  'keynote': 'key_note',
+  'key_notes': 'key_note',
+  'key notes': 'key_note',
+  'kn': 'key_note',
   // variant directives
   'start_of_version': 'start_of_version',
   'end_of_version': 'end_of_version',
@@ -445,6 +451,15 @@ ChordProDocument parseChordProDocument(String content) {
           } else {
             ctx.sections.add(SectionAst(type: 'comment', lines: [cbLine]));
           }
+        case 'key_note':
+          ctx.metadata['keyNote'] = value;
+          ctx.metadata['key_note'] = value;
+          final knLine = LineAst(type: 'key_note', text: value);
+          if (ctx.currentSection != null) {
+            ctx.currentSection!.lines.add(knLine);
+          } else if (ctx.sections.isNotEmpty) {
+            ctx.sections.add(SectionAst(type: 'comment', lines: [knLine]));
+          }
         case 'repeat':
           final repeat = value.isEmpty ? '2' : value;
           if (ctx.currentSection != null) {
@@ -469,7 +484,11 @@ ChordProDocument parseChordProDocument(String content) {
           }
         default:
           if (value.isNotEmpty) {
-            ctx.metadata[_camelCaseMetaKey(name)] = value;
+            final camelKey = _camelCaseMetaKey(name);
+            ctx.metadata[camelKey] = value;
+            if (name != camelKey) {
+              ctx.metadata[name] = value;
+            }
           }
       }
       continue;
