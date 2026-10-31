@@ -635,6 +635,80 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songYoutubeError => 'No se pudo reproducir este video';
 
   @override
+  String get songSectionChorus => 'Estribillo';
+
+  @override
+  String get songSectionBridge => 'Puente';
+
+  @override
+  String get songSectionTab => 'Tablatura';
+
+  @override
+  String get songSectionInstrumental => 'Instrumental';
+
+  @override
+  String get songRepeatChorus => '(Repetir estribillo)';
+
+  @override
+  String songKeyPill(Object key) {
+    return 'Tono: $key';
+  }
+
+  @override
+  String songCapoPill(Object fret) {
+    return 'Capo: traste $fret';
+  }
+
+  @override
+  String songShapePill(Object key) {
+    return 'Formas: $key';
+  }
+
+  @override
+  String songOriginalKeyPill(Object key) {
+    return 'Tono original: $key';
+  }
+
+  @override
+  String songNumberPill(Object number) {
+    return 'Nº $number';
+  }
+
+  @override
+  String songCapoOnFret(Object fret) {
+    return 'Capo en el traste $fret';
+  }
+
+  @override
+  String get songChangeKey => 'Cambiar tono';
+
+  @override
+  String songChordTitle(Object chord) {
+    return 'Acorde: $chord';
+  }
+
+  @override
+  String songChordNotFound(Object chord) {
+    return 'Acorde \"$chord\" no registrado';
+  }
+
+  @override
+  String songChordNotes(Object notes) {
+    return 'Notas: $notes';
+  }
+
+  @override
+  String songChordSemantics(Object chord) {
+    return 'Acorde $chord';
+  }
+
+  @override
+  String get songPreviousChord => 'Acorde anterior';
+
+  @override
+  String get songNextChord => 'Acorde siguiente';
+
+  @override
   String get songPrevious => 'Anterior';
 
   @override

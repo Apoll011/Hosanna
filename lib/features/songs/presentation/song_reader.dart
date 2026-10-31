@@ -619,6 +619,14 @@ class _SongReaderState extends ConsumerState<SongReader>
         : youtubeVideoIdFromMetadata(metadata);
     final playerVideoId = _playerVideoId == videoId ? videoId : null;
 
+    // Approximate height of the bottom overlay (floating buttons, nav pill,
+    // mini player) so the last lines can scroll clear of it.
+    final bottomInset =
+        (widget.isAnnotating ? 140.0 : 40.0) +
+        (!widget.isAnnotating && videoId != null ? 52 : 0) +
+        (!widget.isAnnotating && showNav ? 60 : 0) +
+        (playerVideoId != null ? 124 : 0);
+
     return Stack(
       children: [
         Positioned.fill(
@@ -649,6 +657,10 @@ class _SongReaderState extends ConsumerState<SongReader>
                           content: widget.content,
                           notes: widget.notes,
                           scrollController: _scrollController,
+                          bottomInset: bottomInset,
+                          onYoutubeTap: videoId == null
+                              ? null
+                              : () => setState(() => _playerVideoId = videoId),
                         ),
                       ),
                       if (hasServiceSong)

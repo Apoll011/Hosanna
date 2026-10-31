@@ -1264,6 +1264,114 @@ abstract class AppLocalizations {
   /// **'Não foi possível reproduzir este vídeo'**
   String get songYoutubeError;
 
+  /// No description provided for @songSectionChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refrão'**
+  String get songSectionChorus;
+
+  /// No description provided for @songSectionBridge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponte'**
+  String get songSectionBridge;
+
+  /// No description provided for @songSectionTab.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tablatura'**
+  String get songSectionTab;
+
+  /// No description provided for @songSectionInstrumental.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instrumental'**
+  String get songSectionInstrumental;
+
+  /// No description provided for @songRepeatChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'(Repete o refrão)'**
+  String get songRepeatChorus;
+
+  /// No description provided for @songKeyPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom: {key}'**
+  String songKeyPill(Object key);
+
+  /// No description provided for @songCapoPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo: {fret}ª casa'**
+  String songCapoPill(Object fret);
+
+  /// No description provided for @songShapePill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formato: {key}'**
+  String songShapePill(Object key);
+
+  /// No description provided for @songOriginalKeyPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom Orig: {key}'**
+  String songOriginalKeyPill(Object key);
+
+  /// No description provided for @songNumberPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nº {number}'**
+  String songNumberPill(Object number);
+
+  /// No description provided for @songCapoOnFret.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo na {fret}ª casa'**
+  String songCapoOnFret(Object fret);
+
+  /// No description provided for @songChangeKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mudar tom'**
+  String get songChangeKey;
+
+  /// No description provided for @songChordTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dicionário: {chord}'**
+  String songChordTitle(Object chord);
+
+  /// No description provided for @songChordNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde \"{chord}\" não registado'**
+  String songChordNotFound(Object chord);
+
+  /// No description provided for @songChordNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas: {notes}'**
+  String songChordNotes(Object notes);
+
+  /// No description provided for @songChordSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde {chord}'**
+  String songChordSemantics(Object chord);
+
+  /// No description provided for @songPreviousChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde anterior'**
+  String get songPreviousChord;
+
+  /// No description provided for @songNextChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde seguinte'**
+  String get songNextChord;
+
   /// No description provided for @songPrevious.
   ///
   /// In pt, this message translates to:

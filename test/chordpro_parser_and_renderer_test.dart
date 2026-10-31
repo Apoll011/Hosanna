@@ -2,8 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/features/songs/domain/chordpro/parser.dart';
 import 'package:hosanna/features/songs/presentation/chordpro/chord_pro_renderer.dart';
+import 'package:hosanna/l10n/generated/app_localizations.dart';
+
+Widget _host(String content) => MaterialApp(
+  locale: const Locale('pt'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(
+    body: ChordProRenderer(
+      document: parseChordProDocument(content),
+      showChords: true,
+    ),
+  ),
+);
 
 void main() {
+  test('grid barlines split measures and yt aliases youtube', () {
+    final ast = parseChordPro('''
+{yt: https://youtu.be/dQw4w9WgXcQ}
+{start_of_grid}
+| [G] [D] | [Em] [C] |
+{end_of_grid}
+''');
+    expect(ast.metadata['youtube'], 'https://youtu.be/dQw4w9WgXcQ');
+    final line = ast.sections.single.lines.single;
+    expect(line.startBarline, '|');
+    expect(line.measures!.length, 2);
+    expect(line.measures![0].chords.map((c) => c.chord), ['G', 'D']);
+    expect(line.measures![1].endBarline, '|');
+  });
+
   group('ChordPro parser key_note support', () {
     test('parses key_note directive in header', () {
       const input = '''
@@ -40,7 +68,8 @@ void main() {
       ];
 
       for (final directive in variations) {
-        final input = '''
+        final input =
+            '''
 {title: Teste}
 {key: C}
 $directive
@@ -159,16 +188,7 @@ $directive
 {end_of_verse}
 ''';
 
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ChordProRenderer(
-              content: content,
-              showChords: true,
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_host(content));
       await tester.pumpAndSettle();
 
       expect(
@@ -191,16 +211,7 @@ $directive
 {end_of_verse}
 ''';
 
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ChordProRenderer(
-              content: content,
-              showChords: true,
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_host(content));
       await tester.pumpAndSettle();
 
       expect(find.text('Subir meio tom para Eb'), findsWidgets);

@@ -629,6 +629,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songYoutubeError => 'Couldn\'t play this video';
 
   @override
+  String get songSectionChorus => 'Chorus';
+
+  @override
+  String get songSectionBridge => 'Bridge';
+
+  @override
+  String get songSectionTab => 'Tab';
+
+  @override
+  String get songSectionInstrumental => 'Instrumental';
+
+  @override
+  String get songRepeatChorus => '(Repeat chorus)';
+
+  @override
+  String songKeyPill(Object key) {
+    return 'Key: $key';
+  }
+
+  @override
+  String songCapoPill(Object fret) {
+    return 'Capo: fret $fret';
+  }
+
+  @override
+  String songShapePill(Object key) {
+    return 'Shapes: $key';
+  }
+
+  @override
+  String songOriginalKeyPill(Object key) {
+    return 'Original key: $key';
+  }
+
+  @override
+  String songNumberPill(Object number) {
+    return 'No. $number';
+  }
+
+  @override
+  String songCapoOnFret(Object fret) {
+    return 'Capo on fret $fret';
+  }
+
+  @override
+  String get songChangeKey => 'Change key';
+
+  @override
+  String songChordTitle(Object chord) {
+    return 'Chord: $chord';
+  }
+
+  @override
+  String songChordNotFound(Object chord) {
+    return 'Chord \"$chord\" not found';
+  }
+
+  @override
+  String songChordNotes(Object notes) {
+    return 'Notes: $notes';
+  }
+
+  @override
+  String songChordSemantics(Object chord) {
+    return 'Chord $chord';
+  }
+
+  @override
+  String get songPreviousChord => 'Previous chord';
+
+  @override
+  String get songNextChord => 'Next chord';
+
+  @override
   String get songPrevious => 'Previous';
 
   @override

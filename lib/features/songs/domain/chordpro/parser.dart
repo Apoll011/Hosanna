@@ -122,6 +122,9 @@ class SongAst {
 
 final RegExp _timingRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _chordRegex = RegExp(r'\[([^\]]+)\]');
+final RegExp _barlineRegex = RegExp(r'\|\||\|:|:\||\|\]|\|');
+final RegExp _onlyBarsAndSpacesRegex = RegExp(r'^[\s|:\-.%]*$');
+final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 
 ({String chord, double? timing}) _parseChordTiming(String rawChord) {
   final match = _timingRegex.firstMatch(rawChord);
@@ -283,7 +286,7 @@ class _VersionContext {
 /// Metadata is cumulative: each variant inherits the fully resolved metadata
 /// of the previous version.
 ChordProDocument parseChordProDocument(String content) {
-  final lines = content.split(RegExp(r'\r?\n'));
+  final lines = content.split(_lineBreakRegex);
   final errors = <String>[];
 
   final defaultCtx = _VersionContext(
@@ -515,7 +518,7 @@ ChordProDocument parseChordProDocument(String content) {
     } else {
       parsedSegments = parseLineSegments(rawLine);
       final textContent = parsedSegments.map((s) => s.text).join();
-      final onlyBarsAndSpaces = RegExp(r'^[\s|:\-.%]*$').hasMatch(textContent);
+      final onlyBarsAndSpaces = _onlyBarsAndSpacesRegex.hasMatch(textContent);
       final hasBars = textContent.contains('|');
 
       if (ctx.isGrid || (onlyBarsAndSpaces && hasBars)) {
@@ -545,8 +548,7 @@ ChordProDocument parseChordProDocument(String content) {
           hasSeenChord = true;
         }
 
-        final barlineMatches = RegExp(r'\|\||:\||:\||\\|').allMatches(seg.text);
-        for (final m in barlineMatches) {
+        for (final m in _barlineRegex.allMatches(seg.text)) {
           final b = m.group(0)!;
           if (!hasSeenChord && !startBarlineFound) {
             startBarline = b;
