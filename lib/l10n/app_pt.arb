@@ -200,6 +200,13 @@
   "songAutoScrollStart": "Iniciar scroll automático",
   "songAutoScrollPause": "Pausar scroll",
   "songAutoScrollSpeed": "Velocidade do scroll",
+  "songYoutubeOpenPlayer": "Ouvir no YouTube",
+  "songYoutubeClosePlayer": "Fechar leitor",
+  "songYoutubePlay": "Reproduzir",
+  "songYoutubePause": "Pausar",
+  "songYoutubeRewind": "Recuar 10 segundos",
+  "songYoutubeForward": "Avançar 30 segundos",
+  "songYoutubeError": "Não foi possível reproduzir este vídeo",
   "songPrevious": "Anterior",
   "songNext": "Seguinte",
 

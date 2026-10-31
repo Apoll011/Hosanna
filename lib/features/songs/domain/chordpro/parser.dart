@@ -203,6 +203,7 @@ const Map<String, String> _aliasMap = {
   'key_notes': 'key_note',
   'key notes': 'key_note',
   'kn': 'key_note',
+  'yt': 'youtube',
   // variant directives
   'start_of_version': 'start_of_version',
   'end_of_version': 'end_of_version',

@@ -1222,6 +1222,48 @@ abstract class AppLocalizations {
   /// **'Velocidade do scroll'**
   String get songAutoScrollSpeed;
 
+  /// No description provided for @songYoutubeOpenPlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ouvir no YouTube'**
+  String get songYoutubeOpenPlayer;
+
+  /// No description provided for @songYoutubeClosePlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar leitor'**
+  String get songYoutubeClosePlayer;
+
+  /// No description provided for @songYoutubePlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reproduzir'**
+  String get songYoutubePlay;
+
+  /// No description provided for @songYoutubePause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar'**
+  String get songYoutubePause;
+
+  /// No description provided for @songYoutubeRewind.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuar 10 segundos'**
+  String get songYoutubeRewind;
+
+  /// No description provided for @songYoutubeForward.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançar 30 segundos'**
+  String get songYoutubeForward;
+
+  /// No description provided for @songYoutubeError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível reproduzir este vídeo'**
+  String get songYoutubeError;
+
   /// No description provided for @songPrevious.
   ///
   /// In pt, this message translates to:

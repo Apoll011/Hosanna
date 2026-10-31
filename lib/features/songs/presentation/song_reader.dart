@@ -10,8 +10,11 @@ import 'package:hosanna/app/providers.dart';
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../services/data/service_annotation_repository.dart';
+import '../domain/chordpro/parser.dart';
+import '../domain/youtube.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_body_renderer.dart';
+import 'youtube_mini_player.dart';
 
 /// Tuning for the swipe-to-navigate gesture.
 const double _kMaxOverscroll = 48.0;
@@ -75,6 +78,9 @@ class _SongReaderState extends ConsumerState<SongReader>
   final _scrollController = ScrollController();
   Timer? _scrollTimer;
   bool _isScrolling = false;
+
+  /// Video playing in the bottom mini player, or `null` when it is closed.
+  String? _playerVideoId;
 
   late final AnimationController _swipeController;
 
@@ -291,6 +297,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       }
     }
     if (oldWidget.content != widget.content) {
+      _playerVideoId = null;
       if (_pendingEnterDirection != null) {
         final dir = _pendingEnterDirection!;
         _pendingEnterDirection = null;
@@ -600,6 +607,18 @@ class _SongReaderState extends ConsumerState<SongReader>
     final showNav = widget.onPrev != null || widget.onNext != null;
     final hasServiceSong = widget.serviceId != null && widget.songId != null;
 
+    final document = ref.watch(songCurrentDocumentProvider);
+    final variantId = ref.watch(
+      songDisplaySettingsProvider.select((s) => s.variantId),
+    );
+    final metadata = document == null
+        ? null
+        : selectVersion(document, variantId).metadata;
+    final videoId = metadata == null
+        ? null
+        : youtubeVideoIdFromMetadata(metadata);
+    final playerVideoId = _playerVideoId == videoId ? videoId : null;
+
     return Stack(
       children: [
         Positioned.fill(
@@ -708,70 +727,126 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
 
-        // Elegant floating annotation toolbar with all tools
-        if (widget.isAnnotating)
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 20,
-            child: SafeArea(
-              top: false,
-              child: _HosannaAnnotationToolbar(
-                canvasKey: _canvasKey,
-                tool: _canvasTool,
-                onToolChanged: (t) => setState(() => _canvasTool = t),
-                color: _canvasColor,
-                onColorChanged: (c) => setState(() => _canvasColor = c),
-                strokeWidth: _canvasStrokeWidth,
-                onStrokeWidthChanged: (w) =>
-                    setState(() => _canvasStrokeWidth = w),
-                onStrokeCommitted: _saveCurrentAnnotation,
-                onClearAll: () {
-                  setState(() {});
-                  _saveCurrentAnnotation();
-                },
-              ),
-            ),
-          ),
-
-        // Floating right-side controls: auto-scroll + prev/next (hidden during annotation).
-        if (!widget.isAnnotating)
-          Positioned(
-            right: 16,
-            bottom: 20,
+        // Bottom overlay: annotation toolbar or floating controls, stacked
+        // above the YouTube mini player when it is open.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 20,
+          child: SafeArea(
+            top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FloatingActionButton.small(
-                  heroTag: null,
-                  onPressed: _toggleAutoScroll,
-                  backgroundColor: _isScrolling
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.primary,
-                  foregroundColor: _isScrolling
-                      ? theme.colorScheme.surface
-                      : theme.colorScheme.onPrimary,
-                  tooltip: _isScrolling
-                      ? l10n.songAutoScrollPause
-                      : l10n.songAutoScrollStart,
-                  child: Icon(
-                    _isScrolling
-                        ? Icons.pause
-                        : Icons.keyboard_double_arrow_down,
+                if (widget.isAnnotating)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: _HosannaAnnotationToolbar(
+                      canvasKey: _canvasKey,
+                      tool: _canvasTool,
+                      onToolChanged: (t) => setState(() => _canvasTool = t),
+                      color: _canvasColor,
+                      onColorChanged: (c) => setState(() => _canvasColor = c),
+                      strokeWidth: _canvasStrokeWidth,
+                      onStrokeWidthChanged: (w) =>
+                          setState(() => _canvasStrokeWidth = w),
+                      onStrokeCommitted: _saveCurrentAnnotation,
+                      onClearAll: () {
+                        setState(() {});
+                        _saveCurrentAnnotation();
+                      },
+                    ),
+                  )
+                else
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: _buildFloatingControls(
+                        theme: theme,
+                        l10n: l10n,
+                        showNav: showNav,
+                        videoId: videoId,
+                        playerOpen: playerVideoId != null,
+                      ),
+                    ),
                   ),
-                ),
-                if (showNav) const SizedBox(height: 12),
-                if (showNav)
-                  _ReaderNav(
-                    positionLabel: widget.positionLabel,
-                    canPrev: widget.canPrev,
-                    canNext: widget.canNext,
-                    onPrev: _goPrev,
-                    onNext: _goNext,
+                if (playerVideoId != null) ...[
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: YoutubeMiniPlayer(
+                      key: ValueKey(playerVideoId),
+                      videoId: playerVideoId,
+                      fallbackTitle: metadata?['title'],
+                      onClose: () => setState(() => _playerVideoId = null),
+                    ),
                   ),
+                ],
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Right-side controls: YouTube toggle, auto-scroll and prev/next.
+  Widget _buildFloatingControls({
+    required ThemeData theme,
+    required AppLocalizations l10n,
+    required bool showNav,
+    required String? videoId,
+    required bool playerOpen,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (videoId != null) ...[
+          FloatingActionButton.small(
+            heroTag: null,
+            elevation: 1,
+            highlightElevation: 2,
+            onPressed: () =>
+                setState(() => _playerVideoId = playerOpen ? null : videoId),
+            backgroundColor: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.8),
+            foregroundColor: playerOpen
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+            tooltip: playerOpen
+                ? l10n.songYoutubeClosePlayer
+                : l10n.songYoutubeOpenPlayer,
+            child: const Icon(Icons.smart_display_rounded),
+          ),
+          const SizedBox(height: 12),
+        ],
+        FloatingActionButton.small(
+          heroTag: null,
+          onPressed: _toggleAutoScroll,
+          backgroundColor: _isScrolling
+              ? theme.colorScheme.onSurface
+              : theme.colorScheme.primary,
+          foregroundColor: _isScrolling
+              ? theme.colorScheme.surface
+              : theme.colorScheme.onPrimary,
+          tooltip: _isScrolling
+              ? l10n.songAutoScrollPause
+              : l10n.songAutoScrollStart,
+          child: Icon(
+            _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+          ),
+        ),
+        if (showNav) const SizedBox(height: 12),
+        if (showNav)
+          _ReaderNav(
+            positionLabel: widget.positionLabel,
+            canPrev: widget.canPrev,
+            canNext: widget.canNext,
+            onPrev: _goPrev,
+            onNext: _goNext,
           ),
       ],
     );
@@ -1124,7 +1199,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                                         color: c.toARGB32() == color.toARGB32()
                                             ? theme.colorScheme.primary
                                             : theme.colorScheme.outline
-                                                .withValues(alpha: 0.4),
+                                                  .withValues(alpha: 0.4),
                                         width: c.toARGB32() == color.toARGB32()
                                             ? 2.5
                                             : 1,
@@ -1136,7 +1211,8 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                                               width: 8,
                                               height: 8,
                                               decoration: BoxDecoration(
-                                                color: c.computeLuminance() > 0.5
+                                                color:
+                                                    c.computeLuminance() > 0.5
                                                     ? Colors.black
                                                     : Colors.white,
                                                 shape: BoxShape.circle,
@@ -1204,10 +1280,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                   if (narrow) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        swatches,
-                        strokeSlider,
-                      ],
+                      children: [swatches, strokeSlider],
                     );
                   }
 

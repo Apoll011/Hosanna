@@ -192,6 +192,13 @@
   "songAutoScrollStart": "Iniciar desplazamiento automático",
   "songAutoScrollPause": "Pausar desplazamiento",
   "songAutoScrollSpeed": "Velocidad de desplazamiento",
+  "songYoutubeOpenPlayer": "Escuchar en YouTube",
+  "songYoutubeClosePlayer": "Cerrar reproductor",
+  "songYoutubePlay": "Reproducir",
+  "songYoutubePause": "Pausar",
+  "songYoutubeRewind": "Retroceder 10 segundos",
+  "songYoutubeForward": "Avanzar 30 segundos",
+  "songYoutubeError": "No se pudo reproducir este video",
   "songPrevious": "Anterior",
   "songNext": "Siguiente",
 

@@ -616,6 +616,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songAutoScrollSpeed => 'Velocidade do scroll';
 
   @override
+  String get songYoutubeOpenPlayer => 'Ouvir no YouTube';
+
+  @override
+  String get songYoutubeClosePlayer => 'Fechar leitor';
+
+  @override
+  String get songYoutubePlay => 'Reproduzir';
+
+  @override
+  String get songYoutubePause => 'Pausar';
+
+  @override
+  String get songYoutubeRewind => 'Recuar 10 segundos';
+
+  @override
+  String get songYoutubeForward => 'Avançar 30 segundos';
+
+  @override
+  String get songYoutubeError => 'Não foi possível reproduzir este vídeo';
+
+  @override
   String get songPrevious => 'Anterior';
 
   @override
