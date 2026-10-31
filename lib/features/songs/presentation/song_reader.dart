@@ -121,17 +121,31 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   /// Cached so dispose / post-await work never looks up ancestors via [ref].
   late final ServiceAnnotationRepository _annotationRepo;
+  late final SongDisplaySettingsController _displaySettings;
   bool _syncAnnotations = false;
 
   @override
   void initState() {
     super.initState();
     _annotationRepo = ref.read(serviceAnnotationRepositoryProvider);
+    _displaySettings = ref.read(songDisplaySettingsProvider.notifier);
     _syncAnnotations = ref.read(settingsControllerProvider).syncAnnotations;
     _swipeController = AnimationController(vsync: this);
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
+    _applyTranspositionScope();
     _loadAnnotationForCurrentSong();
+  }
+
+  /// Service songs restore their own transpose/capo; standalone songs start at 0.
+  void _applyTranspositionScope() {
+    final serviceId = widget.serviceId;
+    final songId = widget.songId;
+    if (serviceId != null && songId != null) {
+      _displaySettings.enterServiceSong(serviceId: serviceId, songId: songId);
+    } else {
+      _displaySettings.leaveTranspositionScope();
+    }
   }
 
   Future<void> _loadAnnotationForCurrentSong() async {
@@ -286,6 +300,7 @@ class _SongReaderState extends ConsumerState<SongReader>
     if (oldWidget.serviceId != widget.serviceId ||
         oldWidget.songId != widget.songId) {
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
+      _applyTranspositionScope();
       _loadAnnotationForCurrentSong();
     } else if (oldWidget.isAnnotating && !widget.isAnnotating) {
       _saveCurrentAnnotation();
@@ -313,6 +328,9 @@ class _SongReaderState extends ConsumerState<SongReader>
   @override
   void dispose() {
     _saveAnnotation(widget.serviceId, widget.songId);
+    // Drop scope so the next song (service or library) never inherits this
+    // one's transpose/capo. Service values are already saved on each change.
+    _displaySettings.leaveTranspositionScope();
     _unsubscribeAnnotations();
     _scrollController.removeListener(_onScrollUpdated);
     _stopAutoScroll();
