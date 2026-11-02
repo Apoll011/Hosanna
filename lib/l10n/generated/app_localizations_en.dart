@@ -466,10 +466,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsNumberNone => 'Unnumbered';
 
   @override
-  String get songsSearchLyrics => 'Search in lyrics';
+  String get songsSearchLyrics => 'Also search in song lyrics';
 
   @override
-  String get songsWithChords => 'Only with chords';
+  String get songsWithChords => 'Show only songs that have chords';
 
   @override
   String get songsResetFilters => 'Reset filters';

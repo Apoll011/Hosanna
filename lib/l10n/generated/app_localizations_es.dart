@@ -471,10 +471,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsNumberNone => 'Sin número';
 
   @override
-  String get songsSearchLyrics => 'Buscar en la letra';
+  String get songsSearchLyrics => 'Buscar también en la letra';
 
   @override
-  String get songsWithChords => 'Solo con acordes';
+  String get songsWithChords => 'Mostrar solo canciones con acordes';
 
   @override
   String get songsResetFilters => 'Restablecer filtros';

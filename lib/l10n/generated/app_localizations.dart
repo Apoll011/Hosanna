@@ -955,13 +955,13 @@ abstract class AppLocalizations {
   /// No description provided for @songsSearchLyrics.
   ///
   /// In pt, this message translates to:
-  /// **'Pesquisar na letra'**
+  /// **'Pesquisar também na letra'**
   String get songsSearchLyrics;
 
   /// No description provided for @songsWithChords.
   ///
   /// In pt, this message translates to:
-  /// **'Apenas com acordes'**
+  /// **'Mostrar apenas cânticos com acordes'**
   String get songsWithChords;
 
   /// No description provided for @songsResetFilters.

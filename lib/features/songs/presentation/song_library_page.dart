@@ -178,8 +178,10 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         (id: c.id, name: c.name),
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-    // The collection filter is left out when the page is already scoped to a
-    // single collection.
+    // Folder/collection filters are contextual: hidden on the main library,
+    // folder filter only when browsing a collection, collection filter only
+    // when browsing a folder.
+    final section = ref.read(libraryControllerProvider).section;
     showSongFilterSheet(
       context,
       initial: _settings,
@@ -188,9 +190,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       collectionOptions: collectionOptions,
       keyOptions: keyOptionsFrom(_metaBySongId),
       onChanged: (next) => setState(() => _settings = next),
-      showCollectionFilter:
-          ref.read(libraryControllerProvider).section !=
-              LibrarySection.collection,
+      showFolderFilter: section == LibrarySection.collection,
+      showCollectionFilter: section == LibrarySection.folder,
     );
   }
 

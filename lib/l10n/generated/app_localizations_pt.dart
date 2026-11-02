@@ -473,10 +473,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsNumberNone => 'Sem número';
 
   @override
-  String get songsSearchLyrics => 'Pesquisar na letra';
+  String get songsSearchLyrics => 'Pesquisar também na letra';
 
   @override
-  String get songsWithChords => 'Apenas com acordes';
+  String get songsWithChords => 'Mostrar apenas cânticos com acordes';
 
   @override
   String get songsResetFilters => 'Repor filtros';

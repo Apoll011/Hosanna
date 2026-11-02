@@ -98,35 +98,37 @@ class _TabBar extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => onChanged(tab),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                   decoration: BoxDecoration(
                     color: selected == tab
                         ? theme.colorScheme.primary
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         icon,
-                        size: 16,
+                        size: 20,
                         color: selected == tab
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          label,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: selected == tab
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: selected == tab
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -764,6 +766,7 @@ class _ServiceTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
+    final displayController = ref.read(songDisplaySettingsProvider.notifier);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -775,7 +778,11 @@ class _ServiceTab extends ConsumerWidget {
             title: l10n.settingsMusicianMode,
             subtitle: l10n.settingsMusicianModeDesc,
             value: settings.musicianMode,
-            onChanged: settingsController.setMusicianMode,
+            onChanged: (value) {
+              settingsController.setMusicianMode(value);
+              // Musician mode implies chords; turning it off hides them too.
+              displayController.setShowChords(value);
+            },
           ),
         ),
         const SizedBox(height: 12),
