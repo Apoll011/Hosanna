@@ -12,11 +12,17 @@ import 'package:path_provider/path_provider.dart';
 
 import 'click_synth.dart';
 
-Future<Source> createClickSource({required double frequency}) async {
+Future<Source> createClickSource({
+  required double frequency,
+  bool accent = false,
+}) async {
   final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/metronome_click_${frequency.round()}.wav');
+  final tag = accent ? 'accent' : 'normal';
+  final file = File(
+    '${dir.path}/metronome_click_${tag}_${frequency.round()}_v2.wav',
+  );
   await file.writeAsBytes(
-    ClickSynth.generate(frequency: frequency),
+    ClickSynth.generate(frequency: frequency, accent: accent),
     flush: true,
   );
   return DeviceFileSource(file.path);

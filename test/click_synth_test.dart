@@ -5,7 +5,7 @@ import 'package:hosanna/shared/utils/click_synth.dart';
 
 void main() {
   group('ClickSynth WAV output', () {
-    final bytes = ClickSynth.generate(frequency: 1500);
+    final bytes = ClickSynth.generate(frequency: 1500, accent: true);
     final data = ByteData.sublistView(bytes);
 
     String ascii(int offset, int length) =>
@@ -47,6 +47,12 @@ void main() {
             : data.getInt16(44 + i * 2, Endian.little).abs();
       }
       expect(peak, greaterThan(1000), reason: 'sample peaks well above noise');
+    });
+
+    test('accent and normal clicks are distinct', () {
+      final accent = ClickSynth.generate(frequency: 1760, accent: true);
+      final normal = ClickSynth.generate(frequency: 990, accent: false);
+      expect(accent, isNot(equals(normal)));
     });
   });
 }
