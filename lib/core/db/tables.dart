@@ -96,8 +96,9 @@ class ServiceElementListConverter
 /// Columns shared by every replicated table.
 ///
 /// `isDeleted` is the soft-delete (trash) flag; `dirty` marks rows that were
-/// changed locally and still need to be pushed. `purgeAt` is the server's
-/// hard-delete timestamp for trashed rows.
+/// changed locally and still need to be pushed. `purgeAt` is when the row may
+/// be hard-removed (server cron + local purge). Wire `_deleted` is a
+/// hard-delete tombstone and must stay false while the row is only trashed.
 mixin SyncMetadata on Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get dirty => boolean().withDefault(const Constant(false))();

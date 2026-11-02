@@ -39,11 +39,28 @@ class SongReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.songs,
-        docs.map(_songCompanion).toList(),
-      );
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.songs)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      if (live.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(
+            _db.songs,
+            live.map(_songCompanion).toList(),
+          );
+        });
+      }
     });
   }
 
@@ -93,7 +110,9 @@ class SongReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+        // hard-delete tombstones (not used by this client yet).
+        '_deleted': false,
       };
 
   @override
@@ -121,11 +140,28 @@ class FolderReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.folders,
-        docs.map(_folderCompanion).toList(),
-      );
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.folders)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      if (live.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(
+            _db.folders,
+            live.map(_folderCompanion).toList(),
+          );
+        });
+      }
     });
   }
 
@@ -169,7 +205,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+        // hard-delete tombstones (not used by this client yet).
+        '_deleted': false,
       };
 
   @override
@@ -243,11 +281,29 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.collections,
-        docs.map(_collectionCompanion).toList(),
-      );
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.collections)
+              ..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      if (live.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(
+            _db.collections,
+            live.map(_collectionCompanion).toList(),
+          );
+        });
+      }
     });
   }
 
@@ -295,7 +351,9 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+        // hard-delete tombstones (not used by this client yet).
+        '_deleted': false,
       };
 
   @override
@@ -348,11 +406,28 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.services,
-        docs.map(_serviceCompanion).toList(),
-      );
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.services)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      if (live.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(
+            _db.services,
+            live.map(_serviceCompanion).toList(),
+          );
+        });
+      }
     });
   }
 
@@ -398,7 +473,9 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+        // hard-delete tombstones (not used by this client yet).
+        '_deleted': false,
       };
 
   @override

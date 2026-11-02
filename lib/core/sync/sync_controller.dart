@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/providers.dart';
+import '../db/database.dart';
 import '../network/api_exception.dart';
 import 'adapters.dart';
+import 'purge_expired_trash.dart';
 import 'replication_engine.dart';
 
 enum SyncStatus { idle, syncing, synced, error, offline }
@@ -36,13 +38,18 @@ class SyncState {
 }
 
 class SyncController extends StateNotifier<SyncState> {
-  SyncController(this._engine, this._prefs, this._clearLocalData)
-      : super(const SyncState());
+  SyncController(
+    this._engine,
+    this._prefs,
+    this._db,
+    this._clearLocalData,
+  ) : super(const SyncState());
 
   static const _lastSyncedKey = 'sync.lastSyncedAt';
 
   final ReplicationEngine _engine;
   final SharedPreferences _prefs;
+  final AppDatabase _db;
   final Future<void> Function() _clearLocalData;
 
   DateTime? get lastSyncedAt => state.lastSyncedAt;
@@ -63,6 +70,7 @@ class SyncController extends StateNotifier<SyncState> {
 
     try {
       await _engine.pullAll();
+      await purgeExpiredTrash(_db);
       await _engine.pushAll();
 
       final now = DateTime.now();
@@ -91,6 +99,7 @@ class SyncController extends StateNotifier<SyncState> {
       await _engine.clearAllCheckpoints();
       await _prefs.remove(_lastSyncedKey);
       await _engine.pullAll();
+      await purgeExpiredTrash(_db);
       // Push only after a clean pull so dirty rows from the previous org
       // cannot be uploaded against the new tenant.
       await _engine.pushAll();
@@ -135,6 +144,7 @@ final syncControllerProvider = StateNotifierProvider<SyncController, SyncState>(
     return SyncController(
       ref.watch(replicationEngineProvider),
       ref.watch(sharedPreferencesProvider),
+      db,
       () => db.clearAllReplicatedData(),
     );
   },
