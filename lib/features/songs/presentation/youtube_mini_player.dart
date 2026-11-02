@@ -149,6 +149,38 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void _skip(double delta) => _seekTo(_position + delta);
 
+  /// Stops the IFrame player so audio does not keep playing after this
+  /// widget leaves the tree (back navigation, song change, close).
+  Future<void> _stopPlayback() async {
+    try {
+      await _controller.runJavaScript('''
+        if (window.player) {
+          try { player.stopVideo(); } catch (e) {}
+          try { player.destroy(); } catch (e) {}
+          player = null;
+        }
+      ''');
+    } catch (_) {
+      // Controller may already be tearing down.
+    }
+    try {
+      await _controller.loadHtmlString(
+        '<html><body></body></html>',
+        baseUrl: _kEmbedOrigin,
+      );
+    } catch (_) {
+      // Best-effort; native view may already be gone.
+    }
+  }
+
+  @override
+  void dispose() {
+    // Fire-and-forget: dispose cannot await, but the JS stop + blank load
+    // still run against the platform WebView before it is released.
+    _stopPlayback();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

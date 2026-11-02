@@ -299,6 +299,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
     if (oldWidget.serviceId != widget.serviceId ||
         oldWidget.songId != widget.songId) {
+      _playerVideoId = null;
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
       _applyTranspositionScope();
       _loadAnnotationForCurrentSong();
@@ -327,6 +328,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   void dispose() {
+    _playerVideoId = null;
     _saveAnnotation(widget.serviceId, widget.songId);
     // Drop scope so the next song (service or library) never inherits this
     // one's transpose/capo. Service values are already saved on each change.
@@ -473,19 +475,28 @@ class _SongReaderState extends ConsumerState<SongReader>
     _animateOffsetTo(0);
   }
 
+  void _closeYoutubePlayer() {
+    if (_playerVideoId == null) return;
+    setState(() => _playerVideoId = null);
+  }
+
   void _goPrev() {
     if (!widget.canPrev || _swipeController.isAnimating) return;
     _stopAutoScroll();
+    _closeYoutubePlayer();
     _completeSwipe(1);
   }
 
   void _goNext() {
     if (!widget.canNext || _swipeController.isAnimating) return;
     _stopAutoScroll();
+    _closeYoutubePlayer();
     _completeSwipe(-1);
   }
 
   void _completeSwipe(int dir) {
+    // Stop YouTube as soon as navigation starts (buttons or swipe).
+    _closeYoutubePlayer();
     final target = dir * _viewportWidth;
     _animateOffsetTo(
       target,
