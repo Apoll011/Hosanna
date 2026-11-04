@@ -156,18 +156,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-        ],
-      ),
-      GoRoute(
-        path: '/agenda',
-        builder: (_, _) => const AgendaPage(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            builder: (_, state) =>
-                AgendaEventPage(eventId: state.pathParameters['id']!),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/agenda',
+                builder: (_, _) => const AgendaPage(),
+              ),
+            ],
           ),
         ],
+      ),
+      // Outside the shell (same pattern as /songs/:id) so the shell drawer
+      // stays available on the agenda list via ShellLeadingButton.
+      GoRoute(
+        path: '/agenda/:id',
+        builder: (_, state) =>
+            AgendaEventPage(eventId: state.pathParameters['id']!),
       ),
       // Static song paths before `/songs/:id` so "new" / "import" are not
       // swallowed as ids.

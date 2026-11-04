@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
@@ -343,9 +342,9 @@ class HosannaNavContent extends ConsumerWidget {
                   icon: Icons.event_outlined,
                   iconColor: theme.colorScheme.secondary,
                   label: l10n.navAgenda,
-                  selected: GoRouterState.of(context).uri.path == '/agenda',
+                  selected: currentBranch == kAgendaBranch,
                   collapsed: collapsed,
-                  onTap: () => context.go('/agenda'),
+                  onTap: () => onNavigate(kAgendaBranch),
                 ),
               ],
             ),

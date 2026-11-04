@@ -10,3 +10,4 @@ const int kMetronomeBranch = 2;
 const int kCircleOfFifthsBranch = 3;
 const int kFoldersBranch = 4;
 const int kSettingsBranch = 5;
+const int kAgendaBranch = 6;

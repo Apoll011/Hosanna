@@ -21,7 +21,9 @@ const double kTabletBreakpoint = 750;
 const Set<int> kBranchesWithoutNavBar = {
   kMetronomeBranch,
   kCircleOfFifthsBranch,
+  kFoldersBranch,
   kSettingsBranch,
+  kAgendaBranch,
 };
 
 /// Responsive shell: phones get a slide-in drawer + floating bottom bar;
