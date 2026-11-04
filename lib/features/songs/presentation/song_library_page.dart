@@ -104,7 +104,17 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             activeCount: _settings.activeFilterCount,
             onPressed: _openFilterSheet,
           ),
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            tooltip: l10n.songsNewSong,
+            onPressed: _showNewSongSheet,
+          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showNewSongSheet,
+        tooltip: l10n.songsNewSong,
+        child: const Icon(Icons.add_rounded),
       ),
       body: Column(
         children: [
@@ -290,6 +300,59 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     setState(() => _settings = const FilterSettings());
   }
 
+  Future<void> _showNewSongSheet() async {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: Text(
+                    l10n.songsNewSong,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(l10n.songsCreateManually),
+                  subtitle: Text(l10n.songsCreateManuallyDesc),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push('/songs/new');
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: scheme.primary,
+                  ),
+                  title: Text(l10n.songsImportWithAi),
+                  subtitle: Text(l10n.songsImportWithAiDesc),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push('/songs/import/ai');
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _songList({
     required List<SongRow> songs,
     required Map<String, String> folderNames,
@@ -389,7 +452,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       LibrarySection.all => EmptyState(
           icon: Icons.library_music_outlined,
           title: l10n.songsEmpty,
-          description: l10n.songsEmptyDesc,
+          description: l10n.songsEmptyAddHint,
+          primaryLabel: l10n.songsAddSong,
+          primaryIcon: Icons.add_rounded,
+          onPrimary: _showNewSongSheet,
+          secondaryLabel: l10n.songsImportWithAi,
+          onSecondary: () => context.push('/songs/import/ai'),
           scrollable: true,
         ),
     };

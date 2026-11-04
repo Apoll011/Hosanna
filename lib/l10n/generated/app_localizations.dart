@@ -760,6 +760,96 @@ abstract class AppLocalizations {
   /// **'Os eventos do calendário da igreja aparecem aqui depois de sincronizar.'**
   String get agendaEmptyBody;
 
+  /// No description provided for @agendaNoEventsForDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada neste dia'**
+  String get agendaNoEventsForDay;
+
+  /// No description provided for @agendaNoEventsForDayBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha outro dia na barra acima.'**
+  String get agendaNoEventsForDayBody;
+
+  /// No description provided for @agendaEventDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Evento'**
+  String get agendaEventDetails;
+
+  /// No description provided for @agendaEventNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Evento não encontrado'**
+  String get agendaEventNotFound;
+
+  /// No description provided for @agendaEventNotFoundBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este evento pode ter sido removido ou ainda não sincronizou.'**
+  String get agendaEventNotFoundBody;
+
+  /// No description provided for @agendaFieldDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data'**
+  String get agendaFieldDate;
+
+  /// No description provided for @agendaFieldTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora'**
+  String get agendaFieldTime;
+
+  /// No description provided for @agendaFieldLocation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Local'**
+  String get agendaFieldLocation;
+
+  /// No description provided for @agendaFieldNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas'**
+  String get agendaFieldNotes;
+
+  /// No description provided for @agendaFieldResponsibilities.
+  ///
+  /// In pt, this message translates to:
+  /// **'Equipa'**
+  String get agendaFieldResponsibilities;
+
+  /// No description provided for @agendaLinkedService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Culto associado'**
+  String get agendaLinkedService;
+
+  /// No description provided for @agendaUnassigned.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atribuição'**
+  String get agendaUnassigned;
+
+  /// No description provided for @agendaMinutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} min'**
+  String agendaMinutes(int count);
+
+  /// No description provided for @agendaResponsibilityCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} atribuídos'**
+  String agendaResponsibilityCount(int count);
+
+  /// No description provided for @agendaAssigneeCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} pessoas'**
+  String agendaAssigneeCount(int count);
+
   /// No description provided for @navAllSongs.
   ///
   /// In pt, this message translates to:
@@ -1041,6 +1131,246 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Conteúdo em bruto (ChordPro)'**
   String get songsRawContent;
+
+  /// No description provided for @songsCreate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova canção'**
+  String get songsCreate;
+
+  /// No description provided for @songsEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar canção'**
+  String get songsEdit;
+
+  /// No description provided for @songsPreview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pré-visualizar'**
+  String get songsPreview;
+
+  /// No description provided for @songsFieldTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título'**
+  String get songsFieldTitle;
+
+  /// No description provided for @songsFieldArtist.
+  ///
+  /// In pt, this message translates to:
+  /// **'Artista'**
+  String get songsFieldArtist;
+
+  /// No description provided for @songsFieldKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom'**
+  String get songsFieldKey;
+
+  /// No description provided for @songsFieldTempo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo (BPM)'**
+  String get songsFieldTempo;
+
+  /// No description provided for @songsFieldTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compasso'**
+  String get songsFieldTime;
+
+  /// No description provided for @songsTitleRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'O título é obrigatório.'**
+  String get songsTitleRequired;
+
+  /// No description provided for @songsNewSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova canção'**
+  String get songsNewSong;
+
+  /// No description provided for @songsCreateManually.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar manualmente'**
+  String get songsCreateManually;
+
+  /// No description provided for @songsCreateManuallyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título, acordes e letra.'**
+  String get songsCreateManuallyDesc;
+
+  /// No description provided for @songsImportWithAi.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar com IA'**
+  String get songsImportWithAi;
+
+  /// No description provided for @songsImportWithAiDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'De PDF, imagem ou fotografia.'**
+  String get songsImportWithAiDesc;
+
+  /// No description provided for @songsAddSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar canção'**
+  String get songsAddSong;
+
+  /// No description provided for @songsImportSheetMusic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importe a sua folha de música'**
+  String get songsImportSheetMusic;
+
+  /// No description provided for @songsImportSheetMusicBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use a Logos AI para converter PDFs, imagens ou fotos em canções com letra, acordes e metadados.'**
+  String get songsImportSheetMusicBody;
+
+  /// No description provided for @songsTakePhoto.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar fotografia'**
+  String get songsTakePhoto;
+
+  /// No description provided for @songsChooseGallery.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher da galeria'**
+  String get songsChooseGallery;
+
+  /// No description provided for @songsImportPdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar PDF'**
+  String get songsImportPdf;
+
+  /// No description provided for @songsHowItWorks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como funciona?'**
+  String get songsHowItWorks;
+
+  /// No description provided for @songsAiAnalyzing.
+  ///
+  /// In pt, this message translates to:
+  /// **'A analisar a folha de música…'**
+  String get songsAiAnalyzing;
+
+  /// No description provided for @songsAiAnalyzingBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'A Logos está a extrair letra, acordes e informação.'**
+  String get songsAiAnalyzingBody;
+
+  /// No description provided for @songsAiStepProcess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Processar o ficheiro'**
+  String get songsAiStepProcess;
+
+  /// No description provided for @songsAiStepExtract.
+  ///
+  /// In pt, this message translates to:
+  /// **'Extrair letra e acordes'**
+  String get songsAiStepExtract;
+
+  /// No description provided for @songsAiStepMetadata.
+  ///
+  /// In pt, this message translates to:
+  /// **'Identificar metadados (título, tom, …)'**
+  String get songsAiStepMetadata;
+
+  /// No description provided for @songsAiStepVerify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar online (evitar alucinações)'**
+  String get songsAiStepVerify;
+
+  /// No description provided for @songsAiStepDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preparar o rascunho'**
+  String get songsAiStepDraft;
+
+  /// No description provided for @songsAiPleaseWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto pode demorar alguns segundos…'**
+  String get songsAiPleaseWait;
+
+  /// No description provided for @songsAiResultTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado da importação'**
+  String get songsAiResultTitle;
+
+  /// No description provided for @songsAiCreatedBanner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Canção criada com IA. Confirme e ajuste as informações antes de guardar.'**
+  String get songsAiCreatedBanner;
+
+  /// No description provided for @songsAiSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar'**
+  String get songsAiSave;
+
+  /// No description provided for @songsAiEditContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get songsAiEditContent;
+
+  /// No description provided for @songsAiImportFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível importar esta folha'**
+  String get songsAiImportFailed;
+
+  /// No description provided for @songsAiImportFailedBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tente outra foto ou PDF, ou crie a canção manualmente.'**
+  String get songsAiImportFailedBody;
+
+  /// No description provided for @songsAiSuccessTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importação concluída'**
+  String get songsAiSuccessTitle;
+
+  /// No description provided for @songsAiSuccessBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra, acordes e metadados foram capturados.'**
+  String get songsAiSuccessBody;
+
+  /// No description provided for @songsAiViewSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver canção'**
+  String get songsAiViewSong;
+
+  /// No description provided for @songsAiImportAnother.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar outra'**
+  String get songsAiImportAnother;
+
+  /// No description provided for @songsEmptyAddHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicione uma canção manualmente ou importe com a Logos AI.'**
+  String get songsEmptyAddHint;
 
   /// No description provided for @songsNoContent.
   ///

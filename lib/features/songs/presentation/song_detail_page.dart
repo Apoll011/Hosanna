@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../app/settings_controller.dart';
@@ -79,6 +80,13 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         ),
         actions: [
           const SongToolbarButton(),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: l10n.songsEdit,
+            onPressed: song == null
+                ? null
+                : () => context.push('/songs/${widget.songId}/edit'),
+          ),
           IconButton(
             icon: _isExporting
                 ? const SizedBox(

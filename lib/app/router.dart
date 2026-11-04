@@ -18,7 +18,12 @@ import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_models.dart';
+import '../features/songs/presentation/ai_import/ai_import_progress_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_review_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_source_page.dart';
 import '../features/songs/presentation/song_detail_page.dart';
+import '../features/songs/presentation/song_editor_page.dart';
 import '../features/songs/presentation/song_library_page.dart';
 import '../shared/widgets/hosanna_logo.dart';
 import 'shell.dart';
@@ -163,6 +168,60 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 AgendaEventPage(eventId: state.pathParameters['id']!),
           ),
         ],
+      ),
+      // Static song paths before `/songs/:id` so "new" / "import" are not
+      // swallowed as ids.
+      GoRoute(
+        path: '/songs/new',
+        builder: (_, state) {
+          final q = state.uri.queryParameters;
+          final extra = state.extra;
+          String? title = q['title'];
+          String? artist = q['artist'];
+          String? content = q['content'];
+          String? folderId = q['folderId'];
+          if (extra is Map) {
+            title ??= extra['title'] as String?;
+            artist ??= extra['artist'] as String?;
+            content ??= extra['content'] as String?;
+            folderId ??= extra['folderId'] as String?;
+          }
+          return SongEditorPage(
+            initialTitle: title,
+            initialArtist: artist,
+            initialContent: content,
+            initialFolderId: folderId,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/songs/import/ai',
+        builder: (_, _) => const AiImportSourcePage(),
+      ),
+      GoRoute(
+        path: '/songs/import/ai/progress',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is! AiImportJobRequest) {
+            return const AiImportSourcePage();
+          }
+          return AiImportProgressPage(request: extra);
+        },
+      ),
+      GoRoute(
+        path: '/songs/import/ai/review',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is! AiImportDraft) {
+            return const AiImportSourcePage();
+          }
+          return AiImportReviewPage(draft: extra);
+        },
+      ),
+      GoRoute(
+        path: '/songs/:id/edit',
+        builder: (_, state) =>
+            SongEditorPage(songId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/songs/:id',

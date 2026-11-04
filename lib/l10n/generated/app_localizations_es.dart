@@ -372,6 +372,59 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los eventos del calendario de tu iglesia aparecerán aquí al sincronizar.';
 
   @override
+  String get agendaNoEventsForDay => 'Nada en este día';
+
+  @override
+  String get agendaNoEventsForDayBody =>
+      'Elige otro día en la barra de arriba.';
+
+  @override
+  String get agendaEventDetails => 'Evento';
+
+  @override
+  String get agendaEventNotFound => 'Evento no encontrado';
+
+  @override
+  String get agendaEventNotFoundBody =>
+      'Este evento puede haberse eliminado o aún no se ha sincronizado.';
+
+  @override
+  String get agendaFieldDate => 'Fecha';
+
+  @override
+  String get agendaFieldTime => 'Hora';
+
+  @override
+  String get agendaFieldLocation => 'Lugar';
+
+  @override
+  String get agendaFieldNotes => 'Notas';
+
+  @override
+  String get agendaFieldResponsibilities => 'Equipo';
+
+  @override
+  String get agendaLinkedService => 'Servicio vinculado';
+
+  @override
+  String get agendaUnassigned => 'Sin asignar';
+
+  @override
+  String agendaMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String agendaResponsibilityCount(int count) {
+    return '$count asignados';
+  }
+
+  @override
+  String agendaAssigneeCount(int count) {
+    return '$count personas';
+  }
+
+  @override
   String get navAllSongs => 'Todas las canciones';
 
   @override
@@ -515,6 +568,131 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songsRawContent => 'Contenido sin procesar (ChordPro)';
+
+  @override
+  String get songsCreate => 'Nueva canción';
+
+  @override
+  String get songsEdit => 'Editar canción';
+
+  @override
+  String get songsPreview => 'Vista previa';
+
+  @override
+  String get songsFieldTitle => 'Título';
+
+  @override
+  String get songsFieldArtist => 'Artista';
+
+  @override
+  String get songsFieldKey => 'Tonalidad';
+
+  @override
+  String get songsFieldTempo => 'Tempo (BPM)';
+
+  @override
+  String get songsFieldTime => 'Compás';
+
+  @override
+  String get songsTitleRequired => 'El título es obligatorio.';
+
+  @override
+  String get songsNewSong => 'Nueva canción';
+
+  @override
+  String get songsCreateManually => 'Crear manualmente';
+
+  @override
+  String get songsCreateManuallyDesc => 'Título, acordes y letra.';
+
+  @override
+  String get songsImportWithAi => 'Importar con IA';
+
+  @override
+  String get songsImportWithAiDesc => 'Desde PDF, imagen o foto.';
+
+  @override
+  String get songsAddSong => 'Añadir canción';
+
+  @override
+  String get songsImportSheetMusic => 'Importa tu partitura';
+
+  @override
+  String get songsImportSheetMusicBody =>
+      'Usa Logos AI para convertir PDFs, imágenes o fotos en canciones con letra, acordes y metadatos.';
+
+  @override
+  String get songsTakePhoto => 'Tomar foto';
+
+  @override
+  String get songsChooseGallery => 'Elegir de la galería';
+
+  @override
+  String get songsImportPdf => 'Importar PDF';
+
+  @override
+  String get songsHowItWorks => '¿Cómo funciona?';
+
+  @override
+  String get songsAiAnalyzing => 'Analizando la partitura…';
+
+  @override
+  String get songsAiAnalyzingBody =>
+      'Logos está extrayendo letra, acordes e información.';
+
+  @override
+  String get songsAiStepProcess => 'Procesar el archivo';
+
+  @override
+  String get songsAiStepExtract => 'Extraer letra y acordes';
+
+  @override
+  String get songsAiStepMetadata => 'Identificar metadatos (título, tono, …)';
+
+  @override
+  String get songsAiStepVerify => 'Verificar en línea (evitar alucinaciones)';
+
+  @override
+  String get songsAiStepDraft => 'Preparar el borrador';
+
+  @override
+  String get songsAiPleaseWait => 'Esto puede tardar unos segundos…';
+
+  @override
+  String get songsAiResultTitle => 'Resultado de la importación';
+
+  @override
+  String get songsAiCreatedBanner =>
+      'Canción creada con IA. Confirma y ajusta antes de guardar.';
+
+  @override
+  String get songsAiSave => 'Guardar';
+
+  @override
+  String get songsAiEditContent => 'Editar';
+
+  @override
+  String get songsAiImportFailed => 'No se pudo importar esta partitura';
+
+  @override
+  String get songsAiImportFailedBody =>
+      'Prueba otra foto o PDF, o crea la canción manualmente.';
+
+  @override
+  String get songsAiSuccessTitle => 'Importación completada';
+
+  @override
+  String get songsAiSuccessBody => 'Se capturaron letra, acordes y metadatos.';
+
+  @override
+  String get songsAiViewSong => 'Ver canción';
+
+  @override
+  String get songsAiImportAnother => 'Importar otra';
+
+  @override
+  String get songsEmptyAddHint =>
+      'Añade una canción manualmente o impórtala con Logos AI.';
 
   @override
   String get songsNoContent => 'Sin contenido disponible.';

@@ -16,11 +16,13 @@ class HosannaApi {
     required this.replication,
     required this.annotations,
     required this.serviceNotes,
+    required this.songImport,
   });
 
   final ReplicationApi replication;
   final AnnotationsApi annotations;
   final ServiceNotesApi serviceNotes;
+  final SongImportApi songImport;
 
   factory HosannaApi.fromSharedDio(
     Dio shared, {
@@ -33,6 +35,7 @@ class HosannaApi {
       replication: ReplicationApi(dio),
       annotations: AnnotationsApi(dio),
       serviceNotes: ServiceNotesApi(dio),
+      songImport: SongImportApi(dio),
     );
   }
 }
@@ -199,6 +202,44 @@ class ServiceNotesApi {
     required String noteId,
   }) async {
     await _dio.delete<void>('/services/$id/notes/$noteId');
+  }
+}
+
+/// Logos AI sheet-music → ChordPro draft jobs.
+class SongImportApi {
+  SongImportApi(this._dio);
+  final Dio _dio;
+
+  Future<Map<String, dynamic>> createJob({
+    required String sourceType,
+    required String imageBase64,
+    required String imageMimeType,
+    String? pdfBase64,
+    String? fileName,
+  }) async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/songs/import/jobs',
+      data: {
+        'sourceType': sourceType,
+        'imageBase64': imageBase64,
+        'imageMimeType': imageMimeType,
+        if (pdfBase64 != null) 'pdfBase64': pdfBase64,
+        if (fileName != null) 'fileName': fileName,
+      },
+      options: Options(
+        // Vision + web verify can take a while.
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 3),
+      ),
+    );
+    return res.data ?? const {};
+  }
+
+  Future<Map<String, dynamic>> getJob(String id) async {
+    final res = await _dio.get<Map<String, dynamic>>(
+      '/songs/import/jobs/$id',
+    );
+    return res.data ?? const {};
   }
 }
 

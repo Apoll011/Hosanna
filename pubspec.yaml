@@ -44,6 +44,10 @@ dependencies:
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
   cloud_firestore: ^6.10.0
+  uuid: ^4.6.0
+  image_picker: ^1.2.4
+  file_picker: ^13.3.2
+  pdfrx: ^2.11.0
 
 dev_dependencies:
   flutter_test:

@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Hosanna uses the camera to photograph sheet music for Logos AI import.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Hosanna accesses your photo library to import sheet music with Logos AI.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
