@@ -275,18 +275,28 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
 
               final avatarAndInfo = Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    foregroundImage: imageUrl != null && imageUrl.isNotEmpty
-                        ? CachedNetworkImageProvider(imageUrl)
-                        : null,
-                    onForegroundImageError: (exception, stackTrace) {
-                      debugPrint('Failed to load avatar: $exception');
+                  Builder(
+                    builder: (context) {
+                      final hasImage =
+                          imageUrl != null && imageUrl.isNotEmpty;
+                      return CircleAvatar(
+                        radius: 30,
+                        foregroundImage: hasImage
+                            ? CachedNetworkImageProvider(imageUrl)
+                            : null,
+                        onForegroundImageError: hasImage
+                            ? (exception, stackTrace) {
+                                debugPrint(
+                                  'Failed to load avatar: $exception',
+                                );
+                              }
+                            : null,
+                        child: Text(
+                          _initials(user?.name ?? ''),
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      );
                     },
-                    child: Text(
-                      _initials(user?.name ?? ''),
-                      style: theme.textTheme.titleLarge,
-                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

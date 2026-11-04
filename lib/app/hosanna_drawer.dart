@@ -385,20 +385,28 @@ class HosannaNavContent extends ConsumerWidget {
                         tween: Tween<double>(end: collapsed ? 18 : 16),
                         duration: _kAnimDuration,
                         curve: _kAnimCurve,
-                        builder: (context, radius, _) => CircleAvatar(
-                          radius: radius,
-                          foregroundImage:
-                              imageUrl != null && imageUrl.isNotEmpty
-                              ? CachedNetworkImageProvider(imageUrl)
-                              : null,
-                          onForegroundImageError: (exception, stackTrace) {
-                            debugPrint('Failed to load avatar: $exception');
-                          },
-                          child: Text(
-                            _initials(user.name),
-                            style: theme.textTheme.titleLarge,
-                          ),
-                        ),
+                        builder: (context, radius, _) {
+                          final hasImage =
+                              imageUrl != null && imageUrl.isNotEmpty;
+                          return CircleAvatar(
+                            radius: radius,
+                            foregroundImage: hasImage
+                                ? CachedNetworkImageProvider(imageUrl)
+                                : null,
+                            // Flutter asserts: error callback only when image is set.
+                            onForegroundImageError: hasImage
+                                ? (exception, stackTrace) {
+                                    debugPrint(
+                                      'Failed to load avatar: $exception',
+                                    );
+                                  }
+                                : null,
+                            child: Text(
+                              _initials(user.name),
+                              style: theme.textTheme.titleLarge,
+                            ),
+                          );
+                        },
                       ),
                       if (!collapsed) ...[
                         Expanded(

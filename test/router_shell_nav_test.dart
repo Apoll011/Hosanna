@@ -108,12 +108,8 @@ void main() {
     await pumpFrames(tester, const Duration(seconds: 1));
   }
 
-  // Skipped: drawer user card hits CircleAvatar assert with incomplete
-  // test AuthUser (no image / empty name edge). Hang fix for auth UI tests
-  // lives in social_sign_in_ui_test + test_pump.dart.
   testWidgets(
     'phone: drawer tool item navigates to its shell branch',
-    skip: true, // CircleAvatar assert in drawer with test AuthUser
     (tester) async {
     await pumpApp(tester);
     expect(find.byType(SongLibraryPage), findsOneWidget);
@@ -134,7 +130,6 @@ void main() {
 
   testWidgets(
     'tablet: sidebar tool item navigates to its shell branch',
-    skip: true, // CircleAvatar assert in drawer with test AuthUser
     (tester) async {
     await pumpApp(tester, logicalSize: const Size(1280, 800));
     expect(find.byType(SongLibraryPage), findsOneWidget);
