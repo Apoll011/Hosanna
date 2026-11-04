@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'design/tokens.dart';
 
-/// Hosanna brand seed — soft lavender / purple (Hosanna 2.0).
+/// Hosanna brand seed — sky accent from Hosana-dashboard (`--brand-500`).
 const Color kHosannaSeedColor = HosannaColors.primary;
 
 /// Theme selection mode.
@@ -24,28 +24,40 @@ abstract final class HosannaTheme {
         primaryContainer: HosannaColors.primaryContainer,
         onPrimaryContainer: HosannaColors.onPrimaryContainer,
         secondary: HosannaColors.secondary,
+        onSecondary: Colors.white,
         tertiary: HosannaColors.tertiary,
+        error: HosannaColors.danger,
+        errorContainer: HosannaColors.dangerContainer,
+        onSurface: HosannaColors.textLight,
+        onSurfaceVariant: HosannaColors.secondary,
         surface: HosannaColors.surfaceLight,
         surfaceContainerLowest: Colors.white,
-        surfaceContainerLow: const Color(0xFFF3F0FA),
-        surfaceContainer: const Color(0xFFEEEAF8),
-        surfaceContainerHigh: const Color(0xFFE8E3F4),
-        surfaceContainerHighest: const Color(0xFFE2DCF0),
-        outline: const Color(0xFFCAC2DC),
-        outlineVariant: const Color(0xFFE6E0F5),
+        surfaceContainerLow: HosannaColors.sidebarLight,
+        surfaceContainer: HosannaColors.sidebarLight,
+        surfaceContainerHigh: HosannaColors.hoverLight,
+        surfaceContainerHighest: HosannaColors.hoverLight,
+        outline: HosannaColors.borderLight,
+        outlineVariant: HosannaColors.borderLight.withValues(alpha: 0.7),
       );
     }
     return base.copyWith(
-      primary: const Color(0xFFC4B5FF),
-      onPrimary: const Color(0xFF2A1866),
-      primaryContainer: const Color(0xFF4A3A8C),
-      onPrimaryContainer: const Color(0xFFEDE8FF),
+      primary: HosannaColors.primaryOnDark,
+      onPrimary: HosannaColors.canvasDark,
+      primaryContainer: HosannaColors.primaryContainerDark,
+      onPrimaryContainer: HosannaColors.primaryOnDark,
+      secondary: HosannaColors.secondaryDark,
+      tertiary: HosannaColors.primaryBright,
+      error: HosannaColors.dangerOnDark,
+      onSurface: HosannaColors.textDark,
+      onSurfaceVariant: HosannaColors.secondaryDark,
       surface: HosannaColors.surfaceDark,
-      surfaceContainerLowest: const Color(0xFF12101A),
-      surfaceContainerLow: const Color(0xFF1A1724),
-      surfaceContainer: const Color(0xFF221F2E),
-      surfaceContainerHigh: const Color(0xFF2C2838),
-      surfaceContainerHighest: const Color(0xFF363244),
+      surfaceContainerLowest: HosannaColors.canvasDark,
+      surfaceContainerLow: HosannaColors.sidebarDark,
+      surfaceContainer: HosannaColors.sidebarDark,
+      surfaceContainerHigh: HosannaColors.hoverDark,
+      surfaceContainerHighest: HosannaColors.hoverDark,
+      outline: HosannaColors.borderDark,
+      outlineVariant: HosannaColors.borderDark.withValues(alpha: 0.7),
     );
   }
 
@@ -266,7 +278,7 @@ abstract final class HosannaTheme {
     final base = dark();
     return base.copyWith(
       colorScheme: ColorScheme.highContrastDark(
-        primary: const Color(0xFFD4C8FF),
+        primary: HosannaColors.primaryBright,
       ),
     );
   }
