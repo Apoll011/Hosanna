@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/design/illustrations.dart';
 import '../../../core/db/database.dart';
+import '../../auth/domain/auth_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../services/data/service_repository.dart';
@@ -66,6 +67,9 @@ class _EventBody extends ConsumerWidget {
     final timeLabel = end == null ? event.time : '${event.time} – $end';
     final responsibilities =
         AgendaResponsibility.parse(event.responsibilities);
+    final categories = AgendaResponsibilityCategory.parse(
+      ref.watch(authControllerProvider).organization?.responsibilityCategoryMaps,
+    );
 
     final linkedId = event.linkedServiceId;
     final linkedAsync = linkedId == null || linkedId.isEmpty
@@ -166,7 +170,10 @@ class _EventBody extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           ...responsibilities.map(
-            (r) => _ResponsibilityCard(responsibility: r),
+            (r) => _ResponsibilityCard(
+              responsibility: r,
+              categories: categories,
+            ),
           ),
         ],
       ],
@@ -321,16 +328,29 @@ class _LinkedServiceTile extends StatelessWidget {
 }
 
 class _ResponsibilityCard extends StatelessWidget {
-  const _ResponsibilityCard({required this.responsibility});
+  const _ResponsibilityCard({
+    required this.responsibility,
+    required this.categories,
+  });
 
   final AgendaResponsibility responsibility;
+  final List<AgendaResponsibilityCategory> categories;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final names = responsibility.assignees.map((a) => a.name).join(', ');
+    final category = AgendaResponsibilityCategory.find(
+      responsibility.categoryId,
+      categories: categories,
+    );
+    final roleLabel = category?.label ??
+        AgendaResponsibilityCategory.labelFor(
+          responsibility.categoryId,
+          categories: categories,
+        );
+    final assignees = responsibility.assignees;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -341,41 +361,103 @@ class _ResponsibilityCard extends StatelessWidget {
           color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: scheme.primaryContainer,
-              child: Icon(
-                Icons.person_outline_rounded,
-                size: 20,
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    names.isEmpty ? l10n.agendaUnassigned : names,
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    _iconFor(category?.icon),
+                    size: 18,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    roleLabel.isEmpty
+                        ? l10n.agendaFieldResponsibilities
+                        : roleLabel,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (responsibility.assignees.length > 1)
-                    Text(
-                      l10n.agendaAssigneeCount(responsibility.assignees.length),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 10),
+            if (assignees.isEmpty)
+              Text(
+                l10n.agendaUnassigned,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              )
+            else
+              ...assignees.map(
+                (a) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                        child: Text(
+                          _initials(a.name),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          a.name,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        roleLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty);
+    return parts.take(2).map((e) => e[0]).join().toUpperCase();
+  }
+
+  IconData _iconFor(String? iconKey) {
+    return switch (iconKey) {
+      'mic' => Icons.mic_none_rounded,
+      'music' => Icons.music_note_rounded,
+      'volume' => Icons.volume_up_outlined,
+      'light' => Icons.lightbulb_outline_rounded,
+      'monitor' => Icons.monitor_outlined,
+      'book' => Icons.menu_book_outlined,
+      'heart' => Icons.favorite_border_rounded,
+      _ => Icons.badge_outlined,
+    };
   }
 }
