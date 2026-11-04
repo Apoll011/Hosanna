@@ -385,7 +385,7 @@ class _MusicianTopBar extends StatelessWidget {
             if (isSong) ...[
               IconButton(
                 icon: Icon(
-                  isAnnotating ? Icons.edit : Icons.edit_outlined,
+                  isAnnotating ? Icons.draw : Icons.draw_outlined,
                   color: isAnnotating ? theme.colorScheme.primary : null,
                 ),
                 tooltip: l10n.annotationModeTitle,

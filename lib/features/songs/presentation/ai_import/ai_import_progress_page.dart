@@ -213,7 +213,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
               _error == null
                   ? HosannaIllustrations.aiProcessing
                   : HosannaIllustrations.stateError,
-              height: 120,
+              height: 240,
               fit: BoxFit.contain,
             ),
             if (_error == null) ...[

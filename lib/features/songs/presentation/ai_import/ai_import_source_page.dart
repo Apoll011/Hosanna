@@ -206,7 +206,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
               Center(
                 child: Image.asset(
                   HosannaIllustrations.emptyImportSource,
-                  height: 148,
+                  height: 280,
                   fit: BoxFit.contain,
                 ),
               ),

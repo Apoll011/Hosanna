@@ -122,8 +122,9 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
           if (thumb != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(HosannaRadii.md),
-              child: AspectRatio(
-                aspectRatio: 4 / 3,
+              child: SizedBox(
+                height: 360,
+                width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
