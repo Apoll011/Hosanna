@@ -304,7 +304,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     }
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
+      padding: EdgeInsets.fromLTRB(
+        8,
+        4,
+        8,
+        shellBottomContentPadding(context),
+      ),
       itemCount: songs.length,
       itemBuilder: (context, index) {
         final song = songs[index];
@@ -313,6 +318,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             : folderNames[song.folderId];
         final isFav = favorites.contains(song.id);
         return ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           leading: SongBadge(songNumber: song.songNumber),
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(

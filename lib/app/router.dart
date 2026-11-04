@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/agenda/presentation/agenda_event_page.dart';
 import '../features/agenda/presentation/agenda_page.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/auth/presentation/email_verification_page.dart';
@@ -155,6 +156,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/agenda',
         builder: (_, _) => const AgendaPage(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) =>
+                AgendaEventPage(eventId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: '/songs/:id',

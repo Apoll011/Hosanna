@@ -106,7 +106,10 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                 title: l10n.songsNotFound,
                 description: l10n.songsNotFoundDesc,
               )
-            : SongReader(content: song.content),
+            : SongReader(
+                key: ValueKey(widget.songId),
+                content: song.content,
+              ),
       ),
     );
   }

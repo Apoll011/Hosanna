@@ -821,7 +821,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                       key: ValueKey(playerVideoId),
                       videoId: playerVideoId,
                       fallbackTitle: metadata?['title'],
-                      onClose: () => setState(() => _playerVideoId = null),
+                      onClose: _closeYoutubePlayer,
                     ),
                   ),
                 ],
@@ -850,8 +850,13 @@ class _SongReaderState extends ConsumerState<SongReader>
             heroTag: null,
             elevation: 1,
             highlightElevation: 2,
-            onPressed: () =>
-                setState(() => _playerVideoId = playerOpen ? null : videoId),
+            onPressed: () {
+              if (playerOpen) {
+                _closeYoutubePlayer();
+              } else {
+                setState(() => _playerVideoId = videoId);
+              }
+            },
             backgroundColor: theme.colorScheme.surfaceContainerHighest
                 .withValues(alpha: 0.8),
             foregroundColor: playerOpen

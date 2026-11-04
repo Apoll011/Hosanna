@@ -9,7 +9,7 @@ class AgendaRepository {
 
   final AppDatabase _db;
 
-  Stream<List<AgendaEventRow>> watchUpcoming({int limit = 50}) {
+  Stream<List<AgendaEventRow>> watchAll({int limit = 200}) {
     final query = _db.select(_db.agendaEvents)
       ..where((t) => t.isDeleted.equals(false))
       ..orderBy([
@@ -19,6 +19,11 @@ class AgendaRepository {
       ..limit(limit);
     return query.watch();
   }
+
+  Stream<AgendaEventRow?> watchEvent(String id) {
+    return (_db.select(_db.agendaEvents)..where((t) => t.id.equals(id)))
+        .watchSingleOrNull();
+  }
 }
 
 final agendaRepositoryProvider = Provider<AgendaRepository>((ref) {
@@ -27,5 +32,10 @@ final agendaRepositoryProvider = Provider<AgendaRepository>((ref) {
 
 final agendaEventsStreamProvider =
     StreamProvider.autoDispose<List<AgendaEventRow>>((ref) {
-  return ref.watch(agendaRepositoryProvider).watchUpcoming();
+  return ref.watch(agendaRepositoryProvider).watchAll();
+});
+
+final agendaEventByIdProvider =
+    StreamProvider.autoDispose.family<AgendaEventRow?, String>((ref, id) {
+  return ref.watch(agendaRepositoryProvider).watchEvent(id);
 });

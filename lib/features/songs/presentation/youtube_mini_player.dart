@@ -44,10 +44,10 @@ class YoutubeMiniPlayer extends StatefulWidget {
   final VoidCallback? onClose;
 
   @override
-  State<YoutubeMiniPlayer> createState() => _YoutubeMiniPlayerState();
+  YoutubeMiniPlayerState createState() => YoutubeMiniPlayerState();
 }
 
-class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
+class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   late final WebViewController _controller;
 
   bool _ready = false;
@@ -149,17 +149,21 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void _skip(double delta) => _seekTo(_position + delta);
 
+  static const String _kStopJs = '''
+    if (window.player) {
+      try { player.mute(); } catch (e) {}
+      try { player.pauseVideo(); } catch (e) {}
+      try { player.stopVideo(); } catch (e) {}
+      try { player.destroy(); } catch (e) {}
+      player = null;
+    }
+  ''';
+
   /// Stops the IFrame player so audio does not keep playing after this
   /// widget leaves the tree (back navigation, song change, close).
-  Future<void> _stopPlayback() async {
+  Future<void> stopPlayback() async {
     try {
-      await _controller.runJavaScript('''
-        if (window.player) {
-          try { player.stopVideo(); } catch (e) {}
-          try { player.destroy(); } catch (e) {}
-          player = null;
-        }
-      ''');
+      await _controller.runJavaScript(_kStopJs);
     } catch (_) {
       // Controller may already be tearing down.
     }
@@ -173,11 +177,32 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     }
   }
 
+  /// Kick off a synchronous stop while the platform WebView is still attached.
+  ///
+  /// [dispose] cannot await, and by then the native view may already be gone
+  /// — so we must stop here (children deactivate before parents on route pop).
+  void _stopPlaybackSync() {
+    try {
+      _controller.runJavaScript(_kStopJs);
+    } catch (_) {}
+    try {
+      _controller.loadHtmlString(
+        '<html><body></body></html>',
+        baseUrl: _kEmbedOrigin,
+      );
+    } catch (_) {}
+  }
+
+  @override
+  void deactivate() {
+    _stopPlaybackSync();
+    super.deactivate();
+  }
+
   @override
   void dispose() {
-    // Fire-and-forget: dispose cannot await, but the JS stop + blank load
-    // still run against the platform WebView before it is released.
-    _stopPlayback();
+    // Belt-and-suspenders if deactivate was skipped (e.g. hot reload).
+    _stopPlaybackSync();
     super.dispose();
   }
 

@@ -46,6 +46,29 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     shell.goBranch(index, initialLocation: index == shell.currentIndex);
   }
 
+  void _syncBranchIndex() {
+    final index = widget.navigationShell.currentIndex;
+    if (ref.read(shellBranchIndexProvider) == index) return;
+    ref.read(shellBranchIndexProvider.notifier).state = index;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncBranchIndex();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HosannaShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.navigationShell.currentIndex !=
+        widget.navigationShell.currentIndex) {
+      _syncBranchIndex();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);

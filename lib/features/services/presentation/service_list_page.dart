@@ -171,32 +171,123 @@ class _ServiceList extends StatelessWidget {
         scrollable: true,
       );
     }
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final locale = Localizations.localeOf(context).toString();
+    final today = DateTime.now();
+    final todayKey =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        12 + shellBottomContentPadding(context),
+      ),
       itemCount: services.length,
       itemBuilder: (context, index) {
         final service = services[index];
         final date = DateTime.tryParse(service.date);
         final dateLabel = date == null
             ? ''
-            : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-                  .format(date);
-        return ListTile(
-          leading: const Icon(Icons.calendar_month_outlined),
-          title: Text(
-            service.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            : DateFormat.yMMMd(locale).format(date);
+        final isToday = service.date == todayKey;
+        final weekday = date == null
+            ? ''
+            : DateFormat.E(locale).format(date).toUpperCase();
+        final dayNum = date == null ? '' : DateFormat.d(locale).format(date);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => context.push('/services/${service.id}'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isToday
+                            ? scheme.primary
+                            : scheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isToday
+                              ? scheme.primary
+                              : scheme.outline.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            weekday,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                              color: isToday
+                                  ? scheme.onPrimary.withValues(alpha: 0.85)
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            dayNum,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                              color: isToday
+                                  ? scheme.onPrimary
+                                  : scheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            service.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              dateLabel,
+                              if (service.archived) l10n.servicesArchived,
+                            ].where((e) => e.isNotEmpty).join(' · '),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          subtitle: Text(
-            [
-              dateLabel,
-              if (service.archived) l10n.servicesArchived,
-            ].where((e) => e.isNotEmpty).join(' · '),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/services/${service.id}'),
         );
       },
     );

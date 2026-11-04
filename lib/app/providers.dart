@@ -112,6 +112,11 @@ final shellScaffoldKeyProvider = Provider<GlobalKey<ScaffoldState>>(
 /// sidebar, so this flag is only meaningful in the tablet layout.
 final sidebarCollapsedProvider = StateProvider<bool>((ref) => true);
 
+/// Active [StatefulNavigationShell] branch index (see [nav_branches.dart]).
+/// Updated by [HosannaShell] so tool pages (e.g. metronome) can pause work
+/// when the user switches away while the IndexedStack keeps them alive.
+final shellBranchIndexProvider = StateProvider<int>((ref) => 0);
+
 final serviceAnnotationRepositoryProvider =
     Provider<ServiceAnnotationRepository>((ref) {
       return ServiceAnnotationRepository(ref.watch(hosannaApiProvider));

@@ -1,22 +1,24 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/nav_branches.dart';
+import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/metronome_click_player.dart';
 
-class MetronomePage extends StatefulWidget {
+class MetronomePage extends ConsumerStatefulWidget {
   const MetronomePage({super.key});
 
   @override
-  State<MetronomePage> createState() => _MetronomePageState();
+  ConsumerState<MetronomePage> createState() => _MetronomePageState();
 }
 
-class _MetronomePageState extends State<MetronomePage>
-    with TickerProviderStateMixin {
+class _MetronomePageState extends ConsumerState<MetronomePage>
+    with SingleTickerProviderStateMixin {
   static const int _minBpm = 30;
   static const int _maxBpm = 240;
   static const List<int> _timeSignatures = [2, 3, 4, 5, 6, 7, 9, 12];
@@ -27,7 +29,6 @@ class _MetronomePageState extends State<MetronomePage>
   bool _isPlaying = false;
   bool _accentFirstBeat = true;
 
-  late final AnimationController _pendulumController;
   late final AnimationController _pulseController;
   Timer? _holdTimer;
   Timer? _beatTimer;
@@ -40,10 +41,6 @@ class _MetronomePageState extends State<MetronomePage>
   @override
   void initState() {
     super.initState();
-    _pendulumController = AnimationController(
-      vsync: this,
-      duration: _beatDuration,
-    );
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 140),
@@ -60,7 +57,6 @@ class _MetronomePageState extends State<MetronomePage>
   void dispose() {
     _stopBeats();
     _holdTimer?.cancel();
-    _pendulumController.dispose();
     _pulseController.dispose();
     unawaited(_clickPlayer.dispose());
     super.dispose();
@@ -70,15 +66,9 @@ class _MetronomePageState extends State<MetronomePage>
     _beatTimer?.cancel();
     _beatTimer = null;
     _nextBeatAt = null;
-    _pendulumController.stop();
-    _pendulumController.value = 0;
   }
 
   /// Drift-corrected beat scheduler.
-  ///
-  /// Important: do NOT drive beats from [AnimationController.repeat] status.
-  /// With `reverse: true`, status only toggles forward/reverse and never
-  /// reaches completed/dismissed — which previously caused a single click.
   void _armNextBeat() {
     _beatTimer?.cancel();
     if (!_isPlaying || _nextBeatAt == null) return;
@@ -107,7 +97,6 @@ class _MetronomePageState extends State<MetronomePage>
 
     final interval = _beatDuration;
     _nextBeatAt = (_nextBeatAt ?? DateTime.now()).add(interval);
-    // If we fell more than one beat behind (e.g. app suspended), catch up.
     final now = DateTime.now();
     while (_nextBeatAt!.isBefore(now)) {
       _nextBeatAt = _nextBeatAt!.add(interval);
@@ -122,8 +111,6 @@ class _MetronomePageState extends State<MetronomePage>
         _isPlaying = true;
         _currentBeat = _beatsPerBar - 1; // next fire lands on beat 0
       });
-      _pendulumController.duration = _beatDuration;
-      _pendulumController.repeat(reverse: true);
       _nextBeatAt = DateTime.now();
       _fireBeat();
     } else {
@@ -136,14 +123,9 @@ class _MetronomePageState extends State<MetronomePage>
     final clamped = value.clamp(_minBpm, _maxBpm);
     if (clamped == _bpm) return;
     setState(() => _bpm = clamped);
-    _pendulumController.duration = _beatDuration;
     if (_isPlaying) {
-      // Re-anchor from "now" so tempo changes feel immediate.
       _nextBeatAt = DateTime.now().add(_beatDuration);
       _armNextBeat();
-      if (!_pendulumController.isAnimating) {
-        _pendulumController.repeat(reverse: true);
-      }
     }
   }
 
@@ -190,6 +172,14 @@ class _MetronomePageState extends State<MetronomePage>
 
   @override
   Widget build(BuildContext context) {
+    // IndexedStack keeps this page alive — pause when the user leaves the tab.
+    ref.listen<int>(shellBranchIndexProvider, (prev, next) {
+      if (next != kMetronomeBranch && _isPlaying) {
+        setState(() => _isPlaying = false);
+        _stopBeats();
+      }
+    });
+
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -204,40 +194,43 @@ class _MetronomePageState extends State<MetronomePage>
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final compact = constraints.maxHeight < 680;
             return Stack(
               children: [
                 _buildAura(colors),
-                SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(20, compact ? 8 : 16, 20, 20),
+                Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - (compact ? 16 : 36),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildBeatStrip(theme, colors),
-                        if (_clickPlayer.failed) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            l10n.metronomeAudioUnavailable,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colors.error,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                        SizedBox(height: compact ? 12 : 20),
-                        _buildPendulum(colors, compact: compact),
-                        SizedBox(height: compact ? 8 : 16),
-                        _buildBpmDisplay(theme, colors),
-                        SizedBox(height: compact ? 8 : 14),
-                        _buildBpmStepper(colors),
-                        SizedBox(height: compact ? 16 : 24),
-                        _buildTimeSignatureCard(theme, colors, l10n),
-                        SizedBox(height: compact ? 20 : 28),
-                        _buildTransport(colors, l10n),
-                      ],
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight - 40,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildBeatStrip(theme, colors),
+                            if (_clickPlayer.failed) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.metronomeAudioUnavailable,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.error,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            const SizedBox(height: 36),
+                            _buildBpmDisplay(theme, colors),
+                            const SizedBox(height: 28),
+                            _buildBpmSlider(colors),
+                            const SizedBox(height: 28),
+                            _buildTimeSignature(theme, colors, l10n),
+                            const SizedBox(height: 36),
+                            _buildTransport(colors, l10n),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -251,15 +244,15 @@ class _MetronomePageState extends State<MetronomePage>
 
   Widget _buildAura(ColorScheme colors) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_pulseController, _pendulumController]),
+      animation: _pulseController,
       builder: (context, _) {
-        final v = _isPlaying ? (1 - _pulseController.value) * 0.22 : 0.04;
+        final v = _isPlaying ? (1 - _pulseController.value) * 0.18 : 0.03;
         return IgnorePointer(
           child: Align(
-            alignment: const Alignment(0, -0.55),
+            alignment: const Alignment(0, -0.15),
             child: Container(
-              width: 320,
-              height: 320,
+              width: 280,
+              height: 280,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -282,125 +275,34 @@ class _MetronomePageState extends State<MetronomePage>
       label: _isPlaying
           ? 'Beat ${_currentBeat + 1} of $_beatsPerBar'
           : 'Metronome stopped',
-      child: Column(
-        children: [
-          Text(
-            _isPlaying ? '${_currentBeat + 1} / $_beatsPerBar' : '— / $_beatsPerBar',
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: List.generate(_beatsPerBar, (i) {
-              final active = _isPlaying && i == _currentBeat;
-              final isFirst = i == 0;
-              final accent = isFirst && _accentFirstBeat;
-              return Expanded(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  curve: Curves.easeOut,
-                  height: active ? 14 : 8,
-                  margin: EdgeInsets.symmetric(
-                    horizontal: _beatsPerBar > 7 ? 2 : 3,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: active
-                        ? (accent ? colors.primary : colors.secondary)
-                        : colors.outlineVariant.withValues(alpha: 0.55),
-                    boxShadow: active
-                        ? [
-                            BoxShadow(
-                              color: (accent ? colors.primary : colors.secondary)
-                                  .withValues(alpha: 0.35),
-                              blurRadius: 10,
-                              spreadRadius: 0.5,
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPendulum(ColorScheme colors, {required bool compact}) {
-    const maxAngle = 24 * math.pi / 180;
-    final weightFraction = (1 - (_bpm - _minBpm) / (_maxBpm - _minBpm)).clamp(
-      0.14,
-      0.8,
-    );
-    final height = compact ? 148.0 : 200.0;
-    final armHeight = compact ? 108.0 : 152.0;
-
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: Center(
-        child: SizedBox(
-          height: height,
-          width: 180,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              CustomPaint(
-                size: Size(168, height - 16),
-                painter: _MetronomeBodyPainter(
-                  fill: colors.surfaceContainerHighest,
-                  outline: colors.outline.withValues(alpha: 0.28),
-                  accent: colors.primary.withValues(alpha: 0.12),
-                ),
-              ),
-              AnimatedBuilder(
-                animation: _pendulumController,
-                builder: (context, _) {
-                  final angle = _isPlaying
-                      ? (-maxAngle + _pendulumController.value * 2 * maxAngle)
-                      : 0.0;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Transform.rotate(
-                      angle: angle,
-                      alignment: Alignment.bottomCenter,
-                      child: CustomPaint(
-                        size: Size(14, armHeight),
-                        painter: _MetronomeArmPainter(
-                          armColor: colors.onSurfaceVariant,
-                          weightColor: colors.primary,
-                          weightFraction: weightFraction,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                bottom: 6,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colors.primary,
-                    boxShadow: [
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_beatsPerBar, (i) {
+          final active = _isPlaying && i == _currentBeat;
+          final accent = i == 0 && _accentFirstBeat;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 110),
+            curve: Curves.easeOut,
+            width: active ? 14 : 10,
+            height: active ? 14 : 10,
+            margin: const EdgeInsets.symmetric(horizontal: 5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: active
+                  ? (accent ? colors.primary : colors.secondary)
+                  : colors.outlineVariant.withValues(alpha: 0.55),
+              boxShadow: active
+                  ? [
                       BoxShadow(
-                        color: colors.primary.withValues(alpha: 0.4),
-                        blurRadius: 8,
+                        color: (accent ? colors.primary : colors.secondary)
+                            .withValues(alpha: 0.4),
+                        blurRadius: 10,
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                    ]
+                  : null,
+            ),
+          );
+        }),
       ),
     );
   }
@@ -419,7 +321,7 @@ class _MetronomePageState extends State<MetronomePage>
               animation: _pulseController,
               builder: (context, child) {
                 final scale = _isPlaying
-                    ? 1 + (0.05 * (1 - _pulseController.value))
+                    ? 1 + (0.06 * (1 - _pulseController.value))
                     : 1.0;
                 return Transform.scale(scale: scale, child: child);
               },
@@ -433,20 +335,21 @@ class _MetronomePageState extends State<MetronomePage>
                   style: theme.textTheme.displayLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: colors.onSurface,
-                    height: 0.95,
-                    letterSpacing: -1.5,
-                    fontSize: 72,
+                    height: 0.9,
+                    letterSpacing: -3,
+                    fontSize: 96,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
-              'BPM  ·  ${_tempoMarking(_bpm)}',
-              style: theme.textTheme.titleSmall?.copyWith(
+              _tempoMarking(_bpm),
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                letterSpacing: 0.6,
-                color: colors.secondary,
+                letterSpacing: 1.4,
+                color: colors.onSurfaceVariant,
               ),
             ),
           ],
@@ -455,7 +358,7 @@ class _MetronomePageState extends State<MetronomePage>
     );
   }
 
-  Widget _buildBpmStepper(ColorScheme colors) {
+  Widget _buildBpmSlider(ColorScheme colors) {
     return Row(
       children: [
         _StepperButton(
@@ -468,17 +371,22 @@ class _MetronomePageState extends State<MetronomePage>
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 11,
+                elevation: 2,
+              ),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 22),
+              activeTrackColor: colors.primary,
+              inactiveTrackColor: colors.outline.withValues(alpha: 0.18),
+              thumbColor: colors.primary,
+              overlayColor: colors.primary.withValues(alpha: 0.12),
+              trackShape: const RoundedRectSliderTrackShape(),
             ),
             child: Slider(
               value: _bpm.toDouble(),
               min: _minBpm.toDouble(),
               max: _maxBpm.toDouble(),
-              activeColor: colors.primary,
-              inactiveColor: colors.outline.withValues(alpha: 0.22),
-              label: '$_bpm',
               onChanged: (v) => _setBpm(v.round()),
             ),
           ),
@@ -494,76 +402,61 @@ class _MetronomePageState extends State<MetronomePage>
     );
   }
 
-  Widget _buildTimeSignatureCard(
+  Widget _buildTimeSignature(
     ThemeData theme,
     ColorScheme colors,
     AppLocalizations l10n,
   ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outline.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                l10n.metronomeTimeSignature,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: colors.secondary,
-                ),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              l10n.metronomeAccent,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
               ),
-              const Spacer(),
-              Text(
-                l10n.metronomeAccent,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+            ),
+            const SizedBox(width: 6),
+            Switch.adaptive(
+              value: _accentFirstBeat,
+              onChanged: (v) => setState(() => _accentFirstBeat = v),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: _timeSignatures.map((n) {
+            final selected = n == _beatsPerBar;
+            return ChoiceChip(
+              label: Text('$n/4'),
+              selected: selected,
+              showCheckmark: false,
+              selectedColor: colors.primary,
+              backgroundColor: colors.surfaceContainerHighest.withValues(
+                alpha: 0.45,
               ),
-              const SizedBox(width: 4),
-              Switch.adaptive(
-                value: _accentFirstBeat,
-                onChanged: (v) => setState(() => _accentFirstBeat = v),
+              labelStyle: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected ? colors.onPrimary : colors.onSurfaceVariant,
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _timeSignatures.map((n) {
-              final selected = n == _beatsPerBar;
-              return ChoiceChip(
-                label: Text('$n/4'),
-                selected: selected,
-                showCheckmark: false,
-                selectedColor: colors.primary,
-                backgroundColor: colors.surface,
-                labelStyle: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: selected ? colors.onPrimary : colors.onSurfaceVariant,
-                ),
-                side: BorderSide(
-                  color: selected
-                      ? colors.primary
-                      : colors.outline.withValues(alpha: 0.28),
-                ),
-                onSelected: (_) => setState(() {
-                  _beatsPerBar = n;
-                  if (!_isPlaying) _currentBeat = 0;
-                }),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+              side: BorderSide(
+                color: selected
+                    ? colors.primary
+                    : colors.outline.withValues(alpha: 0.22),
+              ),
+              onSelected: (_) => setState(() {
+                _beatsPerBar = n;
+                if (!_isPlaying) _currentBeat = 0;
+              }),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -578,7 +471,7 @@ class _MetronomePageState extends State<MetronomePage>
             style: OutlinedButton.styleFrom(
               foregroundColor: colors.onSurface,
               side: BorderSide(color: colors.outline.withValues(alpha: 0.35)),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -666,90 +559,4 @@ class _StepperButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _MetronomeBodyPainter extends CustomPainter {
-  _MetronomeBodyPainter({
-    required this.fill,
-    required this.outline,
-    required this.accent,
-  });
-
-  final Color fill;
-  final Color outline;
-  final Color accent;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width * 0.5, 0)
-      ..lineTo(size.width * 0.88, size.height)
-      ..lineTo(size.width * 0.12, size.height)
-      ..close();
-
-    canvas.drawPath(
-      path,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [accent, fill],
-        ).createShader(Offset.zero & size),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = outline
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MetronomeBodyPainter oldDelegate) =>
-      oldDelegate.fill != fill ||
-      oldDelegate.outline != outline ||
-      oldDelegate.accent != accent;
-}
-
-class _MetronomeArmPainter extends CustomPainter {
-  _MetronomeArmPainter({
-    required this.armColor,
-    required this.weightColor,
-    required this.weightFraction,
-  });
-
-  final Color armColor;
-  final Color weightColor;
-  final double weightFraction;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final armRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width / 2 - 2, 0, 4, size.height),
-      const Radius.circular(2),
-    );
-    canvas.drawRRect(armRect, Paint()..color = armColor);
-
-    final weightY = size.height * (1 - weightFraction);
-    canvas.drawCircle(
-      Offset(size.width / 2, weightY),
-      10,
-      Paint()..color = weightColor,
-    );
-    canvas.drawCircle(
-      Offset(size.width / 2, weightY),
-      10,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.28)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MetronomeArmPainter oldDelegate) =>
-      oldDelegate.weightFraction != weightFraction ||
-      oldDelegate.armColor != armColor ||
-      oldDelegate.weightColor != weightColor;
 }
