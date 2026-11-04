@@ -239,7 +239,7 @@ class LyricsLine extends StatelessWidget {
     final chordStyle = TextStyle(
       color: theme.colorScheme.primary,
       fontFamily: 'monospace',
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w700,
       fontSize: chordFontSize,
       height: 1.2,
     );

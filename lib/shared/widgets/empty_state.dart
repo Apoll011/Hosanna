@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../app/design/tokens.dart';
+
 /// Friendly empty / zero-data placeholder.
 ///
-/// Visually distinct from [ErrorState]: soft primary tint, calm copy, and
-/// optional actions that invite the next step (clear filters, sync) rather
-/// than implying something broke.
+/// Prefer [illustrationAsset] from [HosannaIllustrations] when an illustration
+/// fits the context; [icon] remains as a fallback.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
-    required this.icon,
     required this.title,
+    this.icon,
+    this.illustrationAsset,
+    this.illustrationSize = 140,
     this.description,
     this.primaryIcon = Icons.filter_alt_off_outlined,
     this.primaryLabel,
@@ -17,9 +20,11 @@ class EmptyState extends StatelessWidget {
     this.secondaryLabel,
     this.onSecondary,
     this.scrollable = false,
-  });
+  }) : assert(icon != null || illustrationAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? illustrationAsset;
+  final double illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -36,6 +41,8 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = _EmptyStateBody(
       icon: icon,
+      illustrationAsset: illustrationAsset,
+      illustrationSize: illustrationSize,
       title: title,
       description: description,
       primaryIcon: primaryIcon,
@@ -71,6 +78,7 @@ class ErrorState extends StatelessWidget {
     this.retryLabel,
     this.onRetry,
     this.scrollable = false,
+    this.illustrationAsset,
   });
 
   final String title;
@@ -78,11 +86,14 @@ class ErrorState extends StatelessWidget {
   final String? retryLabel;
   final VoidCallback? onRetry;
   final bool scrollable;
+  final String? illustrationAsset;
 
   @override
   Widget build(BuildContext context) {
     final content = _EmptyStateBody(
       icon: Icons.cloud_off_outlined,
+      illustrationAsset: illustrationAsset,
+      illustrationSize: 120,
       title: title,
       description: description,
       primaryIcon: Icons.refresh,
@@ -111,10 +122,12 @@ enum _EmptyTone { calm, error }
 
 class _EmptyStateBody extends StatelessWidget {
   const _EmptyStateBody({
-    required this.icon,
     required this.title,
     required this.tone,
     required this.primaryIcon,
+    this.icon,
+    this.illustrationAsset,
+    this.illustrationSize = 140,
     this.description,
     this.primaryLabel,
     this.onPrimary,
@@ -122,7 +135,9 @@ class _EmptyStateBody extends StatelessWidget {
     this.onSecondary,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? illustrationAsset;
+  final double illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -145,31 +160,43 @@ class _EmptyStateBody extends StatelessWidget {
         isError ? scheme.onErrorContainer : scheme.onPrimaryContainer;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      padding: const EdgeInsets.symmetric(
+        horizontal: HosannaSpacing.xl,
+        vertical: HosannaSpacing.md,
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 320),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: circleColor,
-                shape: BoxShape.circle,
+            if (illustrationAsset != null)
+              Image.asset(
+                illustrationAsset!,
+                width: illustrationSize,
+                height: illustrationSize,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              )
+            else
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: circleColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 40, color: iconColor),
               ),
-              child: Icon(icon, size: 40, color: iconColor),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: HosannaSpacing.md),
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
               textAlign: TextAlign.center,
             ),
             if (description != null && description!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: HosannaSpacing.xs),
               Text(
                 description!,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -180,25 +207,30 @@ class _EmptyStateBody extends StatelessWidget {
               ),
             ],
             if (primaryLabel != null && onPrimary != null) ...[
-              const SizedBox(height: 24),
-              if (isError)
-                FilledButton.icon(
-                  onPressed: onPrimary,
-                  icon: Icon(primaryIcon),
-                  label: Text(primaryLabel!),
-                )
-              else
-                FilledButton.tonalIcon(
-                  onPressed: onPrimary,
-                  icon: Icon(primaryIcon),
-                  label: Text(primaryLabel!),
-                ),
+              const SizedBox(height: HosannaSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: isError
+                    ? FilledButton.icon(
+                        onPressed: onPrimary,
+                        icon: Icon(primaryIcon),
+                        label: Text(primaryLabel!),
+                      )
+                    : FilledButton.icon(
+                        onPressed: onPrimary,
+                        icon: Icon(primaryIcon),
+                        label: Text(primaryLabel!),
+                      ),
+              ),
             ],
             if (secondaryLabel != null && onSecondary != null) ...[
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onSecondary,
-                child: Text(secondaryLabel!),
+              const SizedBox(height: HosannaSpacing.xs),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onSecondary,
+                  child: Text(secondaryLabel!),
+                ),
               ),
             ],
           ],

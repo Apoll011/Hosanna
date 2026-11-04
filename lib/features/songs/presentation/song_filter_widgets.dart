@@ -25,14 +25,11 @@ class SongBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-        ),
       ),
       alignment: Alignment.center,
       child: songNumber != null
@@ -40,12 +37,12 @@ class SongBadge extends StatelessWidget {
               '#$songNumber',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 color: colorScheme.primary,
               ),
             )
           : Icon(
-              Icons.music_note,
+              Icons.music_note_rounded,
               size: 18,
               color: colorScheme.secondary,
             ),

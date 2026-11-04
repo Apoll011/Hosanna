@@ -126,7 +126,13 @@ class MetadataHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (title != null) Text(title, style: theme.textTheme.headlineSmall),
+          if (title != null)
+            Text(
+              title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           if (subtitle != null)
             Text(
               subtitle,
@@ -240,15 +246,15 @@ class _Pill extends StatelessWidget {
     final pill = Material(
       color: highlighted
           ? scheme.primaryContainer
-          : scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
+          : scheme.primaryContainer.withValues(alpha: 0.35),
+      borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(999),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: onTap != null ? 6 : 4,
+            horizontal: 10,
+            vertical: onTap != null ? 6 : 5,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -259,8 +265,10 @@ class _Pill extends StatelessWidget {
               ],
               Text(
                 text,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: fg),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ),

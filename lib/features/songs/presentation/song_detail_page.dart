@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -118,7 +119,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         ),
         data: (song) => song == null
             ? EmptyState(
-                icon: Icons.music_off_outlined,
+                illustrationAsset: HosannaIllustrations.emptySongs,
                 title: l10n.songsNotFound,
                 description: l10n.songsNotFoundDesc,
               )

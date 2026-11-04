@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -307,7 +308,6 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           : TextCapitalization.words,
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
         isDense: true,
       ),
     );
@@ -457,7 +457,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         return Scaffold(
           appBar: AppBar(title: Text(l10n.songsEdit)),
           body: EmptyState(
-            icon: Icons.music_off_outlined,
+            illustrationAsset: HosannaIllustrations.emptySongs,
             title: l10n.songsNotFound,
             description: l10n.songsNotFoundDesc,
           ),

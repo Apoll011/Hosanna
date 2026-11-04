@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -120,7 +121,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     )
                   else if (_invitations.isEmpty)
                     EmptyState(
-                      icon: Icons.mail_outline,
+                      illustrationAsset: HosannaIllustrations.emptyMembers,
                       title: l10n.onboardingNoInvites,
                       description: l10n.onboardingNoInvitesDesc,
                     )

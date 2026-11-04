@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/design/illustrations.dart';
 import '../../../../app/settings_controller.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../auth/domain/auth_controller.dart';
@@ -1065,7 +1066,7 @@ class _NotesError extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return EmptyState(
-      icon: Icons.cloud_off_outlined,
+      illustrationAsset: HosannaIllustrations.emptySync,
       title: l10n.commonError,
       description: _friendlyError(l10n, error),
       primaryLabel: l10n.commonRetry,

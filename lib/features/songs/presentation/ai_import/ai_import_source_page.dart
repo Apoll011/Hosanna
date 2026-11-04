@@ -7,7 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../../../app/design/illustrations.dart';
+import '../../../../app/design/tokens.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/hosanna_surface.dart';
 import '../../../../shared/widgets/shell_modal.dart';
 import 'ai_import_models.dart';
 
@@ -200,56 +203,14 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
           ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             children: [
-              Container(
-                height: 168,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primaryContainer.withValues(alpha: 0.85),
-                      scheme.secondaryContainer.withValues(alpha: 0.55),
-                      scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                    ],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -12,
-                      bottom: -8,
-                      child: Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 120,
-                        color: scheme.primary.withValues(alpha: 0.14),
-                      ),
-                    ),
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _HeroBadge(
-                            icon: Icons.photo_camera_outlined,
-                            color: scheme.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          _HeroBadge(
-                            icon: Icons.picture_as_pdf_outlined,
-                            color: scheme.tertiary,
-                          ),
-                          const SizedBox(width: 10),
-                          _HeroBadge(
-                            icon: Icons.auto_awesome_rounded,
-                            color: scheme.secondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              Center(
+                child: Image.asset(
+                  HosannaIllustrations.emptyImportSource,
+                  height: 148,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: HosannaSpacing.lg),
               Text(
                 l10n.songsImportSheetMusic,
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -257,7 +218,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                   height: 1.15,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: HosannaSpacing.xs),
               Text(
                 l10n.songsImportSheetMusicBody,
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -266,7 +227,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                 ),
               ),
               if (_error != null) ...[
-                const SizedBox(height: 14),
+                const SizedBox(height: HosannaSpacing.sm),
                 Text(
                   _error!,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -274,28 +235,28 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                   ),
                 ),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: HosannaSpacing.xl),
               _SourceCard(
                 icon: Icons.photo_camera_outlined,
                 title: l10n.songsTakePhoto,
                 subtitle: l10n.songsImportWithAiDesc,
                 onTap: _busy ? null : _pickCamera,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: HosannaSpacing.sm),
               _SourceCard(
                 icon: Icons.photo_library_outlined,
                 title: l10n.songsChooseGallery,
                 subtitle: l10n.songsImportWithAiDesc,
                 onTap: _busy ? null : _pickGallery,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: HosannaSpacing.sm),
               _SourceCard(
                 icon: Icons.picture_as_pdf_outlined,
                 title: l10n.songsImportPdf,
                 subtitle: l10n.songsImportWithAiDesc,
                 onTap: _busy ? null : _pickPdf,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: HosannaSpacing.lg),
               Center(
                 child: TextButton.icon(
                   onPressed: _busy ? null : _showHowItWorks,
@@ -333,33 +294,6 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
   }
 }
 
-class _HeroBadge extends StatelessWidget {
-  const _HeroBadge({required this.icon, required this.color});
-
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(icon, color: color),
-    );
-  }
-}
-
 class _SourceCard extends StatelessWidget {
   const _SourceCard({
     required this.icon,
@@ -376,54 +310,38 @@ class _SourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Material(
-      color: scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: scheme.primary.withValues(alpha: 0.28)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(14),
+    return HosannaSurface(
+      elevated: false,
+      onTap: onTap,
+      child: Row(
+        children: [
+          HosannaLeadingBadge(icon: icon),
+          const SizedBox(width: HosannaSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                child: Icon(icon, color: scheme.primary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-            ],
+              ],
+            ),
           ),
-        ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ],
       ),
     );
   }

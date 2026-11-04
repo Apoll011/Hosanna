@@ -86,7 +86,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.authSignInTitle,
-                    style: theme.textTheme.headlineMedium,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),

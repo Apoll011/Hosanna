@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
@@ -111,7 +112,7 @@ class _AgendaPageState extends ConsumerState<AgendaPage> {
             return RefreshIndicator(
               onRefresh: _refresh,
               child: EmptyState(
-                icon: Icons.event_outlined,
+                illustrationAsset: HosannaIllustrations.emptyServices,
                 title: l10n.agendaEmptyTitle,
                 description: l10n.agendaEmptyBody,
                 scrollable: true,
@@ -312,7 +313,7 @@ class _DayEventsList extends StatelessWidget {
 
     if (dateKey == null || events.isEmpty) {
       return EmptyState(
-        icon: Icons.event_busy_outlined,
+        illustrationAsset: HosannaIllustrations.emptyServices,
         title: l10n.agendaNoEventsForDay,
         description: l10n.agendaNoEventsForDayBody,
       );

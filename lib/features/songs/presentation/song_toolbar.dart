@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/chordpro/parser.dart';
 import 'chordpro/instrument_selector.dart';
@@ -44,10 +45,8 @@ Future<void> showSongControlsSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(borderRadius: HosannaRadii.sheet),
     builder: (_) => const SongControlsSheet(),
   );
 }

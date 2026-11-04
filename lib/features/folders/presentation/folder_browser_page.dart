@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/design/illustrations.dart';
 import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
@@ -214,7 +215,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                 child: isEmpty
                     ? hasQuery || !_settings.isDefault
                         ? EmptyState(
-                            icon: Icons.search_off_outlined,
+                            illustrationAsset:
+                                HosannaIllustrations.emptySearch,
                             title: l10n.songsNoResults,
                             description: l10n.foldersNoResultsDesc,
                             primaryLabel: hasQuery
@@ -229,7 +231,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                             scrollable: true,
                           )
                         : EmptyState(
-                            icon: Icons.folder_open_outlined,
+                            illustrationAsset:
+                                HosannaIllustrations.emptyFolders,
                             title: l10n.foldersEmpty,
                             description: l10n.foldersEmptyDesc,
                             scrollable: true,

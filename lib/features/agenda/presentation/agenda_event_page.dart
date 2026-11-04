@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -34,7 +35,7 @@ class AgendaEventPage extends ConsumerWidget {
         data: (event) {
           if (event == null || event.isDeleted) {
             return EmptyState(
-              icon: Icons.event_busy_outlined,
+              illustrationAsset: HosannaIllustrations.emptyServices,
               title: l10n.agendaEventNotFound,
               description: l10n.agendaEventNotFoundBody,
             );

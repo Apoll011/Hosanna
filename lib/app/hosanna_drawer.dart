@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/sync_status_banner.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/collections/data/collection_repository.dart';
 import '../features/folders/data/folder_repository.dart';
@@ -11,6 +10,9 @@ import '../features/songs/data/song_repository.dart';
 import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/hosanna_logo.dart';
+import '../shared/widgets/hosanna_surface.dart';
+import '../shared/widgets/sync_status_banner.dart';
+import 'design/tokens.dart';
 import 'nav_branches.dart';
 
 /// Duration for every collapse/expand transition in the nav content. Kept in
@@ -72,6 +74,7 @@ class HosannaNavContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final tokens = HosannaTokens.of(context);
     final auth = ref.watch(authControllerProvider);
     final library = ref.watch(libraryControllerProvider);
     final libraryController = ref.read(libraryControllerProvider.notifier);
@@ -104,346 +107,321 @@ class HosannaNavContent extends ConsumerWidget {
       onNavigate(0);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Header.
-        AnimatedPadding(
-          duration: _kAnimDuration,
-          curve: _kAnimCurve,
-          padding: EdgeInsets.fromLTRB(
-            collapsed ? 12 : 16,
-            16,
-            collapsed ? 12 : 16,
-            2,
-          ),
-          child: Column(
-            children: [
-              // The logo is the same element in both states; when the
-              // sidebar collapses it glides from the leading edge to the
-              // center of the header.
-              SizedBox(
-                height: 40,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: AnimatedAlign(
-                        alignment: collapsed
-                            ? Alignment.center
-                            : Alignment.centerLeft,
-                        duration: _kAnimDuration,
-                        curve: _kAnimCurve,
-                        // HosannaLogo centers itself internally (see
-                        // hosanna_logo.dart), so pin it to a fixed 40x40 box
-                        // here — otherwise it would fill the whole header and
-                        // ignore this alignment, staying centered in both
-                        // states.
-                        child: const SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: HosannaLogo(size: 40, borderRadius: 12),
-                        ),
-                      ),
-                    ),
-                    // Title/org text, revealed only when expanded. Left edge
-                    // matches the logo width; the 12px gap lives in the
-                    // padding below.
-                    Positioned(
-                      left: 40,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: _RevealBlock(
-                        visible: !collapsed,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.appTitle,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              if (org != null)
-                                Text(
-                                  org.name,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _RevealBlock(
-                visible: !collapsed,
-                child: SyncStatusBanner(compact: false),
-              ),
-            ],
-          ),
-        ),
-        const Divider(),
-
-        // Scrollable content.
-        Expanded(
-          child: AnimatedPadding(
+    return ColoredBox(
+      color: theme.colorScheme.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AnimatedPadding(
             duration: _kAnimDuration,
             curve: _kAnimCurve,
-            padding: EdgeInsets.symmetric(horizontal: collapsed ? 8 : 12),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _RevealBlock(
-                  visible: !collapsed,
-                  child: _SectionLabel(l10n.navLibrarySection),
-                ),
-                _NavItem(
-                  icon: Icons.music_note_outlined,
-                  iconColor: theme.colorScheme.primary,
-                  label: l10n.navAllSongs,
-                  count: songs.length,
-                  // Library rows only highlight while the Songs branch is
-                  // active; on the tools/services branches the current branch
-                  // highlight belongs to that row alone.
-                  selected:
-                      currentBranch == kSongsBranch &&
-                      library.section == LibrarySection.all,
-                  collapsed: collapsed,
-                  onTap: () => selectSection(LibrarySection.all),
-                ),
-                _NavItem(
-                  icon: Icons.favorite_outline,
-                  iconColor: theme.colorScheme.primary,
-                  label: l10n.navFavorites,
-                  count: library.favoriteIds.length,
-                  selected:
-                      currentBranch == kSongsBranch &&
-                      library.section == LibrarySection.favorites,
-                  collapsed: collapsed,
-                  onTap: () => selectSection(LibrarySection.favorites),
-                ),
-                _NavItem(
-                  icon: Icons.history,
-                  iconColor: theme.colorScheme.tertiary,
-                  label: l10n.navRecents,
-                  count: library.recentIds.length,
-                  selected:
-                      currentBranch == kSongsBranch &&
-                      library.section == LibrarySection.recent,
-                  collapsed: collapsed,
-                  onTap: () => selectSection(LibrarySection.recent),
-                ),
-                _NavItem(
-                  icon: Icons.folder_outlined,
-                  iconColor: theme.colorScheme.secondary,
-                  label: l10n.navFolders,
-                  count: folders.length,
-                  // The folders row belongs to its own branch and opens the
-                  // folder explorer at the root level.
-                  selected: currentBranch == kFoldersBranch,
-                  collapsed: collapsed,
-                  onTap: () {
-                    ref.read(folderExplorerProvider.notifier).open(null);
-                    onNavigate(kFoldersBranch);
-                  },
-                ),
-
-                _RevealBlock(
-                  visible: !collapsed,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 8),
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        child: _SectionLabel(l10n.navCollections),
-                      ),
-                      if (collections.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.collections_bookmark_outlined,
-                                size: 18,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  l10n.collectionsEmpty,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        for (final collection in collections)
-                          _NavItem(
-                            icon: Icons.collections_bookmark_outlined,
-                            iconColor: theme.colorScheme.primary,
-                            label: collection.name,
-                            count: collection.songCount,
-                            selected:
-                                currentBranch == kSongsBranch &&
-                                library.section == LibrarySection.collection &&
-                                library.collectionId == collection.id,
-                            collapsed: collapsed,
-                            onTap: () => selectSection(
-                              LibrarySection.collection,
-                              collectionId: collection.id,
-                            ),
-                          ),
-                    ],
-                  ),
-                ),
-
-                _RevealBlock(
-                  visible: !collapsed,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 8),
-                      _SectionLabel(l10n.navToolsSection),
-                    ],
-                  ),
-                ),
-                _NavItem(
-                  icon: Icons.speed,
-                  iconColor: theme.colorScheme.tertiary,
-                  label: l10n.navMetronome,
-                  selected: currentBranch == kMetronomeBranch,
-                  collapsed: collapsed,
-                  onTap: () => onNavigate(kMetronomeBranch),
-                ),
-                _NavItem(
-                  icon: Icons.donut_large,
-                  iconColor: theme.colorScheme.primary,
-                  label: l10n.navCircleOfFifths,
-                  selected: currentBranch == kCircleOfFifthsBranch,
-                  collapsed: collapsed,
-                  onTap: () => onNavigate(kCircleOfFifthsBranch),
-                ),
-                _NavItem(
-                  icon: Icons.event_outlined,
-                  iconColor: theme.colorScheme.secondary,
-                  label: l10n.navAgenda,
-                  selected: currentBranch == kAgendaBranch,
-                  collapsed: collapsed,
-                  onTap: () => onNavigate(kAgendaBranch),
-                ),
-              ],
+            padding: EdgeInsets.fromLTRB(
+              collapsed ? 12 : 16,
+              16,
+              collapsed ? 12 : 16,
+              8,
             ),
-          ),
-        ),
-
-        // Footer — the user card doubles as the Settings entry point.
-        if (user != null) const Divider(height: 1),
-        if (collapsed) const SizedBox(height: 6),
-        if (user != null)
-          Center(
-            child: Material(
-              color: currentBranch == kSettingsBranch
-                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () => onNavigate(kSettingsBranch),
-                child: AnimatedPadding(
-                  duration: _kAnimDuration,
-                  curve: _kAnimCurve,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: collapsed ? 0 : 16,
-                    vertical: collapsed ? 0 : 8,
-                  ),
-                  child: Row(
-                    // Icon-only mode centers the avatar; expanded mode fills the
-                    // width like the ListTile it replaces.
-                    mainAxisSize: collapsed
-                        ? MainAxisSize.min
-                        : MainAxisSize.max,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 48,
+                  child: Stack(
                     children: [
-                      // The avatar is the same widget in both states, so it
-                      // morphs its radius instead of popping between sizes.
-                      TweenAnimationBuilder<double>(
-                        tween: Tween<double>(end: collapsed ? 18 : 16),
-                        duration: _kAnimDuration,
-                        curve: _kAnimCurve,
-                        builder: (context, radius, _) {
-                          final hasImage =
-                              imageUrl != null && imageUrl.isNotEmpty;
-                          return CircleAvatar(
-                            radius: radius,
-                            foregroundImage: hasImage
-                                ? CachedNetworkImageProvider(imageUrl)
-                                : null,
-                            // Flutter asserts: error callback only when image is set.
-                            onForegroundImageError: hasImage
-                                ? (exception, stackTrace) {
-                                    debugPrint(
-                                      'Failed to load avatar: $exception',
-                                    );
-                                  }
-                                : null,
-                            child: Text(
-                              _initials(user.name),
-                              style: theme.textTheme.titleLarge,
-                            ),
-                          );
-                        },
+                      Positioned.fill(
+                        child: AnimatedAlign(
+                          alignment: collapsed
+                              ? Alignment.center
+                              : Alignment.centerLeft,
+                          duration: _kAnimDuration,
+                          curve: _kAnimCurve,
+                          child: const SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: HosannaLogo(size: 44, borderRadius: 14),
+                          ),
+                        ),
                       ),
-                      if (!collapsed) ...[
-                        Expanded(
+                      Positioned(
+                        left: 44,
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _RevealBlock(
+                          visible: !collapsed,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 12),
                             child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  user.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyLarge,
+                                  l10n.appTitle,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
-                                Text(
-                                  user.email,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall,
-                                ),
+                                if (org != null)
+                                  Text(
+                                    org.name,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                               ],
                             ),
                           ),
                         ),
-                        Icon(
-                          Icons.settings_outlined,
-                          size: 22,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
+                      ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _RevealBlock(
+                  visible: !collapsed,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: tokens.subtleFill,
+                      borderRadius: HosannaRadii.card,
+                      border: Border.all(color: tokens.cardBorder),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: SyncStatusBanner(compact: false),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: AnimatedPadding(
+              duration: _kAnimDuration,
+              curve: _kAnimCurve,
+              padding: EdgeInsets.symmetric(horizontal: collapsed ? 8 : 12),
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 8),
+                children: [
+                  _RevealBlock(
+                    visible: !collapsed,
+                    child: HosannaSectionLabel(l10n.navLibrarySection),
+                  ),
+                  _NavItem(
+                    icon: Icons.music_note_outlined,
+                    label: l10n.navAllSongs,
+                    count: songs.length,
+                    selected: currentBranch == kSongsBranch &&
+                        library.section == LibrarySection.all,
+                    collapsed: collapsed,
+                    onTap: () => selectSection(LibrarySection.all),
+                  ),
+                  _NavItem(
+                    icon: Icons.favorite_outline,
+                    label: l10n.navFavorites,
+                    count: library.favoriteIds.length,
+                    selected: currentBranch == kSongsBranch &&
+                        library.section == LibrarySection.favorites,
+                    collapsed: collapsed,
+                    onTap: () => selectSection(LibrarySection.favorites),
+                  ),
+                  _NavItem(
+                    icon: Icons.history,
+                    label: l10n.navRecents,
+                    count: library.recentIds.length,
+                    selected: currentBranch == kSongsBranch &&
+                        library.section == LibrarySection.recent,
+                    collapsed: collapsed,
+                    onTap: () => selectSection(LibrarySection.recent),
+                  ),
+                  _NavItem(
+                    icon: Icons.folder_outlined,
+                    label: l10n.navFolders,
+                    count: folders.length,
+                    selected: currentBranch == kFoldersBranch,
+                    collapsed: collapsed,
+                    onTap: () {
+                      ref.read(folderExplorerProvider.notifier).open(null);
+                      onNavigate(kFoldersBranch);
+                    },
+                  ),
+
+                  _RevealBlock(
+                    visible: !collapsed,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 4),
+                        HosannaSectionLabel(l10n.navCollections),
+                        if (collections.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                            child: Text(
+                              l10n.collectionsEmpty,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          )
+                        else
+                          for (final collection in collections)
+                            _NavItem(
+                              icon: Icons.collections_bookmark_outlined,
+                              label: collection.name,
+                              count: collection.songCount,
+                              selected: currentBranch == kSongsBranch &&
+                                  library.section ==
+                                      LibrarySection.collection &&
+                                  library.collectionId == collection.id,
+                              collapsed: collapsed,
+                              onTap: () => selectSection(
+                                LibrarySection.collection,
+                                collectionId: collection.id,
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+
+                  _RevealBlock(
+                    visible: !collapsed,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 4),
+                        HosannaSectionLabel(l10n.navToolsSection),
+                      ],
+                    ),
+                  ),
+                  _NavItem(
+                    icon: Icons.speed,
+                    label: l10n.navMetronome,
+                    selected: currentBranch == kMetronomeBranch,
+                    collapsed: collapsed,
+                    onTap: () => onNavigate(kMetronomeBranch),
+                  ),
+                  _NavItem(
+                    icon: Icons.donut_large,
+                    label: l10n.navCircleOfFifths,
+                    selected: currentBranch == kCircleOfFifthsBranch,
+                    collapsed: collapsed,
+                    onTap: () => onNavigate(kCircleOfFifthsBranch),
+                  ),
+                  _NavItem(
+                    icon: Icons.event_outlined,
+                    label: l10n.navAgenda,
+                    selected: currentBranch == kAgendaBranch,
+                    collapsed: collapsed,
+                    onTap: () => onNavigate(kAgendaBranch),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          if (user != null)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                collapsed ? 8 : 12,
+                4,
+                collapsed ? 8 : 12,
+                12,
+              ),
+              child: Material(
+                color: currentBranch == kSettingsBranch
+                    ? tokens.selectedNav
+                    : tokens.subtleFill,
+                borderRadius: BorderRadius.circular(HosannaRadii.md),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(HosannaRadii.md),
+                  onTap: () => onNavigate(kSettingsBranch),
+                  child: AnimatedPadding(
+                    duration: _kAnimDuration,
+                    curve: _kAnimCurve,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: collapsed ? 0 : 12,
+                      vertical: collapsed ? 8 : 10,
+                    ),
+                    child: Row(
+                      mainAxisSize:
+                          collapsed ? MainAxisSize.min : MainAxisSize.max,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(end: collapsed ? 18 : 18),
+                          duration: _kAnimDuration,
+                          curve: _kAnimCurve,
+                          builder: (context, radius, _) {
+                            final hasImage =
+                                imageUrl != null && imageUrl.isNotEmpty;
+                            return CircleAvatar(
+                              radius: radius,
+                              backgroundColor: theme.colorScheme.primaryContainer,
+                              foregroundImage: hasImage
+                                  ? CachedNetworkImageProvider(imageUrl)
+                                  : null,
+                              onForegroundImageError: hasImage
+                                  ? (exception, stackTrace) {
+                                      debugPrint(
+                                        'Failed to load avatar: $exception',
+                                      );
+                                    }
+                                  : null,
+                              child: Text(
+                                _initials(user.name),
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        if (!collapsed) ...[
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    user.email,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color:
+                                          theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.settings_outlined,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -471,31 +449,9 @@ class HosannaDrawer extends StatelessWidget {
         child: HosannaNavContent(
           currentBranch: currentBranch,
           onNavigate: (branchIndex) {
-            Navigator.of(context).pop(); // close the drawer
+            Navigator.of(context).pop();
             onNavigate(branchIndex);
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-      child: Text(
-        label.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.8,
         ),
       ),
     );
@@ -505,7 +461,6 @@ class _SectionLabel extends StatelessWidget {
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,
-    required this.iconColor,
     required this.label,
     required this.onTap,
     this.count,
@@ -514,7 +469,6 @@ class _NavItem extends StatelessWidget {
   });
 
   final IconData icon;
-  final Color iconColor;
   final String label;
   final VoidCallback onTap;
   final int? count;
@@ -524,102 +478,104 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bg = selected
-        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-        : Colors.transparent;
+    final tokens = HosannaTokens.of(context);
+    final bg = selected ? tokens.selectedNav : Colors.transparent;
+    final fg = selected
+        ? tokens.selectedNavForeground
+        : theme.colorScheme.onSurface;
+    final iconColor =
+        selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant;
 
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: AnimatedPadding(
-          duration: _kAnimDuration,
-          curve: _kAnimCurve,
-          padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? 0 : 12,
-            vertical: collapsed ? 12 : 10,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                // Icon-only rows stay centered; expanded rows fill the width.
-                mainAxisSize: collapsed ? MainAxisSize.min : MainAxisSize.max,
-                children: [
-                  // The icon is the same widget in both states, so it morphs
-                  // its size instead of popping between 20 and 22.
-                  TweenAnimationBuilder<double>(
-                    tween: Tween<double>(end: collapsed ? 22 : 20),
-                    duration: _kAnimDuration,
-                    curve: _kAnimCurve,
-                    builder: (context, size, _) =>
-                        Icon(icon, size: size, color: iconColor),
-                  ),
-                  Flexible(
-                    child: _RevealBlock(
-                      visible: !collapsed,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(HosannaRadii.sm),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(HosannaRadii.sm),
+          onTap: onTap,
+          child: AnimatedPadding(
+            duration: _kAnimDuration,
+            curve: _kAnimCurve,
+            padding: EdgeInsets.symmetric(
+              horizontal: collapsed ? 0 : 12,
+              vertical: collapsed ? 12 : 10,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize:
+                      collapsed ? MainAxisSize.min : MainAxisSize.max,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(end: collapsed ? 22 : 20),
+                      duration: _kAnimDuration,
+                      curve: _kAnimCurve,
+                      builder: (context, size, _) =>
+                          Icon(icon, size: size, color: iconColor),
+                    ),
+                    Flexible(
+                      child: _RevealBlock(
+                        visible: !collapsed,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w500,
+                              color: fg,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _RevealBlock(
+                      visible: !collapsed && count != null,
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
                             color: selected
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.colorScheme.onSurface,
+                                ? theme.colorScheme.primary
+                                : tokens.subtleFill,
+                            borderRadius: BorderRadius.circular(HosannaRadii.xs),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: selected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  _RevealBlock(
-                    visible: !collapsed && count != null,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '$count',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: selected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                  ],
+                ),
+                _RevealBlock(
+                  visible: collapsed && count != null,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '$count',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              // Icon-only rows put the count underneath the icon.
-              _RevealBlock(
-                visible: collapsed && count != null,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '$count',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

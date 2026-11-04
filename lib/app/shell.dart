@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'design/tokens.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
 import 'providers.dart';
@@ -222,7 +223,7 @@ class _TabletSidebar extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOutCubic,
       width: width,
-      color: theme.colorScheme.surfaceContainerLow,
+      color: theme.colorScheme.surface,
       child: SafeArea(
         child: HosannaNavContent(
           collapsed: collapsed,
@@ -249,21 +250,17 @@ class _FloatingNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final tokens = HosannaTokens.of(context);
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(56, 0, 56, 12),
       child: Container(
         height: 64,
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(42),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: theme.colorScheme.surface,
+          borderRadius: HosannaRadii.navPill,
+          border: Border.all(color: tokens.cardBorder),
+          boxShadow: HosannaElevation.floating(theme.brightness),
         ),
         child: Row(
           children: [
@@ -296,28 +293,36 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = HosannaTokens.of(context);
     final color = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(selected ? item.selectedIcon : item.icon, color: color),
-          const SizedBox(height: 2),
-          Text(
-            item.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Material(
+        color: selected ? tokens.selectedNav : Colors.transparent,
+        borderRadius: BorderRadius.circular(HosannaRadii.pill),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(HosannaRadii.pill),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(selected ? item.selectedIcon : item.icon, color: color),
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

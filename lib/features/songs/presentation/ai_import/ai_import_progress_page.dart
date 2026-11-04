@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/design/illustrations.dart';
+import '../../../../app/design/tokens.dart';
 import '../../../../app/providers.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/hosanna_surface.dart';
 import 'ai_import_models.dart';
 
 class AiImportProgressPage extends ConsumerStatefulWidget {
@@ -203,29 +206,25 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         title: Text(l10n.songsImportWithAi),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         child: Column(
           children: [
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 88,
-              height: 88,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (_error == null)
-                    const CircularProgressIndicator(strokeWidth: 3),
-                  Icon(
-                    _error == null
-                        ? Icons.auto_awesome_rounded
-                        : Icons.error_outline_rounded,
-                    size: 36,
-                    color: _error == null ? scheme.primary : scheme.error,
-                  ),
-                ],
-              ),
+            Image.asset(
+              _error == null
+                  ? HosannaIllustrations.aiProcessing
+                  : HosannaIllustrations.stateError,
+              height: 120,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 24),
+            if (_error == null) ...[
+              const SizedBox(height: HosannaSpacing.sm),
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ],
+            const SizedBox(height: HosannaSpacing.lg),
             Text(
               _error == null ? l10n.songsAiAnalyzing : l10n.songsAiImportFailed,
               textAlign: TextAlign.center,
@@ -233,7 +232,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: HosannaSpacing.xs),
             Text(
               _error ?? l10n.songsAiAnalyzingBody,
               textAlign: TextAlign.center,
@@ -241,8 +240,17 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                 color: scheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 28),
-            ...steps.map((s) => _StepRow(step: s)),
+            const SizedBox(height: HosannaSpacing.xl),
+            HosannaSurface(
+              elevated: false,
+              padding: const EdgeInsets.symmetric(
+                horizontal: HosannaSpacing.md,
+                vertical: HosannaSpacing.sm,
+              ),
+              child: Column(
+                children: [for (final s in steps) _StepRow(step: s)],
+              ),
+            ),
             const Spacer(),
             if (_error == null)
               SizedBox(
@@ -251,8 +259,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                   onPressed: null,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
-                    disabledBackgroundColor:
-                        scheme.surfaceContainerHighest,
+                    disabledBackgroundColor: scheme.surfaceContainerHighest,
                     disabledForegroundColor: scheme.onSurfaceVariant,
                   ),
                   child: Text(l10n.songsAiPleaseWait),
@@ -266,10 +273,13 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                   color: scheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => context.go('/songs/import/ai'),
-                child: Text(l10n.commonRetry),
+              const SizedBox(height: HosannaSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => context.go('/songs/import/ai'),
+                  child: Text(l10n.commonRetry),
+                ),
               ),
               TextButton(
                 onPressed: () => context.go('/songs/new'),

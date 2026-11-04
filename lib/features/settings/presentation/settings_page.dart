@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/tokens.dart';
 import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell_leading_button.dart';
@@ -83,13 +84,14 @@ class _TabBar extends StatelessWidget {
       (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
     ];
 
+    final tokens = HosannaTokens.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        color: tokens.subtleFill,
+        borderRadius: BorderRadius.circular(HosannaRadii.md),
+        border: Border.all(color: tokens.cardBorder),
       ),
       child: Row(
         children: [

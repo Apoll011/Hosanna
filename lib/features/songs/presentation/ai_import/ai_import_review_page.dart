@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/design/tokens.dart';
 import '../../../../core/sync/sync_controller.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/hosanna_surface.dart';
 import '../../data/song_repository.dart';
 import '../../domain/chordpro_content.dart';
 import 'ai_import_models.dart';
@@ -119,7 +121,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
         children: [
           if (thumb != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(HosannaRadii.md),
               child: AspectRatio(
                 aspectRatio: 4 / 3,
                 child: Stack(
@@ -131,7 +133,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: CircleAvatar(
-                          backgroundColor: Colors.green.shade600,
+                          backgroundColor: HosannaColors.success,
                           radius: 16,
                           child: const Icon(
                             Icons.check_rounded,
@@ -145,18 +147,15 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                 ),
               ),
             ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(14),
-            ),
+          const SizedBox(height: HosannaSpacing.md),
+          HosannaSurface(
+            elevated: false,
+            selected: true,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.auto_awesome_rounded, color: scheme.primary),
-                const SizedBox(width: 10),
+                const SizedBox(width: HosannaSpacing.sm),
                 Expanded(
                   child: Text(
                     l10n.songsAiCreatedBanner,
@@ -192,44 +191,32 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
           const SizedBox(height: 16),
           TextField(
             controller: _title,
-            decoration: InputDecoration(
-              labelText: l10n.songsFieldTitle,
-              border: const OutlineInputBorder(),
-            ),
+            decoration: InputDecoration(labelText: l10n.songsFieldTitle),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: HosannaSpacing.sm),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _key,
-                  decoration: InputDecoration(
-                    labelText: l10n.songsFieldKey,
-                    border: const OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(labelText: l10n.songsFieldKey),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: HosannaSpacing.sm),
               Expanded(
                 child: TextField(
                   controller: _tempo,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.songsFieldTempo,
-                    border: const OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(labelText: l10n.songsFieldTempo),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: HosannaSpacing.sm),
           TextField(
             controller: _time,
-            decoration: InputDecoration(
-              labelText: l10n.songsFieldTime,
-              border: const OutlineInputBorder(),
-            ),
+            decoration: InputDecoration(labelText: l10n.songsFieldTime),
           ),
           const SizedBox(height: 28),
           Row(

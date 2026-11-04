@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell.dart';
 import '../../../core/db/database.dart';
@@ -106,7 +107,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           data: (service) {
             if (service == null) {
               return EmptyState(
-                icon: Icons.event_busy_outlined,
+                illustrationAsset: HosannaIllustrations.emptyServices,
                 title: l10n.servicesNotFound,
                 description: l10n.servicesNotFoundDesc,
               );
@@ -198,7 +199,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
     if (elements.isEmpty) {
       return EmptyState(
-        icon: Icons.playlist_add_outlined,
+        illustrationAsset: HosannaIllustrations.emptySongs,
         title: l10n.servicesNoItems,
         description: l10n.servicesNoItemsDesc,
       );
@@ -464,7 +465,7 @@ class _SongElementView extends ConsumerWidget {
       ),
       data: (song) => song == null
           ? EmptyState(
-              icon: Icons.music_off_outlined,
+              illustrationAsset: HosannaIllustrations.emptySongs,
               title: l10n.songsNotFound,
               description: l10n.songsNotFoundDesc,
             )

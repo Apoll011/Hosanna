@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/illustrations.dart';
+import '../../../app/design/tokens.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
 import '../data/service_repository.dart';
 
@@ -96,6 +99,7 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
               onRefresh: _refresh,
               child: switch (servicesAsync) {
                 AsyncValue(hasError: true) => ErrorState(
+                  illustrationAsset: HosannaIllustrations.stateError,
                   title: l10n.commonError,
                   description: l10n.commonErrorDesc,
                   retryLabel: l10n.commonRetry,
@@ -155,7 +159,7 @@ class _ServiceList extends StatelessWidget {
     if (services.isEmpty) {
       if (hasQuery) {
         return EmptyState(
-          icon: Icons.search_off_outlined,
+          illustrationAsset: HosannaIllustrations.emptySearch,
           title: l10n.servicesNoResults,
           description: l10n.servicesNoResultsDesc,
           primaryLabel: l10n.songsClearSearch,
@@ -165,7 +169,7 @@ class _ServiceList extends StatelessWidget {
         );
       }
       return EmptyState(
-        icon: Icons.event_note_outlined,
+        illustrationAsset: HosannaIllustrations.emptyServices,
         title: l10n.servicesEmpty,
         description: l10n.servicesEmptyDesc,
         scrollable: true,
@@ -202,90 +206,79 @@ class _ServiceList extends StatelessWidget {
         final dayNum = date == null ? '' : DateFormat.d(locale).format(date);
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => context.push('/services/${service.id}'),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: isToday
-                            ? scheme.primary
-                            : scheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+          padding: const EdgeInsets.only(bottom: HosannaSpacing.sm),
+          child: HosannaSurface(
+            elevated: false,
+            padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+            onTap: () => context.push('/services/${service.id}'),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: isToday
+                        ? scheme.primary
+                        : scheme.primaryContainer.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(HosannaRadii.sm),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        weekday,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
                           color: isToday
-                              ? scheme.primary
-                              : scheme.outline.withValues(alpha: 0.18),
+                              ? scheme.onPrimary.withValues(alpha: 0.85)
+                              : scheme.onPrimaryContainer,
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            weekday,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.4,
-                              color: isToday
-                                  ? scheme.onPrimary.withValues(alpha: 0.85)
-                                  : scheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            dayNum,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                              color: isToday
-                                  ? scheme.onPrimary
-                                  : scheme.onSurface,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        dayNum,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                          color: isToday
+                              ? scheme.onPrimary
+                              : scheme.onPrimaryContainer,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            service.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            [
-                              dateLabel,
-                              if (service.archived) l10n.servicesArchived,
-                            ].where((e) => e.isNotEmpty).join(' · '),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: HosannaSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          dateLabel,
+                          if (service.archived) l10n.servicesArchived,
+                        ].where((e) => e.isNotEmpty).join(' · '),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
             ),
           ),
         );

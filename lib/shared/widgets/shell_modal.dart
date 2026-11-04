@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design/tokens.dart';
 import '../../app/providers.dart';
 
 /// Shows a modal bottom sheet and hides the shell floating nav pill while it
@@ -17,14 +18,16 @@ Future<T?> showShellModalBottomSheet<T>({
   final container = ProviderScope.containerOf(context);
   final previous = container.read(shellNavVisibleProvider);
   container.read(shellNavVisibleProvider.notifier).state = false;
+  final theme = Theme.of(context);
   try {
     return await showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
       showDragHandle: showDragHandle,
       useSafeArea: useSafeArea,
-      backgroundColor: backgroundColor,
-      shape: shape,
+      backgroundColor: backgroundColor ?? theme.colorScheme.surface,
+      shape: shape ??
+          const RoundedRectangleBorder(borderRadius: HosannaRadii.sheet),
       builder: builder,
     );
   } finally {
