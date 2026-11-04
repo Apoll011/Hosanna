@@ -2,7 +2,6 @@
   "@@locale": "pt",
   "appTitle": "Hosanna",
   "appTagline": "A sua biblioteca e planos de louvor, sempre sincronizados.",
-
   "commonCancel": "Cancelar",
   "commonSave": "Guardar",
   "commonDelete": "Eliminar",
@@ -88,7 +87,6 @@
   "authSocialNetworkError": "Sem ligação ao servidor. Verifique a sua Internet.",
   "authSocialServerError": "O servidor não conseguiu concluir o início de sessão. Tente novamente.",
   "authSocialError": "Não foi possível iniciar sessão.",
-
   "onboardingTitle": "Bem-vindo ao Hosanna",
   "onboardingSubtitle": "Aceite um convite para entrar na organização da sua igreja.",
   "onboardingPendingInvites": "{count, plural, =1{1 convite pendente} other{{count} convites pendentes}}",
@@ -99,7 +97,6 @@
   "onboardingRole": "Função",
   "onboardingLoadingInvites": "A carregar convites…",
   "onboardingSignOut": "Terminar Sessão",
-
   "syncSyncing": "A sincronizar…",
   "syncSynced": "Sincronizado",
   "syncError": "Erro de sincronização",
@@ -108,7 +105,6 @@
   "syncNever": "Nunca sincronizado",
   "syncNow": "Sincronizar agora",
   "syncPullToRefresh": "Puxe para sincronizar",
-
   "navSongs": "Cânticos",
   "navServices": "Cultos",
   "navFolders": "Pastas",
@@ -137,25 +133,30 @@
   "agendaMinutes": "{count} min",
   "@agendaMinutes": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "agendaResponsibilityCount": "{count} atribuídos",
   "@agendaResponsibilityCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "agendaAssigneeCount": "{count} pessoas",
   "@agendaAssigneeCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "navAllSongs": "Todos os cânticos",
   "navFavorites": "Favoritos",
   "navRecents": "Recentes",
-
   "songsTitle": "Cânticos",
   "songsSearchHint": "Pesquisar cânticos…",
   "songsEmpty": "Ainda sem cânticos",
@@ -204,10 +205,22 @@
   "songsEdit": "Editar canção",
   "songsPreview": "Pré-visualizar",
   "songsFieldTitle": "Título",
+  "songsFieldSubtitle": "Subtítulo",
   "songsFieldArtist": "Artista",
+  "songsFieldComposer": "Compositor",
+  "songsFieldSongNumber": "Número da canção",
   "songsFieldKey": "Tom",
+  "songsFieldOriginalKey": "Tom original",
   "songsFieldTempo": "Tempo (BPM)",
   "songsFieldTime": "Compasso",
+  "songsFieldDuration": "Duração (m:ss)",
+  "songsFieldCapo": "Capo",
+  "songsFieldKeyNote": "Nota de tom",
+  "songsFieldCopyright": "Copyright",
+  "songsFieldCcli": "CCLI",
+  "songsFieldYoutube": "URL / ID do YouTube",
+  "songsTabContent": "Letra e acordes",
+  "songsTabMetadata": "Detalhes",
   "songsTitleRequired": "O título é obrigatório.",
   "songsNewSong": "Nova canção",
   "songsCreateManually": "Criar manualmente",
@@ -300,7 +313,6 @@
   "songNextChord": "Acorde seguinte",
   "songPrevious": "Anterior",
   "songNext": "Seguinte",
-
   "foldersTitle": "Pastas",
   "foldersEmpty": "Ainda sem pastas",
   "foldersEmptyDesc": "As pastas organizam a biblioteca de cânticos da sua igreja.",
@@ -312,7 +324,6 @@
   "foldersRoot": "Raiz",
   "foldersViewGrid": "Ver em grelha",
   "foldersViewList": "Ver em lista",
-
   "servicesTitle": "Cultos",
   "servicesEmpty": "Ainda sem cultos",
   "servicesEmptyDesc": "Os cultos e planos de louvor da sua igreja aparecem aqui.",
@@ -381,13 +392,17 @@
   "servicesScheduledWindow": "Agendado {window}",
   "@servicesScheduledWindow": {
     "placeholders": {
-      "window": { "type": "String" }
+      "window": {
+        "type": "String"
+      }
     }
   },
   "servicesItemRunning": "Este item · {elapsed}",
   "@servicesItemRunning": {
     "placeholders": {
-      "elapsed": { "type": "String" }
+      "elapsed": {
+        "type": "String"
+      }
     }
   },
   "servicesNotStarted": "Não iniciado",
@@ -481,7 +496,6 @@
   "noteSugConnectionReminder": "Lembrete de ligação",
   "servicesElementEmpty": "Nada preparado para este momento",
   "servicesElementEmptyDesc": "Ainda não há passagem, conteúdo ou notas neste item.",
-
   "settingsTitle": "Definições",
   "settingsAppearance": "Aspeto",
   "settingsTheme": "Tema",
@@ -541,7 +555,6 @@
   "notificationConsentNotNow": "Agora não",
   "notificationOpenAction": "Abrir",
   "settingsSessionsOnly": "Apenas a sessão atual deste dispositivo está ativa.",
-
   "metronomeTitle": "Metrónomo",
   "metronomeDescription": "Tempo e compasso para ensaios.",
   "metronomeTapTempo": "Toque o Tempo",
@@ -550,7 +563,6 @@
   "metronomePlay": "Reproduzir",
   "metronomePause": "Pausar",
   "metronomeAudioUnavailable": "O som do metrónomo não está disponível neste dispositivo.",
-
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referência de tons e relativas.",
   "circleOfFifthsHarmonicField": "Campo Harmónico",
@@ -565,7 +577,6 @@
   "@circleOfFifthsRelativeMinor": {
     "description": "Label for the vi degree (relative minor) chord card"
   },
-
   "exportPdfTitle": "Exportar PDF",
   "comingSoon": "Em breve",
   "comingSoonDescription": "Esta funcionalidade estará disponível numa próxima versão.",
@@ -593,7 +604,9 @@
   "songVariantTooltip": "Versão: {name}",
   "@songVariantTooltip": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsLanguageSystem": "Sistema",

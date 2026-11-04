@@ -1156,17 +1156,41 @@ abstract class AppLocalizations {
   /// **'Título'**
   String get songsFieldTitle;
 
+  /// No description provided for @songsFieldSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subtítulo'**
+  String get songsFieldSubtitle;
+
   /// No description provided for @songsFieldArtist.
   ///
   /// In pt, this message translates to:
   /// **'Artista'**
   String get songsFieldArtist;
 
+  /// No description provided for @songsFieldComposer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compositor'**
+  String get songsFieldComposer;
+
+  /// No description provided for @songsFieldSongNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Número da canção'**
+  String get songsFieldSongNumber;
+
   /// No description provided for @songsFieldKey.
   ///
   /// In pt, this message translates to:
   /// **'Tom'**
   String get songsFieldKey;
+
+  /// No description provided for @songsFieldOriginalKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom original'**
+  String get songsFieldOriginalKey;
 
   /// No description provided for @songsFieldTempo.
   ///
@@ -1179,6 +1203,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Compasso'**
   String get songsFieldTime;
+
+  /// No description provided for @songsFieldDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração (m:ss)'**
+  String get songsFieldDuration;
+
+  /// No description provided for @songsFieldCapo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo'**
+  String get songsFieldCapo;
+
+  /// No description provided for @songsFieldKeyNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de tom'**
+  String get songsFieldKeyNote;
+
+  /// No description provided for @songsFieldCopyright.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copyright'**
+  String get songsFieldCopyright;
+
+  /// No description provided for @songsFieldCcli.
+  ///
+  /// In pt, this message translates to:
+  /// **'CCLI'**
+  String get songsFieldCcli;
+
+  /// No description provided for @songsFieldYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'URL / ID do YouTube'**
+  String get songsFieldYoutube;
+
+  /// No description provided for @songsTabContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra e acordes'**
+  String get songsTabContent;
+
+  /// No description provided for @songsTabMetadata.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhes'**
+  String get songsTabMetadata;
 
   /// No description provided for @songsTitleRequired.
   ///

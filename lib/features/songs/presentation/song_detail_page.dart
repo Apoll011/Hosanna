@@ -89,7 +89,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         actions: [
           const SongToolbarButton(),
           IconButton(
-            icon: const Icon(Icons.edit_note_rounded),
+            icon: const Icon(Icons.draw_outlined),
             tooltip: l10n.songsEdit,
             onPressed: song == null
                 ? null

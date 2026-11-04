@@ -105,16 +105,17 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             activeCount: _settings.activeFilterCount,
             onPressed: _openFilterSheet,
           ),
-          const SizedBox(width: 4),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: IconButton.filled(
-              onPressed: _showNewSongSheet,
-              tooltip: l10n.songsNewSong,
-              icon: const Icon(Icons.add_rounded),
-            ),
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            tooltip: l10n.songsNewSong,
+            onPressed: _showNewSongSheet,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showNewSongSheet,
+        tooltip: l10n.songsNewSong,
+        child: const Icon(Icons.add_rounded),
       ),
       body: Column(
         children: [

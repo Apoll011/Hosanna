@@ -577,16 +577,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsFieldTitle => 'Title';
 
   @override
+  String get songsFieldSubtitle => 'Subtitle';
+
+  @override
   String get songsFieldArtist => 'Artist';
 
   @override
+  String get songsFieldComposer => 'Composer';
+
+  @override
+  String get songsFieldSongNumber => 'Song number';
+
+  @override
   String get songsFieldKey => 'Key';
+
+  @override
+  String get songsFieldOriginalKey => 'Original key';
 
   @override
   String get songsFieldTempo => 'Tempo (BPM)';
 
   @override
   String get songsFieldTime => 'Time';
+
+  @override
+  String get songsFieldDuration => 'Duration (m:ss)';
+
+  @override
+  String get songsFieldCapo => 'Capo';
+
+  @override
+  String get songsFieldKeyNote => 'Key note';
+
+  @override
+  String get songsFieldCopyright => 'Copyright';
+
+  @override
+  String get songsFieldCcli => 'CCLI';
+
+  @override
+  String get songsFieldYoutube => 'YouTube URL / ID';
+
+  @override
+  String get songsTabContent => 'Lyrics & chords';
+
+  @override
+  String get songsTabMetadata => 'Details';
 
   @override
   String get songsTitleRequired => 'Title is required.';

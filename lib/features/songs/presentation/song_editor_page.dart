@@ -41,12 +41,25 @@ class SongEditorPage extends ConsumerStatefulWidget {
   ConsumerState<SongEditorPage> createState() => _SongEditorPageState();
 }
 
-class _SongEditorPageState extends ConsumerState<SongEditorPage> {
+class _SongEditorPageState extends ConsumerState<SongEditorPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
   final _title = TextEditingController();
+  final _subtitle = TextEditingController();
   final _artist = TextEditingController();
+  final _composer = TextEditingController();
+  final _songNumber = TextEditingController();
   final _key = TextEditingController();
+  final _originalKey = TextEditingController();
   final _tempo = TextEditingController();
   final _time = TextEditingController();
+  final _duration = TextEditingController();
+  final _capo = TextEditingController();
+  final _keyNote = TextEditingController();
+  final _copyright = TextEditingController();
+  final _ccli = TextEditingController();
+  final _youtube = TextEditingController();
   final _content = TextEditingController();
   final _contentFocus = FocusNode();
 
@@ -59,6 +72,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(length: 2, vsync: this);
     if (widget.isCreate) {
       _hydrateCreate();
     }
@@ -73,16 +87,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
             title: title.isEmpty ? 'Untitled' : title,
             artist: artist,
           );
-    _title.text = title.isNotEmpty
-        ? title
-        : (readChordProDirective(raw, 'title') ?? '');
-    _artist.text = artist.isNotEmpty
-        ? artist
-        : (readChordProDirective(raw, 'artist') ?? '');
-    _key.text = readChordProDirective(raw, 'key') ?? 'G';
-    _tempo.text = readChordProDirective(raw, 'tempo') ?? '';
-    _time.text = readChordProDirective(raw, 'time') ?? '4/4';
-    _content.text = stripManagedDirectives(raw);
+    _applyFromContent(raw, titleOverride: title, artistOverride: artist);
     _folderId = widget.initialFolderId;
     _tags = widget.initialTags;
     _hydrated = true;
@@ -91,23 +96,92 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
   void _hydrateFromSong(SongRow song) {
     if (_hydrated) return;
     _hydrated = true;
-    _title.text = song.title;
-    _artist.text = song.artist;
-    _key.text = readChordProDirective(song.content, 'key') ?? '';
-    _tempo.text = readChordProDirective(song.content, 'tempo') ?? '';
-    _time.text = readChordProDirective(song.content, 'time') ?? '';
-    _content.text = stripManagedDirectives(song.content);
+    _applyFromContent(
+      song.content,
+      titleOverride: song.title,
+      artistOverride: song.artist,
+    );
     _folderId = song.folderId;
     _tags = song.tags;
   }
 
+  void _applyFromContent(
+    String raw, {
+    String? titleOverride,
+    String? artistOverride,
+  }) {
+    _title.text = (titleOverride != null && titleOverride.isNotEmpty)
+        ? titleOverride
+        : (readChordProDirective(raw, 'title') ?? '');
+    _subtitle.text = readChordProDirective(raw, 'subtitle') ?? '';
+    _artist.text = (artistOverride != null && artistOverride.isNotEmpty)
+        ? artistOverride
+        : (readChordProDirective(raw, 'artist') ?? '');
+    _composer.text = readChordProDirective(raw, 'composer') ?? '';
+    _songNumber.text = readChordProDirective(
+          raw,
+          'song_number',
+          aliases: const ['songNumber'],
+        ) ??
+        '';
+    _key.text = readChordProDirective(raw, 'key') ?? 'G';
+    _originalKey.text = readChordProDirective(
+          raw,
+          'original_key',
+          aliases: const ['originalKey'],
+        ) ??
+        '';
+    _tempo.text = readChordProDirective(raw, 'tempo') ?? '';
+    _time.text = readChordProDirective(
+          raw,
+          'time',
+          aliases: const ['time_signature'],
+        ) ??
+        '4/4';
+    _duration.text = _formatDurationForField(
+      readChordProDirective(raw, 'duration'),
+    );
+    _capo.text = readChordProDirective(raw, 'capo') ?? '';
+    _keyNote.text = readChordProDirective(
+          raw,
+          'key_note',
+          aliases: const ['keyNote'],
+        ) ??
+        '';
+    _copyright.text = readChordProDirective(raw, 'copyright') ?? '';
+    _ccli.text = readChordProDirective(raw, 'ccli') ?? '';
+    _youtube.text = readChordProDirective(raw, 'youtube') ?? '';
+    _content.text = stripManagedDirectives(raw);
+  }
+
+  /// Parser stores duration as seconds; show m:ss in the field when numeric.
+  String _formatDurationForField(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
+    final seconds = int.tryParse(raw);
+    if (seconds == null) return raw;
+    final m = seconds ~/ 60;
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   @override
   void dispose() {
+    _tabs.dispose();
     _title.dispose();
+    _subtitle.dispose();
     _artist.dispose();
+    _composer.dispose();
+    _songNumber.dispose();
     _key.dispose();
+    _originalKey.dispose();
     _tempo.dispose();
     _time.dispose();
+    _duration.dispose();
+    _capo.dispose();
+    _keyNote.dispose();
+    _copyright.dispose();
+    _ccli.dispose();
+    _youtube.dispose();
     _content.dispose();
     _contentFocus.dispose();
     super.dispose();
@@ -117,10 +191,20 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     return applyChordProMetadata(
       _content.text,
       title: _title.text,
+      subtitle: _subtitle.text,
       artist: _artist.text,
+      composer: _composer.text,
       key: _key.text,
+      originalKey: _originalKey.text,
       tempo: _tempo.text,
       timeSignature: _time.text,
+      duration: _duration.text,
+      capo: _capo.text,
+      copyright: _copyright.text,
+      ccli: _ccli.text,
+      songNumber: _songNumber.text,
+      keyNote: _keyNote.text,
+      youtube: _youtube.text,
     );
   }
 
@@ -134,7 +218,8 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
           appBar: AppBar(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: MaterialLocalizations.of(previewContext).backButtonTooltip,
+              tooltip:
+                  MaterialLocalizations.of(previewContext).backButtonTooltip,
               onPressed: () => Navigator.of(previewContext).pop(),
             ),
             title: Text(
@@ -153,7 +238,10 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     final l10n = AppLocalizations.of(context);
     final title = _title.text.trim();
     if (title.isEmpty) {
-      setState(() => _error = l10n.songsTitleRequired);
+      setState(() {
+        _error = l10n.songsTitleRequired;
+        _tabs.index = 1;
+      });
       return;
     }
 
@@ -189,7 +277,6 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
       unawaited(ref.read(syncControllerProvider.notifier).syncAll());
 
       if (!mounted) return;
-      // Keep library under the detail page so the AppBar back button works.
       context.go('/songs');
       context.push('/songs/${saved.id}');
     } catch (e) {
@@ -201,9 +288,34 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     }
   }
 
-  Widget _metadataFields(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _field(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    int maxLines = 1,
+    TextInputAction textInputAction = TextInputAction.next,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLines: maxLines,
+      textInputAction: textInputAction,
+      textCapitalization: maxLines > 1
+          ? TextCapitalization.sentences
+          : TextCapitalization.words,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _metadataForm(AppLocalizations l10n) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
       children: [
         if (_error != null) ...[
           Text(
@@ -212,111 +324,116 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
                   color: Theme.of(context).colorScheme.error,
                 ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
         ],
-        TextField(
-          controller: _title,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: l10n.songsFieldTitle,
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
-        ),
+        _field(_title, l10n.songsFieldTitle),
         const SizedBox(height: 10),
-        TextField(
-          controller: _artist,
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: l10n.songsFieldArtist,
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
+        _field(_subtitle, l10n.songsFieldSubtitle),
+        const SizedBox(height: 10),
+        _field(_artist, l10n.songsFieldArtist),
+        const SizedBox(height: 10),
+        _field(_composer, l10n.songsFieldComposer),
+        const SizedBox(height: 10),
+        _field(
+          _songNumber,
+          l10n.songsFieldSongNumber,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _field(_key, l10n.songsFieldKey)),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_originalKey, l10n.songsFieldOriginalKey)),
+          ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
-              child: TextField(
-                controller: _key,
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: l10n.songsFieldKey,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _tempo,
+              child: _field(
+                _tempo,
+                l10n.songsFieldTempo,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: l10n.songsFieldTempo,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
               ),
             ),
             const SizedBox(width: 8),
+            Expanded(child: _field(_time, l10n.songsFieldTime)),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_duration, l10n.songsFieldDuration)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
             Expanded(
-              child: TextField(
-                controller: _time,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _contentFocus.requestFocus(),
-                decoration: InputDecoration(
-                  labelText: l10n.songsFieldTime,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
+              child: _field(
+                _capo,
+                l10n.songsFieldCapo,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_ccli, l10n.songsFieldCcli)),
           ],
+        ),
+        const SizedBox(height: 10),
+        _field(
+          _keyNote,
+          l10n.songsFieldKeyNote,
+          maxLines: 3,
+          textInputAction: TextInputAction.newline,
+        ),
+        const SizedBox(height: 10),
+        _field(_copyright, l10n.songsFieldCopyright),
+        const SizedBox(height: 10),
+        _field(
+          _youtube,
+          l10n.songsFieldYoutube,
+          keyboardType: TextInputType.url,
+          textInputAction: TextInputAction.done,
         ),
       ],
     );
   }
 
-  Widget _bodyEditor(AppLocalizations l10n, {required bool expanded}) {
+  Widget _bodyEditor(AppLocalizations l10n) {
     final theme = Theme.of(context);
-    final field = TextField(
-      controller: _content,
-      focusNode: _contentFocus,
-      expands: expanded,
-      maxLines: expanded ? null : 16,
-      minLines: expanded ? null : 16,
-      textAlignVertical: TextAlignVertical.top,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontFamily: 'monospace',
-        height: 1.4,
-        fontSize: 14.5,
-      ),
-      decoration: InputDecoration(
-        hintText: l10n.songsChordPro,
-        alignLabelWithHint: true,
-        filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.35,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: TextField(
+        controller: _content,
+        focusNode: _contentFocus,
+        expands: true,
+        maxLines: null,
+        minLines: null,
+        textAlignVertical: TextAlignVertical.top,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontFamily: 'monospace',
+          height: 1.4,
+          fontSize: 14.5,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        contentPadding: const EdgeInsets.fromLTRB(14, 14, 14, 72),
+        decoration: InputDecoration(
+          hintText: l10n.songsChordPro,
+          alignLabelWithHint: true,
+          filled: true,
+          fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.35,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          contentPadding: const EdgeInsets.fromLTRB(14, 14, 14, 88),
+        ),
       ),
     );
-
-    if (!expanded) return field;
-    return SizedBox.expand(child: field);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final wide = MediaQuery.sizeOf(context).width >= 900;
 
     if (!widget.isCreate) {
       final async = ref.watch(songByIdProvider(widget.songId!));
@@ -356,6 +473,13 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isCreate ? l10n.songsCreate : l10n.songsEdit),
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: [
+            Tab(text: l10n.songsTabContent),
+            Tab(text: l10n.songsTabMetadata),
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Material(
@@ -405,65 +529,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: wide
-            ? Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l10n.songsRawContent,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(child: _bodyEditor(l10n, expanded: true)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    SizedBox(
-                      width: 320,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 96),
-                        child: _metadataFields(l10n),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: _metadataFields(l10n),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      l10n.songsRawContent,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: _bodyEditor(l10n, expanded: true),
-                    ),
-                  ),
-                ],
-              ),
+      body: TabBarView(
+        controller: _tabs,
+        children: [
+          SafeArea(child: _bodyEditor(l10n)),
+          SafeArea(child: _metadataForm(l10n)),
+        ],
       ),
     );
   }
