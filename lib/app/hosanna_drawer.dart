@@ -330,91 +330,97 @@ class HosannaNavContent extends ConsumerWidget {
                 collapsed ? 8 : 12,
                 12,
               ),
-              child: Material(
-                color: currentBranch == kSettingsBranch
-                    ? tokens.selectedNav
-                    : tokens.subtleFill,
-                borderRadius: BorderRadius.circular(HosannaRadii.md),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(HosannaRadii.md),
-                  onTap: () => onNavigate(kSettingsBranch),
-                  child: AnimatedPadding(
-                    duration: _kAnimDuration,
-                    curve: _kAnimCurve,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: collapsed ? 0 : 12,
-                      vertical: collapsed ? 8 : 10,
+              child: Align(
+                // Collapsed tablet sidebar: keep the avatar centered under the
+                // icon column. Expanded: fill the footer like a list tile.
+                alignment: collapsed ? Alignment.center : Alignment.centerLeft,
+                child: Material(
+                  color: currentBranch == kSettingsBranch
+                      ? tokens.selectedNav
+                      : tokens.subtleFill,
+                  borderRadius: BorderRadius.circular(
+                    collapsed ? HosannaRadii.pill : HosannaRadii.md,
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(
+                      collapsed ? HosannaRadii.pill : HosannaRadii.md,
                     ),
-                    child: Row(
-                      mainAxisSize:
-                          collapsed ? MainAxisSize.min : MainAxisSize.max,
-                      children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(end: collapsed ? 18 : 18),
-                          duration: _kAnimDuration,
-                          curve: _kAnimCurve,
-                          builder: (context, radius, _) {
-                            final hasImage =
-                                imageUrl != null && imageUrl.isNotEmpty;
-                            return CircleAvatar(
-                              radius: radius,
-                              backgroundColor: theme.colorScheme.primaryContainer,
-                              foregroundImage: hasImage
-                                  ? CachedNetworkImageProvider(imageUrl)
-                                  : null,
-                              onForegroundImageError: hasImage
-                                  ? (exception, stackTrace) {
-                                      debugPrint(
-                                        'Failed to load avatar: $exception',
-                                      );
-                                    }
-                                  : null,
-                              child: Text(
-                                _initials(user.name),
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        if (!collapsed) ...[
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 12),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    user.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    user.email,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color:
-                                          theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                    onTap: () => onNavigate(kSettingsBranch),
+                    child: AnimatedPadding(
+                      duration: _kAnimDuration,
+                      curve: _kAnimCurve,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: collapsed ? 8 : 12,
+                        vertical: collapsed ? 8 : 10,
+                      ),
+                      child: Row(
+                        mainAxisSize: collapsed
+                            ? MainAxisSize.min
+                            : MainAxisSize.max,
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor:
+                                theme.colorScheme.primaryContainer,
+                            foregroundImage:
+                                imageUrl != null && imageUrl.isNotEmpty
+                                    ? CachedNetworkImageProvider(imageUrl)
+                                    : null,
+                            onForegroundImageError:
+                                imageUrl != null && imageUrl.isNotEmpty
+                                    ? (exception, stackTrace) {
+                                        debugPrint(
+                                          'Failed to load avatar: $exception',
+                                        );
+                                      }
+                                    : null,
+                            child: Text(
+                              _initials(user.name),
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.settings_outlined,
-                            size: 20,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                          if (!collapsed) ...[
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      user.email,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color: theme
+                                            .colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.settings_outlined,
+                              size: 20,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -503,8 +509,14 @@ class _NavItem extends StatelessWidget {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: collapsed
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.stretch,
               children: [
                 Row(
+                  mainAxisAlignment: collapsed
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
                   mainAxisSize:
                       collapsed ? MainAxisSize.min : MainAxisSize.max,
                   children: [
@@ -546,7 +558,8 @@ class _NavItem extends StatelessWidget {
                             color: selected
                                 ? theme.colorScheme.primary
                                 : tokens.subtleFill,
-                            borderRadius: BorderRadius.circular(HosannaRadii.xs),
+                            borderRadius:
+                                BorderRadius.circular(HosannaRadii.xs),
                           ),
                           child: Text(
                             '$count',
