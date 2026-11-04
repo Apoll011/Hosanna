@@ -11,7 +11,10 @@ import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/song_repository.dart';
+import '../domain/chordpro/diagnostics.dart';
 import '../domain/chordpro_content.dart';
+import 'chordpro_editor/chordpro_editor.dart';
+import 'chordpro_editor/chordpro_syntax_controller.dart';
 import 'song_reader.dart';
 
 /// Create or edit a song (metadata + ChordPro body).
@@ -61,7 +64,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   final _copyright = TextEditingController();
   final _ccli = TextEditingController();
   final _youtube = TextEditingController();
-  final _content = TextEditingController();
+  final _content = ChordProSyntaxController();
   final _contentFocus = FocusNode();
 
   bool _saving = false;
@@ -69,14 +72,23 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   String? _folderId;
   List<String> _tags = const [];
   String? _error;
+  List<ChordProDiagnostic> _diagnostics = const [];
 
   @override
   void initState() {
     super.initState();
     _tabs = TabController(length: 2, vsync: this);
+    for (final c in [_key, _tempo, _time, _duration, _capo, _youtube]) {
+      c.addListener(_onMetadataLintFieldsChanged);
+    }
     if (widget.isCreate) {
       _hydrateCreate();
     }
+  }
+
+  void _onMetadataLintFieldsChanged() {
+    if (!_hydrated || !mounted) return;
+    setState(_relint);
   }
 
   void _hydrateCreate() {
@@ -92,6 +104,19 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     _folderId = widget.initialFolderId;
     _tags = widget.initialTags;
     _hydrated = true;
+    _relint();
+  }
+
+  void _relint() {
+    _diagnostics = lintChordPro(
+      _content.text,
+      youtube: _youtube.text,
+      key: _key.text,
+      tempo: _tempo.text,
+      capo: _capo.text,
+      timeSignature: _time.text,
+      duration: _duration.text,
+    );
   }
 
   void _hydrateFromSong(SongRow song) {
@@ -104,6 +129,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     );
     _folderId = song.folderId;
     _tags = song.tags;
+    _relint();
   }
 
   void _applyFromContent(
@@ -167,6 +193,9 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
 
   @override
   void dispose() {
+    for (final c in [_key, _tempo, _time, _duration, _capo, _youtube]) {
+      c.removeListener(_onMetadataLintFieldsChanged);
+    }
     _tabs.dispose();
     _title.dispose();
     _subtitle.dispose();
@@ -313,7 +342,11 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     );
   }
 
+  List<ChordProDiagnostic> get _metadataDiagnostics =>
+      _diagnostics.where((d) => d.line <= 0).toList(growable: false);
+
   Widget _metadataForm(AppLocalizations l10n) {
+    final metaDiags = _metadataDiagnostics;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
       children: [
@@ -325,6 +358,34 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
                 ),
           ),
           const SizedBox(height: 12),
+        ],
+        if (metaDiags.isNotEmpty) ...[
+          ...metaDiags.map((d) {
+            final scheme = Theme.of(context).colorScheme;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: scheme.tertiary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      d.message,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 4),
         ],
         _field(_title, l10n.songsFieldTitle),
         const SizedBox(height: 10),
@@ -401,31 +462,17 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   }
 
   Widget _bodyEditor(AppLocalizations l10n) {
-    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: TextField(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: ChordProEditor(
         controller: _content,
         focusNode: _contentFocus,
-        expands: true,
-        maxLines: null,
-        minLines: null,
-        textAlignVertical: TextAlignVertical.top,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontFamily: 'monospace',
-          height: 1.4,
-          fontSize: 14.5,
-        ),
-        decoration: InputDecoration(
-          hintText: l10n.songsChordPro,
-          alignLabelWithHint: true,
-          filled: true,
-          fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.35,
-          ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          contentPadding: const EdgeInsets.fromLTRB(14, 14, 14, 88),
-        ),
+        diagnostics: _diagnostics,
+        hintText: l10n.songsChordProHint,
+        onLintRequested: () {
+          if (!mounted) return;
+          setState(_relint);
+        },
       ),
     );
   }

@@ -628,6 +628,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsTitleRequired => 'Title is required.';
 
   @override
+  String get songsChordProHint =>
+      '[G]Write lyrics and [C]chords here…\nUse the chips above for verse, chorus, and more.';
+
+  @override
+  String get songsEditorInsertVerse => 'Verse';
+
+  @override
+  String get songsEditorInsertChorus => 'Chorus';
+
+  @override
+  String get songsEditorInsertBridge => 'Bridge';
+
+  @override
+  String get songsEditorInsertComment => 'Comment';
+
+  @override
+  String get songsEditorInsertVersion => 'Version';
+
+  @override
+  String get songsLintAllClear => 'No issues in ChordPro body.';
+
+  @override
+  String songsLintSummary(int errors, int warnings, int infos) {
+    return '$errors errors · $warnings warnings · $infos hints';
+  }
+
+  @override
+  String songsLintLine(int line) {
+    return 'L$line';
+  }
+
+  @override
+  String get songsLintDetails => 'Details';
+
+  @override
+  String get songsLintUnclosedBrace => 'Unclosed or mismatched curly braces.';
+
+  @override
+  String get songsLintUnclosedBracket =>
+      'Unclosed or mismatched chord brackets.';
+
+  @override
+  String get songsLintEmptyChord => 'Empty chord brackets.';
+
+  @override
+  String songsLintUnknownChord(String chord) {
+    return 'Unrecognized chord \"$chord\".';
+  }
+
+  @override
+  String get songsLintMalformedDirective =>
+      'Malformed directive — check braces and name.';
+
+  @override
+  String songsLintUnknownDirective(String name) {
+    return 'Unrecognized directive \"$name\".';
+  }
+
+  @override
+  String songsLintUnclosedSection(String section) {
+    return 'Unclosed $section — missing end_of_$section.';
+  }
+
+  @override
+  String songsLintUnexpectedEndSection(String section) {
+    return 'Unexpected end_of_$section with no matching start.';
+  }
+
+  @override
+  String get songsLintInvalidYoutube =>
+      'YouTube value is not a recognized video URL or ID.';
+
+  @override
+  String songsLintInvalidKey(String value) {
+    return 'Unusual key \"$value\". Expected G, Am, F#m, …';
+  }
+
+  @override
+  String get songsLintInvalidTempo =>
+      'Tempo should be a BPM number between 20 and 400.';
+
+  @override
+  String get songsLintInvalidCapo =>
+      'Capo should be a fret number from 0 to 12.';
+
+  @override
+  String get songsLintInvalidTime =>
+      'Time signature should look like 4/4 or 6/8.';
+
+  @override
+  String get songsLintInvalidDuration =>
+      'Duration should be seconds or m:ss (e.g. 3:45).';
+
+  @override
   String get songsNewSong => 'New song';
 
   @override

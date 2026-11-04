@@ -209,6 +209,67 @@
   "songsTabContent": "Lyrics & chords",
   "songsTabMetadata": "Details",
   "songsTitleRequired": "Title is required.",
+  "songsChordProHint": "[G]Write lyrics and [C]chords here…\nUse the chips above for verse, chorus, and more.",
+  "songsEditorInsertVerse": "Verse",
+  "songsEditorInsertChorus": "Chorus",
+  "songsEditorInsertBridge": "Bridge",
+  "songsEditorInsertComment": "Comment",
+  "songsEditorInsertVersion": "Version",
+  "songsLintAllClear": "No issues in ChordPro body.",
+  "songsLintSummary": "{errors} errors · {warnings} warnings · {infos} hints",
+  "@songsLintSummary": {
+    "placeholders": {
+      "errors": { "type": "int" },
+      "warnings": { "type": "int" },
+      "infos": { "type": "int" }
+    }
+  },
+  "songsLintLine": "L{line}",
+  "@songsLintLine": {
+    "placeholders": {
+      "line": { "type": "int" }
+    }
+  },
+  "songsLintDetails": "Details",
+  "songsLintUnclosedBrace": "Unclosed or mismatched curly braces.",
+  "songsLintUnclosedBracket": "Unclosed or mismatched chord brackets.",
+  "songsLintEmptyChord": "Empty chord brackets.",
+  "songsLintUnknownChord": "Unrecognized chord \"{chord}\".",
+  "@songsLintUnknownChord": {
+    "placeholders": {
+      "chord": { "type": "String" }
+    }
+  },
+  "songsLintMalformedDirective": "Malformed directive — check braces and name.",
+  "songsLintUnknownDirective": "Unrecognized directive \"{name}\".",
+  "@songsLintUnknownDirective": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songsLintUnclosedSection": "Unclosed {section} — missing end_of_{section}.",
+  "@songsLintUnclosedSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintUnexpectedEndSection": "Unexpected end_of_{section} with no matching start.",
+  "@songsLintUnexpectedEndSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintInvalidYoutube": "YouTube value is not a recognized video URL or ID.",
+  "songsLintInvalidKey": "Unusual key \"{value}\". Expected G, Am, F#m, …",
+  "@songsLintInvalidKey": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "songsLintInvalidTempo": "Tempo should be a BPM number between 20 and 400.",
+  "songsLintInvalidCapo": "Capo should be a fret number from 0 to 12.",
+  "songsLintInvalidTime": "Time signature should look like 4/4 or 6/8.",
+  "songsLintInvalidDuration": "Duration should be seconds or m:ss (e.g. 3:45).",
   "songsNewSong": "New song",
   "songsCreateManually": "Create manually",
   "songsCreateManuallyDesc": "Title, chords and lyrics.",

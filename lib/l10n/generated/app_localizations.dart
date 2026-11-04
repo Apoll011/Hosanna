@@ -1258,6 +1258,150 @@ abstract class AppLocalizations {
   /// **'O título é obrigatório.'**
   String get songsTitleRequired;
 
+  /// No description provided for @songsChordProHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'[G]Escreva a letra e os [C]acordes aqui…\nUse as opções acima para verso, refrão e mais.'**
+  String get songsChordProHint;
+
+  /// No description provided for @songsEditorInsertVerse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verso'**
+  String get songsEditorInsertVerse;
+
+  /// No description provided for @songsEditorInsertChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refrão'**
+  String get songsEditorInsertChorus;
+
+  /// No description provided for @songsEditorInsertBridge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponte'**
+  String get songsEditorInsertBridge;
+
+  /// No description provided for @songsEditorInsertComment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentário'**
+  String get songsEditorInsertComment;
+
+  /// No description provided for @songsEditorInsertVersion.
+  ///
+  /// In pt, this message translates to:
+  /// **'Versão'**
+  String get songsEditorInsertVersion;
+
+  /// No description provided for @songsLintAllClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum problema no ChordPro.'**
+  String get songsLintAllClear;
+
+  /// No description provided for @songsLintSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{errors} erros · {warnings} avisos · {infos} dicas'**
+  String songsLintSummary(int errors, int warnings, int infos);
+
+  /// No description provided for @songsLintLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'L{line}'**
+  String songsLintLine(int line);
+
+  /// No description provided for @songsLintDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhes'**
+  String get songsLintDetails;
+
+  /// No description provided for @songsLintUnclosedBrace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chavetas por fechar ou desalinhadas.'**
+  String get songsLintUnclosedBrace;
+
+  /// No description provided for @songsLintUnclosedBracket.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parênteses de acorde por fechar ou desalinhados.'**
+  String get songsLintUnclosedBracket;
+
+  /// No description provided for @songsLintEmptyChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acordes vazios.'**
+  String get songsLintEmptyChord;
+
+  /// No description provided for @songsLintUnknownChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde não reconhecido \"{chord}\".'**
+  String songsLintUnknownChord(String chord);
+
+  /// No description provided for @songsLintMalformedDirective.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diretiva malformada — verifique chavetas e nome.'**
+  String get songsLintMalformedDirective;
+
+  /// No description provided for @songsLintUnknownDirective.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diretiva não reconhecida \"{name}\".'**
+  String songsLintUnknownDirective(String name);
+
+  /// No description provided for @songsLintUnclosedSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Secção {section} por fechar — falta end_of_{section}.'**
+  String songsLintUnclosedSection(String section);
+
+  /// No description provided for @songsLintUnexpectedEndSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'end_of_{section} inesperado sem início correspondente.'**
+  String songsLintUnexpectedEndSection(String section);
+
+  /// No description provided for @songsLintInvalidYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'O valor do YouTube não é um URL ou ID válido.'**
+  String get songsLintInvalidYoutube;
+
+  /// No description provided for @songsLintInvalidKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom invulgar \"{value}\". Esperado G, Am, F#m, …'**
+  String songsLintInvalidKey(String value);
+
+  /// No description provided for @songsLintInvalidTempo.
+  ///
+  /// In pt, this message translates to:
+  /// **'O tempo deve ser um BPM entre 20 e 400.'**
+  String get songsLintInvalidTempo;
+
+  /// No description provided for @songsLintInvalidCapo.
+  ///
+  /// In pt, this message translates to:
+  /// **'O capo deve ser um traste de 0 a 12.'**
+  String get songsLintInvalidCapo;
+
+  /// No description provided for @songsLintInvalidTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'O compasso deve parecer 4/4 ou 6/8.'**
+  String get songsLintInvalidTime;
+
+  /// No description provided for @songsLintInvalidDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'A duração deve ser segundos ou m:ss (ex. 3:45).'**
+  String get songsLintInvalidDuration;
+
   /// No description provided for @songsNewSong.
   ///
   /// In pt, this message translates to:

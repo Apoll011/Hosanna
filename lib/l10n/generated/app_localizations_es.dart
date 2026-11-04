@@ -633,6 +633,98 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsTitleRequired => 'El título es obligatorio.';
 
   @override
+  String get songsChordProHint =>
+      '[G]Escribe la letra y los [C]acordes aquí…\nUsa las opciones de arriba para estrofa, estribillo y más.';
+
+  @override
+  String get songsEditorInsertVerse => 'Estrofa';
+
+  @override
+  String get songsEditorInsertChorus => 'Estribillo';
+
+  @override
+  String get songsEditorInsertBridge => 'Puente';
+
+  @override
+  String get songsEditorInsertComment => 'Comentario';
+
+  @override
+  String get songsEditorInsertVersion => 'Versión';
+
+  @override
+  String get songsLintAllClear => 'Sin problemas en el ChordPro.';
+
+  @override
+  String songsLintSummary(int errors, int warnings, int infos) {
+    return '$errors errores · $warnings avisos · $infos pistas';
+  }
+
+  @override
+  String songsLintLine(int line) {
+    return 'L$line';
+  }
+
+  @override
+  String get songsLintDetails => 'Detalles';
+
+  @override
+  String get songsLintUnclosedBrace => 'Llaves sin cerrar o desparejadas.';
+
+  @override
+  String get songsLintUnclosedBracket =>
+      'Corchetes de acorde sin cerrar o desparejados.';
+
+  @override
+  String get songsLintEmptyChord => 'Acordes vacíos.';
+
+  @override
+  String songsLintUnknownChord(String chord) {
+    return 'Acorde no reconocido \"$chord\".';
+  }
+
+  @override
+  String get songsLintMalformedDirective =>
+      'Directiva mal formada — revisa llaves y nombre.';
+
+  @override
+  String songsLintUnknownDirective(String name) {
+    return 'Directiva no reconocida \"$name\".';
+  }
+
+  @override
+  String songsLintUnclosedSection(String section) {
+    return 'Sección $section sin cerrar — falta end_of_$section.';
+  }
+
+  @override
+  String songsLintUnexpectedEndSection(String section) {
+    return 'end_of_$section inesperado sin inicio correspondiente.';
+  }
+
+  @override
+  String get songsLintInvalidYoutube =>
+      'El valor de YouTube no es una URL o ID válido.';
+
+  @override
+  String songsLintInvalidKey(String value) {
+    return 'Tonalidad inusual \"$value\". Se espera G, Am, F#m, …';
+  }
+
+  @override
+  String get songsLintInvalidTempo =>
+      'El tempo debe ser un BPM entre 20 y 400.';
+
+  @override
+  String get songsLintInvalidCapo => 'La cejilla debe ser un traste de 0 a 12.';
+
+  @override
+  String get songsLintInvalidTime => 'El compás debe verse como 4/4 o 6/8.';
+
+  @override
+  String get songsLintInvalidDuration =>
+      'La duración debe ser segundos o m:ss (p. ej. 3:45).';
+
+  @override
   String get songsNewSong => 'Nueva canción';
 
   @override

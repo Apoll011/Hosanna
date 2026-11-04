@@ -222,6 +222,67 @@
   "songsTabContent": "Letra e acordes",
   "songsTabMetadata": "Detalhes",
   "songsTitleRequired": "O título é obrigatório.",
+  "songsChordProHint": "[G]Escreva a letra e os [C]acordes aqui…\nUse as opções acima para verso, refrão e mais.",
+  "songsEditorInsertVerse": "Verso",
+  "songsEditorInsertChorus": "Refrão",
+  "songsEditorInsertBridge": "Ponte",
+  "songsEditorInsertComment": "Comentário",
+  "songsEditorInsertVersion": "Versão",
+  "songsLintAllClear": "Nenhum problema no ChordPro.",
+  "songsLintSummary": "{errors} erros · {warnings} avisos · {infos} dicas",
+  "@songsLintSummary": {
+    "placeholders": {
+      "errors": { "type": "int" },
+      "warnings": { "type": "int" },
+      "infos": { "type": "int" }
+    }
+  },
+  "songsLintLine": "L{line}",
+  "@songsLintLine": {
+    "placeholders": {
+      "line": { "type": "int" }
+    }
+  },
+  "songsLintDetails": "Detalhes",
+  "songsLintUnclosedBrace": "Chavetas por fechar ou desalinhadas.",
+  "songsLintUnclosedBracket": "Parênteses de acorde por fechar ou desalinhados.",
+  "songsLintEmptyChord": "Acordes vazios.",
+  "songsLintUnknownChord": "Acorde não reconhecido \"{chord}\".",
+  "@songsLintUnknownChord": {
+    "placeholders": {
+      "chord": { "type": "String" }
+    }
+  },
+  "songsLintMalformedDirective": "Diretiva malformada — verifique chavetas e nome.",
+  "songsLintUnknownDirective": "Diretiva não reconhecida \"{name}\".",
+  "@songsLintUnknownDirective": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songsLintUnclosedSection": "Secção {section} por fechar — falta end_of_{section}.",
+  "@songsLintUnclosedSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintUnexpectedEndSection": "end_of_{section} inesperado sem início correspondente.",
+  "@songsLintUnexpectedEndSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintInvalidYoutube": "O valor do YouTube não é um URL ou ID válido.",
+  "songsLintInvalidKey": "Tom invulgar \"{value}\". Esperado G, Am, F#m, …",
+  "@songsLintInvalidKey": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "songsLintInvalidTempo": "O tempo deve ser um BPM entre 20 e 400.",
+  "songsLintInvalidCapo": "O capo deve ser um traste de 0 a 12.",
+  "songsLintInvalidTime": "O compasso deve parecer 4/4 ou 6/8.",
+  "songsLintInvalidDuration": "A duração deve ser segundos ou m:ss (ex. 3:45).",
   "songsNewSong": "Nova canção",
   "songsCreateManually": "Criar manualmente",
   "songsCreateManuallyDesc": "Título, acordes e letra.",
