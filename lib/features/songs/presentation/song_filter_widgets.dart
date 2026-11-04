@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/shell_modal.dart';
 import 'song_filters.dart';
 
 String songSortLabel(AppLocalizations l10n, SongSort sort) {
@@ -91,7 +92,7 @@ Future<void> showSongFilterSheet(
   bool showFolderFilter = true,
   bool showCollectionFilter = true,
 }) {
-  return showModalBottomSheet<void>(
+  return showShellModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

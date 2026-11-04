@@ -70,9 +70,17 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final l10n = AppLocalizations.of(context);
     final songAsync = ref.watch(songByIdProvider(widget.songId));
     final song = songAsync.value;
+    final canPop = context.canPop();
 
     return Scaffold(
       appBar: AppBar(
+        leading: canPop
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => context.go('/songs'),
+              ),
         title: Text(
           song?.title ?? l10n.songsTitle,
           maxLines: 1,
@@ -81,7 +89,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         actions: [
           const SongToolbarButton(),
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.edit_note_rounded),
             tooltip: l10n.songsEdit,
             onPressed: song == null
                 ? null

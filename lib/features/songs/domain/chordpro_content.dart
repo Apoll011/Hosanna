@@ -42,6 +42,18 @@ String? readChordProDirective(String content, String name) {
   return (value == null || value.isEmpty) ? null : value;
 }
 
+/// Removes directives that the song editor manages via dedicated fields so the
+/// body textarea only shows lyrics/chords (and any other free-form directives).
+String stripManagedDirectives(String content) {
+  var result = content;
+  for (final re in [_titleRe, _artistRe, _keyRe, _tempoRe, _timeRe]) {
+    result = result.replaceAll(re, '');
+  }
+  return result
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .replaceFirst(RegExp(r'^\s+'), '');
+}
+
 /// Upserts title/artist/key/tempo/time directives; keeps the rest of [content].
 String applyChordProMetadata(
   String content, {
@@ -51,7 +63,8 @@ String applyChordProMetadata(
   String? tempo,
   String? timeSignature,
 }) {
-  var result = content;
+  // Always start from a body without managed directives so we never duplicate.
+  var result = stripManagedDirectives(content);
   result = _upsert(result, _titleRe, 'title', title);
   result = _upsert(result, _artistRe, 'artist', artist);
   result = _upsert(result, _keyRe, 'key', key);

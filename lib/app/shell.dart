@@ -94,7 +94,9 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final selectedDestination = destinations.indexWhere(
       (d) => d.branch == currentBranch,
     );
-    final showNavBar = !kBranchesWithoutNavBar.contains(currentBranch);
+    final navAllowed = ref.watch(shellNavVisibleProvider);
+    final showNavBar =
+        navAllowed && !kBranchesWithoutNavBar.contains(currentBranch);
     final auth = ref.watch(authControllerProvider);
     final showSubWarning =
         auth.isAuthenticated && !auth.hasActiveSubscription;

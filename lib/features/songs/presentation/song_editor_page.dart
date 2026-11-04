@@ -48,6 +48,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
   final _tempo = TextEditingController();
   final _time = TextEditingController();
   final _content = TextEditingController();
+  final _contentFocus = FocusNode();
 
   bool _saving = false;
   bool _hydrated = false;
@@ -66,15 +67,22 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
   void _hydrateCreate() {
     final title = widget.initialTitle?.trim() ?? '';
     final artist = widget.initialArtist?.trim() ?? '';
-    final content = widget.initialContent?.trim().isNotEmpty == true
+    final raw = widget.initialContent?.trim().isNotEmpty == true
         ? widget.initialContent!
-        : defaultChordProContent(title: title.isEmpty ? 'Untitled' : title, artist: artist);
-    _title.text = title;
-    _artist.text = artist;
-    _content.text = content;
-    _key.text = readChordProDirective(content, 'key') ?? 'G';
-    _tempo.text = readChordProDirective(content, 'tempo') ?? '';
-    _time.text = readChordProDirective(content, 'time') ?? '4/4';
+        : defaultChordProContent(
+            title: title.isEmpty ? 'Untitled' : title,
+            artist: artist,
+          );
+    _title.text = title.isNotEmpty
+        ? title
+        : (readChordProDirective(raw, 'title') ?? '');
+    _artist.text = artist.isNotEmpty
+        ? artist
+        : (readChordProDirective(raw, 'artist') ?? '');
+    _key.text = readChordProDirective(raw, 'key') ?? 'G';
+    _tempo.text = readChordProDirective(raw, 'tempo') ?? '';
+    _time.text = readChordProDirective(raw, 'time') ?? '4/4';
+    _content.text = stripManagedDirectives(raw);
     _folderId = widget.initialFolderId;
     _tags = widget.initialTags;
     _hydrated = true;
@@ -85,10 +93,10 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     _hydrated = true;
     _title.text = song.title;
     _artist.text = song.artist;
-    _content.text = song.content;
     _key.text = readChordProDirective(song.content, 'key') ?? '';
     _tempo.text = readChordProDirective(song.content, 'tempo') ?? '';
     _time.text = readChordProDirective(song.content, 'time') ?? '';
+    _content.text = stripManagedDirectives(song.content);
     _folderId = song.folderId;
     _tags = song.tags;
   }
@@ -101,6 +109,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     _tempo.dispose();
     _time.dispose();
     _content.dispose();
+    _contentFocus.dispose();
     super.dispose();
   }
 
@@ -118,13 +127,19 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
   Future<void> _preview() async {
     final content = _composedContent();
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
+        builder: (previewContext) => Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: MaterialLocalizations.of(previewContext).backButtonTooltip,
+              onPressed: () => Navigator.of(previewContext).pop(),
+            ),
             title: Text(
               _title.text.trim().isEmpty
-                  ? AppLocalizations.of(context).songsPreview
+                  ? l10n.songsPreview
                   : _title.text.trim(),
             ),
           ),
@@ -171,11 +186,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
         );
       }
 
-      // Best-effort push so Studio sees the song quickly.
       unawaited(ref.read(syncControllerProvider.notifier).syncAll());
 
       if (!mounted) return;
-      context.go('/songs/${saved.id}');
+      // Keep library under the detail page so the AppBar back button works.
+      context.go('/songs');
+      context.push('/songs/${saved.id}');
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -185,10 +201,122 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     }
   }
 
+  Widget _metadataFields(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_error != null) ...[
+          Text(
+            _error!,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        TextField(
+          controller: _title,
+          textCapitalization: TextCapitalization.sentences,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.songsFieldTitle,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _artist,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.songsFieldArtist,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _key,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: l10n.songsFieldKey,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _tempo,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: l10n.songsFieldTempo,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _time,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _contentFocus.requestFocus(),
+                decoration: InputDecoration(
+                  labelText: l10n.songsFieldTime,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _bodyEditor(AppLocalizations l10n, {required bool expanded}) {
+    final theme = Theme.of(context);
+    final field = TextField(
+      controller: _content,
+      focusNode: _contentFocus,
+      expands: expanded,
+      maxLines: expanded ? null : 16,
+      minLines: expanded ? null : 16,
+      textAlignVertical: TextAlignVertical.top,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontFamily: 'monospace',
+        height: 1.4,
+        fontSize: 14.5,
+      ),
+      decoration: InputDecoration(
+        hintText: l10n.songsChordPro,
+        alignLabelWithHint: true,
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.35,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(14, 14, 14, 72),
+      ),
+    );
+
+    if (!expanded) return field;
+    return SizedBox.expand(child: field);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final wide = MediaQuery.sizeOf(context).width >= 900;
 
     if (!widget.isCreate) {
       final async = ref.watch(songByIdProvider(widget.songId!));
@@ -220,7 +348,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
       }
       if (!_hydrated) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _hydrateFromSong(song);
+          if (mounted) setState(() => _hydrateFromSong(song));
         });
       }
     }
@@ -228,123 +356,114 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isCreate ? l10n.songsCreate : l10n.songsEdit),
-        actions: [
-          TextButton(
-            onPressed: _saving ? null : _preview,
-            child: Text(l10n.songsPreview),
-          ),
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.commonSave),
-          ),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-        children: [
-          if (_error != null) ...[
-            Text(
-              _error!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: _title,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              labelText: l10n.songsFieldTitle,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _artist,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: l10n.songsFieldArtist,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(28),
+        color: scheme.surface,
+        shadowColor: Colors.black.withValues(alpha: 0.25),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _key,
-                  decoration: InputDecoration(
-                    labelText: l10n.songsFieldKey,
-                    border: const OutlineInputBorder(),
+              TextButton.icon(
+                onPressed: _saving ? null : _preview,
+                icon: const Icon(Icons.visibility_outlined),
+                label: Text(l10n.songsPreview),
+                style: TextButton.styleFrom(
+                  foregroundColor: scheme.onSurface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: _tempo,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.songsFieldTempo,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: _time,
-                  decoration: InputDecoration(
-                    labelText: l10n.songsFieldTime,
-                    border: const OutlineInputBorder(),
+              const SizedBox(width: 6),
+              FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: _saving
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.check_rounded),
+                label: Text(l10n.commonSave),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.songsRawContent,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _content,
-            minLines: 14,
-            maxLines: 28,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              height: 1.35,
-            ),
-            decoration: InputDecoration(
-              hintText: l10n.songsChordPro,
-              border: const OutlineInputBorder(),
-              alignLabelWithHint: true,
-            ),
-          ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _saving ? null : _save,
-            icon: const Icon(Icons.save_rounded),
-            label: Text(l10n.commonSave),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _saving ? null : _preview,
-            icon: const Icon(Icons.visibility_outlined),
-            label: Text(l10n.songsPreview),
-          ),
-        ],
+        ),
+      ),
+      body: SafeArea(
+        child: wide
+            ? Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            l10n.songsRawContent,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(child: _bodyEditor(l10n, expanded: true)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    SizedBox(
+                      width: 320,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.only(bottom: 96),
+                        child: _metadataFields(l10n),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: _metadataFields(l10n),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      l10n.songsRawContent,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: _bodyEditor(l10n, expanded: true),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

@@ -82,7 +82,9 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
           );
       unawaited(ref.read(syncControllerProvider.notifier).syncAll());
       if (!mounted) return;
-      context.go('/songs/${saved.id}');
+      // Keep library under detail so the AppBar back button works.
+      context.go('/songs');
+      context.push('/songs/${saved.id}');
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -125,7 +127,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                   children: [
                     Image.memory(thumb, fit: BoxFit.cover),
                     Align(
-                      alignment: Alignment.topRight,
+                      alignment: Alignment.bottomRight,
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: CircleAvatar(
@@ -229,26 +231,34 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: OutlinedButton.icon(
                   onPressed: _saving ? null : _editFull,
-                  child: Text(l10n.songsAiEditContent),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(l10n.songsAiEditContent),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: _saving ? null : _save,
-                  child: _saving
+                  icon: _saving
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(l10n.songsAiSave),
+                      : const Icon(Icons.check_rounded),
+                  label: Text(l10n.songsAiSave),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
               ),
             ],

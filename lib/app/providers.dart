@@ -117,6 +117,10 @@ final sidebarCollapsedProvider = StateProvider<bool>((ref) => true);
 /// when the user switches away while the IndexedStack keeps them alive.
 final shellBranchIndexProvider = StateProvider<int>((ref) => 0);
 
+/// When false, the shell hides the floating Songs/Services nav pill (e.g.
+/// while a modal bottom sheet is open so it does not cover sheet actions).
+final shellNavVisibleProvider = StateProvider<bool>((ref) => true);
+
 final serviceAnnotationRepositoryProvider =
     Provider<ServiceAnnotationRepository>((ref) {
       return ServiceAnnotationRepository(ref.watch(hosannaApiProvider));

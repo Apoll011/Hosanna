@@ -8,6 +8,7 @@ import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/shell_insets.dart';
+import '../../../shared/widgets/shell_modal.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
 import '../data/song_repository.dart';
@@ -104,17 +105,16 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             activeCount: _settings.activeFilterCount,
             onPressed: _openFilterSheet,
           ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: l10n.songsNewSong,
-            onPressed: _showNewSongSheet,
+          const SizedBox(width: 4),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton.filled(
+              onPressed: _showNewSongSheet,
+              tooltip: l10n.songsNewSong,
+              icon: const Icon(Icons.add_rounded),
+            ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showNewSongSheet,
-        tooltip: l10n.songsNewSong,
-        child: const Icon(Icons.add_rounded),
       ),
       body: Column(
         children: [
@@ -304,7 +304,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    await showModalBottomSheet<void>(
+    await showShellModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (ctx) {
@@ -325,7 +325,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.edit_outlined),
+                  leading: Icon(Icons.edit_outlined, color: scheme.primary),
                   title: Text(l10n.songsCreateManually),
                   subtitle: Text(l10n.songsCreateManuallyDesc),
                   onTap: () {
@@ -333,17 +333,24 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     context.push('/songs/new');
                   },
                 ),
-                ListTile(
-                  leading: Icon(
-                    Icons.auto_awesome_rounded,
-                    color: scheme.primary,
+                Material(
+                  color: scheme.primaryContainer.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    leading: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: scheme.primary,
+                    ),
+                    title: Text(l10n.songsImportWithAi),
+                    subtitle: Text(l10n.songsImportWithAiDesc),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      context.push('/songs/import/ai');
+                    },
                   ),
-                  title: Text(l10n.songsImportWithAi),
-                  subtitle: Text(l10n.songsImportWithAiDesc),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/songs/import/ai');
-                  },
                 ),
               ],
             ),

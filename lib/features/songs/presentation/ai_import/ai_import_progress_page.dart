@@ -244,14 +244,28 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
             const SizedBox(height: 28),
             ...steps.map((s) => _StepRow(step: s)),
             const Spacer(),
-            Text(
-              _error == null ? l10n.songsAiPleaseWait : l10n.songsAiImportFailedBody,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+            if (_error == null)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: null,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    disabledBackgroundColor:
+                        scheme.surfaceContainerHighest,
+                    disabledForegroundColor: scheme.onSurfaceVariant,
+                  ),
+                  child: Text(l10n.songsAiPleaseWait),
+                ),
+              )
+            else ...[
+              Text(
+                l10n.songsAiImportFailedBody,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            if (_error != null) ...[
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => context.go('/songs/import/ai'),
