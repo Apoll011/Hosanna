@@ -134,7 +134,7 @@ final replicationAdaptersProvider = Provider<List<ReplicationAdapter>>((ref) {
 
 final replicationEngineProvider = Provider<ReplicationEngine>((ref) {
   return ReplicationEngine(
-    dio: ref.watch(dioProvider),
+    api: ref.watch(hosannaApiProvider),
     prefs: ref.watch(sharedPreferencesProvider),
     adapters: ref.watch(replicationAdaptersProvider),
   );

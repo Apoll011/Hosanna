@@ -3,15 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/hosanna_api.dart';
 import '../domain/service_note.dart';
 
 /// REST client for `/api/services/:id/notes` (not part of RxDB replication).
 class ServiceNotesRepository {
-  ServiceNotesRepository(this._dio);
+  ServiceNotesRepository(this._api);
 
-  final Dio _dio;
-
-  String _base(String serviceId) => '/api/services/$serviceId/notes';
+  final HosannaApi _api;
 
   /// Lists notes the caller may see. Oldest first.
   ///
@@ -27,22 +26,12 @@ class ServiceNotesRepository {
       'Do not send elementId together with scope=service',
     );
     try {
-      final query = <String, dynamic>{};
-      if (serviceScope) {
-        query['scope'] = 'service';
-      } else if (elementId != null) {
-        query['elementId'] = elementId;
-      }
-      final res = await _dio.get<dynamic>(
-        _base(serviceId),
-        queryParameters: query.isEmpty ? null : query,
+      final list = await _api.serviceNotes.listServiceNotes(
+        id: serviceId,
+        elementId: elementId,
+        scope: serviceScope ? 'service' : (elementId != null ? null : 'all'),
       );
-      final data = res.data;
-      final list = data is List ? data : const <dynamic>[];
-      return list
-          .whereType<Map>()
-          .map((e) => ServiceNote.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return list.map(_fromApi).toList();
     } on DioException catch (e) {
       throw toApiException(e);
     }
@@ -55,15 +44,13 @@ class ServiceNotesRepository {
     bool isPrivate = false,
   }) async {
     try {
-      final res = await _dio.post<dynamic>(
-        _base(serviceId),
-        data: {
-          'body': body,
-          'elementId': elementId,
-          'private': isPrivate,
-        },
+      final note = await _api.serviceNotes.createServiceNote(
+        id: serviceId,
+        body: body,
+        elementId: elementId,
+        private: isPrivate,
       );
-      return ServiceNote.fromJson(Map<String, dynamic>.from(res.data as Map));
+      return _fromApi(note);
     } on DioException catch (e) {
       throw toApiException(e);
     }
@@ -77,14 +64,13 @@ class ServiceNotesRepository {
   }) async {
     assert(body != null || isPrivate != null, 'Send body, private, or both');
     try {
-      final payload = <String, dynamic>{};
-      if (body != null) payload['body'] = body;
-      if (isPrivate != null) payload['private'] = isPrivate;
-      final res = await _dio.put<dynamic>(
-        '${_base(serviceId)}/$noteId',
-        data: payload,
+      final note = await _api.serviceNotes.updateServiceNote(
+        id: serviceId,
+        noteId: noteId,
+        body: body,
+        private: isPrivate,
       );
-      return ServiceNote.fromJson(Map<String, dynamic>.from(res.data as Map));
+      return _fromApi(note);
     } on DioException catch (e) {
       throw toApiException(e);
     }
@@ -95,13 +81,36 @@ class ServiceNotesRepository {
     required String noteId,
   }) async {
     try {
-      await _dio.delete<dynamic>('${_base(serviceId)}/$noteId');
+      await _api.serviceNotes.deleteServiceNote(
+        id: serviceId,
+        noteId: noteId,
+      );
     } on DioException catch (e) {
       throw toApiException(e);
     }
   }
+
+  static ServiceNote _fromApi(ServiceNoteDto note) {
+    final author = note.author;
+    return ServiceNote(
+      id: note.id ?? '',
+      serviceId: note.serviceId ?? '',
+      elementId: note.elementId,
+      body: note.body ?? '',
+      isPrivate: note.private == true,
+      author: author == null
+          ? null
+          : ServiceNoteAuthor(
+              id: author.id ?? '',
+              name: author.name ?? '',
+              image: author.image,
+            ),
+      createdAt: note.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: note.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+    );
+  }
 }
 
 final serviceNotesRepositoryProvider = Provider<ServiceNotesRepository>((ref) {
-  return ServiceNotesRepository(ref.watch(dioProvider));
+  return ServiceNotesRepository(ref.watch(hosannaApiProvider));
 });

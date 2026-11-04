@@ -44,8 +44,9 @@ Dio buildDio({
 }) {
   final dio = Dio(
     BaseOptions(
-      // Origin only: every request path below is absolute (`/api/...`) so the
-      // URL is unambiguous regardless of how Dio resolves base + path.
+      // Origin only (no `/api` suffix). Better Auth keeps absolute `/api/auth/…`
+      // paths; the OpenAPI client ([HosannaApi]) uses a Dio clone whose baseUrl
+      // is [AppConfig.apiRoot] so generated paths like `/replication/…` resolve.
       baseUrl: config.apiBaseUrl,
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 30),

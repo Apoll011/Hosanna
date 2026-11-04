@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
+import '../../../core/network/hosanna_api.dart';
 
 class RemoteAnnotation {
   const RemoteAnnotation({
@@ -38,10 +39,10 @@ class AnnotationSyncHandle {
 /// REST fallback. Live updates use a Firestore snapshot **plus** a slow REST
 /// poll so sync still works if the listener is denied / offline.
 class ServiceAnnotationRepository {
-  ServiceAnnotationRepository(this._dio, {FirebaseFirestore? firestore})
+  ServiceAnnotationRepository(this._api, {FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final Dio _dio;
+  final HosannaApi _api;
   final FirebaseFirestore _firestore;
 
   /// Safety net when Firestore snapshots are unavailable (rules, network).
@@ -106,9 +107,6 @@ class ServiceAnnotationRepository {
       .doc(serviceId)
       .collection('annotations')
       .doc(songId);
-
-  String _annotationUri(String serviceId, String songId) =>
-      '/api/annotation/services/$serviceId/songs/$songId/annotation';
 
   static DateTime? _parseUpdatedAt(dynamic value) {
     if (value == null) return null;
@@ -178,36 +176,27 @@ class ServiceAnnotationRepository {
     int? preferRevision,
   }) async {
     try {
-      final res = await _dio.get(
-        _annotationUri(serviceId, songId),
-        queryParameters: {
-          // Bust CDN / proxy caches so live poll sees fresh Postgres bytes.
-          '_ts': DateTime.now().millisecondsSinceEpoch,
+      final res = await _api.annotations.getAnnotation(
+        serviceId: serviceId,
+        songId: songId,
+        headers: const {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
         },
-        options: Options(
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-          },
-        ),
+        validateStatus: (status) =>
+            status != null && (status == 200 || status == 404),
       );
       if (res.statusCode == 404) return null;
       if (res.statusCode != 200) return null;
 
-      final raw = res.data;
-      final json = raw is Map<String, dynamic>
-          ? raw
-          : jsonDecode(raw as String) as Map<String, dynamic>;
-      final bytes = Uint8List.fromList(
-        base64Decode(json['canvasDataBase64'] as String),
-      );
+      final json = res.data;
+      final b64 = json?.canvasDataBase64;
+      if (b64 == null || b64.isEmpty) return null;
+      final bytes = Uint8List.fromList(base64Decode(b64));
       final updatedAt =
-          preferUpdatedAt ??
-          DateTime.parse(json['updatedAt'] as String).toUtc();
-      final updatedById =
-          preferUpdatedById ?? json['updatedById'] as String?;
-      final revision =
-          preferRevision ?? _parseRevision(json['revision']);
+          preferUpdatedAt ?? (json!.updatedAt ?? DateTime.now()).toUtc();
+      final updatedById = preferUpdatedById ?? json?.updatedById;
+      final revision = preferRevision ?? json?.revision;
 
       await saveAnnotation(serviceId: serviceId, songId: songId, bytes: bytes);
 
@@ -256,22 +245,19 @@ class ServiceAnnotationRepository {
   }) async {
     await saveAnnotation(serviceId: serviceId, songId: songId, bytes: bytes);
 
-    final res = await _dio.put(
-      _annotationUri(serviceId, songId),
-      data: {'canvasDataBase64': base64Encode(bytes)},
+    final res = await _api.annotations.putAnnotation(
+      serviceId: serviceId,
+      songId: songId,
+      canvasDataBase64: base64Encode(bytes),
     );
 
-    if (res.statusCode != 200) {
+    if (res.statusCode != 200 || res.data == null) {
       throw HttpException('Failed to push annotation (${res.statusCode})');
     }
 
-    final raw = res.data;
-    final json = raw is Map<String, dynamic>
-        ? raw
-        : jsonDecode(raw as String) as Map<String, dynamic>;
-    final updatedAt = DateTime.parse(json['updatedAt'] as String).toUtc();
-    final revision =
-        _parseRevision(json['revision']) ?? updatedAt.millisecondsSinceEpoch;
+    final json = res.data!;
+    final updatedAt = (json.updatedAt ?? DateTime.now()).toUtc();
+    final revision = json.revision ?? updatedAt.millisecondsSinceEpoch;
     return (updatedAt: updatedAt, revision: revision);
   }
 

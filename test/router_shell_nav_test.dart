@@ -11,6 +11,7 @@ import 'package:hosanna/core/auth/session_store.dart';
 import 'package:hosanna/core/config/app_config.dart';
 import 'package:hosanna/core/db/database.dart';
 import 'package:hosanna/core/network/api_client.dart';
+import 'package:hosanna/core/network/hosanna_api.dart';
 import 'package:hosanna/core/sync/replication_engine.dart';
 import 'package:hosanna/core/sync/sync_controller.dart';
 import 'package:hosanna/features/auth/data/auth_repository.dart';
@@ -51,7 +52,11 @@ class _TestAuthController extends AuthController {
 class _NoopSyncController extends SyncController {
   _NoopSyncController(SharedPreferences prefs, AppDatabase db)
     : super(
-        ReplicationEngine(dio: Dio(), prefs: prefs, adapters: const []),
+        ReplicationEngine(
+          api: HosannaApi.fromSharedDio(Dio(), config: AppConfig.instance),
+          prefs: prefs,
+          adapters: const [],
+        ),
         prefs,
         db,
         () async {},
@@ -108,6 +113,17 @@ void main() {
     await pumpFrames(tester, const Duration(seconds: 1));
   }
 
+  /// Drop ProviderScope/Drift watchers and flush zero-duration cancel timers
+  /// before the binding's end-of-test invariant check (runs before tearDown).
+  Future<void> disposeApp(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    // Drift schedules Timer.run on stream cancel; flush a few frames.
+    await tester.idle();
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(Duration.zero);
+    }
+  }
+
   testWidgets(
     'phone: drawer tool item navigates to its shell branch',
     (tester) async {
@@ -126,6 +142,7 @@ void main() {
     await pumpFrames(tester, const Duration(seconds: 1));
 
     expect(find.byType(CircleOfFifthsPage), findsOneWidget);
+    await disposeApp(tester);
   });
 
   testWidgets(
@@ -141,5 +158,6 @@ void main() {
     await pumpFrames(tester, const Duration(seconds: 1));
 
     expect(find.byType(CircleOfFifthsPage), findsOneWidget);
+    await disposeApp(tester);
   });
 }

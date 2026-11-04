@@ -12,6 +12,7 @@ import '../core/auth/social_auth_provider.dart';
 import '../core/config/app_config.dart';
 import '../core/db/database.dart';
 import '../core/network/api_client.dart';
+import '../core/network/hosanna_api.dart';
 import '../core/network/user_agent.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/data/google_auth_provider.dart';
@@ -65,6 +66,15 @@ final dioProvider = Provider<Dio>((ref) {
   );
 });
 
+/// Typed OpenAPI client for `/api` REST (replication, notes, annotations, …).
+/// Auth (`/api/auth/*`) stays on [dioProvider] via [AuthRepository].
+final hosannaApiProvider = Provider<HosannaApi>((ref) {
+  return HosannaApi.fromSharedDio(
+    ref.watch(dioProvider),
+    config: ref.watch(appConfigProvider),
+  );
+});
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider));
 });
@@ -104,5 +114,5 @@ final sidebarCollapsedProvider = StateProvider<bool>((ref) => true);
 
 final serviceAnnotationRepositoryProvider =
     Provider<ServiceAnnotationRepository>((ref) {
-      return ServiceAnnotationRepository(ref.watch(dioProvider));
+      return ServiceAnnotationRepository(ref.watch(hosannaApiProvider));
     });
