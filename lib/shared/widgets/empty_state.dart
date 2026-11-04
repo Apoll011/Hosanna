@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../app/design/tokens.dart';
 
+/// Scales empty-state art for phone / tablet / large layouts.
+double emptyStateIllustrationSize(BuildContext context, {double base = 200}) {
+  final shortest = MediaQuery.sizeOf(context).shortestSide;
+  if (shortest >= 900) return (base * 1.7).clamp(280.0, 360.0);
+  if (shortest >= 600) return (base * 1.45).clamp(260.0, 320.0);
+  return base;
+}
+
 /// Friendly empty / zero-data placeholder.
 ///
 /// Prefer [illustrationAsset] from [HosannaIllustrations] when an illustration
@@ -12,7 +20,7 @@ class EmptyState extends StatelessWidget {
     required this.title,
     this.icon,
     this.illustrationAsset,
-    this.illustrationSize = 200,
+    this.illustrationSize,
     this.description,
     this.primaryIcon = Icons.filter_alt_off_outlined,
     this.primaryLabel,
@@ -24,7 +32,9 @@ class EmptyState extends StatelessWidget {
 
   final IconData? icon;
   final String? illustrationAsset;
-  final double illustrationSize;
+
+  /// Explicit size override. When null, scales with screen size.
+  final double? illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -93,7 +103,7 @@ class ErrorState extends StatelessWidget {
     final content = _EmptyStateBody(
       icon: Icons.cloud_off_outlined,
       illustrationAsset: illustrationAsset,
-      illustrationSize: 180,
+      illustrationSize: null,
       title: title,
       description: description,
       primaryIcon: Icons.refresh,
@@ -127,7 +137,7 @@ class _EmptyStateBody extends StatelessWidget {
     required this.primaryIcon,
     this.icon,
     this.illustrationAsset,
-    this.illustrationSize = 200,
+    this.illustrationSize,
     this.description,
     this.primaryLabel,
     this.onPrimary,
@@ -137,7 +147,7 @@ class _EmptyStateBody extends StatelessWidget {
 
   final IconData? icon;
   final String? illustrationAsset;
-  final double illustrationSize;
+  final double? illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -152,6 +162,9 @@ class _EmptyStateBody extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isError = tone == _EmptyTone.error;
+    final artSize =
+        illustrationSize ?? emptyStateIllustrationSize(context, base: 200);
+    final contentWidth = artSize + 80;
 
     final circleColor = isError
         ? scheme.errorContainer
@@ -165,15 +178,15 @@ class _EmptyStateBody extends StatelessWidget {
         vertical: HosannaSpacing.md,
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: BoxConstraints(maxWidth: contentWidth.clamp(320, 420)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (illustrationAsset != null)
               Image.asset(
                 illustrationAsset!,
-                width: illustrationSize,
-                height: illustrationSize,
+                width: artSize,
+                height: artSize,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.high,
               )
