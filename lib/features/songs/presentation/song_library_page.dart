@@ -115,12 +115,6 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showNewSongSheet,
-        tooltip: l10n.songsNewSong,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.songsAddSong),
-      ),
       body: Column(
         children: [
           if (!_settings.isDefault)
