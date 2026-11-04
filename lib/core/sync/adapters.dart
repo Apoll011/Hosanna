@@ -490,3 +490,109 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
     await stmt.write(const ServicesCompanion(dirty: Value(false)));
   }
 }
+
+// ── Agenda events ──────────────────────────────────────────────────────────
+
+class AgendaEventReplicationAdapter extends ReplicationAdapter {
+  AgendaEventReplicationAdapter(this._db);
+
+  final AppDatabase _db;
+
+  @override
+  String get resourceName => 'agendaEvents';
+
+  @override
+  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.agendaEvents)
+              ..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      if (live.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(
+            _db.agendaEvents,
+            live.map(_agendaCompanion).toList(),
+          );
+        });
+      }
+    });
+  }
+
+  AgendaEventsCompanion _agendaCompanion(Map<String, dynamic> d) {
+    return AgendaEventsCompanion.insert(
+      id: _str(d['id']),
+      date: _str(d['date']),
+      title: _str(d['title']),
+      type: _str(d['type'], 'event'),
+      time: _str(d['time'], '00:00'),
+      durationMinutes: Value(_int(d['durationMinutes']) ?? 0),
+      location: Value(_nullableStr(d['location'])),
+      notes: Value(_nullableStr(d['notes'])),
+      reminder: Value(d['reminder'] ?? const {'enabled': false, 'label': ''}),
+      linkedServiceId: Value(_nullableStr(d['linkedServiceId'])),
+      responsibilities: Value(d['responsibilities'] ?? const []),
+      createdAt: _str(d['createdAt']),
+      updatedAt: _str(d['updatedAt']),
+      isDeleted: Value(_bool(d['isDeleted'])),
+      dirty: const Value(false),
+      purgeAt: Value(_nullableStr(d['purgeAt'])),
+    );
+  }
+
+  @override
+  Future<List<ChangeRow>> collectChanges() async {
+    final query = _db.select(_db.agendaEvents)
+      ..where((t) => t.dirty.equals(true));
+    final rows = await query.get();
+    return rows.map((r) {
+      final wire = _agendaToWire(r);
+      return ChangeRow(
+        id: r.id,
+        newDocumentState: wire,
+        assumedMasterState: wire,
+      );
+    }).toList();
+  }
+
+  Map<String, dynamic> _agendaToWire(AgendaEventRow r) => {
+        'id': r.id,
+        'date': r.date,
+        'title': r.title,
+        'type': r.type,
+        'time': r.time,
+        'durationMinutes': r.durationMinutes,
+        'location': r.location,
+        'notes': r.notes,
+        'reminder': r.reminder,
+        'linkedServiceId': r.linkedServiceId,
+        'responsibilities': r.responsibilities,
+        'createdAt': r.createdAt,
+        'updatedAt': r.updatedAt,
+        'isDeleted': r.isDeleted,
+        'purgeAt': r.purgeAt,
+        '_deleted': false,
+      };
+
+  @override
+  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
+      upsertFromWire(serverDocs);
+
+  @override
+  Future<void> markPushed(Iterable<String> ids) async {
+    final list = ids.toList();
+    if (list.isEmpty) return;
+    final stmt = _db.update(_db.agendaEvents)..where((t) => t.id.isIn(list));
+    await stmt.write(const AgendaEventsCompanion(dirty: Value(false)));
+  }
+}

@@ -355,6 +355,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navMetronome => 'Metrónomo';
 
   @override
+  String get navAgenda => 'Agenda';
+
+  @override
   String get navExportPdf => 'Exportar PDF';
 
   @override
@@ -362,6 +365,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get navToolsSection => 'Ferramentas';
+
+  @override
+  String get agendaEmptyTitle => 'Sem eventos próximos';
+
+  @override
+  String get agendaEmptyBody =>
+      'Os eventos do calendário da igreja aparecem aqui depois de sincronizar.';
 
   @override
   String get navAllSongs => 'Todos os cânticos';

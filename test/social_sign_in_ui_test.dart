@@ -18,6 +18,8 @@ import 'package:hosanna/features/auth/presentation/sign_up_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'test_pump.dart';
+
 /// Auth controller double: records which provider the screens hand over and can
 /// fail or block on demand, instead of touching the network or secure storage.
 class _RecordingAuthController extends AuthController {
@@ -27,7 +29,11 @@ class _RecordingAuthController extends AuthController {
           SessionStore(),
           TokenStore(),
           AppConfig.instance,
-        );
+        ) {
+    // AuthController defaults to [AuthStatus.loading], which paints an
+    // infinite CircularProgressIndicator and hangs pumpAndSettle.
+    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
 
   final SocialAuthException? failure;
 
@@ -81,13 +87,14 @@ void main() {
           socialAuthProvidersProvider.overrideWithValue([provider]),
         ],
         child: MaterialApp(
+          locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: page,
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpFrames(tester, const Duration(seconds: 1));
   }
 
   testWidgets('sign-in page offers the Google button next to the form', (
@@ -116,7 +123,7 @@ void main() {
 
         await tester.ensureVisible(find.text('Continue with Google'));
         await tester.tap(find.text('Continue with Google'));
-        await tester.pumpAndSettle();
+        await pumpFrames(tester);
 
         expect(controller.attempts, hasLength(1));
         expect(controller.attempts.single, same(provider));
@@ -134,7 +141,7 @@ void main() {
 
     await tester.ensureVisible(find.text('Continue with Google'));
     await tester.tap(find.text('Continue with Google'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.byType(AuthErrorBanner), findsNothing);
   });
@@ -149,7 +156,7 @@ void main() {
 
     await tester.ensureVisible(find.text('Continue with Google'));
     await tester.tap(find.text('Continue with Google'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.byType(AuthErrorBanner), findsOneWidget);
     expect(
@@ -188,7 +195,7 @@ void main() {
     );
 
     pending.complete();
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(

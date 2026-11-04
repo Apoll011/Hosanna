@@ -194,3 +194,41 @@ class Services extends Table with SyncMetadata {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// Converts arbitrary JSON (Map/List) to/from a text column.
+class JsonConverter extends TypeConverter<Object?, String> {
+  const JsonConverter();
+
+  @override
+  Object? fromSql(String fromDb) {
+    if (fromDb.isEmpty) return null;
+    return jsonDecode(fromDb);
+  }
+
+  @override
+  String toSql(Object? value) => jsonEncode(value ?? null);
+}
+
+/// Org agenda / calendar events (Studio replication collection `agendaEvents`).
+@TableIndex(name: 'agenda_date_idx', columns: {#date})
+@DataClassName('AgendaEventRow')
+class AgendaEvents extends Table with SyncMetadata {
+  TextColumn get id => text()();
+  TextColumn get date => text()();
+  TextColumn get title => text()();
+  TextColumn get type => text()();
+  TextColumn get time => text()();
+  IntColumn get durationMinutes => integer().withDefault(const Constant(0))();
+  TextColumn get location => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get reminder =>
+      text().map(const JsonConverter()).withDefault(const Constant('{}'))();
+  TextColumn get linkedServiceId => text().nullable()();
+  TextColumn get responsibilities =>
+      text().map(const JsonConverter()).withDefault(const Constant('[]'))();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

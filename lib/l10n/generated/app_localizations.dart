@@ -724,6 +724,12 @@ abstract class AppLocalizations {
   /// **'Metrónomo'**
   String get navMetronome;
 
+  /// No description provided for @navAgenda.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agenda'**
+  String get navAgenda;
+
   /// No description provided for @navExportPdf.
   ///
   /// In pt, this message translates to:
@@ -741,6 +747,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ferramentas'**
   String get navToolsSection;
+
+  /// No description provided for @agendaEmptyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem eventos próximos'**
+  String get agendaEmptyTitle;
+
+  /// No description provided for @agendaEmptyBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os eventos do calendário da igreja aparecem aqui depois de sincronizar.'**
+  String get agendaEmptyBody;
 
   /// No description provided for @navAllSongs.
   ///

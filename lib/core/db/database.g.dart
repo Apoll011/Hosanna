@@ -2859,6 +2859,917 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
   }
 }
 
+class $AgendaEventsTable extends AgendaEvents
+    with TableInfo<$AgendaEventsTable, AgendaEventRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AgendaEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _purgeAtMeta = const VerificationMeta(
+    'purgeAt',
+  );
+  @override
+  late final GeneratedColumn<String> purgeAt = GeneratedColumn<String>(
+    'purge_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timeMeta = const VerificationMeta('time');
+  @override
+  late final GeneratedColumn<String> time = GeneratedColumn<String>(
+    'time',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
+    'durationMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> durationMinutes = GeneratedColumn<int>(
+    'duration_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _locationMeta = const VerificationMeta(
+    'location',
+  );
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+    'location',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Object?, String> reminder =
+      GeneratedColumn<String>(
+        'reminder',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      ).withConverter<Object?>($AgendaEventsTable.$converterreminder);
+  static const VerificationMeta _linkedServiceIdMeta = const VerificationMeta(
+    'linkedServiceId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedServiceId = GeneratedColumn<String>(
+    'linked_service_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Object?, String>
+  responsibilities = GeneratedColumn<String>(
+    'responsibilities',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<Object?>($AgendaEventsTable.$converterresponsibilities);
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    isDeleted,
+    dirty,
+    purgeAt,
+    id,
+    date,
+    title,
+    type,
+    time,
+    durationMinutes,
+    location,
+    notes,
+    reminder,
+    linkedServiceId,
+    responsibilities,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'agenda_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AgendaEventRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('purge_at')) {
+      context.handle(
+        _purgeAtMeta,
+        purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('time')) {
+      context.handle(
+        _timeMeta,
+        time.isAcceptableOrUnknown(data['time']!, _timeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timeMeta);
+    }
+    if (data.containsKey('duration_minutes')) {
+      context.handle(
+        _durationMinutesMeta,
+        durationMinutes.isAcceptableOrUnknown(
+          data['duration_minutes']!,
+          _durationMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location')) {
+      context.handle(
+        _locationMeta,
+        location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('linked_service_id')) {
+      context.handle(
+        _linkedServiceIdMeta,
+        linkedServiceId.isAcceptableOrUnknown(
+          data['linked_service_id']!,
+          _linkedServiceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AgendaEventRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AgendaEventRow(
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      purgeAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purge_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      time: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}time'],
+      )!,
+      durationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_minutes'],
+      )!,
+      location: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      reminder: $AgendaEventsTable.$converterreminder.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}reminder'],
+        )!,
+      ),
+      linkedServiceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_service_id'],
+      ),
+      responsibilities: $AgendaEventsTable.$converterresponsibilities.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}responsibilities'],
+        )!,
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AgendaEventsTable createAlias(String alias) {
+    return $AgendaEventsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Object?, String> $converterreminder =
+      const JsonConverter();
+  static TypeConverter<Object?, String> $converterresponsibilities =
+      const JsonConverter();
+}
+
+class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
+  final bool isDeleted;
+  final bool dirty;
+  final String? purgeAt;
+  final String id;
+  final String date;
+  final String title;
+  final String type;
+  final String time;
+  final int durationMinutes;
+  final String? location;
+  final String? notes;
+  final Object? reminder;
+  final String? linkedServiceId;
+  final Object? responsibilities;
+  final String createdAt;
+  final String updatedAt;
+  const AgendaEventRow({
+    required this.isDeleted,
+    required this.dirty,
+    this.purgeAt,
+    required this.id,
+    required this.date,
+    required this.title,
+    required this.type,
+    required this.time,
+    required this.durationMinutes,
+    this.location,
+    this.notes,
+    this.reminder,
+    this.linkedServiceId,
+    this.responsibilities,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || purgeAt != null) {
+      map['purge_at'] = Variable<String>(purgeAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['date'] = Variable<String>(date);
+    map['title'] = Variable<String>(title);
+    map['type'] = Variable<String>(type);
+    map['time'] = Variable<String>(time);
+    map['duration_minutes'] = Variable<int>(durationMinutes);
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || reminder != null) {
+      map['reminder'] = Variable<String>(
+        $AgendaEventsTable.$converterreminder.toSql(reminder),
+      );
+    }
+    if (!nullToAbsent || linkedServiceId != null) {
+      map['linked_service_id'] = Variable<String>(linkedServiceId);
+    }
+    if (!nullToAbsent || responsibilities != null) {
+      map['responsibilities'] = Variable<String>(
+        $AgendaEventsTable.$converterresponsibilities.toSql(responsibilities),
+      );
+    }
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    return map;
+  }
+
+  AgendaEventsCompanion toCompanion(bool nullToAbsent) {
+    return AgendaEventsCompanion(
+      isDeleted: Value(isDeleted),
+      dirty: Value(dirty),
+      purgeAt: purgeAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(purgeAt),
+      id: Value(id),
+      date: Value(date),
+      title: Value(title),
+      type: Value(type),
+      time: Value(time),
+      durationMinutes: Value(durationMinutes),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      reminder: reminder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminder),
+      linkedServiceId: linkedServiceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedServiceId),
+      responsibilities: responsibilities == null && nullToAbsent
+          ? const Value.absent()
+          : Value(responsibilities),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AgendaEventRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AgendaEventRow(
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      id: serializer.fromJson<String>(json['id']),
+      date: serializer.fromJson<String>(json['date']),
+      title: serializer.fromJson<String>(json['title']),
+      type: serializer.fromJson<String>(json['type']),
+      time: serializer.fromJson<String>(json['time']),
+      durationMinutes: serializer.fromJson<int>(json['durationMinutes']),
+      location: serializer.fromJson<String?>(json['location']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      reminder: serializer.fromJson<Object?>(json['reminder']),
+      linkedServiceId: serializer.fromJson<String?>(json['linkedServiceId']),
+      responsibilities: serializer.fromJson<Object?>(json['responsibilities']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'dirty': serializer.toJson<bool>(dirty),
+      'purgeAt': serializer.toJson<String?>(purgeAt),
+      'id': serializer.toJson<String>(id),
+      'date': serializer.toJson<String>(date),
+      'title': serializer.toJson<String>(title),
+      'type': serializer.toJson<String>(type),
+      'time': serializer.toJson<String>(time),
+      'durationMinutes': serializer.toJson<int>(durationMinutes),
+      'location': serializer.toJson<String?>(location),
+      'notes': serializer.toJson<String?>(notes),
+      'reminder': serializer.toJson<Object?>(reminder),
+      'linkedServiceId': serializer.toJson<String?>(linkedServiceId),
+      'responsibilities': serializer.toJson<Object?>(responsibilities),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+    };
+  }
+
+  AgendaEventRow copyWith({
+    bool? isDeleted,
+    bool? dirty,
+    Value<String?> purgeAt = const Value.absent(),
+    String? id,
+    String? date,
+    String? title,
+    String? type,
+    String? time,
+    int? durationMinutes,
+    Value<String?> location = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<Object?> reminder = const Value.absent(),
+    Value<String?> linkedServiceId = const Value.absent(),
+    Value<Object?> responsibilities = const Value.absent(),
+    String? createdAt,
+    String? updatedAt,
+  }) => AgendaEventRow(
+    isDeleted: isDeleted ?? this.isDeleted,
+    dirty: dirty ?? this.dirty,
+    purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    id: id ?? this.id,
+    date: date ?? this.date,
+    title: title ?? this.title,
+    type: type ?? this.type,
+    time: time ?? this.time,
+    durationMinutes: durationMinutes ?? this.durationMinutes,
+    location: location.present ? location.value : this.location,
+    notes: notes.present ? notes.value : this.notes,
+    reminder: reminder.present ? reminder.value : this.reminder,
+    linkedServiceId: linkedServiceId.present
+        ? linkedServiceId.value
+        : this.linkedServiceId,
+    responsibilities: responsibilities.present
+        ? responsibilities.value
+        : this.responsibilities,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  AgendaEventRow copyWithCompanion(AgendaEventsCompanion data) {
+    return AgendaEventRow(
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      title: data.title.present ? data.title.value : this.title,
+      type: data.type.present ? data.type.value : this.type,
+      time: data.time.present ? data.time.value : this.time,
+      durationMinutes: data.durationMinutes.present
+          ? data.durationMinutes.value
+          : this.durationMinutes,
+      location: data.location.present ? data.location.value : this.location,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      reminder: data.reminder.present ? data.reminder.value : this.reminder,
+      linkedServiceId: data.linkedServiceId.present
+          ? data.linkedServiceId.value
+          : this.linkedServiceId,
+      responsibilities: data.responsibilities.present
+          ? data.responsibilities.value
+          : this.responsibilities,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AgendaEventRow(')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('dirty: $dirty, ')
+          ..write('purgeAt: $purgeAt, ')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('title: $title, ')
+          ..write('type: $type, ')
+          ..write('time: $time, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('location: $location, ')
+          ..write('notes: $notes, ')
+          ..write('reminder: $reminder, ')
+          ..write('linkedServiceId: $linkedServiceId, ')
+          ..write('responsibilities: $responsibilities, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    isDeleted,
+    dirty,
+    purgeAt,
+    id,
+    date,
+    title,
+    type,
+    time,
+    durationMinutes,
+    location,
+    notes,
+    reminder,
+    linkedServiceId,
+    responsibilities,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AgendaEventRow &&
+          other.isDeleted == this.isDeleted &&
+          other.dirty == this.dirty &&
+          other.purgeAt == this.purgeAt &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.title == this.title &&
+          other.type == this.type &&
+          other.time == this.time &&
+          other.durationMinutes == this.durationMinutes &&
+          other.location == this.location &&
+          other.notes == this.notes &&
+          other.reminder == this.reminder &&
+          other.linkedServiceId == this.linkedServiceId &&
+          other.responsibilities == this.responsibilities &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
+  final Value<bool> isDeleted;
+  final Value<bool> dirty;
+  final Value<String?> purgeAt;
+  final Value<String> id;
+  final Value<String> date;
+  final Value<String> title;
+  final Value<String> type;
+  final Value<String> time;
+  final Value<int> durationMinutes;
+  final Value<String?> location;
+  final Value<String?> notes;
+  final Value<Object?> reminder;
+  final Value<String?> linkedServiceId;
+  final Value<Object?> responsibilities;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<int> rowid;
+  const AgendaEventsCompanion({
+    this.isDeleted = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.purgeAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.title = const Value.absent(),
+    this.type = const Value.absent(),
+    this.time = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.location = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.reminder = const Value.absent(),
+    this.linkedServiceId = const Value.absent(),
+    this.responsibilities = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AgendaEventsCompanion.insert({
+    this.isDeleted = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.purgeAt = const Value.absent(),
+    required String id,
+    required String date,
+    required String title,
+    required String type,
+    required String time,
+    this.durationMinutes = const Value.absent(),
+    this.location = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.reminder = const Value.absent(),
+    this.linkedServiceId = const Value.absent(),
+    this.responsibilities = const Value.absent(),
+    required String createdAt,
+    required String updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       date = Value(date),
+       title = Value(title),
+       type = Value(type),
+       time = Value(time),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<AgendaEventRow> custom({
+    Expression<bool>? isDeleted,
+    Expression<bool>? dirty,
+    Expression<String>? purgeAt,
+    Expression<String>? id,
+    Expression<String>? date,
+    Expression<String>? title,
+    Expression<String>? type,
+    Expression<String>? time,
+    Expression<int>? durationMinutes,
+    Expression<String>? location,
+    Expression<String>? notes,
+    Expression<String>? reminder,
+    Expression<String>? linkedServiceId,
+    Expression<String>? responsibilities,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (dirty != null) 'dirty': dirty,
+      if (purgeAt != null) 'purge_at': purgeAt,
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (title != null) 'title': title,
+      if (type != null) 'type': type,
+      if (time != null) 'time': time,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (location != null) 'location': location,
+      if (notes != null) 'notes': notes,
+      if (reminder != null) 'reminder': reminder,
+      if (linkedServiceId != null) 'linked_service_id': linkedServiceId,
+      if (responsibilities != null) 'responsibilities': responsibilities,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AgendaEventsCompanion copyWith({
+    Value<bool>? isDeleted,
+    Value<bool>? dirty,
+    Value<String?>? purgeAt,
+    Value<String>? id,
+    Value<String>? date,
+    Value<String>? title,
+    Value<String>? type,
+    Value<String>? time,
+    Value<int>? durationMinutes,
+    Value<String?>? location,
+    Value<String?>? notes,
+    Value<Object?>? reminder,
+    Value<String?>? linkedServiceId,
+    Value<Object?>? responsibilities,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return AgendaEventsCompanion(
+      isDeleted: isDeleted ?? this.isDeleted,
+      dirty: dirty ?? this.dirty,
+      purgeAt: purgeAt ?? this.purgeAt,
+      id: id ?? this.id,
+      date: date ?? this.date,
+      title: title ?? this.title,
+      type: type ?? this.type,
+      time: time ?? this.time,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      location: location ?? this.location,
+      notes: notes ?? this.notes,
+      reminder: reminder ?? this.reminder,
+      linkedServiceId: linkedServiceId ?? this.linkedServiceId,
+      responsibilities: responsibilities ?? this.responsibilities,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (purgeAt.present) {
+      map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (time.present) {
+      map['time'] = Variable<String>(time.value);
+    }
+    if (durationMinutes.present) {
+      map['duration_minutes'] = Variable<int>(durationMinutes.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (reminder.present) {
+      map['reminder'] = Variable<String>(
+        $AgendaEventsTable.$converterreminder.toSql(reminder.value),
+      );
+    }
+    if (linkedServiceId.present) {
+      map['linked_service_id'] = Variable<String>(linkedServiceId.value);
+    }
+    if (responsibilities.present) {
+      map['responsibilities'] = Variable<String>(
+        $AgendaEventsTable.$converterresponsibilities.toSql(
+          responsibilities.value,
+        ),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AgendaEventsCompanion(')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('dirty: $dirty, ')
+          ..write('purgeAt: $purgeAt, ')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('title: $title, ')
+          ..write('type: $type, ')
+          ..write('time: $time, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('location: $location, ')
+          ..write('notes: $notes, ')
+          ..write('reminder: $reminder, ')
+          ..write('linkedServiceId: $linkedServiceId, ')
+          ..write('responsibilities: $responsibilities, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2866,6 +3777,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FoldersTable folders = $FoldersTable(this);
   late final $ServicesTable services = $ServicesTable(this);
   late final $CollectionsTable collections = $CollectionsTable(this);
+  late final $AgendaEventsTable agendaEvents = $AgendaEventsTable(this);
   late final Index songsFolderIdx = Index(
     'songs_folder_idx',
     'CREATE INDEX songs_folder_idx ON songs (folder_id)',
@@ -2882,6 +3794,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'services_date_idx',
     'CREATE INDEX services_date_idx ON services (date)',
   );
+  late final Index agendaDateIdx = Index(
+    'agenda_date_idx',
+    'CREATE INDEX agenda_date_idx ON agenda_events (date)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2891,10 +3807,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     folders,
     services,
     collections,
+    agendaEvents,
     songsFolderIdx,
     songsUpdatedIdx,
     foldersParentIdx,
     servicesDateIdx,
+    agendaDateIdx,
   ];
 }
 
@@ -3223,7 +4141,16 @@ class $$SongsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SongsTable, SongRow>(table),
+                  BaseReferences<_$AppDatabase, $SongsTable, SongRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -3550,7 +4477,16 @@ class $$FoldersTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$FoldersTable, FolderRow>(table),
+                  BaseReferences<_$AppDatabase, $FoldersTable, FolderRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -3864,7 +4800,16 @@ class $$ServicesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ServicesTable, ServiceRow>(table),
+                  BaseReferences<_$AppDatabase, $ServicesTable, ServiceRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -4216,7 +5161,16 @@ class $$CollectionsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CollectionsTable, CollectionRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CollectionsTable,
+                    CollectionRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -4240,6 +5194,433 @@ typedef $$CollectionsTableProcessedTableManager =
       CollectionRow,
       PrefetchHooks Function()
     >;
+typedef $$AgendaEventsTableCreateCompanionBuilder =
+    AgendaEventsCompanion Function({
+      Value<bool> isDeleted,
+      Value<bool> dirty,
+      Value<String?> purgeAt,
+      required String id,
+      required String date,
+      required String title,
+      required String type,
+      required String time,
+      Value<int> durationMinutes,
+      Value<String?> location,
+      Value<String?> notes,
+      Value<Object?> reminder,
+      Value<String?> linkedServiceId,
+      Value<Object?> responsibilities,
+      required String createdAt,
+      required String updatedAt,
+      Value<int> rowid,
+    });
+typedef $$AgendaEventsTableUpdateCompanionBuilder =
+    AgendaEventsCompanion Function({
+      Value<bool> isDeleted,
+      Value<bool> dirty,
+      Value<String?> purgeAt,
+      Value<String> id,
+      Value<String> date,
+      Value<String> title,
+      Value<String> type,
+      Value<String> time,
+      Value<int> durationMinutes,
+      Value<String?> location,
+      Value<String?> notes,
+      Value<Object?> reminder,
+      Value<String?> linkedServiceId,
+      Value<Object?> responsibilities,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$AgendaEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $AgendaEventsTable> {
+  $$AgendaEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purgeAt => $composableBuilder(
+    column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get time => $composableBuilder(
+    column: $table.time,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Object?, Object, String> get reminder =>
+      $composableBuilder(
+        column: $table.reminder,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get linkedServiceId => $composableBuilder(
+    column: $table.linkedServiceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Object?, Object, String>
+  get responsibilities => $composableBuilder(
+    column: $table.responsibilities,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AgendaEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AgendaEventsTable> {
+  $$AgendaEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purgeAt => $composableBuilder(
+    column: $table.purgeAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get time => $composableBuilder(
+    column: $table.time,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reminder => $composableBuilder(
+    column: $table.reminder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedServiceId => $composableBuilder(
+    column: $table.linkedServiceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get responsibilities => $composableBuilder(
+    column: $table.responsibilities,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AgendaEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AgendaEventsTable> {
+  $$AgendaEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get purgeAt =>
+      $composableBuilder(column: $table.purgeAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get time =>
+      $composableBuilder(column: $table.time, builder: (column) => column);
+
+  GeneratedColumn<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Object?, String> get reminder =>
+      $composableBuilder(column: $table.reminder, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedServiceId => $composableBuilder(
+    column: $table.linkedServiceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Object?, String> get responsibilities =>
+      $composableBuilder(
+        column: $table.responsibilities,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AgendaEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AgendaEventsTable,
+          AgendaEventRow,
+          $$AgendaEventsTableFilterComposer,
+          $$AgendaEventsTableOrderingComposer,
+          $$AgendaEventsTableAnnotationComposer,
+          $$AgendaEventsTableCreateCompanionBuilder,
+          $$AgendaEventsTableUpdateCompanionBuilder,
+          (
+            AgendaEventRow,
+            BaseReferences<_$AppDatabase, $AgendaEventsTable, AgendaEventRow>,
+          ),
+          AgendaEventRow,
+          PrefetchHooks Function()
+        > {
+  $$AgendaEventsTableTableManager(_$AppDatabase db, $AgendaEventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AgendaEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AgendaEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AgendaEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<bool> isDeleted = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String?> purgeAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> time = const Value.absent(),
+                Value<int> durationMinutes = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<Object?> reminder = const Value.absent(),
+                Value<String?> linkedServiceId = const Value.absent(),
+                Value<Object?> responsibilities = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AgendaEventsCompanion(
+                isDeleted: isDeleted,
+                dirty: dirty,
+                purgeAt: purgeAt,
+                id: id,
+                date: date,
+                title: title,
+                type: type,
+                time: time,
+                durationMinutes: durationMinutes,
+                location: location,
+                notes: notes,
+                reminder: reminder,
+                linkedServiceId: linkedServiceId,
+                responsibilities: responsibilities,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<bool> isDeleted = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String?> purgeAt = const Value.absent(),
+                required String id,
+                required String date,
+                required String title,
+                required String type,
+                required String time,
+                Value<int> durationMinutes = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<Object?> reminder = const Value.absent(),
+                Value<String?> linkedServiceId = const Value.absent(),
+                Value<Object?> responsibilities = const Value.absent(),
+                required String createdAt,
+                required String updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AgendaEventsCompanion.insert(
+                isDeleted: isDeleted,
+                dirty: dirty,
+                purgeAt: purgeAt,
+                id: id,
+                date: date,
+                title: title,
+                type: type,
+                time: time,
+                durationMinutes: durationMinutes,
+                location: location,
+                notes: notes,
+                reminder: reminder,
+                linkedServiceId: linkedServiceId,
+                responsibilities: responsibilities,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AgendaEventsTable, AgendaEventRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $AgendaEventsTable,
+                    AgendaEventRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AgendaEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AgendaEventsTable,
+      AgendaEventRow,
+      $$AgendaEventsTableFilterComposer,
+      $$AgendaEventsTableOrderingComposer,
+      $$AgendaEventsTableAnnotationComposer,
+      $$AgendaEventsTableCreateCompanionBuilder,
+      $$AgendaEventsTableUpdateCompanionBuilder,
+      (
+        AgendaEventRow,
+        BaseReferences<_$AppDatabase, $AgendaEventsTable, AgendaEventRow>,
+      ),
+      AgendaEventRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4252,4 +5633,6 @@ class $AppDatabaseManager {
       $$ServicesTableTableManager(_db, _db.services);
   $$CollectionsTableTableManager get collections =>
       $$CollectionsTableTableManager(_db, _db.collections);
+  $$AgendaEventsTableTableManager get agendaEvents =>
+      $$AgendaEventsTableTableManager(_db, _db.agendaEvents);
 }

@@ -10,6 +10,7 @@ import 'package:hosanna/core/db/tables.dart';
 import 'package:hosanna/features/services/presentation/service_detail_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'test_pump.dart';
 
 void main() {
   late AppDatabase db;
@@ -81,7 +82,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
   }
 
   testWidgets(
@@ -92,17 +93,17 @@ void main() {
 
       // Open the service detail page.
       await tester.tap(find.text('home'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       expect(find.byType(ServiceDetailPage), findsOneWidget);
 
       // Open the order drawer.
       await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       expect(find.text('Leave Service Mode'), findsOneWidget);
 
       // Tap the drawer's leave action.
       await tester.tap(find.text('Leave Service Mode'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
 
       // The whole service page must be popped, not just the drawer closed.
       expect(find.byType(ServiceDetailPage), findsNothing);

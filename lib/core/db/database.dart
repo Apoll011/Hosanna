@@ -5,7 +5,7 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Songs, Folders, Services, Collections])
+@DriftDatabase(tables: [Songs, Folders, Services, Collections, AgendaEvents])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +37,10 @@ class AppDatabase extends _$AppDatabase {
       // column landed are still tagged as v2.
       if (from < 3 && !await _hasColumn('collections', 'song_count')) {
         await m.addColumn(collections, collections.songCount);
+      }
+      // v4 adds replicated agenda events (Studio calendar).
+      if (from < 4) {
+        await m.createTable(agendaEvents);
       }
     },
   );
@@ -58,6 +62,28 @@ class AppDatabase extends _$AppDatabase {
       await delete(folders).go();
       await delete(collections).go();
       await delete(services).go();
+      await delete(agendaEvents).go();
     });
   }
+
+  /// Marks a local row dirty so the next replication push uploads it.
+  Future<void> markSongDirty(String id) =>
+      (update(songs)..where((t) => t.id.equals(id)))
+          .write(const SongsCompanion(dirty: Value(true)));
+
+  Future<void> markFolderDirty(String id) =>
+      (update(folders)..where((t) => t.id.equals(id)))
+          .write(const FoldersCompanion(dirty: Value(true)));
+
+  Future<void> markCollectionDirty(String id) =>
+      (update(collections)..where((t) => t.id.equals(id)))
+          .write(const CollectionsCompanion(dirty: Value(true)));
+
+  Future<void> markServiceDirty(String id) =>
+      (update(services)..where((t) => t.id.equals(id)))
+          .write(const ServicesCompanion(dirty: Value(true)));
+
+  Future<void> markAgendaEventDirty(String id) =>
+      (update(agendaEvents)..where((t) => t.id.equals(id)))
+          .write(const AgendaEventsCompanion(dirty: Value(true)));
 }

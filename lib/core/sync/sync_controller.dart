@@ -126,7 +126,9 @@ final replicationAdaptersProvider = Provider<List<ReplicationAdapter>>((ref) {
     SongReplicationAdapter(db),
     FolderReplicationAdapter(db),
     CollectionReplicationAdapter(db),
+    // Services before agendaEvents (FK: linkedServiceId).
     ServiceReplicationAdapter(db),
+    AgendaEventReplicationAdapter(db),
   ];
 });
 

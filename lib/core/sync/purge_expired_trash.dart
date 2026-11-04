@@ -22,5 +22,6 @@ Future<void> purgeExpiredTrash(AppDatabase db) async {
     await (db.delete(db.folders)..where(expired)).go();
     await (db.delete(db.collections)..where(expired)).go();
     await (db.delete(db.services)..where(expired)).go();
+    await (db.delete(db.agendaEvents)..where(expired)).go();
   });
 }
