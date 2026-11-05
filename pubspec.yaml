@@ -2,7 +2,7 @@ name: hosanna
 description: "Hosanna musician app (Flutter)."
 publish_to: "none"
 
-version: 2.1.1
+version: 2.2.4
 
 environment:
   sdk: ^3.13.2
