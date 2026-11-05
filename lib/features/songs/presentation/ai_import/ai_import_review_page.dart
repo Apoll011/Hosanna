@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../app/design/illustrations.dart';
 import '../../../../app/design/tokens.dart';
 import '../../../../core/sync/sync_controller.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -230,19 +231,40 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                     elevated: false,
                     selected: true,
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.auto_awesome_rounded,
-                          color: scheme.primary,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            HosannaIllustrations.aiSuccess,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Icon(
+                              Icons.auto_awesome_rounded,
+                              color: scheme.primary,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: HosannaSpacing.sm),
                         Expanded(
-                          child: Text(
-                            l10n.songsAiCreatedBanner,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.songsAiSuccessTitle,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.songsAiCreatedBanner,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

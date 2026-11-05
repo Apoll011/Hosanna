@@ -514,7 +514,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           scrollable: true,
         ),
       LibrarySection.recent => EmptyState(
-          illustrationAsset: HosannaIllustrations.emptySongs,
+          illustrationAsset: HosannaIllustrations.emptyRecents,
           title: l10n.songsRecentsEmpty,
           description: l10n.songsRecentsEmptyDesc,
           scrollable: true,
