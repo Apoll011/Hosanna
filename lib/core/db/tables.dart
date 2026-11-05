@@ -211,7 +211,7 @@ class JsonConverter extends TypeConverter<Object?, String> {
   }
 
   @override
-  String toSql(Object? value) => jsonEncode(value ?? null);
+  String toSql(Object? value) => jsonEncode(value);
 }
 
 /// Org agenda / calendar events (Studio replication collection `agendaEvents`).

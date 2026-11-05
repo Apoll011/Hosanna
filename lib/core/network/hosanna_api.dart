@@ -154,8 +154,8 @@ class ServiceNotesApi {
     final res = await _dio.get<List<dynamic>>(
       '/services/$id/notes',
       queryParameters: {
-        if (elementId != null) 'elementId': elementId,
-        if (scope != null) 'scope': scope,
+        'elementId': ?elementId,
+        'scope': ?scope,
       },
     );
     return (res.data ?? const [])
@@ -174,7 +174,7 @@ class ServiceNotesApi {
       '/services/$id/notes',
       data: {
         'body': body,
-        if (elementId != null) 'elementId': elementId,
+        'elementId': ?elementId,
         'private': private,
       },
     );
@@ -190,8 +190,8 @@ class ServiceNotesApi {
     final res = await _dio.put<Map<String, dynamic>>(
       '/services/$id/notes/$noteId',
       data: {
-        if (body != null) 'body': body,
-        if (private != null) 'private': private,
+        'body': ?body,
+        'private': ?private,
       },
     );
     return ServiceNoteDto.fromJson(res.data ?? const {});
@@ -229,8 +229,8 @@ class SongImportApi {
           'imagesBase64': imagesBase64,
         if (imageMimeTypes != null && imageMimeTypes.isNotEmpty)
           'imageMimeTypes': imageMimeTypes,
-        if (pdfBase64 != null) 'pdfBase64': pdfBase64,
-        if (fileName != null) 'fileName': fileName,
+        'pdfBase64': ?pdfBase64,
+        'fileName': ?fileName,
       },
       options: Options(
         // Create returns immediately (202); still allow slow uploads.
