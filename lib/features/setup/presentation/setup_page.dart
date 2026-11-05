@@ -310,7 +310,7 @@ class _RoleStep extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: _RoleTile(
+              child: _ChoiceTile(
                 asset: HosannaIllustrations.setupRoleMusician,
                 fallbackIcon: Icons.music_note_rounded,
                 title: l10n.setupRoleMusician,
@@ -320,7 +320,7 @@ class _RoleStep extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _RoleTile(
+              child: _ChoiceTile(
                 asset: HosannaIllustrations.setupRoleLeader,
                 fallbackIcon: Icons.groups_rounded,
                 title: l10n.setupRoleLeader,
@@ -335,8 +335,8 @@ class _RoleStep extends StatelessWidget {
   }
 }
 
-class _RoleTile extends StatelessWidget {
-  const _RoleTile({
+class _ChoiceTile extends StatelessWidget {
+  const _ChoiceTile({
     required this.asset,
     required this.fallbackIcon,
     required this.title,
@@ -378,6 +378,7 @@ class _RoleTile extends StatelessWidget {
               child: Image.asset(
                 asset,
                 fit: BoxFit.cover,
+                alignment: Alignment.center,
                 errorBuilder: (_, _, _) => ColoredBox(
                   color: scheme.primary.withValues(alpha: 0.12),
                   child: Icon(
@@ -396,6 +397,8 @@ class _RoleTile extends StatelessWidget {
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3,
@@ -424,57 +427,63 @@ class _FocusStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = <(SetupPrimaryFocus, String, String?, String, IconData)>[
+    final options = <(SetupPrimaryFocus, String, String, IconData)>[
       (
         SetupPrimaryFocus.guitar,
         l10n.setupFocusGuitar,
-        null,
         HosannaIllustrations.setupInstrumentGuitar,
         Icons.graphic_eq_rounded,
       ),
       (
         SetupPrimaryFocus.ukulele,
         l10n.setupFocusUkulele,
-        null,
         HosannaIllustrations.setupInstrumentUkulele,
         Icons.music_note_rounded,
       ),
       (
         SetupPrimaryFocus.piano,
         l10n.setupFocusPiano,
-        null,
         HosannaIllustrations.setupInstrumentPiano,
         Icons.piano_rounded,
       ),
       (
         SetupPrimaryFocus.vocals,
         l10n.setupFocusVocals,
-        l10n.setupFocusVocalsDesc,
         HosannaIllustrations.setupInstrumentVocals,
         Icons.mic_rounded,
       ),
     ];
 
+    Widget row(int start) {
+      return SizedBox(
+        height: 168,
+        child: Row(
+          children: [
+            for (var i = 0; i < 2; i++) ...[
+              if (i > 0) const SizedBox(width: 12),
+              Expanded(
+                child: _ChoiceTile(
+                  asset: options[start + i].$3,
+                  fallbackIcon: options[start + i].$4,
+                  title: options[start + i].$2,
+                  selected: selected == options[start + i].$1,
+                  onTap: () => onSelect(options[start + i].$1),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
     return _StepBody(
       title: l10n.setupFocusTitle,
       subtitle: l10n.setupFocusSubtitle,
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.92,
+      child: Column(
         children: [
-          for (final option in options)
-            _GridChoiceCard(
-              asset: option.$4,
-              fallbackIcon: option.$5,
-              title: option.$2,
-              subtitle: option.$3,
-              selected: selected == option.$1,
-              onTap: () => onSelect(option.$1),
-            ),
+          row(0),
+          const SizedBox(height: 12),
+          row(2),
         ],
       ),
     );
@@ -677,7 +686,6 @@ class _StepBody extends StatelessWidget {
               _HeroImage(
                 asset: imageAsset!,
                 fallbackIcon: fallbackIcon ?? Icons.music_note_rounded,
-                height: 168,
               ),
               const SizedBox(height: 20),
             ],
@@ -707,29 +715,30 @@ class _StepBody extends StatelessWidget {
   }
 }
 
+/// Full-width hero that keeps the image's aspect ratio (no vertical crop).
 class _HeroImage extends StatelessWidget {
   const _HeroImage({
     required this.asset,
     required this.fallbackIcon,
-    this.height = 140,
   });
 
   final String asset;
   final IconData fallbackIcon;
-  final double height;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
-      child: SizedBox(
-        height: height,
+      child: Image.asset(
+        asset,
         width: double.infinity,
-        child: Image.asset(
-          asset,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => DecoratedBox(
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+        errorBuilder: (_, _, _) => SizedBox(
+          height: 160,
+          width: double.infinity,
+          child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -748,94 +757,6 @@ class _HeroImage extends StatelessWidget {
                 color: scheme.primary.withValues(alpha: 0.85),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GridChoiceCard extends StatelessWidget {
-  const _GridChoiceCard({
-    required this.asset,
-    required this.fallbackIcon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String asset;
-  final IconData fallbackIcon;
-  final String title;
-  final String? subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Material(
-      color: selected
-          ? scheme.primaryContainer.withValues(alpha: 0.7)
-          : scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: selected
-              ? scheme.primary
-              : scheme.outlineVariant.withValues(alpha: 0.55),
-          width: selected ? 2 : 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Image.asset(
-                      asset,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => ColoredBox(
-                        color: scheme.primary.withValues(alpha: 0.12),
-                        child: Icon(
-                          fallbackIcon,
-                          size: 36,
-                          color: scheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ],
           ),
         ),
       ),
