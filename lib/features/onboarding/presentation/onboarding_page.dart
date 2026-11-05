@@ -95,11 +95,21 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
+    final empty = !_loading && _error == null && _invitations.isEmpty;
+    final hasInvites = !_loading && _error == null && _invitations.isNotEmpty;
+
+    // One illustration only: empty state owns the copy via scaffold title,
+    // so we don't also render EmptyState's duplicate art underneath.
+    final title = empty ? l10n.onboardingNoInvites : l10n.onboardingTitle;
+    final subtitle =
+        empty ? l10n.onboardingNoInvitesDesc : l10n.onboardingSubtitle;
+
     return AuthScaffold(
-      title: l10n.onboardingTitle,
-      subtitle: l10n.onboardingSubtitle,
-      heroAsset: HosannaIllustrations.onboardingInvite,
+      title: title,
+      subtitle: subtitle,
+      heroAsset: _error != null ? null : HosannaIllustrations.onboardingInvite,
       heroFallbackIcon: Icons.groups_rounded,
+      showLogo: _error != null,
       showBack: false,
       maxWidth: 480,
       footer: TextButton.icon(
@@ -112,17 +122,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         children: [
           if (_loading)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
+              padding: const EdgeInsets.symmetric(vertical: 28),
               child: Column(
                 children: [
-                  Image.asset(
-                    HosannaIllustrations.stateLoading,
-                    height: 120,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const SizedBox(
-                      height: 36,
-                      width: 36,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -143,16 +151,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               onRetry: _load,
               illustrationAsset: HosannaIllustrations.stateError,
             )
-          else if (_invitations.isEmpty)
-            EmptyState(
-              illustrationAsset: HosannaIllustrations.emptyMembers,
-              title: l10n.onboardingNoInvites,
-              description: l10n.onboardingNoInvitesDesc,
-              primaryIcon: Icons.refresh_rounded,
-              primaryLabel: l10n.commonRetry,
-              onPrimary: _load,
+          else if (empty)
+            FilledButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(l10n.commonRetry),
             )
-          else ...[
+          else if (hasInvites) ...[
             Text(
               l10n.onboardingPendingInvites(_invitations.length),
               style: theme.textTheme.titleSmall?.copyWith(
@@ -255,12 +260,6 @@ class _InvitationCard extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: processing ? null : onReject,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
                       child: Text(l10n.onboardingReject),
                     ),
                   ),
@@ -268,12 +267,6 @@ class _InvitationCard extends StatelessWidget {
                   Expanded(
                     child: FilledButton(
                       onPressed: processing ? null : onAccept,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
                       child: processing
                           ? const SizedBox(
                               height: 18,
