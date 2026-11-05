@@ -7,6 +7,9 @@ abstract final class HosannaIllustrations {
   static const String emptyFavorites = '$_base/empty_favorites.png';
   static const String emptySearch = '$_base/empty_search.png';
   static const String emptyServices = '$_base/empty_services.png';
+  static const String emptyAgenda = '$_base/empty_agenda.png';
+  static const String emptyNextService = '$_base/empty_next_service.png';
+  static const String emptyNotes = '$_base/empty_notes.png';
   static const String emptyImportSource = '$_base/empty_import_source.png';
   static const String emptySync = '$_base/empty_sync.png';
   static const String aiProcessing = '$_base/ai_processing.png';
@@ -14,6 +17,7 @@ abstract final class HosannaIllustrations {
   static const String stateSuccess = '$_base/state_success.png';
   static const String stateError = '$_base/state_error.png';
   static const String emptyMembers = '$_base/empty_members.png';
+  static const String notificationConsent = '$_base/notification_consent.png';
 
   // ── Post-login setup wizard ──────────────────────────────────────────────
   static const String setupWelcome = '$_base/setup_welcome.png';
@@ -39,6 +43,5 @@ abstract final class HosannaIllustrations {
   static const String authVerifyEmail = '$_base/auth_verify_email.png';
 
   // ── Org invite (pre-setup) ───────────────────────────────────────────────
-  // Reuses members art until a dedicated invite illustration ships.
-  static const String onboardingInvite = emptyMembers;
+  static const String onboardingInvite = '$_base/onboarding_invite.png';
 }
