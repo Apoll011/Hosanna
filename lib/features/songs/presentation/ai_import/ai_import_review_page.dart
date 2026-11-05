@@ -184,6 +184,39 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
               ],
             ),
           ),
+          if (widget.draft.confidence != null) ...[
+            const SizedBox(height: 10),
+            HosannaSurface(
+              elevated: false,
+              child: Row(
+                children: [
+                  Icon(
+                    widget.draft.isLowConfidence
+                        ? Icons.warning_amber_rounded
+                        : Icons.verified_outlined,
+                    color: widget.draft.isLowConfidence
+                        ? scheme.error
+                        : scheme.primary,
+                  ),
+                  const SizedBox(width: HosannaSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      widget.draft.isLowConfidence
+                          ? l10n.songsAiLowConfidence
+                          : l10n.songsAiConfidence(
+                              ((widget.draft.confidence ?? 0) * 100)
+                                  .round()
+                                  .toString(),
+                            ),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (widget.draft.warnings.isNotEmpty) ...[
             const SizedBox(height: 10),
             ...widget.draft.warnings.map(
@@ -324,6 +357,12 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                 ),
               ),
             ],
+          ),
+          TextButton(
+            onPressed: _saving
+                ? null
+                : () => context.go('/songs/import/ai'),
+            child: Text(l10n.songsAiDiscardDraft),
           ),
         ],
       ),

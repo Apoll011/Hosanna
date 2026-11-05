@@ -47,6 +47,9 @@ class AiImportDraft {
   final List<String> warnings;
   final Uint8List? thumbnailBytes;
 
+  bool get isLowConfidence =>
+      confidence != null && confidence! < 0.45;
+
   factory AiImportDraft.fromJson(
     Map<String, dynamic> json, {
     Uint8List? thumbnailBytes,
@@ -70,7 +73,27 @@ class AiImportDraft {
   }
 }
 
-enum AiImportJobStatus { queued, running, completed, failed }
+enum AiImportJobStatus { queued, running, completed, failed, cancelled }
+
+enum AiImportCancelCode {
+  notASong,
+  unreadable,
+  blank,
+  wrongContent,
+  multipleUnclear,
+  unknown,
+}
+
+AiImportCancelCode parseAiImportCancelCode(String? raw) {
+  return switch (raw) {
+    'not_a_song' => AiImportCancelCode.notASong,
+    'unreadable' => AiImportCancelCode.unreadable,
+    'blank' => AiImportCancelCode.blank,
+    'wrong_content' => AiImportCancelCode.wrongContent,
+    'multiple_unclear' => AiImportCancelCode.multipleUnclear,
+    _ => AiImportCancelCode.unknown,
+  };
+}
 
 class AiImportJobStep {
   const AiImportJobStep({
@@ -93,6 +116,8 @@ class AiImportJobSnapshot {
     required this.steps,
     this.draft,
     this.errorMessage,
+    this.cancelCode,
+    this.cancelReason,
   });
 
   final String id;
@@ -100,6 +125,8 @@ class AiImportJobSnapshot {
   final List<AiImportJobStep> steps;
   final AiImportDraft? draft;
   final String? errorMessage;
+  final AiImportCancelCode? cancelCode;
+  final String? cancelReason;
 
   factory AiImportJobSnapshot.fromJson(Map<String, dynamic> json) {
     final statusRaw = (json['status'] as String?) ?? 'queued';
@@ -107,6 +134,7 @@ class AiImportJobSnapshot {
       'running' => AiImportJobStatus.running,
       'completed' => AiImportJobStatus.completed,
       'failed' => AiImportJobStatus.failed,
+      'cancelled' => AiImportJobStatus.cancelled,
       _ => AiImportJobStatus.queued,
     };
     final stepsRaw = json['steps'];
@@ -126,6 +154,7 @@ class AiImportJobSnapshot {
       }
     }
     final result = json['result'];
+    final cancelCodeRaw = json['cancelCode'] as String?;
     return AiImportJobSnapshot(
       id: (json['id'] as String?) ?? '',
       status: status,
@@ -134,6 +163,13 @@ class AiImportJobSnapshot {
           ? AiImportDraft.fromJson(Map<String, dynamic>.from(result))
           : null,
       errorMessage: json['errorMessage'] as String?,
+      cancelCode: status == AiImportJobStatus.cancelled
+          ? parseAiImportCancelCode(cancelCodeRaw)
+          : null,
+      cancelReason: json['cancelReason'] as String? ??
+          (status == AiImportJobStatus.cancelled
+              ? json['errorMessage'] as String?
+              : null),
     );
   }
 }

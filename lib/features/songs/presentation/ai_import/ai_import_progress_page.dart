@@ -28,7 +28,10 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   String? _jobId;
   AiImportJobSnapshot? _snapshot;
   String? _error;
+  bool _cancelledByAi = false;
+  AiImportCancelCode? _cancelCode;
   bool _started = false;
+  bool _userAborted = false;
 
   @override
   void initState() {
@@ -40,6 +43,54 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   void dispose() {
     _poll?.cancel();
     super.dispose();
+  }
+
+  void _handleSnapshot(AiImportJobSnapshot snap, AppLocalizations l10n) {
+    if (_userAborted || !mounted) return;
+    setState(() => _snapshot = snap);
+    if (snap.status == AiImportJobStatus.completed) {
+      _poll?.cancel();
+      _goReview(
+        snap.draft ??
+            const AiImportDraft(
+              title: 'Untitled',
+              artist: '',
+              content: '',
+              warnings: ['Import finished without a draft payload.'],
+            ),
+      );
+      return;
+    }
+    if (snap.status == AiImportJobStatus.cancelled) {
+      _poll?.cancel();
+      setState(() {
+        _cancelledByAi = true;
+        _cancelCode = snap.cancelCode ?? AiImportCancelCode.unknown;
+        _error = snap.cancelReason?.trim().isNotEmpty == true
+            ? snap.cancelReason
+            : _cancelCodeMessage(l10n, _cancelCode!);
+      });
+      return;
+    }
+    if (snap.status == AiImportJobStatus.failed) {
+      _poll?.cancel();
+      setState(() {
+        _cancelledByAi = false;
+        _cancelCode = null;
+        _error = snap.errorMessage ?? l10n.songsAiImportFailed;
+      });
+    }
+  }
+
+  String _cancelCodeMessage(AppLocalizations l10n, AiImportCancelCode code) {
+    return switch (code) {
+      AiImportCancelCode.notASong => l10n.songsAiCancelledNotASong,
+      AiImportCancelCode.unreadable => l10n.songsAiCancelledUnreadable,
+      AiImportCancelCode.blank => l10n.songsAiCancelledBlank,
+      AiImportCancelCode.wrongContent => l10n.songsAiCancelledWrongContent,
+      AiImportCancelCode.multipleUnclear => l10n.songsAiCancelledMultiple,
+      AiImportCancelCode.unknown => l10n.songsAiCancelledGeneric,
+    };
   }
 
   Future<void> _start() async {
@@ -55,7 +106,11 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       };
       // Show optimistic step motion while the (long) create call runs.
       _poll = Timer.periodic(const Duration(milliseconds: 900), (_) {
-        if (!mounted || _snapshot?.status == AiImportJobStatus.completed) {
+        if (!mounted ||
+            _userAborted ||
+            _snapshot?.status == AiImportJobStatus.completed ||
+            _snapshot?.status == AiImportJobStatus.cancelled ||
+            _snapshot?.status == AiImportJobStatus.failed) {
           return;
         }
         setState(() {
@@ -73,39 +128,29 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         fileName: widget.request.fileName,
       );
       _poll?.cancel();
-      if (!mounted) return;
+      if (!mounted || _userAborted) return;
       final id = created['id'] as String?;
       if (id == null || id.isEmpty) {
         throw StateError('Missing job id');
       }
       final snap = AiImportJobSnapshot.fromJson(created);
-      setState(() {
-        _jobId = id;
-        _snapshot = snap;
-      });
-      if (snap.status == AiImportJobStatus.completed) {
-        // Always hand off to the approval screen — song is not persisted yet.
-        _goReview(
-          snap.draft ??
-              const AiImportDraft(
-                title: 'Untitled',
-                artist: '',
-                content: '',
-                warnings: ['Import finished without a draft payload.'],
-              ),
-        );
+      setState(() => _jobId = id);
+      if (snap.status == AiImportJobStatus.completed ||
+          snap.status == AiImportJobStatus.cancelled ||
+          snap.status == AiImportJobStatus.failed) {
+        _handleSnapshot(snap, l10n);
         return;
       }
-      if (snap.status == AiImportJobStatus.failed) {
-        setState(() => _error = snap.errorMessage ?? l10n.songsAiImportFailed);
-        return;
-      }
+      setState(() => _snapshot = snap);
       // Rare: job still running (e.g. older server) — poll.
       _poll = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     } catch (e) {
       _poll?.cancel();
-      if (!mounted) return;
-      setState(() => _error = _errorMessageFrom(e, l10n));
+      if (!mounted || _userAborted) return;
+      setState(() {
+        _cancelledByAi = false;
+        _error = _errorMessageFrom(e, l10n);
+      });
     }
   }
 
@@ -113,7 +158,10 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     if (e is DioException) {
       final data = e.response?.data;
       if (data is Map) {
-        final msg = data['errorMessage'] ?? data['message'] ?? data['error'];
+        final msg = data['errorMessage'] ??
+            data['cancelReason'] ??
+            data['message'] ??
+            data['error'];
         if (msg is String && msg.trim().isNotEmpty) return msg.trim();
       }
       if (e.message != null && e.message!.trim().isNotEmpty) {
@@ -126,37 +174,19 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
 
   Future<void> _tick() async {
     final id = _jobId;
-    if (id == null) return;
+    if (id == null || _userAborted) return;
     try {
       final raw = await ref.read(hosannaApiProvider).songImport.getJob(id);
       final snap = AiImportJobSnapshot.fromJson(raw);
-      if (!mounted) return;
-      setState(() => _snapshot = snap);
-      if (snap.status == AiImportJobStatus.completed) {
-        _poll?.cancel();
-        _goReview(
-          snap.draft ??
-              const AiImportDraft(
-                title: 'Untitled',
-                artist: '',
-                content: '',
-                warnings: ['Import finished without a draft payload.'],
-              ),
-        );
-      } else if (snap.status == AiImportJobStatus.failed) {
-        _poll?.cancel();
-        setState(() {
-          _error = snap.errorMessage ??
-              AppLocalizations.of(context).songsAiImportFailed;
-        });
-      }
+      if (!mounted || _userAborted) return;
+      _handleSnapshot(snap, AppLocalizations.of(context));
     } catch (_) {
       // Keep polling; transient network blips are OK.
     }
   }
 
   void _goReview(AiImportDraft draft) {
-    if (!mounted) return;
+    if (!mounted || _userAborted) return;
     final withThumb = AiImportDraft(
       title: draft.title,
       artist: draft.artist,
@@ -170,6 +200,13 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     );
     // Draft is in-memory only until the user taps Save on the review screen.
     context.pushReplacement('/songs/import/ai/review', extra: withThumb);
+  }
+
+  void _abortByUser() {
+    _userAborted = true;
+    _poll?.cancel();
+    if (!mounted) return;
+    context.go('/songs/import/ai');
   }
 
   List<AiImportJobStep> _fallbackSteps(AppLocalizations l10n) {
@@ -237,6 +274,20 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     final steps = _snapshot?.steps.isNotEmpty == true
         ? _snapshot!.steps
         : _fallbackSteps(l10n);
+    final hasError = _error != null;
+    final title = !hasError
+        ? l10n.songsAiAnalyzing
+        : _cancelledByAi
+            ? l10n.songsAiCancelledTitle
+            : l10n.songsAiImportFailed;
+    final body = !hasError
+        ? l10n.songsAiAnalyzingBody
+        : _error!;
+    final footerHint = !hasError
+        ? null
+        : _cancelledByAi
+            ? l10n.songsAiCancelledBody
+            : l10n.songsAiImportFailedBody;
 
     return Scaffold(
       appBar: AppBar(
@@ -247,13 +298,13 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         child: Column(
           children: [
             Image.asset(
-              _error == null
-                  ? HosannaIllustrations.aiProcessing
-                  : HosannaIllustrations.stateError,
+              hasError
+                  ? HosannaIllustrations.stateError
+                  : HosannaIllustrations.aiProcessing,
               height: 240,
               fit: BoxFit.contain,
             ),
-            if (_error == null) ...[
+            if (!hasError) ...[
               const SizedBox(height: HosannaSpacing.sm),
               const SizedBox(
                 width: 28,
@@ -263,7 +314,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
             ],
             const SizedBox(height: HosannaSpacing.lg),
             Text(
-              _error == null ? l10n.songsAiAnalyzing : l10n.songsAiImportFailed,
+              title,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -271,12 +322,23 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
             ),
             const SizedBox(height: HosannaSpacing.xs),
             Text(
-              _error ?? l10n.songsAiAnalyzingBody,
+              body,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
             ),
+            if (_cancelledByAi && _cancelCode != null) ...[
+              const SizedBox(height: HosannaSpacing.sm),
+              Chip(
+                avatar: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.primary,
+                ),
+                label: Text(_cancelCodeMessage(l10n, _cancelCode!)),
+              ),
+            ],
             const SizedBox(height: HosannaSpacing.xl),
             HosannaSurface(
               elevated: false,
@@ -289,7 +351,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
               ),
             ),
             const Spacer(),
-            if (_error == null)
+            if (!hasError) ...[
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -301,21 +363,30 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                   ),
                   child: Text(l10n.songsAiPleaseWait),
                 ),
-              )
-            else ...[
-              Text(
-                l10n.songsAiImportFailedBody,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
               ),
+              TextButton(
+                onPressed: _abortByUser,
+                child: Text(l10n.songsAiCancelImport),
+              ),
+            ] else ...[
+              if (footerHint != null)
+                Text(
+                  footerHint,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               const SizedBox(height: HosannaSpacing.md),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => context.go('/songs/import/ai'),
-                  child: Text(l10n.commonRetry),
+                  child: Text(
+                    _cancelledByAi
+                        ? l10n.songsAiImportAnother
+                        : l10n.commonRetry,
+                  ),
                 ),
               ),
               TextButton(

@@ -1558,6 +1558,78 @@ abstract class AppLocalizations {
   /// **'Tente outra foto ou PDF, ou crie a canção manualmente.'**
   String get songsAiImportFailedBody;
 
+  /// No description provided for @songsAiCancelledTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não é uma partitura'**
+  String get songsAiCancelledTitle;
+
+  /// No description provided for @songsAiCancelledBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Logos cancelou esta importação. Tente uma foto mais nítida de uma cifra, ou crie a canção manualmente.'**
+  String get songsAiCancelledBody;
+
+  /// No description provided for @songsAiCancelledGeneric.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta imagem não parece uma canção importável.'**
+  String get songsAiCancelledGeneric;
+
+  /// No description provided for @songsAiCancelledNotASong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto não parece uma partitura ou cifra.'**
+  String get songsAiCancelledNotASong;
+
+  /// No description provided for @songsAiCancelledUnreadable.
+  ///
+  /// In pt, this message translates to:
+  /// **'A imagem está demasiado desfocada ou escura.'**
+  String get songsAiCancelledUnreadable;
+
+  /// No description provided for @songsAiCancelledBlank.
+  ///
+  /// In pt, this message translates to:
+  /// **'A página parece em branco ou vazia.'**
+  String get songsAiCancelledBlank;
+
+  /// No description provided for @songsAiCancelledWrongContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Há texto, mas não é uma canção / cifra.'**
+  String get songsAiCancelledWrongContent;
+
+  /// No description provided for @songsAiCancelledMultiple.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parecem várias canções misturadas sem uma principal clara.'**
+  String get songsAiCancelledMultiple;
+
+  /// No description provided for @songsAiCancelImport.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get songsAiCancelImport;
+
+  /// No description provided for @songsAiDiscardDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar rascunho'**
+  String get songsAiDiscardDraft;
+
+  /// No description provided for @songsAiConfidence.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confiança da IA: {percent}%'**
+  String songsAiConfidence(String percent);
+
+  /// No description provided for @songsAiLowConfidence.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixa confiança — reveja bem a letra e os acordes antes de guardar.'**
+  String get songsAiLowConfidence;
+
   /// No description provided for @songsAiSuccessTitle.
   ///
   /// In pt, this message translates to:

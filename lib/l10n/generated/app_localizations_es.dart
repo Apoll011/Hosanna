@@ -807,6 +807,51 @@ class AppLocalizationsEs extends AppLocalizations {
       'Prueba otra foto o PDF, o crea la canción manualmente.';
 
   @override
+  String get songsAiCancelledTitle => 'No es una partitura';
+
+  @override
+  String get songsAiCancelledBody =>
+      'Logos canceló esta importación. Prueba una foto más nítida de una cifra, o crea la canción manualmente.';
+
+  @override
+  String get songsAiCancelledGeneric =>
+      'Esta imagen no parece una canción importable.';
+
+  @override
+  String get songsAiCancelledNotASong =>
+      'Esto no parece una partitura o cifra.';
+
+  @override
+  String get songsAiCancelledUnreadable =>
+      'La imagen está demasiado borrosa o oscura.';
+
+  @override
+  String get songsAiCancelledBlank => 'La página parece en blanco o vacía.';
+
+  @override
+  String get songsAiCancelledWrongContent =>
+      'Hay texto, pero no es una canción / cifra.';
+
+  @override
+  String get songsAiCancelledMultiple =>
+      'Parecen varias canciones mezcladas sin una principal clara.';
+
+  @override
+  String get songsAiCancelImport => 'Cancelar';
+
+  @override
+  String get songsAiDiscardDraft => 'Descartar borrador';
+
+  @override
+  String songsAiConfidence(String percent) {
+    return 'Confianza de la IA: $percent%';
+  }
+
+  @override
+  String get songsAiLowConfidence =>
+      'Baja confianza — revisa bien la letra y los acordes antes de guardar.';
+
+  @override
   String get songsAiSuccessTitle => 'Importación completada';
 
   @override

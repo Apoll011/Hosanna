@@ -296,6 +296,23 @@
   "songsAiEditContent": "Edit",
   "songsAiImportFailed": "Could not import this sheet music",
   "songsAiImportFailedBody": "Try another photo or PDF, or create the song manually.",
+  "songsAiCancelledTitle": "Not a song sheet",
+  "songsAiCancelledBody": "Logos cancelled this import. Try a clearer photo of a chord chart, or create the song manually.",
+  "songsAiCancelledGeneric": "This image does not look like an importable song.",
+  "songsAiCancelledNotASong": "This does not look like sheet music or a chord chart.",
+  "songsAiCancelledUnreadable": "The image is too blurry or dark to read.",
+  "songsAiCancelledBlank": "The page looks blank or empty.",
+  "songsAiCancelledWrongContent": "Text was found, but it is not a song / chord sheet.",
+  "songsAiCancelledMultiple": "Several songs appear mixed together with no clear primary song.",
+  "songsAiCancelImport": "Cancel",
+  "songsAiDiscardDraft": "Discard draft",
+  "songsAiConfidence": "AI confidence: {percent}%",
+  "@songsAiConfidence": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "songsAiLowConfidence": "Low confidence — please review lyrics and chords carefully before saving.",
   "songsAiSuccessTitle": "Import complete",
   "songsAiSuccessBody": "Lyrics, chords and metadata were captured.",
   "songsAiViewSong": "View song",

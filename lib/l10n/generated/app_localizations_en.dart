@@ -804,6 +804,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try another photo or PDF, or create the song manually.';
 
   @override
+  String get songsAiCancelledTitle => 'Not a song sheet';
+
+  @override
+  String get songsAiCancelledBody =>
+      'Logos cancelled this import. Try a clearer photo of a chord chart, or create the song manually.';
+
+  @override
+  String get songsAiCancelledGeneric =>
+      'This image does not look like an importable song.';
+
+  @override
+  String get songsAiCancelledNotASong =>
+      'This does not look like sheet music or a chord chart.';
+
+  @override
+  String get songsAiCancelledUnreadable =>
+      'The image is too blurry or dark to read.';
+
+  @override
+  String get songsAiCancelledBlank => 'The page looks blank or empty.';
+
+  @override
+  String get songsAiCancelledWrongContent =>
+      'Text was found, but it is not a song / chord sheet.';
+
+  @override
+  String get songsAiCancelledMultiple =>
+      'Several songs appear mixed together with no clear primary song.';
+
+  @override
+  String get songsAiCancelImport => 'Cancel';
+
+  @override
+  String get songsAiDiscardDraft => 'Discard draft';
+
+  @override
+  String songsAiConfidence(String percent) {
+    return 'AI confidence: $percent%';
+  }
+
+  @override
+  String get songsAiLowConfidence =>
+      'Low confidence — please review lyrics and chords carefully before saving.';
+
+  @override
   String get songsAiSuccessTitle => 'Import complete';
 
   @override

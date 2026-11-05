@@ -309,6 +309,23 @@
   "songsAiEditContent": "Editar",
   "songsAiImportFailed": "Não foi possível importar esta folha",
   "songsAiImportFailedBody": "Tente outra foto ou PDF, ou crie a canção manualmente.",
+  "songsAiCancelledTitle": "Não é uma partitura",
+  "songsAiCancelledBody": "O Logos cancelou esta importação. Tente uma foto mais nítida de uma cifra, ou crie a canção manualmente.",
+  "songsAiCancelledGeneric": "Esta imagem não parece uma canção importável.",
+  "songsAiCancelledNotASong": "Isto não parece uma partitura ou cifra.",
+  "songsAiCancelledUnreadable": "A imagem está demasiado desfocada ou escura.",
+  "songsAiCancelledBlank": "A página parece em branco ou vazia.",
+  "songsAiCancelledWrongContent": "Há texto, mas não é uma canção / cifra.",
+  "songsAiCancelledMultiple": "Parecem várias canções misturadas sem uma principal clara.",
+  "songsAiCancelImport": "Cancelar",
+  "songsAiDiscardDraft": "Descartar rascunho",
+  "songsAiConfidence": "Confiança da IA: {percent}%",
+  "@songsAiConfidence": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "songsAiLowConfidence": "Baixa confiança — reveja bem a letra e os acordes antes de guardar.",
   "songsAiSuccessTitle": "Importação concluída",
   "songsAiSuccessBody": "Letra, acordes e metadados foram capturados.",
   "songsAiViewSong": "Ver canção",
