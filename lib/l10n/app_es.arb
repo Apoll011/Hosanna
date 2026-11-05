@@ -322,6 +322,7 @@
   "songsAiViewSong": "Ver canción",
   "songsAiImportAnother": "Importar otra",
   "songsAiPossibleDuplicates": "Posibles coincidencias en tu biblioteca",
+  "songsAiPossibleDuplicatesHint": "Ábrela para comparar — volverás a este borrador. Guardar sigue creando una canción nueva.",
   "songsAiOpenExisting": "Abrir",
   "songsAiLintIssues": "Problemas de ChordPro",
   "songsAiFieldComposer": "Compositor",

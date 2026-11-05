@@ -868,6 +868,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Posibles coincidencias en tu biblioteca';
 
   @override
+  String get songsAiPossibleDuplicatesHint =>
+      'Ábrela para comparar — volverás a este borrador. Guardar sigue creando una canción nueva.';
+
+  @override
   String get songsAiOpenExisting => 'Abrir';
 
   @override

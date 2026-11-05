@@ -19,6 +19,7 @@ import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
 import '../features/songs/presentation/ai_import/ai_import_models.dart';
+import '../features/songs/presentation/ai_import/ai_import_nav.dart';
 import '../features/songs/presentation/ai_import/ai_import_progress_page.dart';
 import '../features/songs/presentation/ai_import/ai_import_review_page.dart';
 import '../features/songs/presentation/ai_import/ai_import_source_page.dart';
@@ -214,7 +215,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final extra = state.extra;
           if (extra is! AiImportJobRequest) {
-            return const AiImportSourcePage();
+            // Avoid nesting a second source page on a dead progress route.
+            return const AiImportMissingPayloadRedirect();
           }
           return AiImportProgressPage(request: extra);
         },
@@ -224,7 +226,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final extra = state.extra;
           if (extra is! AiImportDraft) {
-            return const AiImportSourcePage();
+            return const AiImportMissingPayloadRedirect();
           }
           return AiImportReviewPage(draft: extra);
         },

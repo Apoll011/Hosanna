@@ -864,6 +864,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsAiPossibleDuplicates => 'Possible matches in your library';
 
   @override
+  String get songsAiPossibleDuplicatesHint =>
+      'Open to compare — you’ll return here afterward. Saving still creates a new song.';
+
+  @override
   String get songsAiOpenExisting => 'Open';
 
   @override

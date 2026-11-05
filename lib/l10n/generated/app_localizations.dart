@@ -1660,6 +1660,12 @@ abstract class AppLocalizations {
   /// **'Possíveis correspondências na biblioteca'**
   String get songsAiPossibleDuplicates;
 
+  /// No description provided for @songsAiPossibleDuplicatesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abra para comparar — volta a este rascunho depois. Guardar cria sempre uma canção nova.'**
+  String get songsAiPossibleDuplicatesHint;
+
   /// No description provided for @songsAiOpenExisting.
   ///
   /// In pt, this message translates to:

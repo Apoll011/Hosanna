@@ -318,6 +318,7 @@
   "songsAiViewSong": "View song",
   "songsAiImportAnother": "Import another",
   "songsAiPossibleDuplicates": "Possible matches in your library",
+  "songsAiPossibleDuplicatesHint": "Open to compare — you’ll return here afterward. Saving still creates a new song.",
   "songsAiOpenExisting": "Open",
   "songsAiLintIssues": "ChordPro issues",
   "songsAiFieldComposer": "Composer",

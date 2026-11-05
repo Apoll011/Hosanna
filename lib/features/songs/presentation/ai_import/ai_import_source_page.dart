@@ -13,6 +13,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/hosanna_surface.dart';
 import '../../../../shared/widgets/shell_modal.dart';
 import 'ai_import_models.dart';
+import 'ai_import_nav.dart';
 
 /// Max PDF pages sent to the server (1 primary + up to 4 extras).
 const _maxPdfPages = 5;
@@ -271,109 +272,130 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.songsImportWithAi),
-      ),
-      body: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-            children: [
-              Center(
-                child: Image.asset(
-                  HosannaIllustrations.emptyImportSource,
-                  height: 280,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: HosannaSpacing.lg),
-              Text(
-                l10n.songsImportSheetMusic,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                ),
-              ),
-              const SizedBox(height: HosannaSpacing.xs),
-              Text(
-                l10n.songsImportSheetMusicBody,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: HosannaSpacing.sm),
-              Text(
-                l10n.songsAiCaptureTip,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: HosannaSpacing.sm),
-                Text(
-                  _error!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.error,
+    return PopScope(
+      canPop: !_busy,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: aiImportBackButton(
+            context,
+            enabled: !_busy,
+          ),
+          title: Text(l10n.songsImportWithAi),
+        ),
+        body: Stack(
+          children: [
+            ListView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              children: [
+                Center(
+                  child: Image.asset(
+                    HosannaIllustrations.emptyImportSource,
+                    height: 220,
+                    fit: BoxFit.contain,
                   ),
                 ),
-              ],
-              const SizedBox(height: HosannaSpacing.xl),
-              _SourceCard(
-                icon: Icons.photo_camera_outlined,
-                title: l10n.songsTakePhoto,
-                subtitle: l10n.songsImportWithAiDesc,
-                onTap: _busy ? null : _pickCamera,
-              ),
-              const SizedBox(height: HosannaSpacing.sm),
-              _SourceCard(
-                icon: Icons.photo_library_outlined,
-                title: l10n.songsChooseGallery,
-                subtitle: l10n.songsImportWithAiDesc,
-                onTap: _busy ? null : _pickGallery,
-              ),
-              const SizedBox(height: HosannaSpacing.sm),
-              _SourceCard(
-                icon: Icons.picture_as_pdf_outlined,
-                title: l10n.songsImportPdf,
-                subtitle: l10n.songsAiPdfMultiPageHint,
-                onTap: _busy ? null : _pickPdf,
-              ),
-              const SizedBox(height: HosannaSpacing.lg),
-              Center(
-                child: TextButton.icon(
-                  onPressed: _busy ? null : _showHowItWorks,
-                  icon: const Icon(Icons.help_outline_rounded, size: 18),
-                  label: Text(l10n.songsHowItWorks),
+                const SizedBox(height: HosannaSpacing.md),
+                Text(
+                  l10n.songsImportSheetMusic,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          if (_busy) ...[
-            const ModalBarrier(dismissible: false, color: Color(0x44000000)),
-            Center(
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: HosannaSpacing.xs),
+                Text(
+                  l10n.songsImportSheetMusicBody,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: HosannaSpacing.sm),
+                HosannaSurface(
+                  elevated: false,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.commonLoading,
-                        style: theme.textTheme.titleSmall,
+                      Icon(
+                        Icons.tips_and_updates_outlined,
+                        color: scheme.primary,
+                      ),
+                      const SizedBox(width: HosannaSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          l10n.songsAiCaptureTip,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.4,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+                if (_error != null) ...[
+                  const SizedBox(height: HosannaSpacing.sm),
+                  Text(
+                    _error!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: HosannaSpacing.xl),
+                _SourceCard(
+                  icon: Icons.photo_camera_outlined,
+                  title: l10n.songsTakePhoto,
+                  subtitle: l10n.songsImportWithAiDesc,
+                  onTap: _busy ? null : _pickCamera,
+                ),
+                const SizedBox(height: HosannaSpacing.sm),
+                _SourceCard(
+                  icon: Icons.photo_library_outlined,
+                  title: l10n.songsChooseGallery,
+                  subtitle: l10n.songsImportWithAiDesc,
+                  onTap: _busy ? null : _pickGallery,
+                ),
+                const SizedBox(height: HosannaSpacing.sm),
+                _SourceCard(
+                  icon: Icons.picture_as_pdf_outlined,
+                  title: l10n.songsImportPdf,
+                  subtitle: l10n.songsAiPdfMultiPageHint,
+                  onTap: _busy ? null : _pickPdf,
+                ),
+                const SizedBox(height: HosannaSpacing.lg),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _busy ? null : _showHowItWorks,
+                    icon: const Icon(Icons.help_outline_rounded, size: 18),
+                    label: Text(l10n.songsHowItWorks),
+                  ),
+                ),
+              ],
             ),
+            if (_busy) ...[
+              const ModalBarrier(dismissible: false, color: Color(0x44000000)),
+              Center(
+                child: Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.commonLoading,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

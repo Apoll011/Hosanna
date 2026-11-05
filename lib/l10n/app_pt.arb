@@ -331,6 +331,7 @@
   "songsAiViewSong": "Ver canção",
   "songsAiImportAnother": "Importar outra",
   "songsAiPossibleDuplicates": "Possíveis correspondências na biblioteca",
+  "songsAiPossibleDuplicatesHint": "Abra para comparar — volta a este rascunho depois. Guardar cria sempre uma canção nova.",
   "songsAiOpenExisting": "Abrir",
   "songsAiLintIssues": "Problemas ChordPro",
   "songsAiFieldComposer": "Compositor",

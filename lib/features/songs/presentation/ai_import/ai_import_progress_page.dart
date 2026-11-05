@@ -12,6 +12,7 @@ import '../../../../app/providers.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/hosanna_surface.dart';
 import 'ai_import_models.dart';
+import 'ai_import_nav.dart';
 
 class AiImportProgressPage extends ConsumerStatefulWidget {
   const AiImportProgressPage({super.key, required this.request});
@@ -46,6 +47,9 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     super.dispose();
   }
 
+  bool get _hasError => _error != null;
+  bool get _isRunning => !_hasError && !_leaving;
+
   void _handleSnapshot(AiImportJobSnapshot snap, AppLocalizations l10n) {
     if (_leaving || !mounted) return;
     setState(() => _snapshot = snap);
@@ -65,6 +69,8 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     if (snap.status == AiImportJobStatus.cancelled) {
       _poll?.cancel();
       final byUser = snap.cancelledBy == 'user';
+      // User already left via cancel — don't paint an error screen.
+      if (byUser && _leaving) return;
       setState(() {
         _cancelledByUser = byUser;
         _cancelledByAi = !byUser;
@@ -145,7 +151,6 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         return;
       }
       _poll = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-      // Immediate first poll in case create raced past queued.
       unawaited(_tick());
     } catch (e) {
       _poll?.cancel();
@@ -190,6 +195,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
 
   void _goReview(AiImportDraft draft) {
     if (!mounted || _leaving) return;
+    _leaving = true;
     final withThumb = AiImportDraft(
       title: draft.title,
       artist: draft.artist,
@@ -210,10 +216,11 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       thumbnailBytes: widget.request.imageBytes,
       folderId: widget.request.folderId,
     );
+    // Replace progress so back from review returns to the source picker.
     context.pushReplacement('/songs/import/ai/review', extra: withThumb);
   }
 
-  Future<void> _abortByUser() async {
+  Future<void> _cancelAndLeave() async {
     if (_leaving) return;
     _leaving = true;
     _poll?.cancel();
@@ -226,7 +233,24 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       }
     }
     if (!mounted) return;
-    context.go('/songs/import/ai');
+    // Pop back to source (or library) — never go() to import (that traps).
+    leaveAiImport(context);
+  }
+
+  void _retryOrImportAnother() {
+    returnToAiImportSource(
+      context,
+      folderId: widget.request.folderId,
+    );
+  }
+
+  void _createManually() {
+    context.push(
+      '/songs/new',
+      extra: {
+        if (widget.request.folderId != null) 'folderId': widget.request.folderId,
+      },
+    );
   }
 
   List<AiImportJobStep> _fallbackSteps(AppLocalizations l10n) {
@@ -260,14 +284,13 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     final steps = _snapshot?.steps.isNotEmpty == true
         ? _snapshot!.steps
         : _fallbackSteps(l10n);
-    final hasError = _error != null;
-    final title = !hasError
+    final title = !_hasError
         ? l10n.songsAiAnalyzing
         : (_cancelledByAi || _cancelledByUser)
             ? l10n.songsAiCancelledTitle
             : l10n.songsAiImportFailed;
-    final body = !hasError ? l10n.songsAiAnalyzingBody : _error!;
-    final footerHint = !hasError
+    final body = !_hasError ? l10n.songsAiAnalyzingBody : _error!;
+    final footerHint = !_hasError
         ? null
         : _cancelledByAi
             ? l10n.songsAiCancelledBody
@@ -275,112 +298,151 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                 ? null
                 : l10n.songsAiImportFailedBody;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.songsImportWithAi),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        child: Column(
-          children: [
-            Image.asset(
-              hasError
-                  ? HosannaIllustrations.stateError
-                  : HosannaIllustrations.aiProcessing,
-              height: 240,
-              fit: BoxFit.contain,
-            ),
-            if (!hasError) ...[
-              const SizedBox(height: HosannaSpacing.sm),
-              const SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              ),
-            ],
-            const SizedBox(height: HosannaSpacing.lg),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: HosannaSpacing.xs),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            if (_cancelledByAi && _cancelCode != null) ...[
-              const SizedBox(height: HosannaSpacing.sm),
-              Chip(
-                avatar: Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: scheme.primary,
-                ),
-                label: Text(_cancelCodeMessage(l10n, _cancelCode!)),
-              ),
-            ],
-            const SizedBox(height: HosannaSpacing.xl),
-            HosannaSurface(
-              elevated: false,
-              padding: const EdgeInsets.symmetric(
-                horizontal: HosannaSpacing.md,
-                vertical: HosannaSpacing.sm,
-              ),
-              child: Column(
-                children: [for (final s in steps) _StepRow(step: s)],
-              ),
-            ),
-            const Spacer(),
-            if (!hasError) ...[
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: null,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    disabledBackgroundColor: scheme.surfaceContainerHighest,
-                    disabledForegroundColor: scheme.onSurfaceVariant,
-                  ),
-                  child: Text(l10n.songsAiPleaseWait),
-                ),
-              ),
-              TextButton(
-                onPressed: _abortByUser,
-                child: Text(l10n.songsAiCancelImport),
-              ),
-            ] else ...[
-              if (footerHint != null)
-                Text(
-                  footerHint,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              const SizedBox(height: HosannaSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => context.go('/songs/import/ai'),
-                  child: Text(
-                    (_cancelledByAi || _cancelledByUser)
-                        ? l10n.songsAiImportAnother
-                        : l10n.commonRetry,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _leaving) return;
+        if (_isRunning) {
+          unawaited(_cancelAndLeave());
+        } else {
+          leaveAiImport(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: aiImportBackButton(
+            context,
+            onPressed: () {
+              if (_isRunning) {
+                unawaited(_cancelAndLeave());
+              } else {
+                leaveAiImport(context);
+              }
+            },
+          ),
+          title: Text(l10n.songsImportWithAi),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          _hasError
+                              ? HosannaIllustrations.stateError
+                              : HosannaIllustrations.aiProcessing,
+                          height: 180,
+                          fit: BoxFit.contain,
+                        ),
+                        if (!_hasError) ...[
+                          const SizedBox(height: HosannaSpacing.sm),
+                          const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        ],
+                        const SizedBox(height: HosannaSpacing.lg),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: HosannaSpacing.xs),
+                        Text(
+                          body,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        if (_cancelledByAi && _cancelCode != null) ...[
+                          const SizedBox(height: HosannaSpacing.sm),
+                          Chip(
+                            avatar: Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: scheme.primary,
+                            ),
+                            label: Text(
+                              _cancelCodeMessage(l10n, _cancelCode!),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: HosannaSpacing.xl),
+                        HosannaSurface(
+                          elevated: false,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: HosannaSpacing.md,
+                            vertical: HosannaSpacing.sm,
+                          ),
+                          child: Column(
+                            children: [
+                              for (final s in steps) _StepRow(step: s),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/songs/new'),
-                child: Text(l10n.songsCreateManually),
-              ),
-            ],
-          ],
+                if (!_hasError) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: null,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        disabledBackgroundColor:
+                            scheme.surfaceContainerHighest,
+                        disabledForegroundColor: scheme.onSurfaceVariant,
+                      ),
+                      child: Text(l10n.songsAiPleaseWait),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _cancelAndLeave,
+                    child: Text(l10n.songsAiCancelImport),
+                  ),
+                ] else ...[
+                  if (footerHint != null) ...[
+                    Text(
+                      footerHint,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: HosannaSpacing.md),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _retryOrImportAnother,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: Text(
+                        (_cancelledByAi || _cancelledByUser)
+                            ? l10n.songsAiImportAnother
+                            : l10n.commonRetry,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _createManually,
+                    child: Text(l10n.songsCreateManually),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

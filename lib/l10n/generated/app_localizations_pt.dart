@@ -869,6 +869,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Possíveis correspondências na biblioteca';
 
   @override
+  String get songsAiPossibleDuplicatesHint =>
+      'Abra para comparar — volta a este rascunho depois. Guardar cria sempre uma canção nova.';
+
+  @override
   String get songsAiOpenExisting => 'Abrir';
 
   @override

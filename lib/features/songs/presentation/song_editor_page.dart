@@ -484,15 +484,30 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
 
     if (!widget.isCreate) {
       final async = ref.watch(songByIdProvider(widget.songId!));
+      PreferredSizeWidget editorAppBar(String title) {
+        final canPop = context.canPop();
+        return AppBar(
+          leading: canPop
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => context.go('/songs'),
+                ),
+          title: Text(title),
+        );
+      }
+
       if (async.isLoading && !_hydrated) {
         return Scaffold(
-          appBar: AppBar(title: Text(l10n.songsEdit)),
+          appBar: editorAppBar(l10n.songsEdit),
           body: const Center(child: CircularProgressIndicator()),
         );
       }
       if (async.hasError) {
         return Scaffold(
-          appBar: AppBar(title: Text(l10n.songsEdit)),
+          appBar: editorAppBar(l10n.songsEdit),
           body: ErrorState(
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
@@ -502,7 +517,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       final song = async.valueOrNull;
       if (song == null) {
         return Scaffold(
-          appBar: AppBar(title: Text(l10n.songsEdit)),
+          appBar: editorAppBar(l10n.songsEdit),
           body: EmptyState(
             illustrationAsset: HosannaIllustrations.emptySongs,
             title: l10n.songsNotFound,
@@ -517,8 +532,18 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       }
     }
 
+    final canPop = context.canPop();
     return Scaffold(
       appBar: AppBar(
+        // Always offer a way out when this page was reached via go() and
+        // there is nothing to pop (common from older import error paths).
+        leading: canPop
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => context.go('/songs'),
+              ),
         title: Text(widget.isCreate ? l10n.songsCreate : l10n.songsEdit),
         bottom: TabBar(
           controller: _tabs,
