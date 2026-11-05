@@ -291,7 +291,7 @@
   "songsAiStepProcess": "Procesar el archivo",
   "songsAiStepExtract": "Extraer letra y acordes",
   "songsAiStepMetadata": "Identificar metadatos (título, tono, …)",
-  "songsAiStepVerify": "Verificar en línea (evitar alucinaciones)",
+  "songsAiStepVerify": "Verificar en línea y completar metadatos",
   "songsAiStepDraft": "Preparar el borrador",
   "songsAiPleaseWait": "Esto puede tardar unos segundos…",
   "songsAiResultTitle": "Resultado de la importación",

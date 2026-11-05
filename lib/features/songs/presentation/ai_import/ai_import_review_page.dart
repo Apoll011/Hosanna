@@ -59,13 +59,21 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
   }
 
   String _contentWithMeta() {
+    final source = widget.draft.content;
+    // Preserve enriched import metadata (youtube/ccli/…) when saving.
     return applyChordProMetadata(
-      widget.draft.content,
+      source,
       title: _title.text,
       artist: _artist.text,
       key: _key.text,
       tempo: _tempo.text,
       timeSignature: _time.text,
+      subtitle: readChordProDirective(source, 'subtitle'),
+      composer: readChordProDirective(source, 'composer'),
+      copyright: readChordProDirective(source, 'copyright'),
+      ccli: readChordProDirective(source, 'ccli'),
+      duration: readChordProDirective(source, 'duration'),
+      youtube: readChordProDirective(source, 'youtube'),
     );
   }
 
@@ -238,6 +246,38 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
+          ),
+          Builder(
+            builder: (context) {
+              final source = widget.draft.content;
+              final chips = <String>[
+                if (readChordProDirective(source, 'youtube') != null)
+                  'YouTube',
+                if (readChordProDirective(source, 'ccli') != null) 'CCLI',
+                if (readChordProDirective(source, 'composer') != null)
+                  'Composer',
+                if (readChordProDirective(source, 'duration') != null)
+                  'Duration',
+                if (readChordProDirective(source, 'copyright') != null)
+                  'Copyright',
+              ];
+              if (chips.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: HosannaSpacing.sm),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final label in chips)
+                      Chip(
+                        label: Text(label),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: HosannaSpacing.sm),
           HosannaSurface(

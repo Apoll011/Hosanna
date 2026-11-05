@@ -775,7 +775,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songsAiStepMetadata => 'Identify metadata (title, key, …)';
 
   @override
-  String get songsAiStepVerify => 'Verify online (reduce hallucinations)';
+  String get songsAiStepVerify => 'Verify online & enrich metadata';
 
   @override
   String get songsAiStepDraft => 'Prepare the draft';

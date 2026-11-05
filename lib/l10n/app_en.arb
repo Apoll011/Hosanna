@@ -287,7 +287,7 @@
   "songsAiStepProcess": "Process the file",
   "songsAiStepExtract": "Extract lyrics and chords",
   "songsAiStepMetadata": "Identify metadata (title, key, …)",
-  "songsAiStepVerify": "Verify online (reduce hallucinations)",
+  "songsAiStepVerify": "Verify online & enrich metadata",
   "songsAiStepDraft": "Prepare the draft",
   "songsAiPleaseWait": "This may take a few seconds…",
   "songsAiResultTitle": "Import result",

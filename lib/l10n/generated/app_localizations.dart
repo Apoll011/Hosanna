@@ -1507,7 +1507,7 @@ abstract class AppLocalizations {
   /// No description provided for @songsAiStepVerify.
   ///
   /// In pt, this message translates to:
-  /// **'Verificar online (evitar alucinações)'**
+  /// **'Verificar online e completar metadados'**
   String get songsAiStepVerify;
 
   /// No description provided for @songsAiStepDraft.
