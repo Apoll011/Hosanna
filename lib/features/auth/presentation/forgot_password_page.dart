@@ -56,43 +56,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
     return AuthScaffold(
-      title: l10n.authResetPasswordTitle,
-      subtitle: l10n.authResetPasswordMessage,
-      heroAsset: AuthHeroes.forgotPassword,
+      title: _sent ? l10n.authResetLinkSent : l10n.authResetPasswordTitle,
+      subtitle: _sent ? null : l10n.authResetPasswordMessage,
+      heroAsset: _sent ? AuthHeroes.resetSent : AuthHeroes.forgotPassword,
       heroFallbackIcon: Icons.lock_reset_rounded,
       child: _sent
-          ? Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(
-                  alpha: 0.55,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.mark_email_read_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.authResetLinkSent,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
+          ? const SizedBox.shrink()
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

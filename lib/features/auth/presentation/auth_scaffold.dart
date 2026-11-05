@@ -249,4 +249,7 @@ abstract final class AuthHeroes {
   static const forgotPassword = HosannaIllustrations.authForgotPassword;
   static const resetPassword = HosannaIllustrations.authResetPassword;
   static const verifyEmail = HosannaIllustrations.authVerifyEmail;
+  static const resetSent = HosannaIllustrations.authResetSent;
+  static const passwordChanged = HosannaIllustrations.authPasswordChanged;
+  static const emailVerified = HosannaIllustrations.authEmailVerified;
 }

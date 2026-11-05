@@ -36,6 +36,18 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final verified =
+        ref.watch(authControllerProvider).session?.user.emailVerified == true;
+
+    if (verified) {
+      return AuthScaffold(
+        title: l10n.authEmailVerified,
+        heroAsset: AuthHeroes.emailVerified,
+        heroFallbackIcon: Icons.verified_rounded,
+        showBack: false,
+        child: const SizedBox.shrink(),
+      );
+    }
 
     return AuthScaffold(
       title: l10n.authVerifyEmailTitle,

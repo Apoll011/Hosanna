@@ -24,6 +24,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   bool _loading = false;
   String? _error;
   bool _obscure = true;
+  bool _done = false;
 
   @override
   void dispose() {
@@ -55,12 +56,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             token: widget.token,
             newPassword: password,
           );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authPasswordChanged)),
-        );
-        context.go('/sign-in');
-      }
+      if (mounted) setState(() => _done = true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = authErrorMessage(e, l10n));
@@ -72,6 +68,19 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
+    if (_done) {
+      return AuthScaffold(
+        title: l10n.authPasswordChanged,
+        heroAsset: AuthHeroes.passwordChanged,
+        heroFallbackIcon: Icons.lock_open_rounded,
+        showBack: false,
+        child: AuthPrimaryButton(
+          label: l10n.authSignIn,
+          onPressed: () => context.go('/sign-in'),
+        ),
+      );
+    }
 
     return AuthScaffold(
       title: l10n.authResetPassword,
@@ -93,7 +102,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
               labelText: l10n.authNewPassword,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                  _obscure
+                      ? Icons.visibility_rounded
+                      : Icons.visibility_off_rounded,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
