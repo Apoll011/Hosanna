@@ -63,15 +63,18 @@ class SyncController extends StateNotifier<SyncState> {
     }
   }
 
-  /// Full pull + push cycle for every replicated resource.
+  /// Full push + pull cycle for every replicated resource.
+  ///
+  /// Push runs first (same order as Studio) so local edits are uploaded before
+  /// a pull can apply an older server snapshot over dirty rows.
   Future<void> syncAll() async {
     if (state.isSyncing) return;
     state = state.copyWith(status: SyncStatus.syncing, clearError: true);
 
     try {
+      await _engine.pushAll();
       await _engine.pullAll();
       await purgeExpiredTrash(_db);
-      await _engine.pushAll();
 
       final now = DateTime.now();
       await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);
@@ -98,10 +101,9 @@ class SyncController extends StateNotifier<SyncState> {
       await _clearLocalData();
       await _engine.clearAllCheckpoints();
       await _prefs.remove(_lastSyncedKey);
+      // Empty local DB after org switch — pull the new tenant first.
       await _engine.pullAll();
       await purgeExpiredTrash(_db);
-      // Push only after a clean pull so dirty rows from the previous org
-      // cannot be uploaded against the new tenant.
       await _engine.pushAll();
       final now = DateTime.now();
       await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);

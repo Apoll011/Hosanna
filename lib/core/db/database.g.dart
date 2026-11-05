@@ -47,6 +47,17 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -153,6 +164,7 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     title,
     artist,
@@ -192,6 +204,15 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
       context.handle(
         _purgeAtMeta,
         purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
       );
     }
     if (data.containsKey('id')) {
@@ -284,6 +305,10 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
         DriftSqlType.string,
         data['${effectivePrefix}purge_at'],
       ),
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -342,6 +367,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
   final bool isDeleted;
   final bool dirty;
   final String? purgeAt;
+  final String? serverUpdatedAt;
   final String id;
   final String title;
   final String artist;
@@ -356,6 +382,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     required this.isDeleted,
     required this.dirty,
     this.purgeAt,
+    this.serverUpdatedAt,
     required this.id,
     required this.title,
     required this.artist,
@@ -374,6 +401,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     map['dirty'] = Variable<bool>(dirty);
     if (!nullToAbsent || purgeAt != null) {
       map['purge_at'] = Variable<String>(purgeAt);
+    }
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
     }
     map['id'] = Variable<String>(id);
     map['title'] = Variable<String>(title);
@@ -401,6 +431,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       purgeAt: purgeAt == null && nullToAbsent
           ? const Value.absent()
           : Value(purgeAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
       id: Value(id),
       title: Value(title),
       artist: Value(artist),
@@ -427,6 +460,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
       purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
       id: serializer.fromJson<String>(json['id']),
       title: serializer.fromJson<String>(json['title']),
       artist: serializer.fromJson<String>(json['artist']),
@@ -446,6 +480,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
       'purgeAt': serializer.toJson<String?>(purgeAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
       'id': serializer.toJson<String>(id),
       'title': serializer.toJson<String>(title),
       'artist': serializer.toJson<String>(artist),
@@ -463,6 +498,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     bool? isDeleted,
     bool? dirty,
     Value<String?> purgeAt = const Value.absent(),
+    Value<String?> serverUpdatedAt = const Value.absent(),
     String? id,
     String? title,
     String? artist,
@@ -477,6 +513,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
     purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
     id: id ?? this.id,
     title: title ?? this.title,
     artist: artist ?? this.artist,
@@ -493,6 +532,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
       purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
       artist: data.artist.present ? data.artist.value : this.artist,
@@ -514,6 +556,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('title: $title, ')
           ..write('artist: $artist, ')
@@ -533,6 +576,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     title,
     artist,
@@ -551,6 +595,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty &&
           other.purgeAt == this.purgeAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
           other.id == this.id &&
           other.title == this.title &&
           other.artist == this.artist &&
@@ -567,6 +612,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
   final Value<bool> isDeleted;
   final Value<bool> dirty;
   final Value<String?> purgeAt;
+  final Value<String?> serverUpdatedAt;
   final Value<String> id;
   final Value<String> title;
   final Value<String> artist;
@@ -582,6 +628,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.artist = const Value.absent(),
@@ -598,6 +645,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     required String id,
     required String title,
     required String artist,
@@ -620,6 +668,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
     Expression<String>? purgeAt,
+    Expression<String>? serverUpdatedAt,
     Expression<String>? id,
     Expression<String>? title,
     Expression<String>? artist,
@@ -636,6 +685,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
       if (purgeAt != null) 'purge_at': purgeAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
       if (id != null) 'id': id,
       if (title != null) 'title': title,
       if (artist != null) 'artist': artist,
@@ -654,6 +704,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Value<bool>? isDeleted,
     Value<bool>? dirty,
     Value<String?>? purgeAt,
+    Value<String?>? serverUpdatedAt,
     Value<String>? id,
     Value<String>? title,
     Value<String>? artist,
@@ -670,6 +721,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
       purgeAt: purgeAt ?? this.purgeAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       id: id ?? this.id,
       title: title ?? this.title,
       artist: artist ?? this.artist,
@@ -695,6 +747,9 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     }
     if (purgeAt.present) {
       map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
     }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
@@ -740,6 +795,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('title: $title, ')
           ..write('artist: $artist, ')
@@ -795,6 +851,17 @@ class $FoldersTable extends Folders with TableInfo<$FoldersTable, FolderRow> {
   @override
   late final GeneratedColumn<String> purgeAt = GeneratedColumn<String>(
     'purge_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -900,6 +967,7 @@ class $FoldersTable extends Folders with TableInfo<$FoldersTable, FolderRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     color,
@@ -938,6 +1006,15 @@ class $FoldersTable extends Folders with TableInfo<$FoldersTable, FolderRow> {
       context.handle(
         _purgeAtMeta,
         purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
       );
     }
     if (data.containsKey('id')) {
@@ -1023,6 +1100,10 @@ class $FoldersTable extends Folders with TableInfo<$FoldersTable, FolderRow> {
         DriftSqlType.string,
         data['${effectivePrefix}purge_at'],
       ),
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1072,6 +1153,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
   final bool isDeleted;
   final bool dirty;
   final String? purgeAt;
+  final String? serverUpdatedAt;
   final String id;
   final String name;
   final String color;
@@ -1089,6 +1171,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
     required this.isDeleted,
     required this.dirty,
     this.purgeAt,
+    this.serverUpdatedAt,
     required this.id,
     required this.name,
     required this.color,
@@ -1106,6 +1189,9 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
     map['dirty'] = Variable<bool>(dirty);
     if (!nullToAbsent || purgeAt != null) {
       map['purge_at'] = Variable<String>(purgeAt);
+    }
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
     }
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
@@ -1128,6 +1214,9 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
       purgeAt: purgeAt == null && nullToAbsent
           ? const Value.absent()
           : Value(purgeAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
       id: Value(id),
       name: Value(name),
       color: Value(color),
@@ -1151,6 +1240,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
       purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       color: serializer.fromJson<String>(json['color']),
@@ -1169,6 +1259,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
       'purgeAt': serializer.toJson<String?>(purgeAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'color': serializer.toJson<String>(color),
@@ -1185,6 +1276,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
     bool? isDeleted,
     bool? dirty,
     Value<String?> purgeAt = const Value.absent(),
+    Value<String?> serverUpdatedAt = const Value.absent(),
     String? id,
     String? name,
     String? color,
@@ -1198,6 +1290,9 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
     purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
     id: id ?? this.id,
     name: name ?? this.name,
     color: color ?? this.color,
@@ -1213,6 +1308,9 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
       purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       color: data.color.present ? data.color.value : this.color,
@@ -1233,6 +1331,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
@@ -1251,6 +1350,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     color,
@@ -1268,6 +1368,7 @@ class FolderRow extends DataClass implements Insertable<FolderRow> {
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty &&
           other.purgeAt == this.purgeAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
           other.id == this.id &&
           other.name == this.name &&
           other.color == this.color &&
@@ -1283,6 +1384,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
   final Value<bool> isDeleted;
   final Value<bool> dirty;
   final Value<String?> purgeAt;
+  final Value<String?> serverUpdatedAt;
   final Value<String> id;
   final Value<String> name;
   final Value<String> color;
@@ -1297,6 +1399,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.color = const Value.absent(),
@@ -1312,6 +1415,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     required String id,
     required String name,
     this.color = const Value.absent(),
@@ -1330,6 +1434,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
     Expression<String>? purgeAt,
+    Expression<String>? serverUpdatedAt,
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? color,
@@ -1345,6 +1450,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
       if (purgeAt != null) 'purge_at': purgeAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (color != null) 'color': color,
@@ -1362,6 +1468,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
     Value<bool>? isDeleted,
     Value<bool>? dirty,
     Value<String?>? purgeAt,
+    Value<String?>? serverUpdatedAt,
     Value<String>? id,
     Value<String>? name,
     Value<String>? color,
@@ -1377,6 +1484,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
       purgeAt: purgeAt ?? this.purgeAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       id: id ?? this.id,
       name: name ?? this.name,
       color: color ?? this.color,
@@ -1401,6 +1509,9 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
     }
     if (purgeAt.present) {
       map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
     }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
@@ -1441,6 +1552,7 @@ class FoldersCompanion extends UpdateCompanion<FolderRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
@@ -1496,6 +1608,17 @@ class $ServicesTable extends Services
   @override
   late final GeneratedColumn<String> purgeAt = GeneratedColumn<String>(
     'purge_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -1589,6 +1712,7 @@ class $ServicesTable extends Services
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     date,
@@ -1626,6 +1750,15 @@ class $ServicesTable extends Services
       context.handle(
         _purgeAtMeta,
         purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
       );
     }
     if (data.containsKey('id')) {
@@ -1698,6 +1831,10 @@ class $ServicesTable extends Services
         DriftSqlType.string,
         data['${effectivePrefix}purge_at'],
       ),
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1748,6 +1885,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
   final bool isDeleted;
   final bool dirty;
   final String? purgeAt;
+  final String? serverUpdatedAt;
   final String id;
   final String name;
   final String date;
@@ -1760,6 +1898,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
     required this.isDeleted,
     required this.dirty,
     this.purgeAt,
+    this.serverUpdatedAt,
     required this.id,
     required this.name,
     required this.date,
@@ -1776,6 +1915,9 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
     map['dirty'] = Variable<bool>(dirty);
     if (!nullToAbsent || purgeAt != null) {
       map['purge_at'] = Variable<String>(purgeAt);
+    }
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
     }
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
@@ -1801,6 +1943,9 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
       purgeAt: purgeAt == null && nullToAbsent
           ? const Value.absent()
           : Value(purgeAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
       id: Value(id),
       name: Value(name),
       date: Value(date),
@@ -1823,6 +1968,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
       purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       date: serializer.fromJson<String>(json['date']),
@@ -1840,6 +1986,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
       'purgeAt': serializer.toJson<String?>(purgeAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'date': serializer.toJson<String>(date),
@@ -1855,6 +2002,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
     bool? isDeleted,
     bool? dirty,
     Value<String?> purgeAt = const Value.absent(),
+    Value<String?> serverUpdatedAt = const Value.absent(),
     String? id,
     String? name,
     String? date,
@@ -1867,6 +2015,9 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
     purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
     id: id ?? this.id,
     name: name ?? this.name,
     date: date ?? this.date,
@@ -1881,6 +2032,9 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
       purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       date: data.date.present ? data.date.value : this.date,
@@ -1898,6 +2052,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('date: $date, ')
@@ -1915,6 +2070,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     date,
@@ -1931,6 +2087,7 @@ class ServiceRow extends DataClass implements Insertable<ServiceRow> {
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty &&
           other.purgeAt == this.purgeAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
           other.id == this.id &&
           other.name == this.name &&
           other.date == this.date &&
@@ -1945,6 +2102,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
   final Value<bool> isDeleted;
   final Value<bool> dirty;
   final Value<String?> purgeAt;
+  final Value<String?> serverUpdatedAt;
   final Value<String> id;
   final Value<String> name;
   final Value<String> date;
@@ -1958,6 +2116,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.date = const Value.absent(),
@@ -1972,6 +2131,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     required String id,
     required String name,
     required String date,
@@ -1990,6 +2150,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
     Expression<String>? purgeAt,
+    Expression<String>? serverUpdatedAt,
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? date,
@@ -2004,6 +2165,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
       if (purgeAt != null) 'purge_at': purgeAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (date != null) 'date': date,
@@ -2020,6 +2182,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
     Value<bool>? isDeleted,
     Value<bool>? dirty,
     Value<String?>? purgeAt,
+    Value<String?>? serverUpdatedAt,
     Value<String>? id,
     Value<String>? name,
     Value<String>? date,
@@ -2034,6 +2197,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
       purgeAt: purgeAt ?? this.purgeAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       id: id ?? this.id,
       name: name ?? this.name,
       date: date ?? this.date,
@@ -2057,6 +2221,9 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
     }
     if (purgeAt.present) {
       map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
     }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
@@ -2096,6 +2263,7 @@ class ServicesCompanion extends UpdateCompanion<ServiceRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('date: $date, ')
@@ -2150,6 +2318,17 @@ class $CollectionsTable extends Collections
   @override
   late final GeneratedColumn<String> purgeAt = GeneratedColumn<String>(
     'purge_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -2262,6 +2441,7 @@ class $CollectionsTable extends Collections
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     description,
@@ -2301,6 +2481,15 @@ class $CollectionsTable extends Collections
       context.handle(
         _purgeAtMeta,
         purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
       );
     }
     if (data.containsKey('id')) {
@@ -2386,6 +2575,10 @@ class $CollectionsTable extends Collections
         DriftSqlType.string,
         data['${effectivePrefix}purge_at'],
       ),
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -2444,6 +2637,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
   final bool isDeleted;
   final bool dirty;
   final String? purgeAt;
+  final String? serverUpdatedAt;
   final String id;
   final String name;
   final String? description;
@@ -2460,6 +2654,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     required this.isDeleted,
     required this.dirty,
     this.purgeAt,
+    this.serverUpdatedAt,
     required this.id,
     required this.name,
     this.description,
@@ -2478,6 +2673,9 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     map['dirty'] = Variable<bool>(dirty);
     if (!nullToAbsent || purgeAt != null) {
       map['purge_at'] = Variable<String>(purgeAt);
+    }
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
     }
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
@@ -2507,6 +2705,9 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       purgeAt: purgeAt == null && nullToAbsent
           ? const Value.absent()
           : Value(purgeAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
       id: Value(id),
       name: Value(name),
       description: description == null && nullToAbsent
@@ -2533,6 +2734,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
       purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
@@ -2552,6 +2754,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
       'purgeAt': serializer.toJson<String?>(purgeAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
@@ -2569,6 +2772,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     bool? isDeleted,
     bool? dirty,
     Value<String?> purgeAt = const Value.absent(),
+    Value<String?> serverUpdatedAt = const Value.absent(),
     String? id,
     String? name,
     Value<String?> description = const Value.absent(),
@@ -2583,6 +2787,9 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
     purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
     id: id ?? this.id,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
@@ -2599,6 +2806,9 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
       purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       description: data.description.present
@@ -2620,6 +2830,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -2639,6 +2850,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     name,
     description,
@@ -2657,6 +2869,7 @@ class CollectionRow extends DataClass implements Insertable<CollectionRow> {
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty &&
           other.purgeAt == this.purgeAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
           other.id == this.id &&
           other.name == this.name &&
           other.description == this.description &&
@@ -2673,6 +2886,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
   final Value<bool> isDeleted;
   final Value<bool> dirty;
   final Value<String?> purgeAt;
+  final Value<String?> serverUpdatedAt;
   final Value<String> id;
   final Value<String> name;
   final Value<String?> description;
@@ -2688,6 +2902,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
@@ -2704,6 +2919,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     required String id,
     required String name,
     this.description = const Value.absent(),
@@ -2723,6 +2939,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
     Expression<String>? purgeAt,
+    Expression<String>? serverUpdatedAt,
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? description,
@@ -2739,6 +2956,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
       if (purgeAt != null) 'purge_at': purgeAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
@@ -2757,6 +2975,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     Value<bool>? isDeleted,
     Value<bool>? dirty,
     Value<String?>? purgeAt,
+    Value<String?>? serverUpdatedAt,
     Value<String>? id,
     Value<String>? name,
     Value<String?>? description,
@@ -2773,6 +2992,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
       purgeAt: purgeAt ?? this.purgeAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
@@ -2798,6 +3018,9 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
     }
     if (purgeAt.present) {
       map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
     }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
@@ -2843,6 +3066,7 @@ class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -2899,6 +3123,17 @@ class $AgendaEventsTable extends AgendaEvents
   @override
   late final GeneratedColumn<String> purgeAt = GeneratedColumn<String>(
     'purge_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -3039,6 +3274,7 @@ class $AgendaEventsTable extends AgendaEvents
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     date,
     title,
@@ -3081,6 +3317,15 @@ class $AgendaEventsTable extends AgendaEvents
       context.handle(
         _purgeAtMeta,
         purgeAt.isAcceptableOrUnknown(data['purge_at']!, _purgeAtMeta),
+      );
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
       );
     }
     if (data.containsKey('id')) {
@@ -3187,6 +3432,10 @@ class $AgendaEventsTable extends AgendaEvents
         DriftSqlType.string,
         data['${effectivePrefix}purge_at'],
       ),
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -3261,6 +3510,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
   final bool isDeleted;
   final bool dirty;
   final String? purgeAt;
+  final String? serverUpdatedAt;
   final String id;
   final String date;
   final String title;
@@ -3278,6 +3528,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
     required this.isDeleted,
     required this.dirty,
     this.purgeAt,
+    this.serverUpdatedAt,
     required this.id,
     required this.date,
     required this.title,
@@ -3299,6 +3550,9 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
     map['dirty'] = Variable<bool>(dirty);
     if (!nullToAbsent || purgeAt != null) {
       map['purge_at'] = Variable<String>(purgeAt);
+    }
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
     }
     map['id'] = Variable<String>(id);
     map['date'] = Variable<String>(date);
@@ -3337,6 +3591,9 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
       purgeAt: purgeAt == null && nullToAbsent
           ? const Value.absent()
           : Value(purgeAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
       id: Value(id),
       date: Value(date),
       title: Value(title),
@@ -3372,6 +3629,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       dirty: serializer.fromJson<bool>(json['dirty']),
       purgeAt: serializer.fromJson<String?>(json['purgeAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
       id: serializer.fromJson<String>(json['id']),
       date: serializer.fromJson<String>(json['date']),
       title: serializer.fromJson<String>(json['title']),
@@ -3394,6 +3652,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'dirty': serializer.toJson<bool>(dirty),
       'purgeAt': serializer.toJson<String?>(purgeAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
       'id': serializer.toJson<String>(id),
       'date': serializer.toJson<String>(date),
       'title': serializer.toJson<String>(title),
@@ -3414,6 +3673,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
     bool? isDeleted,
     bool? dirty,
     Value<String?> purgeAt = const Value.absent(),
+    Value<String?> serverUpdatedAt = const Value.absent(),
     String? id,
     String? date,
     String? title,
@@ -3431,6 +3691,9 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
     purgeAt: purgeAt.present ? purgeAt.value : this.purgeAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
     id: id ?? this.id,
     date: date ?? this.date,
     title: title ?? this.title,
@@ -3454,6 +3717,9 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
       purgeAt: data.purgeAt.present ? data.purgeAt.value : this.purgeAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
       id: data.id.present ? data.id.value : this.id,
       date: data.date.present ? data.date.value : this.date,
       title: data.title.present ? data.title.value : this.title,
@@ -3482,6 +3748,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('date: $date, ')
           ..write('title: $title, ')
@@ -3504,6 +3771,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
     isDeleted,
     dirty,
     purgeAt,
+    serverUpdatedAt,
     id,
     date,
     title,
@@ -3525,6 +3793,7 @@ class AgendaEventRow extends DataClass implements Insertable<AgendaEventRow> {
           other.isDeleted == this.isDeleted &&
           other.dirty == this.dirty &&
           other.purgeAt == this.purgeAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
           other.id == this.id &&
           other.date == this.date &&
           other.title == this.title &&
@@ -3544,6 +3813,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
   final Value<bool> isDeleted;
   final Value<bool> dirty;
   final Value<String?> purgeAt;
+  final Value<String?> serverUpdatedAt;
   final Value<String> id;
   final Value<String> date;
   final Value<String> title;
@@ -3562,6 +3832,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     this.id = const Value.absent(),
     this.date = const Value.absent(),
     this.title = const Value.absent(),
@@ -3581,6 +3852,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
     this.isDeleted = const Value.absent(),
     this.dirty = const Value.absent(),
     this.purgeAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
     required String id,
     required String date,
     required String title,
@@ -3606,6 +3878,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
     Expression<bool>? isDeleted,
     Expression<bool>? dirty,
     Expression<String>? purgeAt,
+    Expression<String>? serverUpdatedAt,
     Expression<String>? id,
     Expression<String>? date,
     Expression<String>? title,
@@ -3625,6 +3898,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (dirty != null) 'dirty': dirty,
       if (purgeAt != null) 'purge_at': purgeAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
       if (id != null) 'id': id,
       if (date != null) 'date': date,
       if (title != null) 'title': title,
@@ -3646,6 +3920,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
     Value<bool>? isDeleted,
     Value<bool>? dirty,
     Value<String?>? purgeAt,
+    Value<String?>? serverUpdatedAt,
     Value<String>? id,
     Value<String>? date,
     Value<String>? title,
@@ -3665,6 +3940,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
       isDeleted: isDeleted ?? this.isDeleted,
       dirty: dirty ?? this.dirty,
       purgeAt: purgeAt ?? this.purgeAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       id: id ?? this.id,
       date: date ?? this.date,
       title: title ?? this.title,
@@ -3693,6 +3969,9 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
     }
     if (purgeAt.present) {
       map['purge_at'] = Variable<String>(purgeAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
     }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
@@ -3751,6 +4030,7 @@ class AgendaEventsCompanion extends UpdateCompanion<AgendaEventRow> {
           ..write('isDeleted: $isDeleted, ')
           ..write('dirty: $dirty, ')
           ..write('purgeAt: $purgeAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
           ..write('id: $id, ')
           ..write('date: $date, ')
           ..write('title: $title, ')
@@ -3820,6 +4100,7 @@ typedef $$SongsTableCreateCompanionBuilder = SongsCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   required String id,
   required String title,
   required String artist,
@@ -3836,6 +4117,7 @@ typedef $$SongsTableUpdateCompanionBuilder = SongsCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   Value<String> id,
   Value<String> title,
   Value<String> artist,
@@ -3869,6 +4151,11 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
 
   ColumnFilters<String> get purgeAt => $composableBuilder(
     column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3948,6 +4235,11 @@ class $$SongsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -4017,6 +4309,11 @@ class $$SongsTableAnnotationComposer
   GeneratedColumn<String> get purgeAt =>
       $composableBuilder(column: $table.purgeAt, builder: (column) => column);
 
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -4081,6 +4378,7 @@ class $$SongsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> artist = const Value.absent(),
@@ -4096,6 +4394,7 @@ class $$SongsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 title: title,
                 artist: artist,
@@ -4113,6 +4412,7 @@ class $$SongsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 required String id,
                 required String title,
                 required String artist,
@@ -4128,6 +4428,7 @@ class $$SongsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 title: title,
                 artist: artist,
@@ -4175,6 +4476,7 @@ typedef $$FoldersTableCreateCompanionBuilder = FoldersCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   required String id,
   required String name,
   Value<String> color,
@@ -4190,6 +4492,7 @@ typedef $$FoldersTableUpdateCompanionBuilder = FoldersCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   Value<String> id,
   Value<String> name,
   Value<String> color,
@@ -4223,6 +4526,11 @@ class $$FoldersTableFilterComposer
 
   ColumnFilters<String> get purgeAt => $composableBuilder(
     column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4296,6 +4604,11 @@ class $$FoldersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -4360,6 +4673,11 @@ class $$FoldersTableAnnotationComposer
   GeneratedColumn<String> get purgeAt =>
       $composableBuilder(column: $table.purgeAt, builder: (column) => column);
 
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -4421,6 +4739,7 @@ class $$FoldersTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> color = const Value.absent(),
@@ -4435,6 +4754,7 @@ class $$FoldersTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 color: color,
@@ -4451,6 +4771,7 @@ class $$FoldersTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 required String id,
                 required String name,
                 Value<String> color = const Value.absent(),
@@ -4465,6 +4786,7 @@ class $$FoldersTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 color: color,
@@ -4511,6 +4833,7 @@ typedef $$ServicesTableCreateCompanionBuilder = ServicesCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   required String id,
   required String name,
   required String date,
@@ -4525,6 +4848,7 @@ typedef $$ServicesTableUpdateCompanionBuilder = ServicesCompanion Function({
   Value<bool> isDeleted,
   Value<bool> dirty,
   Value<String?> purgeAt,
+  Value<String?> serverUpdatedAt,
   Value<String> id,
   Value<String> name,
   Value<String> date,
@@ -4557,6 +4881,11 @@ class $$ServicesTableFilterComposer
 
   ColumnFilters<String> get purgeAt => $composableBuilder(
     column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4630,6 +4959,11 @@ class $$ServicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -4688,6 +5022,11 @@ class $$ServicesTableAnnotationComposer
 
   GeneratedColumn<String> get purgeAt =>
       $composableBuilder(column: $table.purgeAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
@@ -4748,6 +5087,7 @@ class $$ServicesTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> date = const Value.absent(),
@@ -4761,6 +5101,7 @@ class $$ServicesTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 date: date,
@@ -4776,6 +5117,7 @@ class $$ServicesTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 required String id,
                 required String name,
                 required String date,
@@ -4789,6 +5131,7 @@ class $$ServicesTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 date: date,
@@ -4835,6 +5178,7 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<bool> isDeleted,
       Value<bool> dirty,
       Value<String?> purgeAt,
+      Value<String?> serverUpdatedAt,
       required String id,
       required String name,
       Value<String?> description,
@@ -4852,6 +5196,7 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<bool> isDeleted,
       Value<bool> dirty,
       Value<String?> purgeAt,
+      Value<String?> serverUpdatedAt,
       Value<String> id,
       Value<String> name,
       Value<String?> description,
@@ -4886,6 +5231,11 @@ class $$CollectionsTableFilterComposer
 
   ColumnFilters<String> get purgeAt => $composableBuilder(
     column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4965,6 +5315,11 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -5034,6 +5389,11 @@ class $$CollectionsTableAnnotationComposer
   GeneratedColumn<String> get purgeAt =>
       $composableBuilder(column: $table.purgeAt, builder: (column) => column);
 
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -5101,6 +5461,7 @@ class $$CollectionsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
@@ -5116,6 +5477,7 @@ class $$CollectionsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 description: description,
@@ -5133,6 +5495,7 @@ class $$CollectionsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 required String id,
                 required String name,
                 Value<String?> description = const Value.absent(),
@@ -5148,6 +5511,7 @@ class $$CollectionsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 name: name,
                 description: description,
@@ -5199,6 +5563,7 @@ typedef $$AgendaEventsTableCreateCompanionBuilder =
       Value<bool> isDeleted,
       Value<bool> dirty,
       Value<String?> purgeAt,
+      Value<String?> serverUpdatedAt,
       required String id,
       required String date,
       required String title,
@@ -5219,6 +5584,7 @@ typedef $$AgendaEventsTableUpdateCompanionBuilder =
       Value<bool> isDeleted,
       Value<bool> dirty,
       Value<String?> purgeAt,
+      Value<String?> serverUpdatedAt,
       Value<String> id,
       Value<String> date,
       Value<String> title,
@@ -5256,6 +5622,11 @@ class $$AgendaEventsTableFilterComposer
 
   ColumnFilters<String> get purgeAt => $composableBuilder(
     column: $table.purgeAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5351,6 +5722,11 @@ class $$AgendaEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -5435,6 +5811,11 @@ class $$AgendaEventsTableAnnotationComposer
   GeneratedColumn<String> get purgeAt =>
       $composableBuilder(column: $table.purgeAt, builder: (column) => column);
 
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -5516,6 +5897,7 @@ class $$AgendaEventsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> date = const Value.absent(),
                 Value<String> title = const Value.absent(),
@@ -5534,6 +5916,7 @@ class $$AgendaEventsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 date: date,
                 title: title,
@@ -5554,6 +5937,7 @@ class $$AgendaEventsTableTableManager
                 Value<bool> isDeleted = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<String?> purgeAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
                 required String id,
                 required String date,
                 required String title,
@@ -5572,6 +5956,7 @@ class $$AgendaEventsTableTableManager
                 isDeleted: isDeleted,
                 dirty: dirty,
                 purgeAt: purgeAt,
+                serverUpdatedAt: serverUpdatedAt,
                 id: id,
                 date: date,
                 title: title,

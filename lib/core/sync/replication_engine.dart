@@ -42,16 +42,23 @@ abstract class ReplicationAdapter {
   String get resourceName;
 
   /// Upsert a batch of pulled wire documents into the local table.
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs);
+  ///
+  /// When [overwriteDirty] is false (pull), locally dirty rows are left alone
+  /// so an in-flight edit is not wiped by an older server snapshot.
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  });
 
   /// Collect locally-created/modified/deleted rows since the last push.
   Future<List<ChangeRow>> collectChanges();
 
   /// Server-wins reconciliation: overwrite local rows with the returned
-  /// conflicting server documents.
+  /// conflicting server documents (including dirty ones).
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs);
 
-  /// Clear the dirty flag for rows the server has accepted.
+  /// Clear the dirty flag for rows the server has accepted and advance the
+  /// local server-updatedAt baseline to the pushed value.
   Future<void> markPushed(Iterable<String> ids);
 
   /// Recompute locally-derived values that are never replicated (e.g. folder
@@ -149,12 +156,21 @@ class ReplicationEngine {
             .toList(),
       );
 
+      final conflictIds = <String>{};
       if (conflicts.isNotEmpty) {
+        for (final doc in conflicts) {
+          final id = doc['id'];
+          if (id is String && id.isNotEmpty) conflictIds.add(id);
+        }
         await adapter.applyServerConflicts(conflicts);
       }
-    }
 
-    await adapter.markPushed(changes.map((c) => c.id));
+      // Only clear dirty on rows the server accepted — conflicted rows stay
+      // dirty after applying the server snapshot (dirty cleared by upsert).
+      final accepted =
+          chunk.map((c) => c.id).where((id) => !conflictIds.contains(id));
+      await adapter.markPushed(accepted);
+    }
   }
 
   /// Drops every resource checkpoint so the next pull starts from scratch

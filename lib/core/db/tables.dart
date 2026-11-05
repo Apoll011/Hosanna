@@ -99,10 +99,15 @@ class ServiceElementListConverter
 /// changed locally and still need to be pushed. `purgeAt` is when the row may
 /// be hard-removed (server cron + local purge). Wire `_deleted` is a
 /// hard-delete tombstone and must stay false while the row is only trashed.
+///
+/// `serverUpdatedAt` is the last `updatedAt` this client has acknowledged from
+/// the server (pull or successful push). It is the RxDB conflict token sent as
+/// `assumedMasterState.updatedAt`. Null means "never seen on server" (insert).
 mixin SyncMetadata on Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get dirty => boolean().withDefault(const Constant(false))();
   TextColumn get purgeAt => text().nullable()();
+  TextColumn get serverUpdatedAt => text().nullable()();
 }
 
 @TableIndex(name: 'songs_folder_idx', columns: {#folderId})

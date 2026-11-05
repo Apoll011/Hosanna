@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -41,6 +41,37 @@ class AppDatabase extends _$AppDatabase {
       // v4 adds replicated agenda events (Studio calendar).
       if (from < 4) {
         await m.createTable(agendaEvents);
+      }
+      // v5: last-known server updatedAt for RxDB assumedMasterState.
+      if (from < 5) {
+        if (!await _hasColumn('songs', 'server_updated_at')) {
+          await m.addColumn(songs, songs.serverUpdatedAt);
+        }
+        if (!await _hasColumn('folders', 'server_updated_at')) {
+          await m.addColumn(folders, folders.serverUpdatedAt);
+        }
+        if (!await _hasColumn('collections', 'server_updated_at')) {
+          await m.addColumn(collections, collections.serverUpdatedAt);
+        }
+        if (!await _hasColumn('services', 'server_updated_at')) {
+          await m.addColumn(services, services.serverUpdatedAt);
+        }
+        if (!await _hasColumn('agenda_events', 'server_updated_at')) {
+          await m.addColumn(agendaEvents, agendaEvents.serverUpdatedAt);
+        }
+        // Clean rows already match the server; dirty rows keep null so the
+        // next push is treated carefully (may conflict once, then recover).
+        for (final table in [
+          'songs',
+          'folders',
+          'collections',
+          'services',
+          'agenda_events',
+        ]) {
+          await customStatement(
+            'UPDATE $table SET server_updated_at = updated_at WHERE dirty = 0',
+          );
+        }
       }
     },
   );
