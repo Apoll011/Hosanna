@@ -45,6 +45,18 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   Future<void> _refresh() =>
       ref.read(syncControllerProvider.notifier).syncAll();
 
+  void _openAiImport() {
+    final library = ref.read(libraryControllerProvider);
+    final folderId = library.section == LibrarySection.folder
+        ? library.folderId
+        : null;
+    if (folderId == null) {
+      context.push('/songs/import/ai');
+      return;
+    }
+    context.push('/songs/import/ai?folderId=$folderId');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -361,7 +373,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                   color: tokens.selectedNav,
                   onTap: () {
                     Navigator.pop(ctx);
-                    context.push('/songs/import/ai');
+                    _openAiImport();
                   },
                   child: Row(
                     children: [
@@ -532,7 +544,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           primaryIcon: Icons.add_rounded,
           onPrimary: _showNewSongSheet,
           secondaryLabel: l10n.songsImportWithAi,
-          onSecondary: () => context.push('/songs/import/ai'),
+          onSecondary: _openAiImport,
           scrollable: true,
         ),
     };

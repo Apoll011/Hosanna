@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/design/tokens.dart';
 import '../../../../core/sync/sync_controller.dart';
@@ -28,6 +29,10 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
   late final TextEditingController _key;
   late final TextEditingController _tempo;
   late final TextEditingController _time;
+  late final TextEditingController _youtube;
+  late final TextEditingController _ccli;
+  late final TextEditingController _composer;
+  late final TextEditingController _duration;
   bool _saving = false;
   String? _error;
 
@@ -35,16 +40,29 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
   void initState() {
     super.initState();
     final d = widget.draft;
+    final source = d.content;
     _title = TextEditingController(text: d.title);
     _artist = TextEditingController(text: d.artist);
     _key = TextEditingController(
-      text: d.key ?? readChordProDirective(d.content, 'key') ?? '',
+      text: d.key ?? readChordProDirective(source, 'key') ?? '',
     );
     _tempo = TextEditingController(
-      text: d.tempo ?? readChordProDirective(d.content, 'tempo') ?? '',
+      text: d.tempo ?? readChordProDirective(source, 'tempo') ?? '',
     );
     _time = TextEditingController(
-      text: d.timeSignature ?? readChordProDirective(d.content, 'time') ?? '',
+      text: d.timeSignature ?? readChordProDirective(source, 'time') ?? '',
+    );
+    _youtube = TextEditingController(
+      text: d.youtube ?? readChordProDirective(source, 'youtube') ?? '',
+    );
+    _ccli = TextEditingController(
+      text: d.ccli ?? readChordProDirective(source, 'ccli') ?? '',
+    );
+    _composer = TextEditingController(
+      text: d.composer ?? readChordProDirective(source, 'composer') ?? '',
+    );
+    _duration = TextEditingController(
+      text: d.duration ?? readChordProDirective(source, 'duration') ?? '',
     );
   }
 
@@ -55,12 +73,15 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
     _key.dispose();
     _tempo.dispose();
     _time.dispose();
+    _youtube.dispose();
+    _ccli.dispose();
+    _composer.dispose();
+    _duration.dispose();
     super.dispose();
   }
 
   String _contentWithMeta() {
     final source = widget.draft.content;
-    // Preserve enriched import metadata (youtube/ccli/…) when saving.
     return applyChordProMetadata(
       source,
       title: _title.text,
@@ -68,16 +89,17 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
       key: _key.text,
       tempo: _tempo.text,
       timeSignature: _time.text,
-      subtitle: readChordProDirective(source, 'subtitle'),
-      composer: readChordProDirective(source, 'composer'),
-      copyright: readChordProDirective(source, 'copyright'),
-      ccli: readChordProDirective(source, 'ccli'),
-      duration: readChordProDirective(source, 'duration'),
-      youtube: readChordProDirective(source, 'youtube'),
+      subtitle: readChordProDirective(source, 'subtitle') ??
+          widget.draft.subtitle,
+      composer: _composer.text,
+      copyright: readChordProDirective(source, 'copyright') ??
+          widget.draft.copyright,
+      ccli: _ccli.text,
+      duration: _duration.text,
+      youtube: _youtube.text,
     );
   }
 
-  /// Persist only after explicit user approval on this screen.
   Future<void> _approveAndSave() async {
     final l10n = AppLocalizations.of(context);
     if (_title.text.trim().isEmpty) {
@@ -97,10 +119,10 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             title: _title.text.trim(),
             artist: _artist.text.trim(),
             content: _contentWithMeta(),
+            folderId: widget.draft.folderId,
           );
       unawaited(ref.read(syncControllerProvider.notifier).syncAll());
       if (!mounted) return;
-      // Keep library under detail so the AppBar back button works.
       context.go('/songs');
       context.push('/songs/${saved.id}');
     } catch (_) {
@@ -119,8 +141,17 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
         'title': _title.text.trim(),
         'artist': _artist.text.trim(),
         'content': _contentWithMeta(),
+        'folderId': widget.draft.folderId,
       },
     );
+  }
+
+  Future<void> _openYoutube() async {
+    final raw = _youtube.text.trim();
+    if (raw.isEmpty) return;
+    final uri = Uri.tryParse(raw);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -129,6 +160,10 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final thumb = widget.draft.thumbnailBytes;
+    final dupes = widget.draft.possibleDuplicates;
+    final diags = widget.draft.diagnostics
+        .where((d) => d.severity == 'error' || d.severity == 'warning')
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.songsAiResultTitle)),
@@ -139,7 +174,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(HosannaRadii.md),
               child: SizedBox(
-                height: 360,
+                height: 280,
                 width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
@@ -217,6 +252,82 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
               ),
             ),
           ],
+          if (dupes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.songsAiPossibleDuplicates,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...dupes.map(
+              (d) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: HosannaSurface(
+                  elevated: false,
+                  onTap: () {
+                    context.go('/songs');
+                    context.push('/songs/${d.id}');
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.library_music_outlined),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              d.title,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              d.artist.isEmpty ? '—' : d.artist,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        l10n.songsAiOpenExisting,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (diags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.songsAiLintIssues,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...diags.take(8).map(
+              (d) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${d.severity}${d.line != null ? ' L${d.line}' : ''}: ${d.message}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: d.severity == 'error'
+                        ? scheme.error
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (widget.draft.warnings.isNotEmpty) ...[
             const SizedBox(height: 10),
             ...widget.draft.warnings.map(
@@ -273,44 +384,45 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             controller: _time,
             decoration: InputDecoration(labelText: l10n.songsFieldTime),
           ),
+          const SizedBox(height: HosannaSpacing.sm),
+          TextField(
+            controller: _composer,
+            decoration: InputDecoration(labelText: l10n.songsAiFieldComposer),
+          ),
+          const SizedBox(height: HosannaSpacing.sm),
+          TextField(
+            controller: _ccli,
+            decoration: InputDecoration(labelText: l10n.songsAiFieldCcli),
+          ),
+          const SizedBox(height: HosannaSpacing.sm),
+          TextField(
+            controller: _duration,
+            decoration: InputDecoration(labelText: l10n.songsAiFieldDuration),
+          ),
+          const SizedBox(height: HosannaSpacing.sm),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _youtube,
+            builder: (context, value, _) {
+              final hasUrl = value.text.trim().isNotEmpty;
+              return TextField(
+                controller: _youtube,
+                decoration: InputDecoration(
+                  labelText: l10n.songsAiFieldYoutube,
+                  suffixIcon: IconButton(
+                    tooltip: l10n.songsAiOpenYoutube,
+                    onPressed: hasUrl ? _openYoutube : null,
+                    icon: const Icon(Icons.open_in_new_rounded),
+                  ),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: HosannaSpacing.lg),
           Text(
             l10n.songsAiSuccessBody,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
-          ),
-          Builder(
-            builder: (context) {
-              final source = widget.draft.content;
-              final chips = <String>[
-                if (readChordProDirective(source, 'youtube') != null)
-                  'YouTube',
-                if (readChordProDirective(source, 'ccli') != null) 'CCLI',
-                if (readChordProDirective(source, 'composer') != null)
-                  'Composer',
-                if (readChordProDirective(source, 'duration') != null)
-                  'Duration',
-                if (readChordProDirective(source, 'copyright') != null)
-                  'Copyright',
-              ];
-              if (chips.isEmpty) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(top: HosannaSpacing.sm),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final label in chips)
-                      Chip(
-                        label: Text(label),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                  ],
-                ),
-              );
-            },
           ),
           const SizedBox(height: HosannaSpacing.sm),
           HosannaSurface(
@@ -359,9 +471,8 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             ],
           ),
           TextButton(
-            onPressed: _saving
-                ? null
-                : () => context.go('/songs/import/ai'),
+            onPressed:
+                _saving ? null : () => context.go('/songs/import/ai'),
             child: Text(l10n.songsAiDiscardDraft),
           ),
         ],

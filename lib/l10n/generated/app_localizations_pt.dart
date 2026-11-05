@@ -865,6 +865,43 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsAiImportAnother => 'Importar outra';
 
   @override
+  String get songsAiPossibleDuplicates =>
+      'Possíveis correspondências na biblioteca';
+
+  @override
+  String get songsAiOpenExisting => 'Abrir';
+
+  @override
+  String get songsAiLintIssues => 'Problemas ChordPro';
+
+  @override
+  String get songsAiFieldComposer => 'Compositor';
+
+  @override
+  String get songsAiFieldCcli => 'CCLI';
+
+  @override
+  String get songsAiFieldDuration => 'Duração';
+
+  @override
+  String get songsAiFieldYoutube => 'YouTube';
+
+  @override
+  String get songsAiOpenYoutube => 'Abrir YouTube';
+
+  @override
+  String get songsAiCaptureTip =>
+      'Use luz uniforme e evite reflexos ou desfoque para melhores resultados.';
+
+  @override
+  String get songsAiCaptureQualityHint =>
+      'Esta imagem parece pequena ou de baixa qualidade — tente uma foto mais nítida e bem iluminada.';
+
+  @override
+  String get songsAiPdfMultiPageHint =>
+      'Até 5 páginas são enviadas em PDFs com várias páginas.';
+
+  @override
   String get songsEmptyAddHint =>
       'Adicione uma canção manualmente ou importe com a Logos AI.';
 

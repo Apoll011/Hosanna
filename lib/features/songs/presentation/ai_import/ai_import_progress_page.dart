@@ -29,9 +29,10 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   AiImportJobSnapshot? _snapshot;
   String? _error;
   bool _cancelledByAi = false;
+  bool _cancelledByUser = false;
   AiImportCancelCode? _cancelCode;
   bool _started = false;
-  bool _userAborted = false;
+  bool _leaving = false;
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   }
 
   void _handleSnapshot(AiImportJobSnapshot snap, AppLocalizations l10n) {
-    if (_userAborted || !mounted) return;
+    if (_leaving || !mounted) return;
     setState(() => _snapshot = snap);
     if (snap.status == AiImportJobStatus.completed) {
       _poll?.cancel();
@@ -63,12 +64,16 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     }
     if (snap.status == AiImportJobStatus.cancelled) {
       _poll?.cancel();
+      final byUser = snap.cancelledBy == 'user';
       setState(() {
-        _cancelledByAi = true;
+        _cancelledByUser = byUser;
+        _cancelledByAi = !byUser;
         _cancelCode = snap.cancelCode ?? AiImportCancelCode.unknown;
         _error = snap.cancelReason?.trim().isNotEmpty == true
             ? snap.cancelReason
-            : _cancelCodeMessage(l10n, _cancelCode!);
+            : byUser
+                ? l10n.songsAiCancelImport
+                : _cancelCodeMessage(l10n, _cancelCode!);
       });
       return;
     }
@@ -76,6 +81,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       _poll?.cancel();
       setState(() {
         _cancelledByAi = false;
+        _cancelledByUser = false;
         _cancelCode = null;
         _error = snap.errorMessage ?? l10n.songsAiImportFailed;
       });
@@ -104,49 +110,46 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         AiImportSourceType.gallery => 'gallery',
         AiImportSourceType.pdf => 'pdf',
       };
-      // Show optimistic step motion while the (long) create call runs.
-      _poll = Timer.periodic(const Duration(milliseconds: 900), (_) {
-        if (!mounted ||
-            _userAborted ||
-            _snapshot?.status == AiImportJobStatus.completed ||
-            _snapshot?.status == AiImportJobStatus.cancelled ||
-            _snapshot?.status == AiImportJobStatus.failed) {
-          return;
-        }
-        setState(() {
-          _snapshot = _advanceLocalSteps(_snapshot, l10n);
-        });
-      });
 
       final created = await api.createJob(
         sourceType: sourceType,
         imageBase64: base64Encode(widget.request.imageBytes),
         imageMimeType: widget.request.mimeType,
+        imagesBase64: widget.request.extraImageBytes.isEmpty
+            ? null
+            : widget.request.extraImageBytes
+                .map(base64Encode)
+                .toList(growable: false),
+        imageMimeTypes: widget.request.extraMimeTypes.isEmpty
+            ? null
+            : widget.request.extraMimeTypes,
         pdfBase64: widget.request.pdfBytes == null
             ? null
             : base64Encode(widget.request.pdfBytes!),
         fileName: widget.request.fileName,
       );
-      _poll?.cancel();
-      if (!mounted || _userAborted) return;
+      if (!mounted || _leaving) return;
       final id = created['id'] as String?;
       if (id == null || id.isEmpty) {
         throw StateError('Missing job id');
       }
       final snap = AiImportJobSnapshot.fromJson(created);
-      setState(() => _jobId = id);
+      setState(() {
+        _jobId = id;
+        _snapshot = snap;
+      });
       if (snap.status == AiImportJobStatus.completed ||
           snap.status == AiImportJobStatus.cancelled ||
           snap.status == AiImportJobStatus.failed) {
         _handleSnapshot(snap, l10n);
         return;
       }
-      setState(() => _snapshot = snap);
-      // Rare: job still running (e.g. older server) — poll.
       _poll = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+      // Immediate first poll in case create raced past queued.
+      unawaited(_tick());
     } catch (e) {
       _poll?.cancel();
-      if (!mounted || _userAborted) return;
+      if (!mounted || _leaving) return;
       setState(() {
         _cancelledByAi = false;
         _error = _errorMessageFrom(e, l10n);
@@ -174,11 +177,11 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
 
   Future<void> _tick() async {
     final id = _jobId;
-    if (id == null || _userAborted) return;
+    if (id == null || _leaving) return;
     try {
       final raw = await ref.read(hosannaApiProvider).songImport.getJob(id);
       final snap = AiImportJobSnapshot.fromJson(raw);
-      if (!mounted || _userAborted) return;
+      if (!mounted || _leaving) return;
       _handleSnapshot(snap, AppLocalizations.of(context));
     } catch (_) {
       // Keep polling; transient network blips are OK.
@@ -186,7 +189,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   }
 
   void _goReview(AiImportDraft draft) {
-    if (!mounted || _userAborted) return;
+    if (!mounted || _leaving) return;
     final withThumb = AiImportDraft(
       title: draft.title,
       artist: draft.artist,
@@ -196,15 +199,32 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       timeSignature: draft.timeSignature,
       confidence: draft.confidence,
       warnings: draft.warnings,
+      diagnostics: draft.diagnostics,
+      possibleDuplicates: draft.possibleDuplicates,
+      youtube: draft.youtube,
+      ccli: draft.ccli,
+      composer: draft.composer,
+      copyright: draft.copyright,
+      subtitle: draft.subtitle,
+      duration: draft.duration,
       thumbnailBytes: widget.request.imageBytes,
+      folderId: widget.request.folderId,
     );
-    // Draft is in-memory only until the user taps Save on the review screen.
     context.pushReplacement('/songs/import/ai/review', extra: withThumb);
   }
 
-  void _abortByUser() {
-    _userAborted = true;
+  Future<void> _abortByUser() async {
+    if (_leaving) return;
+    _leaving = true;
     _poll?.cancel();
+    final id = _jobId;
+    if (id != null) {
+      try {
+        await ref.read(hosannaApiProvider).songImport.cancelJob(id);
+      } catch (_) {
+        /* best-effort */
+      }
+    }
     if (!mounted) return;
     context.go('/songs/import/ai');
   }
@@ -232,40 +252,6 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     ];
   }
 
-  AiImportJobSnapshot _advanceLocalSteps(
-    AiImportJobSnapshot? current,
-    AppLocalizations l10n,
-  ) {
-    final steps = List<AiImportJobStep>.from(
-      current?.steps.isNotEmpty == true ? current!.steps : _fallbackSteps(l10n),
-    );
-    final activeIdx = steps.indexWhere((s) => s.active);
-    final idx = activeIdx < 0 ? 0 : activeIdx;
-    if (idx >= steps.length - 1) {
-      return AiImportJobSnapshot(
-        id: current?.id ?? '',
-        status: AiImportJobStatus.running,
-        steps: steps,
-      );
-    }
-    steps[idx] = AiImportJobStep(
-      id: steps[idx].id,
-      label: steps[idx].label,
-      done: true,
-    );
-    steps[idx + 1] = AiImportJobStep(
-      id: steps[idx + 1].id,
-      label: steps[idx + 1].label,
-      done: false,
-      active: true,
-    );
-    return AiImportJobSnapshot(
-      id: current?.id ?? '',
-      status: AiImportJobStatus.running,
-      steps: steps,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -277,17 +263,17 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
     final hasError = _error != null;
     final title = !hasError
         ? l10n.songsAiAnalyzing
-        : _cancelledByAi
+        : (_cancelledByAi || _cancelledByUser)
             ? l10n.songsAiCancelledTitle
             : l10n.songsAiImportFailed;
-    final body = !hasError
-        ? l10n.songsAiAnalyzingBody
-        : _error!;
+    final body = !hasError ? l10n.songsAiAnalyzingBody : _error!;
     final footerHint = !hasError
         ? null
         : _cancelledByAi
             ? l10n.songsAiCancelledBody
-            : l10n.songsAiImportFailedBody;
+            : _cancelledByUser
+                ? null
+                : l10n.songsAiImportFailedBody;
 
     return Scaffold(
       appBar: AppBar(
@@ -383,7 +369,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                 child: FilledButton(
                   onPressed: () => context.go('/songs/import/ai'),
                   child: Text(
-                    _cancelledByAi
+                    (_cancelledByAi || _cancelledByUser)
                         ? l10n.songsAiImportAnother
                         : l10n.commonRetry,
                   ),

@@ -14,8 +14,18 @@ import '../../../../shared/widgets/hosanna_surface.dart';
 import '../../../../shared/widgets/shell_modal.dart';
 import 'ai_import_models.dart';
 
+/// Max PDF pages sent to the server (1 primary + up to 4 extras).
+const _maxPdfPages = 5;
+
+/// Consistent capture settings for camera/gallery.
+const _captureMaxWidth = 2048.0;
+const _captureQuality = 85;
+
 class AiImportSourcePage extends StatefulWidget {
-  const AiImportSourcePage({super.key});
+  const AiImportSourcePage({super.key, this.folderId});
+
+  /// Optional library folder to save into after review approval.
+  final String? folderId;
 
   @override
   State<AiImportSourcePage> createState() => _AiImportSourcePageState();
@@ -30,6 +40,45 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
     context.push('/songs/import/ai/progress', extra: request);
   }
 
+  Future<bool> _looksLowQuality(Uint8List bytes) async {
+    if (bytes.length < 40 * 1024) return true;
+    try {
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final w = frame.image.width;
+      final h = frame.image.height;
+      frame.image.dispose();
+      return w < 800 || h < 800;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Returns false if the user cancels after a quality warning.
+  Future<bool> _confirmQualityIfNeeded(Uint8List bytes) async {
+    if (!await _looksLowQuality(bytes)) return true;
+    if (!mounted) return false;
+    final l10n = AppLocalizations.of(context);
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.songsImportWithAi),
+        content: Text(l10n.songsAiCaptureQualityHint),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.commonConfirm),
+          ),
+        ],
+      ),
+    );
+    return proceed == true;
+  }
+
   Future<void> _pickCamera() async {
     setState(() {
       _busy = true;
@@ -39,17 +88,19 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
       final picker = ImagePicker();
       final file = await picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 85,
-        maxWidth: 2048,
+        imageQuality: _captureQuality,
+        maxWidth: _captureMaxWidth,
       );
       if (file == null) return;
       final bytes = await file.readAsBytes();
+      if (!await _confirmQualityIfNeeded(bytes)) return;
       await _start(
         AiImportJobRequest(
           sourceType: AiImportSourceType.photo,
           imageBytes: bytes,
           mimeType: 'image/jpeg',
           fileName: file.name,
+          folderId: widget.folderId,
         ),
       );
     } catch (_) {
@@ -70,8 +121,8 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
       final picker = ImagePicker();
       final file = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 2048,
+        imageQuality: _captureQuality,
+        maxWidth: _captureMaxWidth,
       );
       if (file == null) return;
       final bytes = await file.readAsBytes();
@@ -81,12 +132,14 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
           : name.endsWith('.webp')
               ? 'image/webp'
               : 'image/jpeg';
+      if (!await _confirmQualityIfNeeded(bytes)) return;
       await _start(
         AiImportJobRequest(
           sourceType: AiImportSourceType.gallery,
           imageBytes: bytes,
           mimeType: mime,
           fileName: file.name,
+          folderId: widget.folderId,
         ),
       );
     } catch (_) {
@@ -113,14 +166,24 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
       final pdfBytes = await file.readAsBytes();
       if (pdfBytes.isEmpty) return;
 
-      final screenshot = await _renderPdfFirstPage(pdfBytes);
+      final pages = await _renderPdfPages(pdfBytes);
+      if (pages.isEmpty) {
+        throw StateError('Failed to rasterize PDF');
+      }
       await _start(
         AiImportJobRequest(
           sourceType: AiImportSourceType.pdf,
-          imageBytes: screenshot,
+          imageBytes: pages.first,
           mimeType: 'image/png',
+          extraImageBytes: pages.length > 1
+              ? pages.sublist(1)
+              : const [],
+          extraMimeTypes: pages.length > 1
+              ? List.filled(pages.length - 1, 'image/png')
+              : const [],
           pdfBytes: pdfBytes,
           fileName: file.name,
+          folderId: widget.folderId,
         ),
       );
     } catch (_) {
@@ -132,30 +195,39 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
     }
   }
 
-  Future<Uint8List> _renderPdfFirstPage(Uint8List pdfBytes) async {
+  Future<List<Uint8List>> _renderPdfPages(Uint8List pdfBytes) async {
     final doc = await PdfDocument.openData(pdfBytes);
     try {
-      final page = doc.pages.first;
-      final fullWidth = 1280.0;
-      final fullHeight = page.height / page.width * fullWidth;
-      final image = await page.renderForDisplay(
-        fullWidth: fullWidth,
-        fullHeight: fullHeight,
-      );
-      if (image == null) {
-        throw StateError('Failed to rasterize PDF page');
+      final out = <Uint8List>[];
+      final limit =
+          doc.pages.length < _maxPdfPages ? doc.pages.length : _maxPdfPages;
+      for (var i = 0; i < limit; i++) {
+        out.add(await _renderPdfPage(doc.pages[i]));
       }
-      try {
-        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-        if (byteData == null) {
-          throw StateError('Failed to encode PDF screenshot');
-        }
-        return byteData.buffer.asUint8List();
-      } finally {
-        image.dispose();
-      }
+      return out;
     } finally {
       doc.dispose();
+    }
+  }
+
+  Future<Uint8List> _renderPdfPage(PdfPage page) async {
+    final fullWidth = 1280.0;
+    final fullHeight = page.height / page.width * fullWidth;
+    final image = await page.renderForDisplay(
+      fullWidth: fullWidth,
+      fullHeight: fullHeight,
+    );
+    if (image == null) {
+      throw StateError('Failed to rasterize PDF page');
+    }
+    try {
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw StateError('Failed to encode PDF screenshot');
+      }
+      return byteData.buffer.asUint8List();
+    } finally {
+      image.dispose();
     }
   }
 
@@ -180,6 +252,11 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
             const SizedBox(height: 12),
             Text(
               l10n.songsImportSheetMusicBody,
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.songsAiCaptureTip,
               style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
             ),
           ],
@@ -226,6 +303,14 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                   height: 1.4,
                 ),
               ),
+              const SizedBox(height: HosannaSpacing.sm),
+              Text(
+                l10n.songsAiCaptureTip,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
               if (_error != null) ...[
                 const SizedBox(height: HosannaSpacing.sm),
                 Text(
@@ -253,7 +338,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
               _SourceCard(
                 icon: Icons.picture_as_pdf_outlined,
                 title: l10n.songsImportPdf,
-                subtitle: l10n.songsImportWithAiDesc,
+                subtitle: l10n.songsAiPdfMultiPageHint,
                 onTap: _busy ? null : _pickPdf,
               ),
               const SizedBox(height: HosannaSpacing.lg),

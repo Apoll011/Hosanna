@@ -200,7 +200,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/songs/import/ai',
-        builder: (_, _) => const AiImportSourcePage(),
+        builder: (_, state) {
+          String? folderId = state.uri.queryParameters['folderId'];
+          final extra = state.extra;
+          if (extra is Map) {
+            folderId ??= extra['folderId'] as String?;
+          }
+          return AiImportSourcePage(folderId: folderId);
+        },
       ),
       GoRoute(
         path: '/songs/import/ai/progress',

@@ -214,6 +214,8 @@ class SongImportApi {
     required String sourceType,
     required String imageBase64,
     required String imageMimeType,
+    List<String>? imagesBase64,
+    List<String>? imageMimeTypes,
     String? pdfBase64,
     String? fileName,
   }) async {
@@ -223,13 +225,17 @@ class SongImportApi {
         'sourceType': sourceType,
         'imageBase64': imageBase64,
         'imageMimeType': imageMimeType,
+        if (imagesBase64 != null && imagesBase64.isNotEmpty)
+          'imagesBase64': imagesBase64,
+        if (imageMimeTypes != null && imageMimeTypes.isNotEmpty)
+          'imageMimeTypes': imageMimeTypes,
         if (pdfBase64 != null) 'pdfBase64': pdfBase64,
         if (fileName != null) 'fileName': fileName,
       },
       options: Options(
-        // Vision + web verify can take a while.
+        // Create returns immediately (202); still allow slow uploads.
         sendTimeout: const Duration(minutes: 2),
-        receiveTimeout: const Duration(minutes: 3),
+        receiveTimeout: const Duration(seconds: 60),
       ),
     );
     return res.data ?? const {};
@@ -237,6 +243,13 @@ class SongImportApi {
 
   Future<Map<String, dynamic>> getJob(String id) async {
     final res = await _dio.get<Map<String, dynamic>>(
+      '/songs/import/jobs/$id',
+    );
+    return res.data ?? const {};
+  }
+
+  Future<Map<String, dynamic>> cancelJob(String id) async {
+    final res = await _dio.delete<Map<String, dynamic>>(
       '/songs/import/jobs/$id',
     );
     return res.data ?? const {};

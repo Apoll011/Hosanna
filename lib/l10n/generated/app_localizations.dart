@@ -1654,6 +1654,72 @@ abstract class AppLocalizations {
   /// **'Importar outra'**
   String get songsAiImportAnother;
 
+  /// No description provided for @songsAiPossibleDuplicates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Possíveis correspondências na biblioteca'**
+  String get songsAiPossibleDuplicates;
+
+  /// No description provided for @songsAiOpenExisting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get songsAiOpenExisting;
+
+  /// No description provided for @songsAiLintIssues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Problemas ChordPro'**
+  String get songsAiLintIssues;
+
+  /// No description provided for @songsAiFieldComposer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compositor'**
+  String get songsAiFieldComposer;
+
+  /// No description provided for @songsAiFieldCcli.
+  ///
+  /// In pt, this message translates to:
+  /// **'CCLI'**
+  String get songsAiFieldCcli;
+
+  /// No description provided for @songsAiFieldDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração'**
+  String get songsAiFieldDuration;
+
+  /// No description provided for @songsAiFieldYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'YouTube'**
+  String get songsAiFieldYoutube;
+
+  /// No description provided for @songsAiOpenYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir YouTube'**
+  String get songsAiOpenYoutube;
+
+  /// No description provided for @songsAiCaptureTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use luz uniforme e evite reflexos ou desfoque para melhores resultados.'**
+  String get songsAiCaptureTip;
+
+  /// No description provided for @songsAiCaptureQualityHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta imagem parece pequena ou de baixa qualidade — tente uma foto mais nítida e bem iluminada.'**
+  String get songsAiCaptureQualityHint;
+
+  /// No description provided for @songsAiPdfMultiPageHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Até 5 páginas são enviadas em PDFs com várias páginas.'**
+  String get songsAiPdfMultiPageHint;
+
   /// No description provided for @songsEmptyAddHint.
   ///
   /// In pt, this message translates to:
