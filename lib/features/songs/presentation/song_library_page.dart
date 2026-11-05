@@ -6,6 +6,7 @@ import '../../../app/design/illustrations.dart';
 import '../../../app/design/tokens.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
+import '../../../core/permissions/permissions.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/app_bar_search_field.dart';
@@ -15,6 +16,7 @@ import '../../../shared/widgets/shell_insets.dart';
 import '../../../shared/widgets/shell_modal.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
+import '../data/ai_settings_provider.dart';
 import '../data/song_repository.dart';
 import '../domain/library_controller.dart';
 import 'song_filter_widgets.dart';
@@ -66,6 +68,11 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final collectionsAsync = ref.watch(collectionsStreamProvider);
     final library = ref.watch(libraryControllerProvider);
     final libraryController = ref.read(libraryControllerProvider.notifier);
+    // Watch so add / AI affordances appear once role + AI settings resolve.
+    final canCreateSong =
+        ref.watch(canPermissionProvider(AppPermission.songCreate));
+    final canImportWithAi = ref.watch(aiImportAvailableProvider);
+    final canAddSongs = canCreateSong || canImportWithAi;
 
     final songs = songsAsync.valueOrNull ?? const <SongRow>[];
     if (!identical(_metaCacheSongs, songs)) {
@@ -111,11 +118,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             activeCount: _settings.activeFilterCount,
             onPressed: _openFilterSheet,
           ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: l10n.songsNewSong,
-            onPressed: _showNewSongSheet,
-          ),
+          if (canAddSongs)
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
+              tooltip: l10n.songsNewSong,
+              onPressed: _showNewSongSheet,
+            ),
         ],
       ),
       body: Column(
@@ -145,6 +153,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     folderNames: folderNames,
                     favorites: library.favoriteIds,
                     library: library,
+                    canCreateSong: canCreateSong,
+                    canImportWithAi: canImportWithAi,
                     onToggleFavorite: libraryController.toggleFavorite,
                     onOpenSong: (id) {
                       libraryController.markPlayed(id);
@@ -304,6 +314,21 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   }
 
   Future<void> _showNewSongSheet() async {
+    final canCreate =
+        ref.read(canPermissionProvider(AppPermission.songCreate));
+    final canImport = ref.read(aiImportAvailableProvider);
+    if (!canCreate && !canImport) return;
+
+    // Single option → skip the chooser sheet.
+    if (canCreate && !canImport) {
+      context.push('/songs/new');
+      return;
+    }
+    if (!canCreate && canImport) {
+      _openAiImport();
+      return;
+    }
+
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final tokens = HosannaTokens.of(context);
@@ -407,12 +432,19 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     required Map<String, String> folderNames,
     required List<String> favorites,
     required LibraryState library,
+    required bool canCreateSong,
+    required bool canImportWithAi,
     required ValueChanged<String> onToggleFavorite,
     required ValueChanged<String> onOpenSong,
   }) {
     final l10n = AppLocalizations.of(context);
     if (songs.isEmpty) {
-      return _buildEmpty(l10n, library);
+      return _buildEmpty(
+        l10n,
+        library,
+        canCreateSong: canCreateSong,
+        canImportWithAi: canImportWithAi,
+      );
     }
     final theme = Theme.of(context);
     return ListView.separated(
@@ -487,7 +519,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     );
   }
 
-  Widget _buildEmpty(AppLocalizations l10n, LibraryState library) {
+  Widget _buildEmpty(
+    AppLocalizations l10n,
+    LibraryState library, {
+    required bool canCreateSong,
+    required bool canImportWithAi,
+  }) {
     final hasFilters = !_settings.isDefault || _search.text.trim().isNotEmpty;
 
     if (hasFilters) {
@@ -530,12 +567,14 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       LibrarySection.all => EmptyState(
           illustrationAsset: HosannaIllustrations.emptySongs,
           title: l10n.songsEmpty,
-          description: l10n.songsEmptyAddHint,
-          primaryLabel: l10n.songsAddSong,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.songsEmptyAddHint
+              : l10n.songsEmptyDesc,
+          primaryLabel: canCreateSong ? l10n.songsAddSong : null,
           primaryIcon: Icons.add_rounded,
-          onPrimary: _showNewSongSheet,
-          secondaryLabel: l10n.songsImportWithAi,
-          onSecondary: _openAiImport,
+          onPrimary: canCreateSong ? _showNewSongSheet : null,
+          secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
+          onSecondary: canImportWithAi ? _openAiImport : null,
           scrollable: true,
         ),
     };

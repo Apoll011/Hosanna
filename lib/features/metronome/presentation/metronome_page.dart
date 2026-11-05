@@ -185,7 +185,6 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
     final colors = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
         title: Text(l10n.metronomeTitle),
         centerTitle: true,

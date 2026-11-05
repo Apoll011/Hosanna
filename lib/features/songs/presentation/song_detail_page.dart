@@ -6,6 +6,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
+import '../../../core/permissions/permissions.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../export/presentation/song_pdf_share.dart';
@@ -72,6 +73,10 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final songAsync = ref.watch(songByIdProvider(widget.songId));
     final song = songAsync.value;
     final canPop = context.canPop();
+    final canEdit =
+        ref.watch(canPermissionProvider(AppPermission.songUpdate));
+    final canExport =
+        ref.watch(canPermissionProvider(AppPermission.exportPdf));
 
     return Scaffold(
       appBar: AppBar(
@@ -89,26 +94,28 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         ),
         actions: [
           const SongToolbarButton(),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: l10n.songsEdit,
-            onPressed: song == null
-                ? null
-                : () => context.push('/songs/${widget.songId}/edit'),
-          ),
-          IconButton(
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.ios_share),
-            tooltip: l10n.navExportPdf,
-            onPressed: (_isExporting || song == null)
-                ? null
-                : () => _exportAndShare(song),
-          ),
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.songsEdit,
+              onPressed: song == null
+                  ? null
+                  : () => context.push('/songs/${widget.songId}/edit'),
+            ),
+          if (canExport)
+            IconButton(
+              icon: _isExporting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.ios_share),
+              tooltip: l10n.navExportPdf,
+              onPressed: (_isExporting || song == null)
+                  ? null
+                  : () => _exportAndShare(song),
+            ),
         ],
       ),
       body: songAsync.when(

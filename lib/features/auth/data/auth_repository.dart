@@ -200,6 +200,9 @@ class AuthRepository {
   // ── Organization plugin ──────────────────────────────────────────────────
 
   /// The active (full) organization, or `null` when none is set.
+  ///
+  /// Also caches the raw `members` list on the response so
+  /// [resolveMemberRole] can avoid an extra round-trip when callers pass it.
   Future<Organization?> getFullOrganization() async {
     try {
       final res =
@@ -208,10 +211,54 @@ class AuthRepository {
       if (data == null) return null;
       final map = _asMap(data);
       if (map.isEmpty) return null;
+      _lastFullOrganizationMembers = map['members'];
       return Organization.fromJson(map);
+    } on DioException {
+      _lastFullOrganizationMembers = null;
+      return null;
+    }
+  }
+
+  /// Members array from the most recent [getFullOrganization] call, if any.
+  Object? _lastFullOrganizationMembers;
+
+  /// Active membership role for [userId] in the current organization.
+  ///
+  /// Prefers the members list from the last full-org fetch (same as Studio),
+  /// then falls back to `GET /organization/get-active-member-role`.
+  Future<String?> resolveMemberRole({required String userId}) async {
+    final fromMembers = _roleFromMembers(
+      _lastFullOrganizationMembers,
+      userId,
+    );
+    if (fromMembers != null) return fromMembers;
+    return getActiveMemberRole();
+  }
+
+  /// `GET /api/auth/organization/get-active-member-role` → `{ role }`.
+  Future<String?> getActiveMemberRole() async {
+    try {
+      final res = await _dio.get<dynamic>(
+        '/api/auth/organization/get-active-member-role',
+      );
+      final map = _asMap(res.data);
+      final role = map['role'];
+      return role is String && role.isNotEmpty ? role : null;
     } on DioException {
       return null;
     }
+  }
+
+  static String? _roleFromMembers(Object? members, String userId) {
+    if (members is! List) return null;
+    for (final raw in members) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      if (map['userId'] != userId) continue;
+      final role = map['role'];
+      if (role is String && role.isNotEmpty) return role;
+    }
+    return null;
   }
 
   Future<List<Organization>> listOrganizations() async {

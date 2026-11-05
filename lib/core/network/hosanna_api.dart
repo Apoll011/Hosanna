@@ -17,12 +17,14 @@ class HosannaApi {
     required this.annotations,
     required this.serviceNotes,
     required this.songImport,
+    required this.ai,
   });
 
   final ReplicationApi replication;
   final AnnotationsApi annotations;
   final ServiceNotesApi serviceNotes;
   final SongImportApi songImport;
+  final AiApi ai;
 
   factory HosannaApi.fromSharedDio(
     Dio shared, {
@@ -36,6 +38,7 @@ class HosannaApi {
       annotations: AnnotationsApi(dio),
       serviceNotes: ServiceNotesApi(dio),
       songImport: SongImportApi(dio),
+      ai: AiApi(dio),
     );
   }
 }
@@ -206,6 +209,38 @@ class ServiceNotesApi {
 }
 
 /// Logos AI sheet-music → ChordPro draft jobs.
+class AiApi {
+  AiApi(this._dio);
+  final Dio _dio;
+
+  /// `GET /ai/settings` — public org AI config (no API key).
+  ///
+  /// Requires `ai.use`. Callers should treat errors as "not ready".
+  Future<AiSettingsPublic> getSettings() async {
+    final res = await _dio.get<Map<String, dynamic>>('/ai/settings');
+    return AiSettingsPublic.fromJson(res.data ?? const {});
+  }
+}
+
+class AiSettingsPublic {
+  const AiSettingsPublic({
+    required this.enabled,
+    required this.configured,
+  });
+
+  final bool enabled;
+  final bool configured;
+
+  /// Same readiness gate as Studio: key present and feature toggled on.
+  bool get ready => configured && enabled;
+
+  factory AiSettingsPublic.fromJson(Map<String, dynamic> json) =>
+      AiSettingsPublic(
+        enabled: json['enabled'] == true,
+        configured: json['configured'] == true,
+      );
+}
+
 class SongImportApi {
   SongImportApi(this._dio);
   final Dio _dio;
