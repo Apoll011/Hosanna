@@ -30,13 +30,14 @@ class AgendaEventPage extends ConsumerWidget {
       body: eventAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => ErrorState(
+          illustrationAsset: HosannaIllustrations.stateError,
           title: l10n.commonError,
           description: l10n.commonErrorDesc,
         ),
         data: (event) {
           if (event == null || event.isDeleted) {
             return EmptyState(
-              illustrationAsset: HosannaIllustrations.emptyServices,
+              illustrationAsset: HosannaIllustrations.emptyAgenda,
               title: l10n.agendaEventNotFound,
               description: l10n.agendaEventNotFoundBody,
             );

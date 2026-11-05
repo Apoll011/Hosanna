@@ -100,6 +100,7 @@ class _AgendaPageState extends ConsumerState<AgendaPage> {
         error: (_, _) => RefreshIndicator(
           onRefresh: _refresh,
           child: ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
             retryLabel: l10n.commonRetry,
@@ -112,7 +113,7 @@ class _AgendaPageState extends ConsumerState<AgendaPage> {
             return RefreshIndicator(
               onRefresh: _refresh,
               child: EmptyState(
-                illustrationAsset: HosannaIllustrations.emptyServices,
+                illustrationAsset: HosannaIllustrations.emptyAgenda,
                 title: l10n.agendaEmptyTitle,
                 description: l10n.agendaEmptyBody,
                 scrollable: true,
@@ -313,7 +314,7 @@ class _DayEventsList extends StatelessWidget {
 
     if (dateKey == null || events.isEmpty) {
       return EmptyState(
-        illustrationAsset: HosannaIllustrations.emptyServices,
+        illustrationAsset: HosannaIllustrations.emptyAgenda,
         title: l10n.agendaNoEventsForDay,
         description: l10n.agendaNoEventsForDayBody,
       );
