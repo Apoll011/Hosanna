@@ -74,8 +74,10 @@ abstract final class HosannaRadii {
   static const BorderRadius sheet = BorderRadius.vertical(
     top: Radius.circular(lg),
   );
-  static const BorderRadius button = BorderRadius.all(Radius.circular(sm));
-  static const BorderRadius field = BorderRadius.all(Radius.circular(sm));
+  /// Matches auth/setup CTAs (16px).
+  static const BorderRadius button = BorderRadius.all(Radius.circular(16));
+  /// Matches auth/setup text fields (16px).
+  static const BorderRadius field = BorderRadius.all(Radius.circular(16));
   static const BorderRadius navPill = BorderRadius.all(Radius.circular(pill));
 }
 

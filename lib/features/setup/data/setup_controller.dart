@@ -14,6 +14,7 @@ class SetupController extends StateNotifier<bool> {
 
   static const completedKey = 'setup.completed';
   static const roleKey = 'setup.role';
+  static const inviteRoleKey = 'setup.inviteRole';
 
   final SharedPreferences _prefs;
 
@@ -34,7 +35,62 @@ class SetupController extends StateNotifier<bool> {
     return false;
   }
 
-  Future<void> apply(SetupDraft draft, {
+  /// Maps an org-invite role to the setup musician/leader choice.
+  static SetupRole? roleFromInvite(String? inviteRole) {
+    if (inviteRole == null || inviteRole.isEmpty) return null;
+    return switch (inviteRole.toLowerCase()) {
+      'owner' || 'admin' || 'editor' => SetupRole.leader,
+      'musician' || 'guest' || 'member' => SetupRole.musician,
+      _ => null,
+    };
+  }
+
+  static SetupPrimaryFocus focusFromInstrument(String instrumentId) {
+    return switch (instrumentId) {
+      'ukulele' => SetupPrimaryFocus.ukulele,
+      'piano' => SetupPrimaryFocus.piano,
+      _ => SetupPrimaryFocus.guitar,
+    };
+  }
+
+  /// Prefills the wizard from saved setup, current prefs, or the last invite.
+  SetupDraft initialDraft({
+    required AppSettings settings,
+    required SongDisplaySettings display,
+  }) {
+    final savedRoleName = _prefs.getString(roleKey);
+    SetupRole? role;
+    if (savedRoleName == SetupRole.leader.name ||
+        savedRoleName == SetupRole.musician.name) {
+      role = SetupRole.values.byName(savedRoleName!);
+    } else {
+      role = roleFromInvite(_prefs.getString(inviteRoleKey));
+    }
+
+    // Musician mode already persisted (redo) wins over invite mapping.
+    if (_prefs.containsKey('settings.musicianMode')) {
+      role = settings.musicianMode ? SetupRole.musician : SetupRole.leader;
+    }
+
+    final focus = role == SetupRole.leader
+        ? null
+        : focusFromInstrument(display.instrument);
+
+    return SetupDraft(
+      role: role,
+      focus: focus,
+      showDiagrams: role == SetupRole.leader ? false : display.showDiagrams,
+      keepScreenAwake: settings.keepScreenAwake,
+      localeCode: settings.localeCode,
+    );
+  }
+
+  Future<void> rememberInviteRole(String role) async {
+    await _prefs.setString(inviteRoleKey, role);
+  }
+
+  Future<void> apply(
+    SetupDraft draft, {
     required SettingsController settings,
     required SongDisplaySettingsController display,
   }) async {
@@ -51,6 +107,7 @@ class SetupController extends StateNotifier<bool> {
     if (roleName != null) {
       await _prefs.setString(roleKey, roleName);
     }
+    await _prefs.remove(inviteRoleKey);
     await _prefs.setBool(completedKey, true);
     state = true;
   }

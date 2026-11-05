@@ -24,7 +24,7 @@ enum _Step { welcome, role, focus, prefs, language, done }
 
 class _SetupPageState extends ConsumerState<SetupPage> {
   final _pageController = PageController();
-  SetupDraft _draft = const SetupDraft();
+  late SetupDraft _draft;
   var _stepIndex = 0;
   var _finishing = false;
 
@@ -39,6 +39,15 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   }
 
   _Step get _currentStep => _steps[_stepIndex.clamp(0, _steps.length - 1)];
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = ref.read(setupControllerProvider.notifier).initialDraft(
+          settings: ref.read(settingsControllerProvider),
+          display: ref.read(songDisplaySettingsProvider),
+        );
+  }
 
   @override
   void dispose() {
@@ -74,24 +83,19 @@ class _SetupPageState extends ConsumerState<SetupPage> {
         _Step.focus => _draft.focus != null,
       };
 
-  Future<void> _finish({bool skipped = false}) async {
+  Future<void> _finish() async {
     if (_finishing) return;
     setState(() => _finishing = true);
-    final role = skipped
-        ? SetupRole.musician
-        : (_draft.role ?? SetupRole.musician);
-    final draft = skipped
-        ? const SetupDraft(
-            role: SetupRole.musician,
-            focus: SetupPrimaryFocus.guitar,
-          )
-        : _draft.copyWith(
-            role: role,
-            // Leaders keep a harmless default instrument for song charts.
-            focus: role == SetupRole.leader
-                ? SetupPrimaryFocus.guitar
-                : (_draft.focus ?? SetupPrimaryFocus.guitar),
-          );
+
+    // Skip and complete both preserve role/locale/prefs already chosen and only
+    // fill missing required fields — never rebuild a blank draft that wipes locale.
+    final role = _draft.role ?? SetupRole.musician;
+    final draft = _draft.copyWith(
+      role: role,
+      focus: role == SetupRole.leader
+          ? SetupPrimaryFocus.guitar
+          : (_draft.focus ?? SetupPrimaryFocus.guitar),
+    );
 
     await ref.read(setupControllerProvider.notifier).apply(
           draft,
@@ -163,7 +167,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                     ),
                     if (_currentStep != _Step.done)
                       TextButton(
-                        onPressed: _finishing ? null : () => _finish(skipped: true),
+                        onPressed: _finishing ? null : _finish,
                         child: Text(l10n.setupSkip),
                       )
                     else

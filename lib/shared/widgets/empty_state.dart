@@ -172,6 +172,21 @@ class _EmptyStateBody extends StatelessWidget {
     final iconColor =
         isError ? scheme.onErrorContainer : scheme.onPrimaryContainer;
 
+    final ctaShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    );
+    final ctaStyle = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      shape: ctaShape,
+      textStyle: theme.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+    );
+    final outlinedStyle = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      shape: ctaShape,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: HosannaSpacing.xl,
@@ -183,12 +198,33 @@ class _EmptyStateBody extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (illustrationAsset != null)
-              Image.asset(
-                illustrationAsset!,
-                width: artSize,
-                height: artSize,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      isError
+                          ? scheme.error.withValues(alpha: 0.08)
+                          : scheme.primary.withValues(alpha: 0.08),
+                      scheme.surface.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      illustrationAsset!,
+                      width: artSize,
+                      height: artSize,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  ),
+                ),
               )
             else
               Container(
@@ -203,8 +239,9 @@ class _EmptyStateBody extends StatelessWidget {
             const SizedBox(height: HosannaSpacing.md),
             Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
               ),
               textAlign: TextAlign.center,
             ),
@@ -223,17 +260,12 @@ class _EmptyStateBody extends StatelessWidget {
               const SizedBox(height: HosannaSpacing.lg),
               SizedBox(
                 width: double.infinity,
-                child: isError
-                    ? FilledButton.icon(
-                        onPressed: onPrimary,
-                        icon: Icon(primaryIcon),
-                        label: Text(primaryLabel!),
-                      )
-                    : FilledButton.icon(
-                        onPressed: onPrimary,
-                        icon: Icon(primaryIcon),
-                        label: Text(primaryLabel!),
-                      ),
+                child: FilledButton.icon(
+                  onPressed: onPrimary,
+                  style: ctaStyle,
+                  icon: Icon(primaryIcon),
+                  label: Text(primaryLabel!),
+                ),
               ),
             ],
             if (secondaryLabel != null && onSecondary != null) ...[
@@ -242,6 +274,7 @@ class _EmptyStateBody extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: onSecondary,
+                  style: outlinedStyle,
                   child: Text(secondaryLabel!),
                 ),
               ),

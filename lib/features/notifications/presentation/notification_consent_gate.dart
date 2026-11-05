@@ -4,13 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
+import '../../setup/data/setup_controller.dart';
 
-/// Asks the user — once, after the first authenticated session — whether the
+/// Asks the user — once, after first-run setup is complete — whether the
 /// server may send notifications to this device, then records the answer and
 /// mirrors it onto the current session's `notify` field.
 ///
 /// It is mounted from `MaterialApp.builder`, i.e. *above* the Navigator, so
 /// the prompt is rendered as an in-tree modal overlay instead of a dialog.
+///
+/// Deferred until the user has an organization **and** finished the setup
+/// wizard so the prompt does not stack on top of join/setup.
 ///
 /// The answer is intentionally distinct from the OS notification permission:
 /// "Allow" records consent and *also* requests the OS permission, while
@@ -42,6 +46,14 @@ class _NotificationConsentGateState
       if (next.isAuthenticated && previous?.isAuthenticated != true) {
         _maybeAsk();
       }
+      if (next.organization != null && previous?.organization == null) {
+        _maybeAsk();
+      }
+    });
+    ref.listen(setupControllerProvider, (previous, next) {
+      if (next && previous != true) {
+        _maybeAsk();
+      }
     });
 
     return Stack(
@@ -55,7 +67,9 @@ class _NotificationConsentGateState
   Future<void> _maybeAsk() async {
     if (_prompting || !mounted) return;
     if (await ref.read(notificationConsentStoreProvider).read() != null) return;
-    if (!ref.read(authControllerProvider).isAuthenticated) return;
+    final auth = ref.read(authControllerProvider);
+    if (!auth.isAuthenticated || auth.organization == null) return;
+    if (!ref.read(setupControllerProvider)) return;
     if (!mounted) return;
     setState(() => _prompting = true);
   }
@@ -95,6 +109,9 @@ class _NotificationConsentGateState
             constraints: const BoxConstraints(maxWidth: 420),
             child: Card(
               margin: const EdgeInsets.all(24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -125,13 +142,17 @@ class _NotificationConsentGateState
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed:
-                              _busy ? null : () => _answer(false),
+                          onPressed: _busy ? null : () => _answer(false),
                           child: Text(l10n.notificationConsentNotNow),
                         ),
                         const SizedBox(width: 8),
                         FilledButton(
                           onPressed: _busy ? null : () => _answer(true),
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
                           child: Text(l10n.notificationConsentAllow),
                         ),
                       ],

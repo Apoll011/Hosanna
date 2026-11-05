@@ -37,4 +37,8 @@ abstract final class HosannaIllustrations {
   static const String authForgotPassword = '$_base/auth_forgot_password.png';
   static const String authResetPassword = '$_base/auth_reset_password.png';
   static const String authVerifyEmail = '$_base/auth_verify_email.png';
+
+  // ── Org invite (pre-setup) ───────────────────────────────────────────────
+  // Reuses members art until a dedicated invite illustration ships.
+  static const String onboardingInvite = emptyMembers;
 }

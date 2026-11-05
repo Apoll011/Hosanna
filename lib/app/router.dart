@@ -29,6 +29,7 @@ import '../features/songs/presentation/song_detail_page.dart';
 import '../features/songs/presentation/song_editor_page.dart';
 import '../features/songs/presentation/song_library_page.dart';
 import '../shared/widgets/hosanna_logo.dart';
+import 'design/illustrations.dart';
 import 'shell.dart';
 
 bool _isAuthRoute(String path) {
@@ -276,15 +277,42 @@ class _SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const HosannaLogo(size: 96),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
-          ],
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              scheme.primary.withValues(alpha: 0.10),
+              scheme.surface,
+              scheme.surface,
+            ],
+            stops: const [0, 0.4, 1],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const HosannaLogo(size: 96),
+              const SizedBox(height: 28),
+              Image.asset(
+                HosannaIllustrations.stateLoading,
+                height: 96,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: scheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
