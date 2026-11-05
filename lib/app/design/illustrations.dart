@@ -10,14 +10,26 @@ abstract final class HosannaIllustrations {
   static const String emptyAgenda = '$_base/empty_agenda.png';
   static const String emptyNextService = '$_base/empty_next_service.png';
   static const String emptyNotes = '$_base/empty_notes.png';
+  static const String emptyServiceItems = '$_base/empty_service_items.png';
+  static const String emptyRecents = '$_base/empty_recents.png';
   static const String emptyImportSource = '$_base/empty_import_source.png';
   static const String emptySync = '$_base/empty_sync.png';
+  static const String emptyMembers = '$_base/empty_members.png';
+
   static const String aiProcessing = '$_base/ai_processing.png';
+  static const String aiSuccess = '$_base/ai_success.png';
+
   static const String stateLoading = '$_base/state_loading.png';
   static const String stateSuccess = '$_base/state_success.png';
   static const String stateError = '$_base/state_error.png';
-  static const String emptyMembers = '$_base/empty_members.png';
+  static const String stateOffline = '$_base/state_offline.png';
+
   static const String notificationConsent = '$_base/notification_consent.png';
+  static const String comingSoon = '$_base/coming_soon.png';
+  static const String settingsAppearance = '$_base/settings_appearance.png';
+
+  static const String toolMetronome = '$_base/tool_metronome.png';
+  static const String toolCircleOfFifths = '$_base/tool_circle_of_fifths.png';
 
   // ── Post-login setup wizard ──────────────────────────────────────────────
   static const String setupWelcome = '$_base/setup_welcome.png';
@@ -41,6 +53,9 @@ abstract final class HosannaIllustrations {
   static const String authForgotPassword = '$_base/auth_forgot_password.png';
   static const String authResetPassword = '$_base/auth_reset_password.png';
   static const String authVerifyEmail = '$_base/auth_verify_email.png';
+  static const String authResetSent = '$_base/auth_reset_sent.png';
+  static const String authPasswordChanged = '$_base/auth_password_changed.png';
+  static const String authEmailVerified = '$_base/auth_email_verified.png';
 
   // ── Org invite (pre-setup) ───────────────────────────────────────────────
   static const String onboardingInvite = '$_base/onboarding_invite.png';
