@@ -187,7 +187,7 @@ class ServiceNotesPanel extends ConsumerWidget {
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.35,
               child: EmptyState(
-                icon: Icons.sticky_note_2_outlined,
+                illustrationAsset: HosannaIllustrations.emptyNotes,
                 title: l10n.servicesNotesEmpty,
                 description: l10n.servicesNotesEmptyDesc,
               ),
@@ -1066,7 +1066,7 @@ class _NotesError extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return EmptyState(
-      illustrationAsset: HosannaIllustrations.emptySync,
+      illustrationAsset: HosannaIllustrations.stateError,
       title: l10n.commonError,
       description: _friendlyError(l10n, error),
       primaryLabel: l10n.commonRetry,

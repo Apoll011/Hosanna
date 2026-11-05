@@ -675,6 +675,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
             scheme: scheme,
           ),
           body: ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),

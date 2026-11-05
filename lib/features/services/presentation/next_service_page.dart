@@ -43,6 +43,7 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
       appBar: AppBar(title: Text(l10n.servicesNextService)),
       body: switch (servicesAsync) {
         AsyncValue(hasError: true) => ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),
@@ -56,7 +57,7 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
     final next = nextUpcomingService(services);
     if (next == null) {
       return EmptyState(
-        illustrationAsset: HosannaIllustrations.emptyServices,
+        illustrationAsset: HosannaIllustrations.emptyNextService,
         title: l10n.servicesNoUpcoming,
         description: l10n.servicesNoUpcomingDesc,
       );

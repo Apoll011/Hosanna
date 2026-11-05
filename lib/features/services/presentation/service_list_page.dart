@@ -9,6 +9,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
@@ -62,19 +63,9 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
     return Scaffold(
       appBar: AppBar(
         title: _searchOpen
-            ? TextField(
+            ? AppBarSearchField(
                 controller: _search,
-                autofocus: true,
-                style: Theme.of(context).textTheme.titleLarge,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.servicesSearchHint,
-                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  border: InputBorder.none,
-                  isDense: true,
-                ),
+                hintText: l10n.servicesSearchHint,
                 onChanged: (_) => setState(() {}),
               )
             : Text(l10n.servicesTitle),
@@ -113,6 +104,7 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
                     _search.clear();
                     setState(() => _searchOpen = false);
                   },
+                  onRefresh: _refresh,
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -147,11 +139,13 @@ class _ServiceList extends StatelessWidget {
     required this.services,
     required this.hasQuery,
     required this.onClearSearch,
+    required this.onRefresh,
   });
 
   final List<ServiceRow> services;
   final bool hasQuery;
   final VoidCallback onClearSearch;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +166,9 @@ class _ServiceList extends StatelessWidget {
         illustrationAsset: HosannaIllustrations.emptyServices,
         title: l10n.servicesEmpty,
         description: l10n.servicesEmptyDesc,
+        primaryLabel: l10n.commonRetry,
+        primaryIcon: Icons.sync_rounded,
+        onPrimary: () => onRefresh(),
         scrollable: true,
       );
     }

@@ -8,6 +8,7 @@ import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
@@ -85,19 +86,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     return Scaffold(
       appBar: AppBar(
         title: _searchOpen
-            ? TextField(
+            ? AppBarSearchField(
                 controller: _search,
-                autofocus: true,
-                style: Theme.of(context).textTheme.titleLarge,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.songsSearchHint,
-                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  border: InputBorder.none,
-                  isDense: true,
-                ),
+                hintText: l10n.songsSearchHint,
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => setState(() {}),
               )

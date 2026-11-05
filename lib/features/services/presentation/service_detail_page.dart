@@ -101,6 +101,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         child: serviceAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),
@@ -460,6 +461,7 @@ class _SongElementView extends ConsumerWidget {
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => ErrorState(
+        illustrationAsset: HosannaIllustrations.stateError,
         title: l10n.commonError,
         description: l10n.commonErrorDesc,
       ),
@@ -608,7 +610,7 @@ class _NonSongElementView extends StatelessWidget {
                 if (!hasBody) ...[
                   const SizedBox(height: 24),
                   EmptyState(
-                    icon: Icons.notes_outlined,
+                    illustrationAsset: HosannaIllustrations.emptyNotes,
                     title: l10n.servicesElementEmpty,
                     description: l10n.servicesElementEmptyDesc,
                   ),

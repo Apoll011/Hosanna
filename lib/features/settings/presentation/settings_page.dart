@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/design/tokens.dart';
 import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
@@ -833,21 +834,73 @@ class _ServiceTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            leading: Icon(
-              Icons.auto_awesome_rounded,
-              color: theme.colorScheme.primary,
+        Material(
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
             ),
-            title: Text(l10n.settingsRedoSetup),
-            subtitle: Text(l10n.settingsRedoSetupDesc),
-            trailing: const Icon(Icons.chevron_right_rounded),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
             onTap: () async {
               await ref.read(setupControllerProvider.notifier).reset();
               if (!context.mounted) return;
               context.go('/setup');
             },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      HosannaIllustrations.setupWelcome,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 72,
+                        height: 72,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.settingsRedoSetup,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.settingsRedoSetupDesc,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],

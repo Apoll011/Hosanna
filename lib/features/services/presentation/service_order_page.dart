@@ -102,6 +102,7 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
       ),
       error: (_, _) => Scaffold(
         body: ErrorState(
+          illustrationAsset: HosannaIllustrations.stateError,
           title: l10n.commonError,
           description: l10n.commonErrorDesc,
         ),
@@ -1555,7 +1556,7 @@ class _NonSongDetailBody extends StatelessWidget {
         if (!hasBody) ...[
           const SizedBox(height: 24),
           EmptyState(
-            icon: Icons.notes_outlined,
+            illustrationAsset: HosannaIllustrations.emptyNotes,
             title: l10n.servicesElementEmpty,
             description: l10n.servicesElementEmptyDesc,
           ),
@@ -1617,6 +1618,7 @@ class _SongDetailBody extends ConsumerWidget {
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => ErrorState(
+        illustrationAsset: HosannaIllustrations.stateError,
         title: l10n.commonError,
         description: l10n.commonErrorDesc,
       ),

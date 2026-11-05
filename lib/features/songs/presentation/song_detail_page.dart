@@ -114,6 +114,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       body: songAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => ErrorState(
+          illustrationAsset: HosannaIllustrations.stateError,
           title: l10n.commonError,
           description: l10n.commonErrorDesc,
         ),
