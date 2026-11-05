@@ -97,10 +97,18 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     final useSideRail = _useSideRail(context);
 
     return serviceAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.servicesTitle),
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.servicesTitle),
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
         body: ErrorState(
           illustrationAsset: HosannaIllustrations.stateError,
           title: l10n.commonError,
@@ -110,6 +118,10 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
       data: (service) {
         if (service == null) {
           return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.servicesTitle),
+              leading: BackButton(onPressed: () => context.pop()),
+            ),
             body: EmptyState(
               illustrationAsset: HosannaIllustrations.emptyServices,
               title: l10n.servicesNotFound,

@@ -69,11 +69,25 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     final service = serviceAsync.valueOrNull;
     final useSideRail = _useSideRail(context);
 
+    final elementsEmpty = service != null && _sorted(service).isEmpty;
+    final needsBackBar =
+        serviceAsync.hasError || service == null || elementsEmpty;
+
     return Scaffold(
       key: _scaffoldKey,
       // Edge-drag open fights horizontal prev/next swipes in the song reader.
       drawerEnableOpenDragGesture: false,
-      drawer: (service == null || useSideRail)
+      appBar: needsBackBar
+          ? AppBar(
+              title: Text(
+                service?.name.trim().isNotEmpty == true
+                    ? service!.name
+                    : l10n.servicesTitle,
+              ),
+              leading: BackButton(onPressed: () => context.pop()),
+            )
+          : null,
+      drawer: (service == null || useSideRail || elementsEmpty)
           ? null
           : _OrderDrawer(
               service: service,

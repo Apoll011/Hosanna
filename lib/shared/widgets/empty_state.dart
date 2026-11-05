@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/design/tokens.dart';
+import 'shell_insets.dart';
 
 /// Scales empty-state art for phone / tablet / large layouts.
 double emptyStateIllustrationSize(BuildContext context, {double base = 200}) {
@@ -63,18 +64,9 @@ class EmptyState extends StatelessWidget {
       tone: _EmptyTone.calm,
     );
 
-    if (!scrollable) {
-      return Center(child: content);
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: constraints.maxHeight,
-          child: Center(child: content),
-        ),
-      ),
+    return _OpticallyCentered(
+      scrollable: scrollable,
+      child: content,
     );
   }
 }
@@ -112,16 +104,39 @@ class ErrorState extends StatelessWidget {
       tone: _EmptyTone.error,
     );
 
-    if (!scrollable) {
-      return Center(child: content);
-    }
+    return _OpticallyCentered(
+      scrollable: scrollable,
+      child: content,
+    );
+  }
+}
+
+/// Centers [child] in the visible area above the floating nav pill.
+class _OpticallyCentered extends StatelessWidget {
+  const _OpticallyCentered({
+    required this.child,
+    required this.scrollable,
+  });
+
+  final Widget child;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = ShellOpticalInsets.bottomOverlayOf(context);
+    final centered = Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Center(child: child),
+    );
+
+    if (!scrollable) return centered;
 
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: SizedBox(
           height: constraints.maxHeight,
-          child: Center(child: content),
+          child: centered,
         ),
       ),
     );

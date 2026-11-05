@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../shared/widgets/shell_insets.dart';
 import 'design/tokens.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
@@ -104,10 +105,16 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final showSubWarning =
         auth.isAuthenticated && !auth.hasActiveSubscription;
 
+    Widget withOpticalInsets(Widget child) {
+      final overlay =
+          showNavBar ? shellBottomContentPadding(context) : 0.0;
+      return ShellOpticalInsets(bottomNavOverlay: overlay, child: child);
+    }
+
     Widget withSubscriptionBanner(Widget child) {
-      if (!showSubWarning) return child;
+      if (!showSubWarning) return withOpticalInsets(child);
       final theme = Theme.of(context);
-      return Column(
+      return withOpticalInsets(Column(
         children: [
           Material(
             color: theme.colorScheme.errorContainer,
@@ -139,7 +146,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
           ),
           Expanded(child: child),
         ],
-      );
+      ));
     }
 
     return LayoutBuilder(

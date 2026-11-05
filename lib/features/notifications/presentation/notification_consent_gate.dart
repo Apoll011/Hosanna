@@ -109,99 +109,85 @@ class _NotificationConsentGateState
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+            child: Material(
+              color: scheme.surface,
+              elevation: 8,
+              shadowColor: Colors.black.withValues(alpha: 0.35),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    scheme.primary.withValues(alpha: 0.12),
-                    scheme.surface,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          HosannaIllustrations.notificationConsent,
-                          height: 140,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) => Icon(
-                            Icons.notifications_active_outlined,
-                            color: scheme.primary,
-                            size: 48,
-                          ),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ColoredBox(
+                      color: scheme.surface,
+                      child: Image.asset(
+                        HosannaIllustrations.notificationConsent,
+                        height: 140,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.notifications_active_outlined,
+                          color: scheme.primary,
+                          size: 48,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.notificationConsentTitle,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
-                        ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.notificationConsentTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.notificationConsentMessage,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.notificationConsentMessage,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4,
                       ),
-                      const SizedBox(height: 22),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _busy ? null : () => _answer(false),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _busy ? null : () => _answer(false),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
                               ),
-                              child: Text(l10n.notificationConsentNotNow),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: _busy ? null : () => _answer(true),
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Text(l10n.notificationConsentAllow),
                             ),
+                            child: Text(l10n.notificationConsentNotNow),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: _busy ? null : () => _answer(true),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(l10n.notificationConsentAllow),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
