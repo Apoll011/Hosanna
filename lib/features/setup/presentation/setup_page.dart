@@ -306,7 +306,7 @@ class _RoleStep extends StatelessWidget {
       title: l10n.setupRoleTitle,
       subtitle: l10n.setupRoleSubtitle,
       child: SizedBox(
-        height: 220,
+        height: 280,
         child: Row(
           children: [
             Expanded(
@@ -374,36 +374,32 @@ class _ChoiceTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              flex: 3,
-              child: Image.asset(
-                asset,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                errorBuilder: (_, _, _) => ColoredBox(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                  child: Icon(
-                    fallbackIcon,
-                    size: 48,
-                    color: scheme.primary,
+              child: ColoredBox(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                child: Image.asset(
+                  asset,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                  errorBuilder: (_, _, _) => Center(
+                    child: Icon(
+                      fallbackIcon,
+                      size: 56,
+                      color: scheme.primary,
+                    ),
                   ),
                 ),
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),
@@ -456,7 +452,7 @@ class _FocusStep extends StatelessWidget {
 
     Widget row(int start) {
       return SizedBox(
-        height: 168,
+        height: 240,
         child: Row(
           children: [
             for (var i = 0; i < 2; i++) ...[
