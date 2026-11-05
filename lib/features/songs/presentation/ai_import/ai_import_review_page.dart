@@ -24,6 +24,7 @@ class AiImportReviewPage extends ConsumerStatefulWidget {
 
 class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
   late final TextEditingController _title;
+  late final TextEditingController _artist;
   late final TextEditingController _key;
   late final TextEditingController _tempo;
   late final TextEditingController _time;
@@ -35,6 +36,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
     super.initState();
     final d = widget.draft;
     _title = TextEditingController(text: d.title);
+    _artist = TextEditingController(text: d.artist);
     _key = TextEditingController(
       text: d.key ?? readChordProDirective(d.content, 'key') ?? '',
     );
@@ -49,6 +51,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
   @override
   void dispose() {
     _title.dispose();
+    _artist.dispose();
     _key.dispose();
     _tempo.dispose();
     _time.dispose();
@@ -59,17 +62,22 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
     return applyChordProMetadata(
       widget.draft.content,
       title: _title.text,
-      artist: widget.draft.artist,
+      artist: _artist.text,
       key: _key.text,
       tempo: _tempo.text,
       timeSignature: _time.text,
     );
   }
 
-  Future<void> _save() async {
+  /// Persist only after explicit user approval on this screen.
+  Future<void> _approveAndSave() async {
     final l10n = AppLocalizations.of(context);
     if (_title.text.trim().isEmpty) {
       setState(() => _error = l10n.songsTitleRequired);
+      return;
+    }
+    if (widget.draft.content.trim().isEmpty) {
+      setState(() => _error = l10n.songsAiImportFailed);
       return;
     }
     setState(() {
@@ -79,7 +87,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
     try {
       final saved = await ref.read(songRepositoryProvider).createSong(
             title: _title.text.trim(),
-            artist: widget.draft.artist,
+            artist: _artist.text.trim(),
             content: _contentWithMeta(),
           );
       unawaited(ref.read(syncControllerProvider.notifier).syncAll());
@@ -101,7 +109,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
       '/songs/new',
       extra: {
         'title': _title.text.trim(),
-        'artist': widget.draft.artist,
+        'artist': _artist.text.trim(),
         'content': _contentWithMeta(),
       },
     );
@@ -195,6 +203,11 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             decoration: InputDecoration(labelText: l10n.songsFieldTitle),
           ),
           const SizedBox(height: HosannaSpacing.sm),
+          TextField(
+            controller: _artist,
+            decoration: InputDecoration(labelText: l10n.songsFieldArtist),
+          ),
+          const SizedBox(height: HosannaSpacing.sm),
           Row(
             children: [
               Expanded(
@@ -219,6 +232,27 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
             controller: _time,
             decoration: InputDecoration(labelText: l10n.songsFieldTime),
           ),
+          const SizedBox(height: HosannaSpacing.lg),
+          Text(
+            l10n.songsAiSuccessBody,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: HosannaSpacing.sm),
+          HosannaSurface(
+            elevated: false,
+            padding: const EdgeInsets.all(HosannaSpacing.md),
+            child: SelectableText(
+              widget.draft.content.trim().isEmpty
+                  ? '—'
+                  : widget.draft.content,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: 'monospace',
+                height: 1.45,
+              ),
+            ),
+          ),
           const SizedBox(height: 28),
           Row(
             children: [
@@ -235,7 +269,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: _saving ? null : _save,
+                  onPressed: _saving ? null : _approveAndSave,
                   icon: _saving
                       ? const SizedBox(
                           width: 18,

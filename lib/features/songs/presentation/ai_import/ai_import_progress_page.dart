@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,6 +73,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         fileName: widget.request.fileName,
       );
       _poll?.cancel();
+      if (!mounted) return;
       final id = created['id'] as String?;
       if (id == null || id.isEmpty) {
         throw StateError('Missing job id');
@@ -81,8 +83,17 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
         _jobId = id;
         _snapshot = snap;
       });
-      if (snap.status == AiImportJobStatus.completed && snap.draft != null) {
-        _goReview(snap.draft!);
+      if (snap.status == AiImportJobStatus.completed) {
+        // Always hand off to the approval screen — song is not persisted yet.
+        _goReview(
+          snap.draft ??
+              const AiImportDraft(
+                title: 'Untitled',
+                artist: '',
+                content: '',
+                warnings: ['Import finished without a draft payload.'],
+              ),
+        );
         return;
       }
       if (snap.status == AiImportJobStatus.failed) {
@@ -92,9 +103,25 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       // Rare: job still running (e.g. older server) — poll.
       _poll = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     } catch (e) {
+      _poll?.cancel();
       if (!mounted) return;
-      setState(() => _error = l10n.songsAiImportFailed);
+      setState(() => _error = _errorMessageFrom(e, l10n));
     }
+  }
+
+  String _errorMessageFrom(Object e, AppLocalizations l10n) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final msg = data['errorMessage'] ?? data['message'] ?? data['error'];
+        if (msg is String && msg.trim().isNotEmpty) return msg.trim();
+      }
+      if (e.message != null && e.message!.trim().isNotEmpty) {
+        return e.message!.trim();
+      }
+    }
+    if (e is StateError && e.message.isNotEmpty) return e.message;
+    return l10n.songsAiImportFailed;
   }
 
   Future<void> _tick() async {
@@ -105,9 +132,17 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       final snap = AiImportJobSnapshot.fromJson(raw);
       if (!mounted) return;
       setState(() => _snapshot = snap);
-      if (snap.status == AiImportJobStatus.completed && snap.draft != null) {
+      if (snap.status == AiImportJobStatus.completed) {
         _poll?.cancel();
-        _goReview(snap.draft!);
+        _goReview(
+          snap.draft ??
+              const AiImportDraft(
+                title: 'Untitled',
+                artist: '',
+                content: '',
+                warnings: ['Import finished without a draft payload.'],
+              ),
+        );
       } else if (snap.status == AiImportJobStatus.failed) {
         _poll?.cancel();
         setState(() {
@@ -121,6 +156,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
   }
 
   void _goReview(AiImportDraft draft) {
+    if (!mounted) return;
     final withThumb = AiImportDraft(
       title: draft.title,
       artist: draft.artist,
@@ -132,6 +168,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
       warnings: draft.warnings,
       thumbnailBytes: widget.request.imageBytes,
     );
+    // Draft is in-memory only until the user taps Save on the review screen.
     context.pushReplacement('/songs/import/ai/review', extra: withThumb);
   }
 
