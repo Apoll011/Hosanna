@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
+import 'auth_scaffold.dart';
 import 'auth_ui_utils.dart';
 
 /// Accepts a Better Auth password-reset `token` (from the emailed deep link)
@@ -71,68 +72,48 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.authResetPassword)),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.authNewPassword,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 24),
-                  if (_error != null) ...[
-                    AuthErrorBanner(message: _error!),
-                    const SizedBox(height: 16),
-                  ],
-                  TextField(
-                    controller: _password,
-                    obscureText: _obscure,
-                    decoration: InputDecoration(
-                      labelText: l10n.authNewPassword,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscure
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _confirm,
-                    obscureText: _obscure,
-                    decoration: InputDecoration(
-                      labelText: l10n.authConfirmPassword,
-                      border: const OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _loading ? null : _submit,
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.authChangePassword),
-                  ),
-                ],
+    return AuthScaffold(
+      title: l10n.authResetPassword,
+      subtitle: l10n.authNewPassword,
+      heroAsset: AuthHeroes.resetPassword,
+      heroFallbackIcon: Icons.password_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+            AuthErrorBanner(message: _error!),
+            const SizedBox(height: 16),
+          ],
+          TextField(
+            controller: _password,
+            obscureText: _obscure,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: l10n.authNewPassword,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _confirm,
+            obscureText: _obscure,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(labelText: l10n.authConfirmPassword),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 20),
+          AuthPrimaryButton(
+            label: l10n.authChangePassword,
+            loading: _loading,
+            onPressed: _submit,
+          ),
+        ],
       ),
     );
   }

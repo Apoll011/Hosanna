@@ -30,4 +30,11 @@ abstract final class HosannaIllustrations {
   static const String setupPrefs = '$_base/setup_prefs.png';
   static const String setupLanguage = '$_base/setup_language.png';
   static const String setupDone = '$_base/setup_done.png';
+
+  // ── Auth screens ─────────────────────────────────────────────────────────
+  static const String authSignIn = '$_base/auth_sign_in.png';
+  static const String authSignUp = '$_base/auth_sign_up.png';
+  static const String authForgotPassword = '$_base/auth_forgot_password.png';
+  static const String authResetPassword = '$_base/auth_reset_password.png';
+  static const String authVerifyEmail = '$_base/auth_verify_email.png';
 }

@@ -124,10 +124,16 @@ class SocialSignInButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: loading ? null : onPressed,
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size.fromHeight(52),
         // Google's branding asks for a neutral, high-contrast button surface.
         backgroundColor: theme.colorScheme.surface,
         foregroundColor: theme.colorScheme.onSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
       ),
       child: loading
           ? const SizedBox(
