@@ -673,7 +673,7 @@ class _OrderListTab extends ConsumerWidget {
 
     if (elements.isEmpty) {
       return EmptyState(
-        illustrationAsset: HosannaIllustrations.emptySongs,
+        illustrationAsset: HosannaIllustrations.emptyServiceItems,
         title: l10n.servicesNoItems,
         description: l10n.servicesNoItemsDesc,
       );
