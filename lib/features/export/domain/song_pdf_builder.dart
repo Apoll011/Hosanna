@@ -177,6 +177,15 @@ pw.Widget _metadataHeader({
   final composer = metadata['composer'];
   final byLine =
       [artist, composer].where((e) => e != null && e.isNotEmpty).join(' / ');
+  final lyricist = metadata['lyricist'];
+  final translator = metadata['translator'];
+  final arranger = metadata['arranger'];
+  final album = metadata['album'];
+  final year = metadata['year'];
+  final albumLine = [
+    if (album != null && album.isNotEmpty) album,
+    if (year != null && year.isNotEmpty) year,
+  ].join(' · ');
 
   final pills = <pw.Widget>[
     if (_numberOrNull(metadata['songNumber']) != null || songNumber != null)
@@ -227,6 +236,38 @@ pw.Widget _metadataHeader({
             child: pw.Text(
               _sanitize(byLine),
               style: pw.TextStyle(fontSize: 10, color: _onSurfaceVariant),
+            ),
+          ),
+        if (lyricist != null && lyricist.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 2),
+            child: pw.Text(
+              _sanitize('Letra: $lyricist'),
+              style: pw.TextStyle(fontSize: 9, color: _onSurfaceVariant),
+            ),
+          ),
+        if (translator != null && translator.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 2),
+            child: pw.Text(
+              _sanitize('Tradução: $translator'),
+              style: pw.TextStyle(fontSize: 9, color: _onSurfaceVariant),
+            ),
+          ),
+        if (arranger != null && arranger.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 2),
+            child: pw.Text(
+              _sanitize('Arranjo: $arranger'),
+              style: pw.TextStyle(fontSize: 9, color: _onSurfaceVariant),
+            ),
+          ),
+        if (albumLine.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 2),
+            child: pw.Text(
+              _sanitize(albumLine),
+              style: pw.TextStyle(fontSize: 9, color: _onSurfaceVariant),
             ),
           ),
         if (pills.isNotEmpty)

@@ -208,17 +208,24 @@
   "songsFieldSubtitle": "Subtítulo",
   "songsFieldArtist": "Artista",
   "songsFieldComposer": "Compositor",
+  "songsFieldLyricist": "Letrista",
+  "songsFieldTranslator": "Tradutor",
+  "songsFieldArranger": "Arranjador",
   "songsFieldSongNumber": "Número da canção",
   "songsFieldKey": "Tom",
   "songsFieldOriginalKey": "Tom original",
+  "songsFieldKeyNone": "Nenhum",
   "songsFieldTempo": "Tempo (BPM)",
   "songsFieldTime": "Compasso",
   "songsFieldDuration": "Duração (m:ss)",
   "songsFieldCapo": "Capo",
   "songsFieldKeyNote": "Nota de tom",
+  "songsFieldAlbum": "Álbum",
+  "songsFieldYear": "Ano",
   "songsFieldCopyright": "Copyright",
   "songsFieldCcli": "CCLI",
   "songsFieldYoutube": "URL / ID do YouTube",
+  "songsFieldTagsHint": "Etiquetas separadas por vírgula",
   "songsTabContent": "Letra e acordes",
   "songsTabMetadata": "Detalhes",
   "songsTitleRequired": "O título é obrigatório.",
@@ -392,6 +399,24 @@
   "songCapoPill": "Capo: {fret}ª casa",
   "songShapePill": "Formato: {key}",
   "songOriginalKeyPill": "Tom Orig: {key}",
+  "songTranslatorCredit": "Tradução: {name}",
+  "@songTranslatorCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songLyricistCredit": "Letra: {name}",
+  "@songLyricistCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songArrangerCredit": "Arranjo: {name}",
+  "@songArrangerCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "songNumberPill": "Nº {number}",
   "songCapoOnFret": "Capo na {fret}ª casa",
   "songChangeKey": "Mudar tom",

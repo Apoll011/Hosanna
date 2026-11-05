@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,11 +38,14 @@ class _ChordProEditorState extends State<ChordProEditor> {
   final _scrollController = ScrollController();
   Timer? _lintDebounce;
   int? _selectedDiagnosticIndex;
+  double _editorWidth = 0;
 
   static const _fontSize = 14.5;
   static const _lineHeight = 1.45;
   static const _padTop = 12.0;
   static const _padLeft = 4.0;
+  static const _padRight = 14.0;
+  static const _padBottom = 16.0;
 
   double get _lineExtent => _fontSize * _lineHeight;
 
@@ -102,7 +106,7 @@ class _ChordProEditorState extends State<ChordProEditor> {
     _lintDebounce = Timer(const Duration(milliseconds: 280), () {
       if (mounted) widget.onLintRequested();
     });
-    // Keep gutter line count in sync while typing.
+    // Keep gutter line count / wrap heights in sync while typing.
     if (mounted) setState(() {});
   }
 
@@ -110,6 +114,40 @@ class _ChordProEditorState extends State<ChordProEditor> {
     final text = widget.controller.text;
     if (text.isEmpty) return 1;
     return '\n'.allMatches(text).length + 1;
+  }
+
+  TextStyle _baseStyle(BuildContext context) {
+    return Theme.of(context).textTheme.bodyMedium!.copyWith(
+          fontFamily: 'monospace',
+          fontSize: _fontSize,
+          height: _lineHeight,
+        );
+  }
+
+  /// Visual height of each logical line after soft-wrapping to [maxWidth].
+  List<double> _wrappedLineHeights(TextStyle style, double maxWidth) {
+    final text = widget.controller.text;
+    final lines = text.isEmpty ? const [''] : text.split('\n');
+    final width = math.max(1.0, maxWidth);
+    final heights = <double>[];
+    for (final line in lines) {
+      final tp = TextPainter(
+        text: TextSpan(text: line.isEmpty ? ' ' : line, style: style),
+        textDirection: ui.TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout(maxWidth: width);
+      heights.add(math.max(tp.height, _lineExtent));
+    }
+    return heights;
+  }
+
+  double _offsetForLine(List<double> heights, int line) {
+    var y = 0.0;
+    final last = math.min(line - 1, heights.length);
+    for (var i = 0; i < last; i++) {
+      y += heights[i];
+    }
+    return y;
   }
 
   void _jumpToDiagnostic(ChordProDiagnostic d) {
@@ -123,8 +161,15 @@ class _ChordProEditorState extends State<ChordProEditor> {
     );
     widget.focusNode.requestFocus();
 
-    final targetY = (d.line - 1) * _lineExtent;
-    final view = _scrollController.position.viewportDimension;
+    final style = _baseStyle(context);
+    final heights = _wrappedLineHeights(
+      style,
+      math.max(1.0, _editorWidth - _padLeft - _padRight),
+    );
+    final targetY = _padTop + _offsetForLine(heights, d.line);
+    final view = _scrollController.hasClients
+        ? _scrollController.position.viewportDimension
+        : 0.0;
     final jump = math.max(0.0, targetY - view * 0.3);
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -219,11 +264,7 @@ class _ChordProEditorState extends State<ChordProEditor> {
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final syntaxTheme = ChordProSyntaxTheme.fromScheme(scheme);
-    final baseStyle = theme.textTheme.bodyMedium!.copyWith(
-      fontFamily: 'monospace',
-      fontSize: _fontSize,
-      height: _lineHeight,
-    );
+    final baseStyle = _baseStyle(context);
 
     final errors = countDiagnosticsBySeverity(
       widget.diagnostics,
@@ -267,83 +308,106 @@ class _ChordProEditorState extends State<ChordProEditor> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    width: gutterWidth,
-                    child: ColoredBox(
-                      color: scheme.surfaceContainerHighest.withValues(
-                        alpha: 0.55,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final textWidth = math.max(
+                    1.0,
+                    constraints.maxWidth - gutterWidth - 1 - _padLeft - _padRight,
+                  );
+                  if ((textWidth - _editorWidth).abs() > 0.5) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) setState(() => _editorWidth = textWidth);
+                    });
+                  }
+                  final lineHeights = _wrappedLineHeights(baseStyle, textWidth);
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: gutterWidth,
+                        child: ColoredBox(
+                          color: scheme.surfaceContainerHighest.withValues(
+                            alpha: 0.55,
+                          ),
+                          child: AnimatedBuilder(
+                            animation: Listenable.merge([
+                              _scrollController,
+                              widget.controller,
+                            ]),
+                            builder: (context, _) {
+                              final scroll = _scrollController.hasClients
+                                  ? _scrollController.offset
+                                  : 0.0;
+                              final diagLines = {
+                                for (final d in widget.diagnostics)
+                                  if (d.line > 0) d.line: d.severity,
+                              };
+                              return CustomPaint(
+                                painter: _GutterPainter(
+                                  lineHeights: lineHeights,
+                                  scrollOffset: scroll,
+                                  padTop: _padTop,
+                                  textStyle: baseStyle.copyWith(
+                                    fontSize: _fontSize * 0.85,
+                                    color: scheme.onSurfaceVariant
+                                        .withValues(alpha: 0.65),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1,
+                                  ),
+                                  errorColor: scheme.error,
+                                  warningColor: syntaxTheme.warningUnderline,
+                                  diagLines: diagLines,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                      child: AnimatedBuilder(
-                        animation: Listenable.merge([
-                          _scrollController,
-                          widget.controller,
-                        ]),
-                        builder: (context, _) {
-                          final scroll = _scrollController.hasClients
-                              ? _scrollController.offset
-                              : 0.0;
-                          final diagLines = {
-                            for (final d in widget.diagnostics)
-                              if (d.line > 0) d.line: d.severity,
-                          };
-                          return CustomPaint(
-                            painter: _GutterPainter(
-                              lineCount: _lineCount,
-                              lineExtent: _lineExtent,
-                              scrollOffset: scroll,
-                              padTop: _padTop,
-                              textStyle: baseStyle.copyWith(
-                                fontSize: _fontSize * 0.85,
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: 0.65),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              errorColor: scheme.error,
-                              warningColor: syntaxTheme.warningUnderline,
-                              diagLines: diagLines,
+                      Container(
+                        width: 1,
+                        color: scheme.outlineVariant.withValues(alpha: 0.45),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: widget.controller,
+                          focusNode: widget.focusNode,
+                          scrollController: _scrollController,
+                          maxLines: null,
+                          expands: true,
+                          textAlignVertical: TextAlignVertical.top,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          style: baseStyle,
+                          cursorColor: scheme.primary,
+                          scrollPadding: EdgeInsets.zero,
+                          decoration: InputDecoration(
+                            isCollapsed: false,
+                            filled: false,
+                            hintText: widget.hintText ?? l10n.songsChordProHint,
+                            hintStyle: baseStyle.copyWith(
+                              color: scheme.onSurfaceVariant
+                                  .withValues(alpha: 0.45),
+                              fontWeight: FontWeight.w400,
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    color: scheme.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: widget.controller,
-                      focusNode: widget.focusNode,
-                      scrollController: _scrollController,
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      style: baseStyle,
-                      cursorColor: scheme.primary,
-                      decoration: InputDecoration(
-                        hintText: widget.hintText ?? l10n.songsChordProHint,
-                        hintStyle: baseStyle.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.45),
-                          fontWeight: FontWeight.w400,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.fromLTRB(
-                          _padLeft + 8,
-                          _padTop,
-                          14,
-                          88,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              _padLeft + 8,
+                              _padTop,
+                              _padRight,
+                              _padBottom,
+                            ),
+                          ),
+                          inputFormatters: const [_ChordProTabFormatter()],
                         ),
                       ),
-                      inputFormatters: const [_ChordProTabFormatter()],
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -629,8 +693,7 @@ class _DiagnosticsBar extends StatelessWidget {
 
 class _GutterPainter extends CustomPainter {
   _GutterPainter({
-    required this.lineCount,
-    required this.lineExtent,
+    required this.lineHeights,
     required this.scrollOffset,
     required this.padTop,
     required this.textStyle,
@@ -639,8 +702,7 @@ class _GutterPainter extends CustomPainter {
     required this.diagLines,
   });
 
-  final int lineCount;
-  final double lineExtent;
+  final List<double> lineHeights;
   final double scrollOffset;
   final double padTop;
   final TextStyle textStyle;
@@ -650,15 +712,15 @@ class _GutterPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final first = math.max(0, (scrollOffset / lineExtent).floor() - 1);
-    final last = math.min(
-      lineCount,
-      ((scrollOffset + size.height) / lineExtent).ceil() + 2,
-    );
-
-    for (var line = first + 1; line <= last; line++) {
-      final y = padTop + (line - 1) * lineExtent - scrollOffset;
-      if (y + lineExtent < 0 || y > size.height) continue;
+    var y = padTop - scrollOffset;
+    for (var i = 0; i < lineHeights.length; i++) {
+      final extent = lineHeights[i];
+      final line = i + 1;
+      if (y + extent < 0) {
+        y += extent;
+        continue;
+      }
+      if (y > size.height) break;
 
       final severity = diagLines[line];
       if (severity == ChordProSeverity.error ||
@@ -669,29 +731,36 @@ class _GutterPainter extends CustomPainter {
                   : warningColor)
               .withValues(alpha: 0.18);
         canvas.drawRect(
-          Rect.fromLTWH(0, y - 1, size.width, lineExtent),
+          Rect.fromLTWH(0, y - 1, size.width, extent),
           paint,
         );
       }
 
       final tp = TextPainter(
         text: TextSpan(text: '$line', style: textStyle),
-        textDirection: TextDirection.ltr,
+        textDirection: ui.TextDirection.ltr,
         textAlign: TextAlign.right,
       )..layout(minWidth: size.width - 8, maxWidth: size.width - 8);
       tp.paint(
         canvas,
-        Offset(4, y + (lineExtent - tp.height) / 2),
+        Offset(4, y + (math.min(extent, textStyle.fontSize! * 1.45) - tp.height) / 2),
       );
+      y += extent;
     }
   }
 
   @override
-  bool shouldRepaint(covariant _GutterPainter old) =>
-      old.lineCount != lineCount ||
-      old.scrollOffset != scrollOffset ||
-      old.diagLines.length != diagLines.length ||
-      old.lineExtent != lineExtent;
+  bool shouldRepaint(covariant _GutterPainter old) {
+    if (old.scrollOffset != scrollOffset ||
+        old.diagLines.length != diagLines.length ||
+        old.lineHeights.length != lineHeights.length) {
+      return true;
+    }
+    for (var i = 0; i < lineHeights.length; i++) {
+      if (old.lineHeights[i] != lineHeights[i]) return true;
+    }
+    return false;
+  }
 }
 
 /// Converts Tab key presses into two spaces (ChordPro indentation).

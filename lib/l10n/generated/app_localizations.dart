@@ -1174,6 +1174,24 @@ abstract class AppLocalizations {
   /// **'Compositor'**
   String get songsFieldComposer;
 
+  /// No description provided for @songsFieldLyricist.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letrista'**
+  String get songsFieldLyricist;
+
+  /// No description provided for @songsFieldTranslator.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradutor'**
+  String get songsFieldTranslator;
+
+  /// No description provided for @songsFieldArranger.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arranjador'**
+  String get songsFieldArranger;
+
   /// No description provided for @songsFieldSongNumber.
   ///
   /// In pt, this message translates to:
@@ -1191,6 +1209,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Tom original'**
   String get songsFieldOriginalKey;
+
+  /// No description provided for @songsFieldKeyNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum'**
+  String get songsFieldKeyNone;
 
   /// No description provided for @songsFieldTempo.
   ///
@@ -1222,6 +1246,18 @@ abstract class AppLocalizations {
   /// **'Nota de tom'**
   String get songsFieldKeyNote;
 
+  /// No description provided for @songsFieldAlbum.
+  ///
+  /// In pt, this message translates to:
+  /// **'Álbum'**
+  String get songsFieldAlbum;
+
+  /// No description provided for @songsFieldYear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ano'**
+  String get songsFieldYear;
+
   /// No description provided for @songsFieldCopyright.
   ///
   /// In pt, this message translates to:
@@ -1239,6 +1275,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'URL / ID do YouTube'**
   String get songsFieldYoutube;
+
+  /// No description provided for @songsFieldTagsHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiquetas separadas por vírgula'**
+  String get songsFieldTagsHint;
 
   /// No description provided for @songsTabContent.
   ///
@@ -2025,6 +2067,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Tom Orig: {key}'**
   String songOriginalKeyPill(Object key);
+
+  /// No description provided for @songTranslatorCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradução: {name}'**
+  String songTranslatorCredit(String name);
+
+  /// No description provided for @songLyricistCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra: {name}'**
+  String songLyricistCredit(String name);
+
+  /// No description provided for @songArrangerCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arranjo: {name}'**
+  String songArrangerCredit(String name);
 
   /// No description provided for @songNumberPill.
   ///

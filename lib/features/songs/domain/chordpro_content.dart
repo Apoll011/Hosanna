@@ -10,6 +10,9 @@ const kManagedChordProDirectives = <String>[
   'subtitle',
   'artist',
   'composer',
+  'lyricist',
+  'translator',
+  'arranger',
   'key',
   'original_key',
   'originalKey',
@@ -24,7 +27,48 @@ const kManagedChordProDirectives = <String>[
   'songNumber',
   'key_note',
   'keyNote',
+  'album',
+  'year',
   'youtube',
+  'tags',
+];
+
+/// Common major / minor keys for the song editor dropdowns.
+const kMusicalKeys = <String>[
+  'C',
+  'C#',
+  'Db',
+  'D',
+  'D#',
+  'Eb',
+  'E',
+  'F',
+  'F#',
+  'Gb',
+  'G',
+  'G#',
+  'Ab',
+  'A',
+  'A#',
+  'Bb',
+  'B',
+  'Cm',
+  'C#m',
+  'Dbm',
+  'Dm',
+  'D#m',
+  'Ebm',
+  'Em',
+  'Fm',
+  'F#m',
+  'Gbm',
+  'Gm',
+  'G#m',
+  'Abm',
+  'Am',
+  'A#m',
+  'Bbm',
+  'Bm',
 ];
 
 /// Stub ChordPro body for a brand-new song.
@@ -82,12 +126,18 @@ String stripManagedDirectives(String content) {
   }
   return result
       .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-      .replaceFirst(RegExp(r'^\s+'), '');
+      .replaceFirst(RegExp(r'^\s+'), '')
+      .replaceFirst(RegExp(r'\s+$'), '');
 }
 
 /// Upserts managed header directives; keeps the rest of [content].
 ///
-/// Pass empty string to remove a directive; omit / null to leave unchanged
+/// Managed metadata is always written as a contiguous block at the top of the
+/// file (title → … → tags), followed by a blank line and then the body. Body
+/// directives such as `{comment: …}` stay with the lyrics — they are never
+/// pulled into the header and never cause metadata to be inserted mid-body.
+///
+/// Pass empty string to omit a directive; omit / null to leave unchanged
 /// relative to stripped body (i.e. not written). Prefer always passing the
 /// current field values from the editor.
 String applyChordProMetadata(
@@ -96,6 +146,9 @@ String applyChordProMetadata(
   String? subtitle,
   String? artist,
   String? composer,
+  String? lyricist,
+  String? translator,
+  String? arranger,
   String? key,
   String? originalKey,
   String? tempo,
@@ -106,64 +159,51 @@ String applyChordProMetadata(
   String? ccli,
   String? songNumber,
   String? keyNote,
+  String? album,
+  String? year,
   String? youtube,
+  String? tags,
 }) {
-  // Always start from a body without managed directives so we never duplicate.
-  var result = stripManagedDirectives(content);
-  result = _upsert(result, 'title', title);
-  result = _upsert(result, 'subtitle', subtitle);
-  result = _upsert(result, 'artist', artist);
-  result = _upsert(result, 'composer', composer);
-  result = _upsert(result, 'key', key);
-  result = _upsert(result, 'original_key', originalKey);
-  result = _upsert(result, 'tempo', tempo);
-  result = _upsert(result, 'time', timeSignature);
-  result = _upsert(result, 'duration', duration);
-  result = _upsert(result, 'capo', capo);
-  result = _upsert(result, 'copyright', copyright);
-  result = _upsert(result, 'ccli', ccli);
-  result = _upsert(result, 'song_number', songNumber);
-  result = _upsert(result, 'key_note', keyNote);
-  result = _upsert(result, 'youtube', youtube);
-  return result;
-}
+  final body = stripManagedDirectives(content);
+  final header = StringBuffer();
 
-String _upsert(String content, String name, String? value) {
-  if (value == null) return content;
-  final trimmed = value.trim();
-  final re = _directiveRe(name);
-  if (trimmed.isEmpty) {
-    return content.replaceAll(re, '').replaceAll(RegExp(r'\n{3,}'), '\n\n');
+  void write(String name, String? value) {
+    if (value == null) return;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return;
+    header.writeln('{$name: $trimmed}');
   }
-  final directive = '{$name: $trimmed}';
-  if (re.hasMatch(content)) {
-    return content.replaceFirst(re, directive);
-  }
-  final headerEnd = _headerEndIndex(content);
-  if (headerEnd <= 0) {
-    return '$directive\n$content';
-  }
-  return '${content.substring(0, headerEnd)}$directive\n'
-      '${content.substring(headerEnd)}';
-}
 
-int _headerEndIndex(String content) {
-  final lines = content.split('\n');
-  var i = 0;
-  while (i < lines.length) {
-    final line = lines[i].trim();
-    if (line.isEmpty || (line.startsWith('{') && line.endsWith('}'))) {
-      i++;
-      continue;
-    }
-    break;
+  write('title', title);
+  write('subtitle', subtitle);
+  write('artist', artist);
+  write('composer', composer);
+  write('lyricist', lyricist);
+  write('translator', translator);
+  write('arranger', arranger);
+  write('key', key);
+  write('original_key', originalKey);
+  write('tempo', tempo);
+  write('time', timeSignature);
+  write('duration', duration);
+  write('capo', capo);
+  write('copyright', copyright);
+  write('ccli', ccli);
+  write('song_number', songNumber);
+  write('key_note', keyNote);
+  write('album', album);
+  write('year', year);
+  write('youtube', youtube);
+  write('tags', tags);
+
+  final headerText = header.toString();
+  if (headerText.isEmpty) {
+    return body.isEmpty ? '' : '$body\n';
   }
-  if (i == 0) return 0;
-  var offset = 0;
-  for (var j = 0; j < i; j++) {
-    offset += lines[j].length + 1;
+  if (body.isEmpty) {
+    return headerText;
   }
-  return offset.clamp(0, content.length);
+  return '$headerText\n$body\n';
 }
 
 String sanitizeSongPath(String title) {

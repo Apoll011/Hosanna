@@ -53,6 +53,9 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   final _subtitle = TextEditingController();
   final _artist = TextEditingController();
   final _composer = TextEditingController();
+  final _lyricist = TextEditingController();
+  final _translator = TextEditingController();
+  final _arranger = TextEditingController();
   final _songNumber = TextEditingController();
   final _key = TextEditingController();
   final _originalKey = TextEditingController();
@@ -61,9 +64,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   final _duration = TextEditingController();
   final _capo = TextEditingController();
   final _keyNote = TextEditingController();
+  final _album = TextEditingController();
+  final _year = TextEditingController();
   final _copyright = TextEditingController();
   final _ccli = TextEditingController();
   final _youtube = TextEditingController();
+  final _tagsField = TextEditingController();
   final _content = ChordProSyntaxController();
   final _contentFocus = FocusNode();
 
@@ -100,9 +106,9 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
             title: title.isEmpty ? 'Untitled' : title,
             artist: artist,
           );
+    _tags = widget.initialTags;
     _applyFromContent(raw, titleOverride: title, artistOverride: artist);
     _folderId = widget.initialFolderId;
-    _tags = widget.initialTags;
     _hydrated = true;
     _relint();
   }
@@ -122,13 +128,13 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   void _hydrateFromSong(SongRow song) {
     if (_hydrated) return;
     _hydrated = true;
+    _tags = song.tags;
     _applyFromContent(
       song.content,
       titleOverride: song.title,
       artistOverride: song.artist,
     );
     _folderId = song.folderId;
-    _tags = song.tags;
     _relint();
   }
 
@@ -145,6 +151,9 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         ? artistOverride
         : (readChordProDirective(raw, 'artist') ?? '');
     _composer.text = readChordProDirective(raw, 'composer') ?? '';
+    _lyricist.text = readChordProDirective(raw, 'lyricist') ?? '';
+    _translator.text = readChordProDirective(raw, 'translator') ?? '';
+    _arranger.text = readChordProDirective(raw, 'arranger') ?? '';
     _songNumber.text = readChordProDirective(
           raw,
           'song_number',
@@ -175,11 +184,26 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           aliases: const ['keyNote'],
         ) ??
         '';
+    _album.text = readChordProDirective(raw, 'album') ?? '';
+    _year.text = readChordProDirective(raw, 'year') ?? '';
     _copyright.text = readChordProDirective(raw, 'copyright') ?? '';
     _ccli.text = readChordProDirective(raw, 'ccli') ?? '';
     _youtube.text = readChordProDirective(raw, 'youtube') ?? '';
+    final contentTags = readChordProDirective(raw, 'tags');
+    if (contentTags != null && contentTags.isNotEmpty) {
+      _tags = _parseTags(contentTags);
+    }
+    _tagsField.text = _tags.join(', ');
     _content.text = stripManagedDirectives(raw);
   }
+
+  List<String> _parseTags(String raw) => raw
+      .split(',')
+      .map((t) => t.trim())
+      .where((t) => t.isNotEmpty)
+      .toList(growable: false);
+
+  List<String> _tagsFromField() => _parseTags(_tagsField.text);
 
   /// Parser stores duration as seconds; show m:ss in the field when numeric.
   String _formatDurationForField(String? raw) {
@@ -201,6 +225,9 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     _subtitle.dispose();
     _artist.dispose();
     _composer.dispose();
+    _lyricist.dispose();
+    _translator.dispose();
+    _arranger.dispose();
     _songNumber.dispose();
     _key.dispose();
     _originalKey.dispose();
@@ -209,21 +236,28 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     _duration.dispose();
     _capo.dispose();
     _keyNote.dispose();
+    _album.dispose();
+    _year.dispose();
     _copyright.dispose();
     _ccli.dispose();
     _youtube.dispose();
+    _tagsField.dispose();
     _content.dispose();
     _contentFocus.dispose();
     super.dispose();
   }
 
   String _composedContent() {
+    _tags = _tagsFromField();
     return applyChordProMetadata(
       _content.text,
       title: _title.text,
       subtitle: _subtitle.text,
       artist: _artist.text,
       composer: _composer.text,
+      lyricist: _lyricist.text,
+      translator: _translator.text,
+      arranger: _arranger.text,
       key: _key.text,
       originalKey: _originalKey.text,
       tempo: _tempo.text,
@@ -234,7 +268,10 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       ccli: _ccli.text,
       songNumber: _songNumber.text,
       keyNote: _keyNote.text,
+      album: _album.text,
+      year: _year.text,
       youtube: _youtube.text,
+      tags: _tags.join(', '),
     );
   }
 
@@ -325,6 +362,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
     TextInputAction textInputAction = TextInputAction.next,
+    String? hintText,
   }) {
     return TextField(
       controller: controller,
@@ -337,8 +375,50 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           : TextCapitalization.words,
       decoration: InputDecoration(
         labelText: label,
+        hintText: hintText,
         isDense: true,
       ),
+    );
+  }
+
+  Widget _keyDropdown({
+    required TextEditingController controller,
+    required String label,
+    required bool allowEmpty,
+    required String emptyLabel,
+  }) {
+    final current = controller.text.trim();
+    final items = <String?>[
+      if (allowEmpty) null,
+      ...kMusicalKeys,
+    ];
+    // Keep a custom / unexpected value selectable so we don't wipe it.
+    final String? value = current.isEmpty
+        ? (allowEmpty ? null : 'G')
+        : current;
+    if (value != null && !kMusicalKeys.contains(value)) {
+      items.add(value);
+    }
+
+    return DropdownButtonFormField<String?>(
+      key: ValueKey('$label|$value'),
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+      ),
+      items: [
+        for (final key in items)
+          DropdownMenuItem<String?>(
+            value: key,
+            child: Text(key ?? emptyLabel),
+          ),
+      ],
+      onChanged: (next) {
+        controller.text = next ?? '';
+        _onMetadataLintFieldsChanged();
+      },
     );
   }
 
@@ -348,7 +428,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
   Widget _metadataForm(AppLocalizations l10n) {
     final metaDiags = _metadataDiagnostics;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         if (_error != null) ...[
           Text(
@@ -395,6 +475,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         const SizedBox(height: 10),
         _field(_composer, l10n.songsFieldComposer),
         const SizedBox(height: 10),
+        _field(_lyricist, l10n.songsFieldLyricist),
+        const SizedBox(height: 10),
+        _field(_translator, l10n.songsFieldTranslator),
+        const SizedBox(height: 10),
+        _field(_arranger, l10n.songsFieldArranger),
+        const SizedBox(height: 10),
         _field(
           _songNumber,
           l10n.songsFieldSongNumber,
@@ -404,9 +490,23 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _field(_key, l10n.songsFieldKey)),
+            Expanded(
+              child: _keyDropdown(
+                controller: _key,
+                label: l10n.songsFieldKey,
+                allowEmpty: false,
+                emptyLabel: l10n.songsFieldKeyNone,
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _field(_originalKey, l10n.songsFieldOriginalKey)),
+            Expanded(
+              child: _keyDropdown(
+                controller: _originalKey,
+                label: l10n.songsFieldOriginalKey,
+                allowEmpty: true,
+                emptyLabel: l10n.songsFieldKeyNone,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -442,11 +542,24 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           ],
         ),
         const SizedBox(height: 10),
-        _field(
-          _keyNote,
-          l10n.songsFieldKeyNote,
-          maxLines: 3,
-          textInputAction: TextInputAction.newline,
+        _field(_keyNote, l10n.songsFieldKeyNote),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _field(_album, l10n.songsFieldAlbum)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _field(
+                _year,
+                l10n.songsFieldYear,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         _field(_copyright, l10n.songsFieldCopyright),
@@ -455,6 +568,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           _youtube,
           l10n.songsFieldYoutube,
           keyboardType: TextInputType.url,
+        ),
+        const SizedBox(height: 10),
+        _field(
+          _tagsField,
+          l10n.songsTagsLabel,
+          hintText: l10n.songsFieldTagsHint,
           textInputAction: TextInputAction.done,
         ),
       ],
@@ -477,6 +596,59 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     );
   }
 
+  List<Widget> _appBarActions(AppLocalizations l10n, ColorScheme scheme) {
+    return [
+      IconButton(
+        tooltip: l10n.songsPreview,
+        onPressed: _saving ? null : _preview,
+        icon: const Icon(Icons.visibility_outlined),
+      ),
+      IconButton(
+        tooltip: l10n.commonSave,
+        onPressed: _saving ? null : _save,
+        icon: _saving
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: scheme.primary,
+                ),
+              )
+            : const Icon(Icons.check_rounded),
+      ),
+    ];
+  }
+
+  PreferredSizeWidget _editorAppBar({
+    required String title,
+    required AppLocalizations l10n,
+    required ColorScheme scheme,
+    bool showTabs = false,
+  }) {
+    final canPop = context.canPop();
+    return AppBar(
+      leading: canPop
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: () => context.go('/songs'),
+            ),
+      title: Text(title),
+      actions: _appBarActions(l10n, scheme),
+      bottom: showTabs
+          ? TabBar(
+              controller: _tabs,
+              tabs: [
+                Tab(text: l10n.songsTabContent),
+                Tab(text: l10n.songsTabMetadata),
+              ],
+            )
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -484,30 +656,24 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
 
     if (!widget.isCreate) {
       final async = ref.watch(songByIdProvider(widget.songId!));
-      PreferredSizeWidget editorAppBar(String title) {
-        final canPop = context.canPop();
-        return AppBar(
-          leading: canPop
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  tooltip:
-                      MaterialLocalizations.of(context).backButtonTooltip,
-                  onPressed: () => context.go('/songs'),
-                ),
-          title: Text(title),
-        );
-      }
 
       if (async.isLoading && !_hydrated) {
         return Scaffold(
-          appBar: editorAppBar(l10n.songsEdit),
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
           body: const Center(child: CircularProgressIndicator()),
         );
       }
       if (async.hasError) {
         return Scaffold(
-          appBar: editorAppBar(l10n.songsEdit),
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
           body: ErrorState(
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
@@ -517,7 +683,11 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       final song = async.valueOrNull;
       if (song == null) {
         return Scaffold(
-          appBar: editorAppBar(l10n.songsEdit),
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
           body: EmptyState(
             illustrationAsset: HosannaIllustrations.emptySongs,
             title: l10n.songsNotFound,
@@ -532,74 +702,12 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       }
     }
 
-    final canPop = context.canPop();
     return Scaffold(
-      appBar: AppBar(
-        // Always offer a way out when this page was reached via go() and
-        // there is nothing to pop (common from older import error paths).
-        leading: canPop
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                onPressed: () => context.go('/songs'),
-              ),
-        title: Text(widget.isCreate ? l10n.songsCreate : l10n.songsEdit),
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: [
-            Tab(text: l10n.songsTabContent),
-            Tab(text: l10n.songsTabMetadata),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(28),
-        color: scheme.surface,
-        shadowColor: Colors.black.withValues(alpha: 0.25),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton.icon(
-                onPressed: _saving ? null : _preview,
-                icon: const Icon(Icons.visibility_outlined),
-                label: Text(l10n.songsPreview),
-                style: TextButton.styleFrom(
-                  foregroundColor: scheme.onSurface,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              FilledButton.icon(
-                onPressed: _saving ? null : _save,
-                icon: _saving
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: scheme.onPrimary,
-                        ),
-                      )
-                    : const Icon(Icons.check_rounded),
-                label: Text(l10n.commonSave),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: _editorAppBar(
+        title: widget.isCreate ? l10n.songsCreate : l10n.songsEdit,
+        l10n: l10n,
+        scheme: scheme,
+        showTabs: true,
       ),
       body: TabBarView(
         controller: _tabs,

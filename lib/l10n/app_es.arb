@@ -199,17 +199,24 @@
   "songsFieldSubtitle": "Subtítulo",
   "songsFieldArtist": "Artista",
   "songsFieldComposer": "Compositor",
+  "songsFieldLyricist": "Letrista",
+  "songsFieldTranslator": "Traductor",
+  "songsFieldArranger": "Arreglista",
   "songsFieldSongNumber": "Número de canción",
   "songsFieldKey": "Tonalidad",
   "songsFieldOriginalKey": "Tonalidad original",
+  "songsFieldKeyNone": "Ninguna",
   "songsFieldTempo": "Tempo (BPM)",
   "songsFieldTime": "Compás",
   "songsFieldDuration": "Duración (m:ss)",
   "songsFieldCapo": "Cejilla",
   "songsFieldKeyNote": "Nota de tonalidad",
+  "songsFieldAlbum": "Álbum",
+  "songsFieldYear": "Año",
   "songsFieldCopyright": "Copyright",
   "songsFieldCcli": "CCLI",
   "songsFieldYoutube": "URL / ID de YouTube",
+  "songsFieldTagsHint": "Etiquetas separadas por comas",
   "songsTabContent": "Letra y acordes",
   "songsTabMetadata": "Detalles",
   "songsTitleRequired": "El título es obligatorio.",
@@ -383,6 +390,24 @@
   "songCapoPill": "Capo: traste {fret}",
   "songShapePill": "Formas: {key}",
   "songOriginalKeyPill": "Tono original: {key}",
+  "songTranslatorCredit": "Traducción: {name}",
+  "@songTranslatorCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songLyricistCredit": "Letra: {name}",
+  "@songLyricistCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songArrangerCredit": "Arreglo: {name}",
+  "@songArrangerCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "songNumberPill": "Nº {number}",
   "songCapoOnFret": "Capo en el traste {fret}",
   "songChangeKey": "Cambiar tono",

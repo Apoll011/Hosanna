@@ -195,17 +195,24 @@
   "songsFieldSubtitle": "Subtitle",
   "songsFieldArtist": "Artist",
   "songsFieldComposer": "Composer",
+  "songsFieldLyricist": "Lyricist",
+  "songsFieldTranslator": "Translator",
+  "songsFieldArranger": "Arranger",
   "songsFieldSongNumber": "Song number",
   "songsFieldKey": "Key",
   "songsFieldOriginalKey": "Original key",
+  "songsFieldKeyNone": "None",
   "songsFieldTempo": "Tempo (BPM)",
   "songsFieldTime": "Time",
   "songsFieldDuration": "Duration (m:ss)",
   "songsFieldCapo": "Capo",
   "songsFieldKeyNote": "Key note",
+  "songsFieldAlbum": "Album",
+  "songsFieldYear": "Year",
   "songsFieldCopyright": "Copyright",
   "songsFieldCcli": "CCLI",
   "songsFieldYoutube": "YouTube URL / ID",
+  "songsFieldTagsHint": "Comma-separated tags",
   "songsTabContent": "Lyrics & chords",
   "songsTabMetadata": "Details",
   "songsTitleRequired": "Title is required.",
@@ -378,6 +385,24 @@
   "songCapoPill": "Capo: fret {fret}",
   "songShapePill": "Shapes: {key}",
   "songOriginalKeyPill": "Original key: {key}",
+  "songTranslatorCredit": "Translation: {name}",
+  "@songTranslatorCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songLyricistCredit": "Lyrics: {name}",
+  "@songLyricistCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songArrangerCredit": "Arrangement: {name}",
+  "@songArrangerCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "songNumberPill": "No. {number}",
   "songCapoOnFret": "Capo on fret {fret}",
   "songChangeKey": "Change key",

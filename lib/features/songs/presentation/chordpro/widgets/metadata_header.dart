@@ -83,6 +83,15 @@ class MetadataHeader extends StatelessWidget {
       _meta('artist'),
       _meta('composer'),
     ].whereType<String>().join(' / ');
+    final lyricist = _meta('lyricist');
+    final translator = _meta('translator');
+    final arranger = _meta('arranger');
+    final album = _meta('album');
+    final year = _meta('year');
+    final albumLine = [
+      ?album,
+      ?year,
+    ].join(' · ');
     final keyNote = _meta('keyNote') ?? _meta('key_note');
     final copyright = _meta('copyright');
     final songNumber = _meta('songNumber');
@@ -145,6 +154,46 @@ class MetadataHeader extends StatelessWidget {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 byline,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (lyricist != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.songLyricistCredit(lyricist),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (translator != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.songTranslatorCredit(translator),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (arranger != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                l10n.songArrangerCredit(arranger),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (albumLine.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                albumLine,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

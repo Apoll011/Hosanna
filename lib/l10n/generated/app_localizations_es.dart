@@ -591,6 +591,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsFieldComposer => 'Compositor';
 
   @override
+  String get songsFieldLyricist => 'Letrista';
+
+  @override
+  String get songsFieldTranslator => 'Traductor';
+
+  @override
+  String get songsFieldArranger => 'Arreglista';
+
+  @override
   String get songsFieldSongNumber => 'Número de canción';
 
   @override
@@ -598,6 +607,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songsFieldOriginalKey => 'Tonalidad original';
+
+  @override
+  String get songsFieldKeyNone => 'Ninguna';
 
   @override
   String get songsFieldTempo => 'Tempo (BPM)';
@@ -615,6 +627,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsFieldKeyNote => 'Nota de tonalidad';
 
   @override
+  String get songsFieldAlbum => 'Álbum';
+
+  @override
+  String get songsFieldYear => 'Año';
+
+  @override
   String get songsFieldCopyright => 'Copyright';
 
   @override
@@ -622,6 +640,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songsFieldYoutube => 'URL / ID de YouTube';
+
+  @override
+  String get songsFieldTagsHint => 'Etiquetas separadas por comas';
 
   @override
   String get songsTabContent => 'Letra y acordes';
@@ -1069,6 +1090,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String songOriginalKeyPill(Object key) {
     return 'Tono original: $key';
+  }
+
+  @override
+  String songTranslatorCredit(String name) {
+    return 'Traducción: $name';
+  }
+
+  @override
+  String songLyricistCredit(String name) {
+    return 'Letra: $name';
+  }
+
+  @override
+  String songArrangerCredit(String name) {
+    return 'Arreglo: $name';
   }
 
   @override
