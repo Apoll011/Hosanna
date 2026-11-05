@@ -22,14 +22,9 @@ abstract final class HosannaIllustrations {
   static const String stateLoading = '$_base/state_loading.png';
   static const String stateSuccess = '$_base/state_success.png';
   static const String stateError = '$_base/state_error.png';
-  static const String stateOffline = '$_base/state_offline.png';
 
   static const String notificationConsent = '$_base/notification_consent.png';
   static const String comingSoon = '$_base/coming_soon.png';
-  static const String settingsAppearance = '$_base/settings_appearance.png';
-
-  static const String toolMetronome = '$_base/tool_metronome.png';
-  static const String toolCircleOfFifths = '$_base/tool_circle_of_fifths.png';
 
   // ── Post-login setup wizard ──────────────────────────────────────────────
   static const String setupWelcome = '$_base/setup_welcome.png';
