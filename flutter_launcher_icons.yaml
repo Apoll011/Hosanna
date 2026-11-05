@@ -12,8 +12,8 @@ flutter_launcher_icons:
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/logo.png"
   # Middle ground: 0 was cropped/zoomed on phone masks; default 16 looked
-  # ~30% too small. ~10 keeps the mark large without clipping pegs/neck.
-  adaptive_icon_foreground_inset: 10
+  # ~30% too small. ~15 keeps the mark large without clipping pegs/neck.
+  adaptive_icon_foreground_inset: 15
 
   ios: true
   remove_alpha_ios: true
