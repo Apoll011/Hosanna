@@ -634,6 +634,210 @@ abstract class AppLocalizations {
   /// **'Terminar Sessão'**
   String get onboardingSignOut;
 
+  /// No description provided for @setupWelcomeTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vamos configurar o Hosanna'**
+  String get setupWelcomeTitle;
+
+  /// No description provided for @setupWelcomeSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Algumas escolhas rápidas para que canções e cultos fiquem certos para a forma como serve.'**
+  String get setupWelcomeSubtitle;
+
+  /// No description provided for @setupWelcomeCta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar'**
+  String get setupWelcomeCta;
+
+  /// No description provided for @setupRoleTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como usa o Hosanna?'**
+  String get setupRoleTitle;
+
+  /// No description provided for @setupRoleSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrimos os cultos da forma que melhor se adequa ao seu papel. Pode mudar isto depois nas Definições.'**
+  String get setupRoleSubtitle;
+
+  /// No description provided for @setupRoleMusician.
+  ///
+  /// In pt, this message translates to:
+  /// **'Músico'**
+  String get setupRoleMusician;
+
+  /// No description provided for @setupRoleMusicianDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre direto nas canções com acordes, capo e diagramas.'**
+  String get setupRoleMusicianDesc;
+
+  /// No description provided for @setupRoleLeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Líder'**
+  String get setupRoleLeader;
+
+  /// No description provided for @setupRoleLeaderDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comece pela ordem do culto e pelas notas do momento.'**
+  String get setupRoleLeaderDesc;
+
+  /// No description provided for @setupFocusTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'O que toca?'**
+  String get setupFocusTitle;
+
+  /// No description provided for @setupFocusSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto define o instrumento predefinido para os diagramas de acordes.'**
+  String get setupFocusSubtitle;
+
+  /// No description provided for @setupFocusGuitar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guitarra'**
+  String get setupFocusGuitar;
+
+  /// No description provided for @setupFocusUkulele.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ukulele'**
+  String get setupFocusUkulele;
+
+  /// No description provided for @setupFocusPiano.
+  ///
+  /// In pt, this message translates to:
+  /// **'Piano / teclas'**
+  String get setupFocusPiano;
+
+  /// No description provided for @setupFocusVocals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voz'**
+  String get setupFocusVocals;
+
+  /// No description provided for @setupFocusVocalsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra em primeiro — os acordes ficam disponíveis quando precisar.'**
+  String get setupFocusVocalsDesc;
+
+  /// No description provided for @setupLeaderFocusTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando abre uma canção…'**
+  String get setupLeaderFocusTitle;
+
+  /// No description provided for @setupLeaderFocusSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opcional — escolha um instrumento para as cifras ao rever canções.'**
+  String get setupLeaderFocusSubtitle;
+
+  /// No description provided for @setupPrefsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Predefinições para o palco'**
+  String get setupPrefsTitle;
+
+  /// No description provided for @setupPrefsSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções úteis para ensaios e culto ao vivo.'**
+  String get setupPrefsSubtitle;
+
+  /// No description provided for @setupPrefDiagrams.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar diagramas de acordes'**
+  String get setupPrefDiagrams;
+
+  /// No description provided for @setupPrefDiagramsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digitação acima da canção quando disponível.'**
+  String get setupPrefDiagramsDesc;
+
+  /// No description provided for @setupPrefAwake.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manter o ecrã ligado'**
+  String get setupPrefAwake;
+
+  /// No description provided for @setupPrefAwakeDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não escurecer durante uma canção ou culto.'**
+  String get setupPrefAwakeDesc;
+
+  /// No description provided for @setupLanguageTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma'**
+  String get setupLanguageTitle;
+
+  /// No description provided for @setupLanguageSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha o idioma dos menus e etiquetas.'**
+  String get setupLanguageSubtitle;
+
+  /// No description provided for @setupLanguageSystem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguir o dispositivo'**
+  String get setupLanguageSystem;
+
+  /// No description provided for @setupDoneTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Está pronto'**
+  String get setupDoneTitle;
+
+  /// No description provided for @setupDoneSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Hosanna está configurado para si. Entre na biblioteca quando quiser.'**
+  String get setupDoneSubtitle;
+
+  /// No description provided for @setupDoneCta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrar no Hosanna'**
+  String get setupDoneCta;
+
+  /// No description provided for @setupSkip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saltar por agora'**
+  String get setupSkip;
+
+  /// No description provided for @setupStepOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passo {current} de {total}'**
+  String setupStepOf(int current, int total);
+
+  /// No description provided for @settingsRedoSetup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repetir configuração'**
+  String get settingsRedoSetup;
+
+  /// No description provided for @settingsRedoSetupDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar a responder às perguntas de função e instrumento.'**
+  String get settingsRedoSetupDesc;
+
   /// No description provided for @syncSyncing.
   ///
   /// In pt, this message translates to:

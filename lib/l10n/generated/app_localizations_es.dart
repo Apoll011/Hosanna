@@ -306,6 +306,122 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingSignOut => 'Cerrar Sesión';
 
   @override
+  String get setupWelcomeTitle => 'Configuremos Hosanna';
+
+  @override
+  String get setupWelcomeSubtitle =>
+      'Unas pocas opciones para que canciones y servicios se sientan bien según cómo sirves.';
+
+  @override
+  String get setupWelcomeCta => 'Empezar';
+
+  @override
+  String get setupRoleTitle => '¿Cómo usas Hosanna?';
+
+  @override
+  String get setupRoleSubtitle =>
+      'Abriremos los servicios según tu rol. Puedes cambiarlo después en Ajustes.';
+
+  @override
+  String get setupRoleMusician => 'Músico';
+
+  @override
+  String get setupRoleMusicianDesc =>
+      'Entra directo a las canciones con acordes, cejilla y diagramas.';
+
+  @override
+  String get setupRoleLeader => 'Líder';
+
+  @override
+  String get setupRoleLeaderDesc =>
+      'Empieza por el orden del servicio y las notas del momento.';
+
+  @override
+  String get setupFocusTitle => '¿Qué tocas?';
+
+  @override
+  String get setupFocusSubtitle =>
+      'Esto define el instrumento predeterminado para los diagramas de acordes.';
+
+  @override
+  String get setupFocusGuitar => 'Guitarra';
+
+  @override
+  String get setupFocusUkulele => 'Ukelele';
+
+  @override
+  String get setupFocusPiano => 'Piano / teclas';
+
+  @override
+  String get setupFocusVocals => 'Voz';
+
+  @override
+  String get setupFocusVocalsDesc =>
+      'Letra primero — los acordes siguen disponibles cuando los necesites.';
+
+  @override
+  String get setupLeaderFocusTitle => 'Cuando abres una canción…';
+
+  @override
+  String get setupLeaderFocusSubtitle =>
+      'Opcional — elige un instrumento para las cifras al revisar canciones.';
+
+  @override
+  String get setupPrefsTitle => 'Ajustes listos para el escenario';
+
+  @override
+  String get setupPrefsSubtitle =>
+      'Opciones útiles para ensayos y culto en vivo.';
+
+  @override
+  String get setupPrefDiagrams => 'Mostrar diagramas de acordes';
+
+  @override
+  String get setupPrefDiagramsDesc =>
+      'Digitaciones encima de la canción cuando estén disponibles.';
+
+  @override
+  String get setupPrefAwake => 'Mantener la pantalla encendida';
+
+  @override
+  String get setupPrefAwakeDesc =>
+      'No oscurecer durante una canción o servicio.';
+
+  @override
+  String get setupLanguageTitle => 'Idioma';
+
+  @override
+  String get setupLanguageSubtitle => 'Elige el idioma de menús y etiquetas.';
+
+  @override
+  String get setupLanguageSystem => 'Igual que el dispositivo';
+
+  @override
+  String get setupDoneTitle => 'Listo';
+
+  @override
+  String get setupDoneSubtitle =>
+      'Hosanna está configurado para ti. Entra en tu biblioteca cuando quieras.';
+
+  @override
+  String get setupDoneCta => 'Entrar a Hosanna';
+
+  @override
+  String get setupSkip => 'Omitir por ahora';
+
+  @override
+  String setupStepOf(int current, int total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get settingsRedoSetup => 'Volver a configurar';
+
+  @override
+  String get settingsRedoSetupDesc =>
+      'Responder de nuevo las preguntas de rol e instrumento.';
+
+  @override
   String get syncSyncing => 'Sincronizando…';
 
   @override

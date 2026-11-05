@@ -14,6 +14,8 @@ import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/setup/data/setup_controller.dart';
+import '../features/setup/presentation/setup_page.dart';
 import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
@@ -40,12 +42,14 @@ bool _isAuthRoute(String path) {
 final goRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.listen(authControllerProvider, (_, _) => refresh.value++);
+  ref.listen(setupControllerProvider, (_, _) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
+      final setupComplete = ref.read(setupControllerProvider);
       final path = state.uri.path;
       final loading = auth.status == AuthStatus.loading;
       final loggedIn = auth.isAuthenticated;
@@ -64,15 +68,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return path == '/splash' ? null : '/splash';
       }
 
-      if (onAuthRoute) return hasOrg ? '/songs' : '/onboarding';
+      if (onAuthRoute) {
+        if (!hasOrg) return '/onboarding';
+        return setupComplete ? '/songs' : '/setup';
+      }
 
       if (!hasOrg) {
         // Org-less users may only see onboarding until they join one.
         return path == '/onboarding' ? null : '/onboarding';
       }
 
-      // Has an org — no longer allow the pre-org screens.
-      if (path == '/onboarding' || path == '/splash') return '/songs';
+      if (!setupComplete) {
+        return path == '/setup' ? null : '/setup';
+      }
+
+      // Has an org + finished setup — leave the pre-app screens.
+      if (path == '/onboarding' || path == '/setup' || path == '/splash') {
+        return '/songs';
+      }
       return null;
     },
     routes: [
@@ -93,6 +106,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const EmailVerificationPage(),
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
+      GoRoute(path: '/setup', builder: (_, _) => const SetupPage()),
       // Branch order must match the kSongsBranch..kSettingsBranch constants in
       // nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(

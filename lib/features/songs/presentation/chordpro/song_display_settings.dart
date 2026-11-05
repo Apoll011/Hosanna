@@ -274,9 +274,13 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void toggleDiagrams() {
-    final v = !state.showDiagrams;
-    _prefs.setBool(_diagramsKey, v);
-    state = state.copyWith(showDiagrams: v);
+    setShowDiagrams(!state.showDiagrams);
+  }
+
+  void setShowDiagrams(bool value) {
+    if (state.showDiagrams == value) return;
+    _prefs.setBool(_diagramsKey, value);
+    state = state.copyWith(showDiagrams: value);
   }
 
   void setAutoScrollSpeed(double value) {

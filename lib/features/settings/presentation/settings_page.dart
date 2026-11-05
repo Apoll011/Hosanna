@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/design/tokens.dart';
@@ -13,6 +14,7 @@ import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../services/data/service_repository.dart';
+import '../../setup/data/setup_controller.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
@@ -828,6 +830,24 @@ class _ServiceTab extends ConsumerWidget {
             subtitle: l10n.settingsSyncAnnotationsDesc,
             value: settings.syncAnnotations,
             onChanged: settingsController.setSyncAnnotations,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Card(
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            leading: Icon(
+              Icons.auto_awesome_rounded,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(l10n.settingsRedoSetup),
+            subtitle: Text(l10n.settingsRedoSetupDesc),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () async {
+              await ref.read(setupControllerProvider.notifier).reset();
+              if (!context.mounted) return;
+              context.go('/setup');
+            },
           ),
         ),
       ],
