@@ -30,8 +30,10 @@ class _SetupPageState extends ConsumerState<SetupPage> {
 
   List<_Step> get _steps {
     final steps = <_Step>[_Step.welcome, _Step.role];
-    // Leaders still get an optional instrument step for song reading.
-    steps.add(_Step.focus);
+    // Instrument choice is only for musicians.
+    if (_draft.role == SetupRole.musician) {
+      steps.add(_Step.focus);
+    }
     steps.addAll([_Step.prefs, _Step.language, _Step.done]);
     return steps;
   }
@@ -69,20 +71,26 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   bool get _canContinue => switch (_currentStep) {
         _Step.welcome || _Step.prefs || _Step.language || _Step.done => true,
         _Step.role => _draft.role != null,
-        _Step.focus => _draft.focus != null || _draft.role == SetupRole.leader,
+        _Step.focus => _draft.focus != null,
       };
 
   Future<void> _finish({bool skipped = false}) async {
     if (_finishing) return;
     setState(() => _finishing = true);
+    final role = skipped
+        ? SetupRole.musician
+        : (_draft.role ?? SetupRole.musician);
     final draft = skipped
         ? const SetupDraft(
             role: SetupRole.musician,
             focus: SetupPrimaryFocus.guitar,
           )
         : _draft.copyWith(
-            role: _draft.role ?? SetupRole.musician,
-            focus: _draft.focus ?? SetupPrimaryFocus.guitar,
+            role: role,
+            // Leaders keep a harmless default instrument for song charts.
+            focus: role == SetupRole.leader
+                ? SetupPrimaryFocus.guitar
+                : (_draft.focus ?? SetupPrimaryFocus.guitar),
           );
 
     await ref.read(setupControllerProvider.notifier).apply(
@@ -224,13 +232,13 @@ class _SetupPageState extends ConsumerState<SetupPage> {
           onSelect: (role) => setState(() {
             _draft = _draft.copyWith(
               role: role,
-              focus: role == SetupRole.leader ? _draft.focus : _draft.focus,
+              clearFocus: role != SetupRole.musician,
+              showDiagrams: role == SetupRole.musician,
             );
           }),
         ),
       _Step.focus => _FocusStep(
           l10n: l10n,
-          isLeader: _draft.role == SetupRole.leader,
           selected: _draft.focus,
           onSelect: (focus) => setState(() {
             _draft = _draft.copyWith(
@@ -244,6 +252,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       _Step.prefs => _PrefsStep(
           l10n: l10n,
           draft: _draft,
+          showDiagramsToggle: _draft.role == SetupRole.musician,
           onChanged: (next) => setState(() => _draft = next),
         ),
       _Step.language => _LanguageStep(
@@ -296,26 +305,107 @@ class _RoleStep extends StatelessWidget {
     return _StepBody(
       title: l10n.setupRoleTitle,
       subtitle: l10n.setupRoleSubtitle,
-      child: Column(
-        children: [
-          _ImageChoiceCard(
-            asset: HosannaIllustrations.setupRoleMusician,
-            fallbackIcon: Icons.music_note_rounded,
-            title: l10n.setupRoleMusician,
-            subtitle: l10n.setupRoleMusicianDesc,
-            selected: selected == SetupRole.musician,
-            onTap: () => onSelect(SetupRole.musician),
-          ),
-          const SizedBox(height: 12),
-          _ImageChoiceCard(
-            asset: HosannaIllustrations.setupRoleLeader,
-            fallbackIcon: Icons.groups_rounded,
-            title: l10n.setupRoleLeader,
-            subtitle: l10n.setupRoleLeaderDesc,
-            selected: selected == SetupRole.leader,
-            onTap: () => onSelect(SetupRole.leader),
-          ),
-        ],
+      child: SizedBox(
+        height: 220,
+        child: Row(
+          children: [
+            Expanded(
+              child: _RoleTile(
+                asset: HosannaIllustrations.setupRoleMusician,
+                fallbackIcon: Icons.music_note_rounded,
+                title: l10n.setupRoleMusician,
+                selected: selected == SetupRole.musician,
+                onTap: () => onSelect(SetupRole.musician),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _RoleTile(
+                asset: HosannaIllustrations.setupRoleLeader,
+                fallbackIcon: Icons.groups_rounded,
+                title: l10n.setupRoleLeader,
+                selected: selected == SetupRole.leader,
+                onTap: () => onSelect(SetupRole.leader),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleTile extends StatelessWidget {
+  const _RoleTile({
+    required this.asset,
+    required this.fallbackIcon,
+    required this.title,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String asset;
+  final IconData fallbackIcon;
+  final String title;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      color: selected
+          ? scheme.primaryContainer.withValues(alpha: 0.75)
+          : scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: selected
+              ? scheme.primary
+              : scheme.outlineVariant.withValues(alpha: 0.55),
+          width: selected ? 2.5 : 1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Image.asset(
+                asset,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => ColoredBox(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  child: Icon(
+                    fallbackIcon,
+                    size: 48,
+                    color: scheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -324,13 +414,11 @@ class _RoleStep extends StatelessWidget {
 class _FocusStep extends StatelessWidget {
   const _FocusStep({
     required this.l10n,
-    required this.isLeader,
     required this.selected,
     required this.onSelect,
   });
 
   final AppLocalizations l10n;
-  final bool isLeader;
   final SetupPrimaryFocus? selected;
   final ValueChanged<SetupPrimaryFocus> onSelect;
 
@@ -368,9 +456,8 @@ class _FocusStep extends StatelessWidget {
     ];
 
     return _StepBody(
-      title: isLeader ? l10n.setupLeaderFocusTitle : l10n.setupFocusTitle,
-      subtitle:
-          isLeader ? l10n.setupLeaderFocusSubtitle : l10n.setupFocusSubtitle,
+      title: l10n.setupFocusTitle,
+      subtitle: l10n.setupFocusSubtitle,
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -398,11 +485,13 @@ class _PrefsStep extends StatelessWidget {
   const _PrefsStep({
     required this.l10n,
     required this.draft,
+    required this.showDiagramsToggle,
     required this.onChanged,
   });
 
   final AppLocalizations l10n;
   final SetupDraft draft;
+  final bool showDiagramsToggle;
   final ValueChanged<SetupDraft> onChanged;
 
   @override
@@ -414,14 +503,16 @@ class _PrefsStep extends StatelessWidget {
       subtitle: l10n.setupPrefsSubtitle,
       child: Column(
         children: [
-          _ToggleCard(
-            icon: Icons.grid_view_rounded,
-            title: l10n.setupPrefDiagrams,
-            subtitle: l10n.setupPrefDiagramsDesc,
-            value: draft.showDiagrams,
-            onChanged: (v) => onChanged(draft.copyWith(showDiagrams: v)),
-          ),
-          const SizedBox(height: 10),
+          if (showDiagramsToggle) ...[
+            _ToggleCard(
+              icon: Icons.grid_view_rounded,
+              title: l10n.setupPrefDiagrams,
+              subtitle: l10n.setupPrefDiagramsDesc,
+              value: draft.showDiagrams,
+              onChanged: (v) => onChanged(draft.copyWith(showDiagrams: v)),
+            ),
+            const SizedBox(height: 10),
+          ],
           _ToggleCard(
             icon: Icons.phonelink_lock_rounded,
             title: l10n.setupPrefAwake,
@@ -485,9 +576,9 @@ class _DoneStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final roleLabel = draft.role == SetupRole.leader
-        ? l10n.setupRoleLeader
-        : l10n.setupRoleMusician;
+    final isMusician = draft.role != SetupRole.leader;
+    final roleLabel =
+        isMusician ? l10n.setupRoleMusician : l10n.setupRoleLeader;
     final focusLabel = switch (draft.focus) {
       SetupPrimaryFocus.guitar => l10n.setupFocusGuitar,
       SetupPrimaryFocus.ukulele => l10n.setupFocusUkulele,
@@ -517,8 +608,10 @@ class _DoneStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SummaryRow(label: l10n.setupRoleTitle, value: roleLabel),
-            const SizedBox(height: 10),
-            _SummaryRow(label: l10n.setupFocusTitle, value: focusLabel),
+            if (isMusician) ...[
+              const SizedBox(height: 10),
+              _SummaryRow(label: l10n.setupFocusTitle, value: focusLabel),
+            ],
           ],
         ),
       ),
@@ -655,100 +748,6 @@ class _HeroImage extends StatelessWidget {
                 color: scheme.primary.withValues(alpha: 0.85),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ImageChoiceCard extends StatelessWidget {
-  const _ImageChoiceCard({
-    required this.asset,
-    required this.fallbackIcon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String asset;
-  final IconData fallbackIcon;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Material(
-      color: selected
-          ? scheme.primaryContainer.withValues(alpha: 0.65)
-          : scheme.surface,
-      elevation: selected ? 0 : 1,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: selected
-              ? scheme.primary
-              : scheme.outlineVariant.withValues(alpha: 0.55),
-          width: selected ? 2 : 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: Image.asset(
-                    asset,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => ColoredBox(
-                      color: scheme.primary.withValues(alpha: 0.12),
-                      child: Icon(fallbackIcon, color: scheme.primary),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.circle_outlined,
-                color: selected ? scheme.primary : scheme.outline,
-              ),
-            ],
           ),
         ),
       ),

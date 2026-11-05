@@ -43,6 +43,7 @@ class SetupDraft {
   SetupDraft copyWith({
     SetupRole? role,
     SetupPrimaryFocus? focus,
+    bool clearFocus = false,
     bool? showDiagrams,
     bool? keepScreenAwake,
     String? localeCode,
@@ -50,7 +51,7 @@ class SetupDraft {
   }) {
     return SetupDraft(
       role: role ?? this.role,
-      focus: focus ?? this.focus,
+      focus: clearFocus ? null : (focus ?? this.focus),
       showDiagrams: showDiagrams ?? this.showDiagrams,
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       localeCode: clearLocale ? null : (localeCode ?? this.localeCode),
