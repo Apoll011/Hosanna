@@ -27,6 +27,8 @@ class FrettedFingering extends InstrumentFingering {
     this.fingers,
     this.barre,
     this.approximate = false,
+    this.stringNames,
+    this.tuningId,
   });
 
   /// Per-string frets in diagram order (leftmost string first).
@@ -38,6 +40,12 @@ class FrettedFingering extends InstrumentFingering {
 
   /// Fret number of the barre, when the shape uses one.
   final int? barre;
+
+  /// Optional open-string labels for the diagram (same order as [frets]).
+  final List<String>? stringNames;
+
+  /// Active [FrettedTuning.id], when known.
+  final String? tuningId;
 
   @override
   final bool approximate;
@@ -54,6 +62,9 @@ class KeyboardFingering extends InstrumentFingering {
   final List<int> highlightKeys;
 }
 
+/// Broad family used to group instruments in pickers as the registry grows.
+enum InstrumentFamily { fretted, keyboard, other }
+
 /// Contract for an instrument that can suggest a fingering for a chord.
 ///
 /// Implementations are stateless and cheap, so they are held in a `const`
@@ -68,6 +79,9 @@ abstract class Instrument {
   /// layer (see `presentation/chordpro/instrument_selector.dart`).
   String get label;
 
+  /// Family for grouping in the instrument selector.
+  InstrumentFamily get family;
+
   /// Whether a capo lowers the sounding pitch, so the reader should render
   /// chord shapes at `transpose - capo`.
   bool get supportsCapo;
@@ -75,7 +89,7 @@ abstract class Instrument {
   /// Suggests a voicing for [chord], or null when this instrument has none.
   ///
   /// [options] carries per-instrument preferences (e.g. piano compact
-  /// voicings). Fretted instruments typically ignore it.
+  /// voicings, fretted tuning id).
   InstrumentFingering? fingering(
     ParsedChord chord, {
     InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'fretted_diagram_layout.dart';
+
 /// Fretboard diagram for any fretted instrument (guitar, ukulele, …).
 ///
-/// The diagram adapts to [frets]`.length` strings, so supporting a new fretted
-/// instrument needs no widget changes.
+/// Adapts to [frets]`.length` strings via [FrettedDiagramLayout], so 4–7
+/// string instruments need no separate widgets.
 class FrettedDiagram extends StatelessWidget {
   const FrettedDiagram({
     super.key,
@@ -13,6 +15,8 @@ class FrettedDiagram extends StatelessWidget {
     this.capo = 0,
     this.maxFrets = 4,
     this.showFingerNumbers = true,
+    this.stringNames,
+    this.showStringLabels = true,
     required this.dotColor,
     required this.lineColor,
     required this.textColor,
@@ -39,6 +43,12 @@ class FrettedDiagram extends StatelessWidget {
   /// Whether to paint finger numbers inside the fretting dots.
   final bool showFingerNumbers;
 
+  /// Optional open-string names under each string.
+  final List<String>? stringNames;
+
+  /// Whether to draw [stringNames] when available.
+  final bool showStringLabels;
+
   final Color dotColor;
   final Color lineColor;
   final Color textColor;
@@ -46,25 +56,21 @@ class FrettedDiagram extends StatelessWidget {
   final Color openColor;
   final Color capoColor;
 
-  static const double _stringSpacing = 14;
-  static const double _fretSpacing = 20;
-  static const double _topMargin = 22;
-  static const double _leftMargin = 18;
-  static const double _rightMargin = 16;
-
-  /// Width needed to draw [stringCount] strings.
-  static double widthFor(int stringCount) =>
-      _leftMargin + (stringCount - 1).clamp(0, 12) * _stringSpacing + _rightMargin;
-
-  /// Height needed to draw [maxFrets] fret rows.
-  static double heightFor(int maxFrets) =>
-      _topMargin + maxFrets * _fretSpacing + 8;
-
   @override
   Widget build(BuildContext context) {
     final stringCount = frets.isEmpty ? 6 : frets.length;
+    final labels = showStringLabels &&
+            stringNames != null &&
+            stringNames!.length == stringCount
+        ? stringNames
+        : null;
+    final layout = FrettedDiagramLayout(
+      stringCount: stringCount,
+      maxFrets: maxFrets,
+      showStringLabels: labels != null,
+    );
     return CustomPaint(
-      size: Size(widthFor(stringCount), heightFor(maxFrets)),
+      size: Size(layout.width, layout.height),
       painter: _FrettedDiagramPainter(
         frets: frets,
         fingers: fingers,
@@ -72,6 +78,8 @@ class FrettedDiagram extends StatelessWidget {
         capo: capo,
         maxFrets: maxFrets,
         showFingerNumbers: showFingerNumbers,
+        stringNames: labels,
+        layout: layout,
         dotColor: dotColor,
         lineColor: lineColor,
         textColor: textColor,
@@ -91,6 +99,8 @@ class _FrettedDiagramPainter extends CustomPainter {
     required this.capo,
     required this.maxFrets,
     required this.showFingerNumbers,
+    required this.stringNames,
+    required this.layout,
     required this.dotColor,
     required this.lineColor,
     required this.textColor,
@@ -105,6 +115,8 @@ class _FrettedDiagramPainter extends CustomPainter {
   final int capo;
   final int maxFrets;
   final bool showFingerNumbers;
+  final List<String>? stringNames;
+  final FrettedDiagramLayout layout;
   final Color dotColor;
   final Color lineColor;
   final Color textColor;
@@ -114,11 +126,9 @@ class _FrettedDiagramPainter extends CustomPainter {
 
   int get _stringCount => frets.length;
 
-  double _stringX(int index) =>
-      FrettedDiagram._leftMargin + index * FrettedDiagram._stringSpacing;
+  double _stringX(int index) => layout.stringX(index);
 
-  double _fretY(int index) =>
-      FrettedDiagram._topMargin + index * FrettedDiagram._fretSpacing;
+  double _fretY(int index) => layout.fretY(index);
 
   /// First fret shown: 1 for open-position shapes, otherwise the lowest
   /// fingered fret so the shape fits the window.
@@ -171,7 +181,7 @@ class _FrettedDiagramPainter extends CustomPainter {
 
     final stringPaint = Paint()
       ..color = lineColor.withValues(alpha: 0.5)
-      ..strokeWidth = 1.2;
+      ..strokeWidth = _stringCount >= 7 ? 1.0 : 1.2;
     for (var i = 0; i < _stringCount; i++) {
       canvas.drawLine(
         Offset(_stringX(i), _fretY(0)),
@@ -196,6 +206,20 @@ class _FrettedDiagramPainter extends CustomPainter {
     for (var stringIdx = 0; stringIdx < _stringCount; stringIdx++) {
       _paintStringMarker(canvas, stringIdx, startFret);
     }
+
+    final names = stringNames;
+    if (names != null) {
+      for (var i = 0; i < names.length; i++) {
+        _drawText(
+          canvas,
+          names[i],
+          Offset(_stringX(i), _fretY(maxFrets) + 8),
+          color: textColor.withValues(alpha: 0.7),
+          fontSize: _stringCount >= 7 ? 7 : 8,
+          alignCenter: true,
+        );
+      }
+    }
   }
 
   /// Capo clamp across the nut with the fret number centred on the bar.
@@ -211,7 +235,6 @@ class _FrettedDiagramPainter extends CustomPainter {
     );
     canvas.drawRRect(rect, Paint()..color = capoColor);
 
-    // Small "wing" notches at each end (suggests a capo clamp).
     final wingPaint = Paint()..color = capoColor.withValues(alpha: 0.85);
     canvas.drawCircle(Offset(left + 1, cy), 3.5, wingPaint);
     canvas.drawCircle(Offset(right - 1, cy), 3.5, wingPaint);
@@ -226,7 +249,6 @@ class _FrettedDiagramPainter extends CustomPainter {
       bold: true,
     );
 
-    // Capo fret label to the left of the clamp.
     _drawText(
       canvas,
       'C$capo',
@@ -248,7 +270,7 @@ class _FrettedDiagramPainter extends CustomPainter {
     final startString = frets.indexOf(barreFret);
     if (startString == -1) return;
 
-    final y = _fretY(row) + FrettedDiagram._fretSpacing / 2;
+    final y = _fretY(row) + layout.fretSpacing / 2;
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(
         _stringX(startString) - 4,
@@ -292,7 +314,7 @@ class _FrettedDiagramPainter extends CustomPainter {
     if (row < 0 || row >= maxFrets) return;
 
     final cx = _stringX(stringIdx);
-    final cy = _fretY(row) + FrettedDiagram._fretSpacing / 2;
+    final cy = _fretY(row) + layout.fretSpacing / 2;
     final finger =
         fingers != null && stringIdx < fingers!.length ? fingers![stringIdx] : 0;
 
@@ -305,7 +327,6 @@ class _FrettedDiagramPainter extends CustomPainter {
       canvas.drawCircle(Offset(cx, cy), 5, Paint()..color = dotColor);
     }
     if (showFingerNumbers && finger > 0) {
-      // Centre the digit in the bubble (no vertical nudge).
       _drawText(
         canvas,
         '$finger',
@@ -358,6 +379,7 @@ class _FrettedDiagramPainter extends CustomPainter {
       old.capo != capo ||
       old.maxFrets != maxFrets ||
       old.showFingerNumbers != showFingerNumbers ||
+      old.stringNames != stringNames ||
       old.dotColor != dotColor ||
       old.lineColor != lineColor ||
       old.textColor != textColor ||

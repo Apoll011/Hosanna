@@ -21,6 +21,8 @@ class InstrumentPreference {
   const InstrumentPreference({
     this.showFingerNumbers = true,
     this.showCapoMarker = true,
+    this.showStringLabels = true,
+    this.tuningId,
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
   });
@@ -30,6 +32,12 @@ class InstrumentPreference {
 
   /// Fretted: draw the capo clamp on the nut when a capo is active.
   final bool showCapoMarker;
+
+  /// Fretted: label open-string names under the diagram.
+  final bool showStringLabels;
+
+  /// Fretted: selected [FrettedTuning.id] (null → instrument default).
+  final String? tuningId;
 
   /// Piano: full vs compact (rootless) voicings.
   final PianoVoicingStyle pianoVoicingStyle;
@@ -43,12 +51,17 @@ class InstrumentPreference {
   InstrumentPreference copyWith({
     bool? showFingerNumbers,
     bool? showCapoMarker,
+    bool? showStringLabels,
+    String? tuningId,
+    bool clearTuningId = false,
     PianoVoicingStyle? pianoVoicingStyle,
     bool? pianoSlashSplitHands,
   }) {
     return InstrumentPreference(
       showFingerNumbers: showFingerNumbers ?? this.showFingerNumbers,
       showCapoMarker: showCapoMarker ?? this.showCapoMarker,
+      showStringLabels: showStringLabels ?? this.showStringLabels,
+      tuningId: clearTuningId ? null : (tuningId ?? this.tuningId),
       pianoVoicingStyle: pianoVoicingStyle ?? this.pianoVoicingStyle,
       pianoSlashSplitHands: pianoSlashSplitHands ?? this.pianoSlashSplitHands,
     );
@@ -57,6 +70,8 @@ class InstrumentPreference {
   Map<String, Object?> toJson() => {
         'showFingerNumbers': showFingerNumbers,
         'showCapoMarker': showCapoMarker,
+        'showStringLabels': showStringLabels,
+        if (tuningId != null) 'tuningId': tuningId,
         'pianoVoicingStyle': pianoVoicingStyle.name,
         'pianoSlashSplitHands': pianoSlashSplitHands,
       };
@@ -68,9 +83,12 @@ class InstrumentPreference {
       (s) => s.name == styleName,
       orElse: () => PianoVoicingStyle.full,
     );
+    final tuning = json['tuningId'];
     return InstrumentPreference(
       showFingerNumbers: json['showFingerNumbers'] as bool? ?? true,
       showCapoMarker: json['showCapoMarker'] as bool? ?? true,
+      showStringLabels: json['showStringLabels'] as bool? ?? true,
+      tuningId: tuning is String && tuning.isNotEmpty ? tuning : null,
       pianoVoicingStyle: style,
       pianoSlashSplitHands: json['pianoSlashSplitHands'] as bool? ?? true,
     );
@@ -115,15 +133,20 @@ class InstrumentFingeringOptions {
   const InstrumentFingeringOptions({
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
+    this.tuningId,
   });
 
   final PianoVoicingStyle pianoVoicingStyle;
   final bool pianoSlashSplitHands;
 
+  /// Fretted tuning id; null uses the instrument default.
+  final String? tuningId;
+
   factory InstrumentFingeringOptions.fromPreference(InstrumentPreference p) {
     return InstrumentFingeringOptions(
       pianoVoicingStyle: p.pianoVoicingStyle,
       pianoSlashSplitHands: p.pianoSlashSplitHands,
+      tuningId: p.tuningId,
     );
   }
 

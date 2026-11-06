@@ -1107,8 +1107,8 @@ class _InstrumentSettingsCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final instrument = instrumentRegistry.resolve(instrumentId);
-    final isPiano = instrumentId == 'piano';
-    final isFretted = instrument.supportsCapo;
+    final isPiano = instrument.family == InstrumentFamily.keyboard;
+    final fretted = instrument is FrettedInstrument ? instrument : null;
 
     return _Card(
       child: Column(
@@ -1141,7 +1141,30 @@ class _InstrumentSettingsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          if (isFretted) ...[
+          if (fretted != null) ...[
+            if (fretted.tunings.length > 1) ...[
+              Text(
+                l10n.settingsTuning,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.settingsTuningDesc,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              FrettedTuningSelector(
+                tunings: fretted.tunings,
+                selectedId: preference.tuningId ?? fretted.defaultTuning.id,
+                onChanged: (id) =>
+                    onChanged(preference.copyWith(tuningId: id)),
+              ),
+              const SizedBox(height: 8),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.settingsShowFingerNumbers),
@@ -1157,6 +1180,14 @@ class _InstrumentSettingsCard extends StatelessWidget {
               value: preference.showCapoMarker,
               onChanged: (v) =>
                   onChanged(preference.copyWith(showCapoMarker: v)),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsShowStringLabels),
+              subtitle: Text(l10n.settingsShowStringLabelsDesc),
+              value: preference.showStringLabels,
+              onChanged: (v) =>
+                  onChanged(preference.copyWith(showStringLabels: v)),
             ),
           ],
           if (isPiano) ...[

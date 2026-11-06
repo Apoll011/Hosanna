@@ -58,12 +58,20 @@ void main() {
       expect(instrumentRegistry.resolve('ukulele').supportsCapo, isTrue);
       expect(instrumentRegistry.resolve('piano').supportsCapo, isFalse);
     });
+
+    test('fretted instruments expose multiple tunings', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final uke = instrumentRegistry.resolve('ukulele') as FrettedInstrument;
+      expect(guitar.tunings.map((t) => t.id), containsAll(['standard', 'drop_d', 'seven_string']));
+      expect(uke.tunings.map((t) => t.id), containsAll(['high_g', 'low_g', 'baritone']));
+    });
   });
 
   group('fretted voicings', () {
     for (final instrument in frettedInstruments) {
       test('${instrument.id}: tuning matches its string count', () async {
         expect(instrument.tuning, isNotEmpty);
+        expect(instrument.tuning.length, instrument.defaultTuning.stringCount);
       });
 
       test('${instrument.id}: every chord resolves to a valid shape', () {
@@ -117,6 +125,18 @@ void main() {
           );
         }
       });
+
+      for (final tuning in instrument.tunings) {
+        test('${instrument.id}/${tuning.id}: adapts string count', () {
+          final fingering = instrument.fingering(
+            parseChordSymbol('Am')!,
+            options: InstrumentFingeringOptions(tuningId: tuning.id),
+          ) as FrettedFingering;
+          expect(fingering.stringCount, tuning.stringCount);
+          expect(fingering.stringNames, tuning.stringNames);
+          expect(fingering.tuningId, tuning.id);
+        });
+      }
     }
   });
 

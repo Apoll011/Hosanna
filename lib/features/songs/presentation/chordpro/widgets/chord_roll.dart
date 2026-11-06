@@ -117,6 +117,7 @@ class _ChordRollItem extends StatelessWidget {
                   capo: capo,
                   showFingerNumbers: preference.showFingerNumbers,
                   showCapoMarker: preference.showCapoMarker,
+                  showStringLabels: preference.showStringLabels,
                 ),
               ),
               if (voicing != null)

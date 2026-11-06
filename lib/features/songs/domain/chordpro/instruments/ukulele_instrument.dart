@@ -1,11 +1,15 @@
+import '../chord_theory.dart';
 import 'fretted_instrument.dart';
+import 'guitar_instrument.dart';
 
-/// Soprano/concert/tenor ukulele in standard re-entrant GCEA tuning.
+/// Ukulele chord library with high-G, low-G, and baritone (DGBE) tunings.
 ///
-/// Strings are ordered G → C → E → A to match how ukulele diagrams are drawn
-/// (the G string is leftmost even though it is not the lowest pitch).
+/// High/low G share the same 4-string shapes (pitch class identical on open
+/// G). Baritone reuses guitar shapes trimmed to the top four strings (DGBE).
 class UkuleleInstrument extends FrettedInstrument {
   const UkuleleInstrument();
+
+  static const _guitar = GuitarInstrument();
 
   @override
   String get id => 'ukulele';
@@ -13,12 +17,10 @@ class UkuleleInstrument extends FrettedInstrument {
   @override
   String get label => 'Ukulele';
 
-  /// G4, C4, E4, A4.
   @override
-  List<int> get tuning => const [7, 0, 4, 9];
+  List<FrettedTuning> get tunings => FrettedTunings.ukulele;
 
-  /// Root on the C string and its fifth on the G string, two frets apart in
-  /// pitch but on the same fret number.
+  /// Root on the C string and its fifth on the G string (high/low G only).
   @override
   FrettedShape? powerChordShape(int rootSemitone) {
     final fret = ((rootSemitone % 12) + 12) % 12;
@@ -36,7 +38,32 @@ class UkuleleInstrument extends FrettedInstrument {
 
   @override
   Map<String, List<MovableShape>> get movableShapes => _movableShapes;
+
+  @override
+  ({FrettedShape shape, bool approximate})? resolveShape(
+    ParsedChord chord, {
+    FrettedTuning? tuning,
+  }) {
+    final active = tuning ?? defaultTuning;
+    if (active.id != FrettedTunings.ukuleleBaritone.id) {
+      return super.resolveShape(chord, tuning: active);
+    }
+
+    // Baritone DGBE ≅ guitar's top four strings.
+    final guitar = _guitar.resolveShape(chord);
+    if (guitar == null) return null;
+    final frets = FrettedInstrument.adaptFrets(guitar.shape.frets, 4);
+    final fingers = FrettedInstrument.adaptOptionalInts(
+      guitar.shape.fingers,
+      4,
+    );
+    return (
+      shape: FrettedShape(frets, fingers: fingers, barre: guitar.shape.barre),
+      approximate: guitar.approximate,
+    );
+  }
 }
+
 
 const Map<String, FrettedShape> _openShapes = {
   'C': FrettedShape([0, 0, 0, 3], fingers: [0, 0, 0, 3]),

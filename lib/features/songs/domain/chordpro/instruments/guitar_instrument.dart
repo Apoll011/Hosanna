@@ -1,7 +1,9 @@
 import 'fretted_instrument.dart';
 
-/// Standard 6-string guitar in EADGBE tuning (low E → high E), strings
-/// ordered low-E first to match the diagram.
+/// Guitar chord library with standard / Drop D / 7-string tunings.
+///
+/// Shapes are authored for 6 strings (EADGBE). Drop D reuses them with a
+/// lowered open 6th; 7-string pads a muted low B on the bass side.
 class GuitarInstrument extends FrettedInstrument {
   const GuitarInstrument();
 
@@ -11,11 +13,11 @@ class GuitarInstrument extends FrettedInstrument {
   @override
   String get label => 'Guitar';
 
-  /// Low E, A, D, G, B, high E.
   @override
-  List<int> get tuning => const [4, 9, 2, 7, 11, 4];
+  List<FrettedTuning> get tunings => FrettedTunings.guitar;
 
-  /// Power chords use the root, fifth and octave on the two lowest strings.
+  /// Power chords use the root, fifth and octave on the two lowest strings
+  /// of the 6-string shape (then adapted for 7-string).
   @override
   FrettedShape? powerChordShape(int rootSemitone) {
     final shift = ((rootSemitone - 4) % 12 + 12) % 12;

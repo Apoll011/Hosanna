@@ -1109,11 +1109,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get instrumentFamilyFretted => 'Fretted';
+
+  @override
+  String get instrumentFamilyKeyboard => 'Keyboard';
+
+  @override
   String get settingsInstrumentConfig => 'Instrument settings';
 
   @override
   String get settingsInstrumentConfigDesc =>
       'Options for the selected instrument — used when rendering chord diagrams.';
+
+  @override
+  String get settingsTuning => 'Tuning';
+
+  @override
+  String get settingsTuningDesc =>
+      'Open-string configuration for chord diagrams.';
 
   @override
   String get settingsShowFingerNumbers => 'Show finger numbers';
@@ -1130,6 +1143,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Draw a capo clamp on the nut when a capo is active (CifraClub-style).';
 
   @override
+  String get settingsShowStringLabels => 'Show string names';
+
+  @override
+  String get settingsShowStringLabelsDesc =>
+      'Label each string under the chord diagram (E A D G B e, etc.).';
+
+  @override
   String get settingsPianoCompactVoicing => 'Compact voicings';
 
   @override
@@ -1142,6 +1162,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsPianoSlashSplitDesc =>
       'Play the slash bass with the left hand and the chord with the right (e.g. A/C#).';
+
+  @override
+  String get tuningGuitarStandard => 'Standard';
+
+  @override
+  String get tuningGuitarDropD => 'Drop D';
+
+  @override
+  String get tuningGuitarSevenString => '7-string';
+
+  @override
+  String get tuningUkuleleHighG => 'High G';
+
+  @override
+  String get tuningUkuleleLowG => 'Low G';
+
+  @override
+  String get tuningUkuleleBaritone => 'Baritone';
 
   @override
   String get songAutoScrollStart => 'Start auto-scroll';

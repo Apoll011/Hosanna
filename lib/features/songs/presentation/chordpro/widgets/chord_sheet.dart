@@ -166,6 +166,7 @@ class _ChordSheetState extends State<ChordSheet> {
                           capo: diagramCapo,
                           showFingerNumbers: pref.showFingerNumbers,
                           showCapoMarker: pref.showCapoMarker,
+                          showStringLabels: pref.showStringLabels,
                         )
                       : Padding(
                           padding: const EdgeInsets.all(16),

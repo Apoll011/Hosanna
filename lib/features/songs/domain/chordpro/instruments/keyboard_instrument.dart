@@ -17,6 +17,9 @@ class KeyboardInstrument extends Instrument {
   String get label => 'Piano';
 
   @override
+  InstrumentFamily get family => InstrumentFamily.keyboard;
+
+  @override
   bool get supportsCapo => false;
 
   @override

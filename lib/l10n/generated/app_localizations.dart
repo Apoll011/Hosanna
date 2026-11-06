@@ -2104,6 +2104,18 @@ abstract class AppLocalizations {
   /// **'Piano'**
   String get songPiano;
 
+  /// No description provided for @instrumentFamilyFretted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com trastes'**
+  String get instrumentFamilyFretted;
+
+  /// No description provided for @instrumentFamilyKeyboard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Teclado'**
+  String get instrumentFamilyKeyboard;
+
   /// No description provided for @settingsInstrumentConfig.
   ///
   /// In pt, this message translates to:
@@ -2115,6 +2127,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Opções do instrumento selecionado — usadas ao desenhar os diagramas de acordes.'**
   String get settingsInstrumentConfigDesc;
+
+  /// No description provided for @settingsTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinação'**
+  String get settingsTuning;
+
+  /// No description provided for @settingsTuningDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configuração das cordas abertas para os diagramas.'**
+  String get settingsTuningDesc;
 
   /// No description provided for @settingsShowFingerNumbers.
   ///
@@ -2140,6 +2164,18 @@ abstract class AppLocalizations {
   /// **'Desenha o capo no pestana quando está ativo (estilo CifraClub).'**
   String get settingsShowCapoMarkerDesc;
 
+  /// No description provided for @settingsShowStringLabels.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar nomes das cordas'**
+  String get settingsShowStringLabels;
+
+  /// No description provided for @settingsShowStringLabelsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiqueta cada corda por baixo do diagrama (E A D G B e, etc.).'**
+  String get settingsShowStringLabelsDesc;
+
   /// No description provided for @settingsPianoCompactVoicing.
   ///
   /// In pt, this message translates to:
@@ -2163,6 +2199,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Toca o baixo do acorde com barra na mão esquerda e o acorde na direita (ex.: A/C#).'**
   String get settingsPianoSlashSplitDesc;
+
+  /// No description provided for @tuningGuitarStandard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão'**
+  String get tuningGuitarStandard;
+
+  /// No description provided for @tuningGuitarDropD.
+  ///
+  /// In pt, this message translates to:
+  /// **'Drop D'**
+  String get tuningGuitarDropD;
+
+  /// No description provided for @tuningGuitarSevenString.
+  ///
+  /// In pt, this message translates to:
+  /// **'7 cordas'**
+  String get tuningGuitarSevenString;
+
+  /// No description provided for @tuningUkuleleHighG.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sol agudo'**
+  String get tuningUkuleleHighG;
+
+  /// No description provided for @tuningUkuleleLowG.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sol grave'**
+  String get tuningUkuleleLowG;
+
+  /// No description provided for @tuningUkuleleBaritone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Barítono'**
+  String get tuningUkuleleBaritone;
 
   /// No description provided for @songAutoScrollStart.
   ///

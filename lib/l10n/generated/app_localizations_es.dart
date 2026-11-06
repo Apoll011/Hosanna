@@ -1112,11 +1112,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songPiano => 'Piano';
 
   @override
+  String get instrumentFamilyFretted => 'Con trastes';
+
+  @override
+  String get instrumentFamilyKeyboard => 'Teclado';
+
+  @override
   String get settingsInstrumentConfig => 'Ajustes del instrumento';
 
   @override
   String get settingsInstrumentConfigDesc =>
       'Opciones del instrumento seleccionado — usadas al dibujar los diagramas de acordes.';
+
+  @override
+  String get settingsTuning => 'Afinación';
+
+  @override
+  String get settingsTuningDesc =>
+      'Configuración de las cuerdas al aire para los diagramas.';
 
   @override
   String get settingsShowFingerNumbers => 'Mostrar números de dedos';
@@ -1133,6 +1146,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Dibuja el capo en la cejilla cuando está activo (estilo CifraClub).';
 
   @override
+  String get settingsShowStringLabels => 'Mostrar nombres de cuerdas';
+
+  @override
+  String get settingsShowStringLabelsDesc =>
+      'Etiqueta cada cuerda bajo el diagrama (E A D G B e, etc.).';
+
+  @override
   String get settingsPianoCompactVoicing => 'Voicings compactos';
 
   @override
@@ -1146,6 +1166,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsPianoSlashSplitDesc =>
       'Toca el bajo del acorde con barra en la mano izquierda y el acorde en la derecha (ej.: A/C#).';
+
+  @override
+  String get tuningGuitarStandard => 'Estándar';
+
+  @override
+  String get tuningGuitarDropD => 'Drop D';
+
+  @override
+  String get tuningGuitarSevenString => '7 cuerdas';
+
+  @override
+  String get tuningUkuleleHighG => 'Sol agudo';
+
+  @override
+  String get tuningUkuleleLowG => 'Sol grave';
+
+  @override
+  String get tuningUkuleleBaritone => 'Barítono';
 
   @override
   String get songAutoScrollStart => 'Iniciar desplazamiento automático';
