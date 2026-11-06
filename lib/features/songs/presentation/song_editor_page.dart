@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -341,9 +339,18 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         );
       }
 
-      unawaited(ref.read(syncControllerProvider.notifier).syncAll());
+      // Push/pull so online saves land quickly; offline leaves the row dirty
+      // and surfaces a snackbar so musicians know the edit is on-device only.
+      await ref.read(syncControllerProvider.notifier).syncAll();
 
       if (!mounted) return;
+      final offline =
+          ref.read(syncControllerProvider).status == SyncStatus.offline;
+      if (offline) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.songsSavedOffline)),
+        );
+      }
       context.go('/songs');
       context.push('/songs/${saved.id}');
     } catch (e) {

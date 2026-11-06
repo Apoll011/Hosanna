@@ -441,6 +441,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncNow => 'Sync now';
 
   @override
+  String get songsSavedOffline =>
+      'Saved on this device. Changes will sync when you\'re back online.';
+
+  @override
   String get syncPullToRefresh => 'Pull to sync';
 
   @override

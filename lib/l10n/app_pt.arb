@@ -144,6 +144,7 @@
   "syncLastSynced": "Última sincronização: {time}",
   "syncNever": "Nunca sincronizado",
   "syncNow": "Sincronizar agora",
+  "songsSavedOffline": "Guardado neste dispositivo. As alterações sincronizam quando voltares a ter ligação.",
   "syncPullToRefresh": "Puxe para sincronizar",
   "navSongs": "Cânticos",
   "navServices": "Cultos",

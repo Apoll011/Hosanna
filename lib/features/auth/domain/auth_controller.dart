@@ -99,13 +99,21 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> checkSession() async {
     final cached = await _store.readSession();
     final cachedToken = await _store.readToken();
+    final cachedRole = await _store.readMemberRole();
 
     if (cached != null) {
       _tokenStore.update(cachedToken);
+      // Restore RBAC offline: song edit/create gates use [memberRole], and
+      // song writes already persist locally as dirty until sync resumes.
+      final roleForOrg = cachedRole != null &&
+              cachedRole.orgId == cached.organization?.id
+          ? cachedRole.role
+          : null;
       state = AuthState(
         status: AuthStatus.authenticated,
         session: cached,
         organization: cached.organization,
+        memberRole: roleForOrg,
       );
     }
 
@@ -125,7 +133,7 @@ class AuthController extends StateNotifier<AuthState> {
       if (_isAuthRejection(e)) {
         await _clearSession();
       } else if (cached != null) {
-        // Keep the cached (offline) session.
+        // Keep the cached (offline) session + role.
       } else {
         await _clearSession();
       }
@@ -403,10 +411,14 @@ class AuthController extends StateNotifier<AuthState> {
     await _store.writeToken(merged.sessionToken);
     await _store.writeSession(merged);
     final org = merged.organization ?? state.organization;
+    final sameOrg = org?.id != null && org!.id == state.organization?.id;
     state = AuthState(
       status: AuthStatus.authenticated,
       session: merged,
       organization: org,
+      // Keep the last known role until `_resolveOrganization` refreshes it so
+      // a mid-session network blip does not hide edit actions.
+      memberRole: sameOrg ? state.memberRole : null,
       // If we don't know the org yet, the router shows a loading screen until
       // `_resolveOrganization` finishes instead of flashing onboarding.
       resolvingOrganization: org == null,
@@ -437,14 +449,21 @@ class AuthController extends StateNotifier<AuthState> {
           userId: session.user.id,
         );
         await _store.writeSession(merged);
+        if (role != null && role.isNotEmpty) {
+          await _store.writeMemberRole(orgId: org.id, role: role);
+        } else {
+          await _store.clearMemberRole();
+        }
         state = state.copyWith(
           session: merged,
           organization: org,
           memberRole: role,
           resolvingOrganization: false,
+          clearMemberRole: role == null || role.isEmpty,
         );
         await _refreshEntitlement();
       } else {
+        await _store.clearMemberRole();
         state = state.copyWith(
           resolvingOrganization: false,
           clearMemberRole: true,
@@ -452,6 +471,7 @@ class AuthController extends StateNotifier<AuthState> {
       }
     } catch (_) {
       // Non-fatal: sync will surface any missing active-org as a 403.
+      // Keep any previously cached memberRole so offline editing stays available.
       state = state.copyWith(resolvingOrganization: false);
     }
   }

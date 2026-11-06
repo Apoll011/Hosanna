@@ -136,6 +136,7 @@
   "syncLastSynced": "Last synced: {time}",
   "syncNever": "Never synced",
   "syncNow": "Sync now",
+  "songsSavedOffline": "Saved on this device. Changes will sync when you're back online.",
   "syncPullToRefresh": "Pull to sync",
   "navSongs": "Songs",
   "navServices": "Services",

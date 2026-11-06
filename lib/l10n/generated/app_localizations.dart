@@ -880,6 +880,12 @@ abstract class AppLocalizations {
   /// **'Sincronizar agora'**
   String get syncNow;
 
+  /// No description provided for @songsSavedOffline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardado neste dispositivo. As alterações sincronizam quando voltares a ter ligação.'**
+  String get songsSavedOffline;
+
   /// No description provided for @syncPullToRefresh.
   ///
   /// In pt, this message translates to:

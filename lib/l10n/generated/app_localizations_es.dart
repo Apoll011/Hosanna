@@ -445,6 +445,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get syncNow => 'Sincronizar ahora';
 
   @override
+  String get songsSavedOffline =>
+      'Guardado en este dispositivo. Los cambios se sincronizarán cuando vuelvas a tener conexión.';
+
+  @override
   String get syncPullToRefresh => 'Desliza para sincronizar';
 
   @override
