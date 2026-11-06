@@ -8,6 +8,7 @@ import '../../domain/chordpro/instruments/instruments.dart';
 extension InstrumentVisuals on Instrument {
   IconData get icon => switch (id) {
         'guitar' => Icons.music_note_rounded,
+        'bass' => Icons.queue_music_rounded,
         'ukulele' => Icons.nightlife_rounded,
         'piano' => Icons.piano,
         _ => Icons.music_note_outlined,
@@ -15,6 +16,7 @@ extension InstrumentVisuals on Instrument {
 
   String localizedLabel(AppLocalizations l10n) => switch (id) {
         'guitar' => l10n.songGuitar,
+        'bass' => l10n.songBass,
         'ukulele' => l10n.songUkulele,
         'piano' => l10n.songPiano,
         _ => label,
@@ -26,6 +28,7 @@ extension FrettedTuningVisuals on FrettedTuning {
         'standard' => l10n.tuningGuitarStandard,
         'drop_d' => l10n.tuningGuitarDropD,
         'seven_string' => l10n.tuningGuitarSevenString,
+        'five_string' => l10n.tuningBassFiveString,
         'high_g' => l10n.tuningUkuleleHighG,
         'low_g' => l10n.tuningUkuleleLowG,
         'baritone' => l10n.tuningUkuleleBaritone,

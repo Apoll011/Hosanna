@@ -11,11 +11,13 @@
 ///    already handled.
 library;
 
+import 'bass_instrument.dart';
 import 'guitar_instrument.dart';
 import 'instrument.dart';
 import 'keyboard_instrument.dart';
 import 'ukulele_instrument.dart';
 
+export 'bass_instrument.dart';
 export 'fretted_instrument.dart';
 export 'fretted_tuning.dart';
 export 'guitar_instrument.dart';
@@ -27,6 +29,7 @@ export 'ukulele_instrument.dart';
 /// Every instrument available to the app, in display order.
 const List<Instrument> defaultInstruments = [
   GuitarInstrument(),
+  BassInstrument(),
   UkuleleInstrument(),
   KeyboardInstrument(),
 ];

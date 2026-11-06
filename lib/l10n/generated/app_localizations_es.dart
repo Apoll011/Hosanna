@@ -347,6 +347,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setupFocusGuitar => 'Guitarra';
 
   @override
+  String get setupFocusBass => 'Bajo';
+
+  @override
   String get setupFocusUkulele => 'Ukelele';
 
   @override
@@ -1106,6 +1109,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songGuitar => 'Guitarra';
 
   @override
+  String get songBass => 'Bajo';
+
+  @override
   String get songUkulele => 'Ukelele';
 
   @override
@@ -1153,6 +1159,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Etiqueta cada cuerda bajo el diagrama (E A D G B e, etc.).';
 
   @override
+  String get settingsBassRootNotes => 'Solo notas fundamentales';
+
+  @override
+  String get settingsBassRootNotesDesc =>
+      'Muestra una sola nota (tónica o bajo del acorde con barra) en lugar de formas completas.';
+
+  @override
   String get settingsPianoCompactVoicing => 'Voicings compactos';
 
   @override
@@ -1175,6 +1188,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tuningGuitarSevenString => '7 cuerdas';
+
+  @override
+  String get tuningBassFiveString => '5 cuerdas';
 
   @override
   String get tuningUkuleleHighG => 'Sol agudo';

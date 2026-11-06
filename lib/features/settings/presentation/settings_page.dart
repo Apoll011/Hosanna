@@ -1178,6 +1178,20 @@ class _InstrumentSettingsCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
+            if (instrumentId == 'bass') ...[
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsBassRootNotes),
+                subtitle: Text(l10n.settingsBassRootNotesDesc),
+                value: preference.bassVoicingStyle == BassVoicingStyle.roots,
+                onChanged: (v) => onChanged(
+                  preference.copyWith(
+                    bassVoicingStyle:
+                        v ? BassVoicingStyle.roots : BassVoicingStyle.chords,
+                  ),
+                ),
+              ),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.settingsShowFingerNumbers),
@@ -1186,14 +1200,15 @@ class _InstrumentSettingsCard extends StatelessWidget {
               onChanged: (v) =>
                   onChanged(preference.copyWith(showFingerNumbers: v)),
             ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.settingsShowCapoMarker),
-              subtitle: Text(l10n.settingsShowCapoMarkerDesc),
-              value: preference.showCapoMarker,
-              onChanged: (v) =>
-                  onChanged(preference.copyWith(showCapoMarker: v)),
-            ),
+            if (instrument.supportsCapo)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsShowCapoMarker),
+                subtitle: Text(l10n.settingsShowCapoMarkerDesc),
+                value: preference.showCapoMarker,
+                onChanged: (v) =>
+                    onChanged(preference.copyWith(showCapoMarker: v)),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.settingsShowStringLabels),

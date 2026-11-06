@@ -34,6 +34,8 @@ abstract final class HosannaIllustrations {
       '$_base/setup_instrument_guitar.png';
   static const String setupInstrumentUkulele =
       '$_base/setup_instrument_ukulele.png';
+  static const String setupInstrumentBass =
+      '$_base/setup_instrument_bass.png';
   static const String setupInstrumentPiano =
       '$_base/setup_instrument_piano.png';
   static const String setupInstrumentVocals =

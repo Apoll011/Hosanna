@@ -706,6 +706,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get setupFocusGuitar;
 
+  /// No description provided for @setupFocusBass.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixo'**
+  String get setupFocusBass;
+
   /// No description provided for @setupFocusUkulele.
   ///
   /// In pt, this message translates to:
@@ -2092,6 +2098,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get songGuitar;
 
+  /// No description provided for @songBass.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixo'**
+  String get songBass;
+
   /// No description provided for @songUkulele.
   ///
   /// In pt, this message translates to:
@@ -2176,6 +2188,18 @@ abstract class AppLocalizations {
   /// **'Etiqueta cada corda por baixo do diagrama (E A D G B e, etc.).'**
   String get settingsShowStringLabelsDesc;
 
+  /// No description provided for @settingsBassRootNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só notas fundamentais'**
+  String get settingsBassRootNotes;
+
+  /// No description provided for @settingsBassRootNotesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostra uma única nota (tónica ou baixo do acorde com barra) em vez de formas completas.'**
+  String get settingsBassRootNotesDesc;
+
   /// No description provided for @settingsPianoCompactVoicing.
   ///
   /// In pt, this message translates to:
@@ -2217,6 +2241,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'7 cordas'**
   String get tuningGuitarSevenString;
+
+  /// No description provided for @tuningBassFiveString.
+  ///
+  /// In pt, this message translates to:
+  /// **'5 cordas'**
+  String get tuningBassFiveString;
 
   /// No description provided for @tuningUkuleleHighG.
   ///

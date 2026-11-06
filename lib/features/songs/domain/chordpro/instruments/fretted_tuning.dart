@@ -92,4 +92,36 @@ abstract final class FrettedTunings {
     ukuleleLowG,
     ukuleleBaritone,
   ];
+
+  // ── Bass guitar ─────────────────────────────────────────────────────────
+
+  /// Standard 4-string E₁ A₁ D₂ G₂ (same pitch classes as guitar's low four).
+  static const bassStandard = FrettedTuning(
+    id: 'standard',
+    label: 'Standard',
+    openPitches: [4, 9, 2, 7],
+    stringNames: ['E', 'A', 'D', 'G'],
+  );
+
+  /// Drop D — low string down a whole step (D A D G).
+  static const bassDropD = FrettedTuning(
+    id: 'drop_d',
+    label: 'Drop D',
+    openPitches: [2, 9, 2, 7],
+    stringNames: ['D', 'A', 'D', 'G'],
+  );
+
+  /// Standard 5-string (B₀ + EADG). Shapes are 4-string with a muted low B.
+  static const bassFiveString = FrettedTuning(
+    id: 'five_string',
+    label: '5-string',
+    openPitches: [11, 4, 9, 2, 7],
+    stringNames: ['B', 'E', 'A', 'D', 'G'],
+  );
+
+  static const List<FrettedTuning> bass = [
+    bassStandard,
+    bassDropD,
+    bassFiveString,
+  ];
 }

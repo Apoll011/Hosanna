@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../domain/chordpro/instruments/instruments.dart';
 import '../domain/chordpro/parser.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
@@ -193,37 +192,6 @@ class SongControlsSheet extends ConsumerWidget {
               InstrumentSelector(
                 selected: settings.instrument,
                 onChanged: controller.setInstrument,
-              ),
-              Builder(
-                builder: (context) {
-                  final instrument = settings.instrumentInfo;
-                  if (instrument is! FrettedInstrument) {
-                    return const SizedBox.shrink();
-                  }
-                  if (instrument.tunings.length <= 1) {
-                    return const SizedBox.shrink();
-                  }
-                  final pref = settings.currentInstrumentPreference;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _SectionTitle(label: l10n.settingsTuning, value: ''),
-                        FrettedTuningSelector(
-                          tunings: instrument.tunings,
-                          selectedId:
-                              pref.tuningId ?? instrument.defaultTuning.id,
-                          onChanged: (id) =>
-                              controller.updateInstrumentPreference(
-                            settings.instrument,
-                            pref.copyWith(tuningId: id),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
               ),
             ],
           ],

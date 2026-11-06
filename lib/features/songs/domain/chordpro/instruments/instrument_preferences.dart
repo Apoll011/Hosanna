@@ -13,6 +13,15 @@ enum PianoVoicingStyle {
   compact,
 }
 
+/// How bass diagrams present a chord symbol.
+enum BassVoicingStyle {
+  /// Full fretted chord shapes (adapted from the low four guitar strings).
+  chords,
+
+  /// Single-note diagrams: just the chord root (or slash bass).
+  roots,
+}
+
 /// Per-instrument preferences that affect voicing and diagram rendering.
 ///
 /// Each instrument id has its own bag of settings so guitar, ukulele and piano
@@ -25,6 +34,7 @@ class InstrumentPreference {
     this.tuningId,
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
+    this.bassVoicingStyle = BassVoicingStyle.chords,
   });
 
   /// Fretted: paint 1–4 inside the fretting dots.
@@ -46,6 +56,9 @@ class InstrumentPreference {
   /// the right hand (upper octave). Fixes crowded A/C#-style diagrams.
   final bool pianoSlashSplitHands;
 
+  /// Bass: full chord shapes vs single-note root diagrams.
+  final BassVoicingStyle bassVoicingStyle;
+
   static const defaults = InstrumentPreference();
 
   InstrumentPreference copyWith({
@@ -56,6 +69,7 @@ class InstrumentPreference {
     bool clearTuningId = false,
     PianoVoicingStyle? pianoVoicingStyle,
     bool? pianoSlashSplitHands,
+    BassVoicingStyle? bassVoicingStyle,
   }) {
     return InstrumentPreference(
       showFingerNumbers: showFingerNumbers ?? this.showFingerNumbers,
@@ -64,6 +78,7 @@ class InstrumentPreference {
       tuningId: clearTuningId ? null : (tuningId ?? this.tuningId),
       pianoVoicingStyle: pianoVoicingStyle ?? this.pianoVoicingStyle,
       pianoSlashSplitHands: pianoSlashSplitHands ?? this.pianoSlashSplitHands,
+      bassVoicingStyle: bassVoicingStyle ?? this.bassVoicingStyle,
     );
   }
 
@@ -74,6 +89,7 @@ class InstrumentPreference {
         if (tuningId != null) 'tuningId': tuningId,
         'pianoVoicingStyle': pianoVoicingStyle.name,
         'pianoSlashSplitHands': pianoSlashSplitHands,
+        'bassVoicingStyle': bassVoicingStyle.name,
       };
 
   factory InstrumentPreference.fromJson(Map<String, dynamic>? json) {
@@ -83,6 +99,11 @@ class InstrumentPreference {
       (s) => s.name == styleName,
       orElse: () => PianoVoicingStyle.full,
     );
+    final bassStyleName = json['bassVoicingStyle'] as String?;
+    final bassStyle = BassVoicingStyle.values.firstWhere(
+      (s) => s.name == bassStyleName,
+      orElse: () => BassVoicingStyle.chords,
+    );
     final tuning = json['tuningId'];
     return InstrumentPreference(
       showFingerNumbers: json['showFingerNumbers'] as bool? ?? true,
@@ -91,6 +112,7 @@ class InstrumentPreference {
       tuningId: tuning is String && tuning.isNotEmpty ? tuning : null,
       pianoVoicingStyle: style,
       pianoSlashSplitHands: json['pianoSlashSplitHands'] as bool? ?? true,
+      bassVoicingStyle: bassStyle,
     );
   }
 }
@@ -134,6 +156,7 @@ class InstrumentFingeringOptions {
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
     this.tuningId,
+    this.bassVoicingStyle = BassVoicingStyle.chords,
   });
 
   final PianoVoicingStyle pianoVoicingStyle;
@@ -142,11 +165,15 @@ class InstrumentFingeringOptions {
   /// Fretted tuning id; null uses the instrument default.
   final String? tuningId;
 
+  /// Bass: full chords vs single-note roots.
+  final BassVoicingStyle bassVoicingStyle;
+
   factory InstrumentFingeringOptions.fromPreference(InstrumentPreference p) {
     return InstrumentFingeringOptions(
       pianoVoicingStyle: p.pianoVoicingStyle,
       pianoSlashSplitHands: p.pianoSlashSplitHands,
       tuningId: p.tuningId,
+      bassVoicingStyle: p.bassVoicingStyle,
     );
   }
 
