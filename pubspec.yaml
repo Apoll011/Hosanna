@@ -1,5 +1,5 @@
 name: hosanna
-description: "Hosanna musician app (Flutter)."
+description: "Hosanna — ChordPro songbook and worship planning app for church musicians (transpose, metronome, auto-scroll, PDF, offline sync)."
 publish_to: "none"
 
 version: 2.4.0
