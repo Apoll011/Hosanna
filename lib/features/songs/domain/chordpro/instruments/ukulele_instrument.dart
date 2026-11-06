@@ -40,7 +40,7 @@ class UkuleleInstrument extends FrettedInstrument {
   Map<String, List<MovableShape>> get movableShapes => _movableShapes;
 
   @override
-  ({FrettedShape shape, bool approximate})? resolveShape(
+  FrettedShapeHit? resolveShape(
     ParsedChord chord, {
     FrettedTuning? tuning,
   }) {
@@ -49,7 +49,7 @@ class UkuleleInstrument extends FrettedInstrument {
       return super.resolveShape(chord, tuning: active);
     }
 
-    // Baritone DGBE ≅ guitar's top four strings.
+    // Baritone DGBE ≅ guitar's top four strings (already in baritone pitch space).
     final guitar = _guitar.resolveShape(chord);
     if (guitar == null) return null;
     final frets = FrettedInstrument.adaptFrets(guitar.shape.frets, 4);
@@ -60,6 +60,7 @@ class UkuleleInstrument extends FrettedInstrument {
     return (
       shape: FrettedShape(frets, fingers: fingers, barre: guitar.shape.barre),
       approximate: guitar.approximate,
+      reference: FrettedTunings.ukuleleBaritone,
     );
   }
 }

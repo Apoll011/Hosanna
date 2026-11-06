@@ -56,15 +56,17 @@ class BassInstrument extends FrettedInstrument {
   }
 
   @override
-  ({FrettedShape shape, bool approximate})? resolveShape(
+  FrettedShapeHit? resolveShape(
     ParsedChord chord, {
     FrettedTuning? tuning,
   }) {
     final guitar = _guitar.resolveShape(chord);
     if (guitar == null) return null;
+    // Low-four guitar strings are EADG — same pitch classes as bass standard.
     return (
       shape: _trimToBass(guitar.shape),
       approximate: guitar.approximate,
+      reference: defaultTuning,
     );
   }
 

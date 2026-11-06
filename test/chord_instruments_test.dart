@@ -182,8 +182,102 @@ void main() {
           expect(fingering.stringNames, tuning.stringNames);
           expect(fingering.tuningId, tuning.id);
         });
+
+        test('${instrument.id}/${tuning.id}: sounding notes stay in-chord', () {
+          for (final symbol in _chords) {
+            final parsed = parseChordSymbol(symbol)!;
+            final fingering = instrument.fingering(
+              parsed,
+              options: InstrumentFingeringOptions(tuningId: tuning.id),
+            );
+            expect(
+              fingering,
+              isA<FrettedFingering>(),
+              reason: '${instrument.id}/${tuning.id} missing $symbol',
+            );
+            final fretted = fingering! as FrettedFingering;
+            final expected = _expectedPitchClasses(parsed);
+            final sounded = _soundedPitchClasses(fretted, tuning.openPitches);
+            expect(
+              sounded.difference(expected),
+              isEmpty,
+              reason:
+                  '$symbol on ${instrument.id}/${tuning.id} sounds foreign '
+                  '${sounded.difference(expected)} frets=${fretted.frets}',
+            );
+            expect(
+              sounded.contains(pitchClass(parsed.rootSemitone)),
+              isTrue,
+              reason: '$symbol on ${instrument.id}/${tuning.id} omits root',
+            );
+          }
+        });
       }
     }
+  });
+
+  group('tuning retarget math', () {
+    test('Drop D Em frets the low string at 2 to keep E', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('Em')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets, [2, 2, 2, 0, 0, 0]);
+      expect(
+        _soundedPitchClasses(fingering, FrettedTunings.guitarDropD.openPitches),
+        containsAll(<int>{4, 7, 11}), // E G B
+      );
+    });
+
+    test('Drop D D5 becomes an open power chord', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('D5')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets.take(3), [0, 0, 0]);
+      expect(
+        _soundedPitchClasses(fingering, FrettedTunings.guitarDropD.openPitches),
+        containsAll(<int>{2, 9}), // D A
+      );
+    });
+
+    test('Drop D promotes open D on a D major shape', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('D')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets.first, 0);
+      expect(fingering.notes, contains('D'));
+    });
+
+    test('bass Drop D retunes Em root string', () {
+      final bass = instrumentRegistry.resolve('bass') as FrettedInstrument;
+      final standard = bass.fingering(parseChordSymbol('Em')!) as FrettedFingering;
+      final drop = bass.fingering(
+        parseChordSymbol('Em')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(standard.frets.first, 0);
+      expect(drop.frets.first, 2);
+      expect(
+        _soundedPitchClasses(drop, FrettedTunings.bassDropD.openPitches),
+        contains(4), // E
+      );
+    });
+
+    test('retuneFrets preserves pitch classes across Drop D', () {
+      // Standard Em open shape.
+      final frets = [0, 2, 2, 0, 0, 0];
+      final retuned = FrettedInstrument.retuneFrets(
+        frets,
+        FrettedTunings.guitarStandard.openPitches,
+        FrettedTunings.guitarDropD.openPitches,
+      );
+      expect(retuned, [2, 2, 2, 0, 0, 0]);
+    });
   });
 
   group('keyboard voicings', () {

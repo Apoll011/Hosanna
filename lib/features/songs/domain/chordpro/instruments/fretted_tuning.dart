@@ -1,9 +1,9 @@
 /// A named open-string configuration for a fretted instrument.
 ///
-/// Tunings share the instrument's shape library when their [stringCount]
-/// matches the authored shapes; longer tunings (e.g. 7-string) mute the
-/// extra bass string(s), shorter ones (e.g. baritone from 6-string source)
-/// keep the treble side.
+/// Shapes are authored for an instrument's default tuning; [FrettedInstrument]
+/// retargets frets by pitch class when another tuning is selected (Drop D,
+/// 5/7-string, etc.). Extra bass strings are muted; shorter tunings keep the
+/// treble side (baritone) unless the instrument trims the bass side itself.
 class FrettedTuning {
   const FrettedTuning({
     required this.id,
