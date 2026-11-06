@@ -16,14 +16,13 @@ const double kTabletBreakpoint = 750;
 
 /// Branches that hide the floating bottom nav bar.
 ///
-/// The bar only ever links to the Songs and Services branches, so on the tools
-/// (metronome, circle of fifths) and Settings it would just cover content
-/// without showing a selected destination. Those branches are reached through
-/// the drawer/sidebar instead.
+/// The bar only ever links to Songs and Services. Folders keeps it visible so
+/// musicians can jump back to those hubs; tools (metronome, circle of fifths),
+/// Settings, and Agenda hide it so it does not cover content without a selected
+/// destination. Those branches are reached through the drawer/sidebar instead.
 const Set<int> kBranchesWithoutNavBar = {
   kMetronomeBranch,
   kCircleOfFifthsBranch,
-  kFoldersBranch,
   kSettingsBranch,
   kAgendaBranch,
 };
