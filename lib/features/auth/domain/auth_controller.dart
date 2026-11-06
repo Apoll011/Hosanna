@@ -94,6 +94,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   StreamSubscription<String>? _fcmSubscription;
 
+  /// Bumped on every [switchOrganization] so a slow resolve from switch A
+  /// cannot overwrite state after the user already moved to org B.
+  int _orgSwitchEpoch = 0;
+
   /// Restores a persisted session on launch, then verifies it against the
   /// server (falling back to the cached session on network errors).
   Future<void> checkSession() async {
@@ -371,12 +375,20 @@ class AuthController extends StateNotifier<AuthState> {
       _repository.listOrganizations();
 
   /// Switches the active organization and re-resolves it locally.
+  ///
+  /// Rapid successive calls are serialized by [_orgSwitchEpoch]: only the
+  /// latest switch applies [AuthState.organization] / member role.
   Future<void> switchOrganization(String slug) async {
+    final epoch = ++_orgSwitchEpoch;
+    state = state.copyWith(resolvingOrganization: true);
     await _repository.setActiveOrganization(slug);
+    if (epoch != _orgSwitchEpoch) return;
     final session = state.session;
-    if (session != null) {
-      await _resolveOrganization(session);
+    if (session == null) {
+      state = state.copyWith(resolvingOrganization: false);
+      return;
     }
+    await _resolveOrganization(session, switchEpoch: epoch);
   }
 
   Future<void> _refreshEntitlement() async {
@@ -425,14 +437,24 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
-  Future<void> _resolveOrganization(AuthSession session) async {
+  Future<void> _resolveOrganization(
+    AuthSession session, {
+    int? switchEpoch,
+  }) async {
+    bool isStale() =>
+        switchEpoch != null && switchEpoch != _orgSwitchEpoch;
+
     try {
       var org = await _repository.getFullOrganization();
+      if (isStale()) return;
       if (org == null) {
         final orgs = await _repository.listOrganizations();
+        if (isStale()) return;
         if (orgs.isNotEmpty) {
           await _repository.setActiveOrganization(orgs.first.slug);
+          if (isStale()) return;
           org = await _repository.getFullOrganization();
+          if (isStale()) return;
         }
       }
       if (org != null) {
@@ -448,12 +470,14 @@ class AuthController extends StateNotifier<AuthState> {
         final role = await _repository.resolveMemberRole(
           userId: session.user.id,
         );
+        if (isStale()) return;
         await _store.writeSession(merged);
         if (role != null && role.isNotEmpty) {
           await _store.writeMemberRole(orgId: org.id, role: role);
         } else {
           await _store.clearMemberRole();
         }
+        if (isStale()) return;
         state = state.copyWith(
           session: merged,
           organization: org,
@@ -463,6 +487,7 @@ class AuthController extends StateNotifier<AuthState> {
         );
         await _refreshEntitlement();
       } else {
+        if (isStale()) return;
         await _store.clearMemberRole();
         state = state.copyWith(
           resolvingOrganization: false,
@@ -470,6 +495,7 @@ class AuthController extends StateNotifier<AuthState> {
         );
       }
     } catch (_) {
+      if (isStale()) return;
       // Non-fatal: sync will surface any missing active-org as a 403.
       // Keep any previously cached memberRole so offline editing stays available.
       state = state.copyWith(resolvingOrganization: false);

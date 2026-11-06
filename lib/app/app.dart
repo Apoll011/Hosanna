@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/folders/domain/folder_explorer_controller.dart';
 import '../features/notifications/presentation/foreground_notification_listener.dart';
 import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../features/setup/data/setup_controller.dart';
+import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
 import 'providers.dart';
@@ -162,14 +164,19 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     // this stays valid even if the element has since been deactivated.
     //
     // When switching orgs, wipe local rows + checkpoints first so the previous
-    // church's data cannot linger or be pushed to the new tenant.
-    Future.microtask(() {
-      final sync = _container?.read(syncControllerProvider.notifier);
-      if (sync == null) return;
+    // church's data cannot linger or be pushed to the new tenant. Rapid switches
+    // are coalesced inside SyncController (org epoch) — never dropped.
+    Future.microtask(() async {
+      final container = _container;
+      if (container == null) return;
+      final sync = container.read(syncControllerProvider.notifier);
+      // Drop browse context that belonged to the previous tenant.
+      container.read(folderExplorerProvider.notifier).open(null);
+      container.read(libraryControllerProvider.notifier).selectAll();
       if (prevOrg != null) {
-        sync.resetForOrganizationSwitch();
+        await sync.resetForOrganizationSwitch();
       } else {
-        sync.syncAll();
+        await sync.syncAll();
       }
     });
   }

@@ -545,6 +545,11 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
     setState(() => _switching = true);
     try {
       await ref.read(authControllerProvider.notifier).switchOrganization(slug);
+      // Auth listener schedules the wipe+pull on a microtask; flush it, then
+      // wait so rapid taps cannot start another switch on half-migrated data.
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      await ref.read(syncControllerProvider.notifier).waitUntilIdle();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -683,7 +688,9 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                             color: theme.colorScheme.primary,
                           )
                         : const Icon(Icons.circle_outlined),
-                    enabled: !_switching && o.slug != org?.slug,
+                    enabled: !_switching &&
+                        !sync.isSyncing &&
+                        o.slug != org?.slug,
                     onTap: () => _switchOrg(o.slug),
                   ),
               ],
