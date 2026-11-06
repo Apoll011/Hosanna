@@ -84,6 +84,7 @@ class SongControlsSheet extends ConsumerWidget {
                 onInc: () => controller.setTranspose(settings.transpose + 1),
                 onReset: () => controller.setTranspose(0),
                 resetLabel: l10n.songOriginal,
+                resetSelected: settings.transpose == 0,
               ),
               const SizedBox(height: 16),
 
@@ -264,12 +265,16 @@ class _StepperRow extends StatelessWidget {
     required this.onInc,
     required this.onReset,
     required this.resetLabel,
+    this.resetSelected = false,
   });
 
   final VoidCallback onDec;
   final VoidCallback onInc;
   final VoidCallback onReset;
   final String resetLabel;
+
+  /// True when transpose is at the song's written key (0 semitones).
+  final bool resetSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +283,17 @@ class _StepperRow extends StatelessWidget {
       color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: theme.colorScheme.outlineVariant),
+    );
+    final resetDecoration = BoxDecoration(
+      color: resetSelected
+          ? theme.colorScheme.primary
+          : theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: resetSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outlineVariant,
+      ),
     );
     return Row(
       children: [
@@ -294,13 +310,16 @@ class _StepperRow extends StatelessWidget {
             onTap: onReset,
             borderRadius: BorderRadius.circular(16),
             child: Container(
-              decoration: base,
+              decoration: resetDecoration,
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 resetLabel,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: resetSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
