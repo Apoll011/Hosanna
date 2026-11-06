@@ -14,6 +14,8 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
 import '../data/service_repository.dart';
+import 'service_filter_widgets.dart';
+import 'service_filters.dart';
 
 /// Common date formats used for search, so queries like `dd/MM/yyyy`,
 /// `MM-dd-yyyy`, `yyyy.MM.dd`, etc. match however the user types the date.
@@ -45,6 +47,7 @@ class ServiceListPage extends ConsumerStatefulWidget {
 class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   final _search = TextEditingController();
   bool _searchOpen = false;
+  ServiceFilterSettings _filters = const ServiceFilterSettings();
 
   @override
   void dispose() {
@@ -55,10 +58,30 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   Future<void> _refresh() =>
       ref.read(syncControllerProvider.notifier).syncAll();
 
+  void _openFilterSheet() {
+    showServiceFilterSheet(
+      context,
+      initial: _filters,
+      onChanged: (next) => setState(() => _filters = next),
+    );
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _search.clear();
+      _searchOpen = false;
+    });
+  }
+
+  void _resetFilters() {
+    setState(() => _filters = const ServiceFilterSettings());
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final servicesAsync = ref.watch(servicesStreamProvider);
+    final hasQuery = _search.text.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -81,31 +104,41 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
               });
             },
           ),
+          ServiceFilterButton(
+            activeCount: _filters.activeFilterCount,
+            onPressed: _openFilterSheet,
+          ),
         ],
       ),
       body: Column(
         children: [
+          ServiceActiveFilterChips(
+            settings: _filters,
+            onOpenFilters: _openFilterSheet,
+            onReset: _resetFilters,
+          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
               child: switch (servicesAsync) {
                 AsyncValue(hasError: true) => ErrorState(
-                  illustrationAsset: HosannaIllustrations.stateError,
-                  title: l10n.commonError,
-                  description: l10n.commonErrorDesc,
-                  retryLabel: l10n.commonRetry,
-                  onRetry: _refresh,
-                  scrollable: true,
-                ),
+                    illustrationAsset: HosannaIllustrations.stateError,
+                    title: l10n.commonError,
+                    description: l10n.commonErrorDesc,
+                    retryLabel: l10n.commonRetry,
+                    onRetry: _refresh,
+                    scrollable: true,
+                  ),
                 AsyncValue(:final value?) => _ServiceList(
-                  services: _filtered(value),
-                  hasQuery: _search.text.trim().isNotEmpty,
-                  onClearSearch: () {
-                    _search.clear();
-                    setState(() => _searchOpen = false);
-                  },
-                  onRefresh: _refresh,
-                ),
+                    services: _filtered(value),
+                    hasQuery: hasQuery,
+                    hasFilters: !_filters.isDefault,
+                    onClearSearch: _clearSearch,
+                    onClearFilters: () {
+                      if (hasQuery) _clearSearch();
+                      if (!_filters.isDefault) _resetFilters();
+                    },
+                  ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
             ),
@@ -116,21 +149,25 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
   }
 
   List<ServiceRow> _filtered(List<ServiceRow> services) {
-    final q = _search.text.trim().toLowerCase();
-    if (q.isEmpty) return services.where((s) => !s.archived).toList();
     final locale = Localizations.localeOf(context).toString();
     final localizedDateFormat = DateFormat.yMMMd(locale);
-    return services.where((s) {
-      if (s.name.toLowerCase().contains(q)) return true;
-      final date = DateTime.tryParse(s.date);
-      if (date == null) return s.date.toLowerCase().contains(q);
-      if (localizedDateFormat.format(date).toLowerCase().contains(q)) {
-        return true;
-      }
-      return _dateSearchFormats.any(
-        (f) => f.format(date).toLowerCase().contains(q),
-      );
-    }).toList();
+    return applyServiceFilters(
+      services,
+      settings: _filters,
+      query: _search.text,
+      matchesSearch: (s, q) {
+        final needle = q.toLowerCase();
+        if (s.name.toLowerCase().contains(needle)) return true;
+        final date = DateTime.tryParse(s.date);
+        if (date == null) return s.date.toLowerCase().contains(needle);
+        if (localizedDateFormat.format(date).toLowerCase().contains(needle)) {
+          return true;
+        }
+        return _dateSearchFormats.any(
+          (f) => f.format(date).toLowerCase().contains(needle),
+        );
+      },
+    );
   }
 }
 
@@ -138,27 +175,35 @@ class _ServiceList extends StatelessWidget {
   const _ServiceList({
     required this.services,
     required this.hasQuery,
+    required this.hasFilters,
     required this.onClearSearch,
-    required this.onRefresh,
+    required this.onClearFilters,
   });
 
   final List<ServiceRow> services;
   final bool hasQuery;
+  final bool hasFilters;
   final VoidCallback onClearSearch;
-  final Future<void> Function() onRefresh;
+  final VoidCallback onClearFilters;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (services.isEmpty) {
-      if (hasQuery) {
+      if (hasQuery || hasFilters) {
         return EmptyState(
           illustrationAsset: HosannaIllustrations.emptySearch,
           title: l10n.servicesNoResults,
-          description: l10n.servicesNoResultsDesc,
-          primaryLabel: l10n.songsClearSearch,
-          primaryIcon: Icons.search_off_outlined,
-          onPrimary: onClearSearch,
+          description: hasFilters && !hasQuery
+              ? l10n.servicesNoResultsFiltersDesc
+              : l10n.servicesNoResultsDesc,
+          primaryLabel: hasQuery && !hasFilters
+              ? l10n.songsClearSearch
+              : l10n.songsClearFilters,
+          primaryIcon: hasQuery && !hasFilters
+              ? Icons.search_off_outlined
+              : Icons.filter_alt_off_outlined,
+          onPrimary: hasQuery && !hasFilters ? onClearSearch : onClearFilters,
           scrollable: true,
         );
       }
@@ -166,9 +211,6 @@ class _ServiceList extends StatelessWidget {
         illustrationAsset: HosannaIllustrations.emptyServices,
         title: l10n.servicesEmpty,
         description: l10n.servicesEmptyDesc,
-        primaryLabel: l10n.commonRetry,
-        primaryIcon: Icons.sync_rounded,
-        onPrimary: () => onRefresh(),
         scrollable: true,
       );
     }

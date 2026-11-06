@@ -1396,6 +1396,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicesNoResultsDesc => 'Prueba otra búsqueda.';
 
   @override
+  String get servicesNoResultsFiltersDesc =>
+      'Nada coincide con estos filtros. Prueba a limpiarlos.';
+
+  @override
+  String get servicesFilter => 'Filtrar servicios';
+
+  @override
+  String get servicesSortDate => 'Fecha';
+
+  @override
+  String get servicesSortName => 'Nombre';
+
+  @override
+  String get servicesFilterWhen => 'Cuándo';
+
+  @override
+  String get servicesFilterDateAll => 'Todas las fechas';
+
+  @override
+  String get servicesFilterUpcoming => 'Próximos';
+
+  @override
+  String get servicesFilterPast => 'Pasados';
+
+  @override
+  String get servicesFilterToday => 'Hoy';
+
+  @override
+  String get servicesFilterThisWeek => 'Esta semana';
+
+  @override
+  String get servicesFilterThisMonth => 'Este mes';
+
+  @override
+  String get servicesFilterStatus => 'Estado';
+
+  @override
+  String get servicesFilterActive => 'Activos';
+
+  @override
+  String get servicesFilterArchivedOnly => 'Archivados';
+
+  @override
+  String get servicesFilterIncludeArchived => 'Activos + archivados';
+
+  @override
+  String get servicesFilterContent => 'Plan';
+
+  @override
+  String get servicesFilterContentAny => 'Cualquiera';
+
+  @override
+  String get servicesFilterWithSongs => 'Con canciones';
+
+  @override
+  String get servicesFilterWithNotes => 'Con notas';
+
+  @override
+  String get servicesFilterEmptyPlan => 'Plan vacío';
+
+  @override
   String get servicesNextService => 'Próximo servicio';
 
   @override

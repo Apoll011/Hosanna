@@ -2572,6 +2572,126 @@ abstract class AppLocalizations {
   /// **'Experimente outra pesquisa.'**
   String get servicesNoResultsDesc;
 
+  /// No description provided for @servicesNoResultsFiltersDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada corresponde a estes filtros. Experimenta limpá-los.'**
+  String get servicesNoResultsFiltersDesc;
+
+  /// No description provided for @servicesFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar cultos'**
+  String get servicesFilter;
+
+  /// No description provided for @servicesSortDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data'**
+  String get servicesSortDate;
+
+  /// No description provided for @servicesSortName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get servicesSortName;
+
+  /// No description provided for @servicesFilterWhen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando'**
+  String get servicesFilterWhen;
+
+  /// No description provided for @servicesFilterDateAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as datas'**
+  String get servicesFilterDateAll;
+
+  /// No description provided for @servicesFilterUpcoming.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximos'**
+  String get servicesFilterUpcoming;
+
+  /// No description provided for @servicesFilterPast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passados'**
+  String get servicesFilterPast;
+
+  /// No description provided for @servicesFilterToday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje'**
+  String get servicesFilterToday;
+
+  /// No description provided for @servicesFilterThisWeek.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta semana'**
+  String get servicesFilterThisWeek;
+
+  /// No description provided for @servicesFilterThisMonth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este mês'**
+  String get servicesFilterThisMonth;
+
+  /// No description provided for @servicesFilterStatus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estado'**
+  String get servicesFilterStatus;
+
+  /// No description provided for @servicesFilterActive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativos'**
+  String get servicesFilterActive;
+
+  /// No description provided for @servicesFilterArchivedOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivados'**
+  String get servicesFilterArchivedOnly;
+
+  /// No description provided for @servicesFilterIncludeArchived.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativos + arquivados'**
+  String get servicesFilterIncludeArchived;
+
+  /// No description provided for @servicesFilterContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Plano'**
+  String get servicesFilterContent;
+
+  /// No description provided for @servicesFilterContentAny.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qualquer'**
+  String get servicesFilterContentAny;
+
+  /// No description provided for @servicesFilterWithSongs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com músicas'**
+  String get servicesFilterWithSongs;
+
+  /// No description provided for @servicesFilterWithNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com notas'**
+  String get servicesFilterWithNotes;
+
+  /// No description provided for @servicesFilterEmptyPlan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Plano vazio'**
+  String get servicesFilterEmptyPlan;
+
   /// No description provided for @servicesNextService.
   ///
   /// In pt, this message translates to:

@@ -1392,6 +1392,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesNoResultsDesc => 'Try a different search.';
 
   @override
+  String get servicesNoResultsFiltersDesc =>
+      'Nothing matches these filters. Try clearing them.';
+
+  @override
+  String get servicesFilter => 'Filter services';
+
+  @override
+  String get servicesSortDate => 'Date';
+
+  @override
+  String get servicesSortName => 'Name';
+
+  @override
+  String get servicesFilterWhen => 'When';
+
+  @override
+  String get servicesFilterDateAll => 'All dates';
+
+  @override
+  String get servicesFilterUpcoming => 'Upcoming';
+
+  @override
+  String get servicesFilterPast => 'Past';
+
+  @override
+  String get servicesFilterToday => 'Today';
+
+  @override
+  String get servicesFilterThisWeek => 'This week';
+
+  @override
+  String get servicesFilterThisMonth => 'This month';
+
+  @override
+  String get servicesFilterStatus => 'Status';
+
+  @override
+  String get servicesFilterActive => 'Active';
+
+  @override
+  String get servicesFilterArchivedOnly => 'Archived';
+
+  @override
+  String get servicesFilterIncludeArchived => 'Active + archived';
+
+  @override
+  String get servicesFilterContent => 'Plan';
+
+  @override
+  String get servicesFilterContentAny => 'Any';
+
+  @override
+  String get servicesFilterWithSongs => 'Has songs';
+
+  @override
+  String get servicesFilterWithNotes => 'Has notes';
+
+  @override
+  String get servicesFilterEmptyPlan => 'Empty plan';
+
+  @override
   String get servicesNextService => 'Next service';
 
   @override
