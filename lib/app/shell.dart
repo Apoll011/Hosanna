@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
+import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/shell_insets.dart';
 import 'design/tokens.dart';
@@ -16,10 +17,12 @@ const double kTabletBreakpoint = 750;
 
 /// Branches that hide the floating bottom nav bar.
 ///
-/// The bar only ever links to Songs and Services. Folders keeps it visible so
-/// musicians can jump back to those hubs; tools (metronome, circle of fifths),
-/// Settings, and Agenda hide it so it does not cover content without a selected
-/// destination. Those branches are reached through the drawer/sidebar instead.
+/// The bar only ever links to Songs and Services. Folders (and an open
+/// collection, which still lives on the songs branch) keep it visible so
+/// musicians can jump back to those hubs with nothing selected; tools
+/// (metronome, circle of fifths), Settings, and Agenda hide it so it does not
+/// cover content without a selected destination. Those branches are reached
+/// through the drawer/sidebar instead.
 const Set<int> kBranchesWithoutNavBar = {
   kMetronomeBranch,
   kCircleOfFifthsBranch,
@@ -47,6 +50,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final shell = widget.navigationShell;
     if (index < 0 || index >= shell.route.branches.length) return;
     shell.goBranch(index, initialLocation: index == shell.currentIndex);
+  }
+
+  /// Bottom-bar Songs tap: always land on the full library (clears an open
+  /// collection the same way leaving Folders does). Not used for drawer
+  /// collection/favorites navigation, which also calls [_goBranch].
+  void _goSongsHub() {
+    ref.read(libraryControllerProvider.notifier).selectAll();
+    _goBranch(kSongsBranch);
   }
 
   void _syncBranchIndex() {
@@ -94,9 +105,16 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
         label: l10n.navServices,
       ),
     ];
-    final selectedDestination = destinations.indexWhere(
-      (d) => d.branch == currentBranch,
-    );
+    // Collections render inside the songs branch (unlike folders, which have
+    // their own). Treat an open collection like folders: leave Songs
+    // unselected so tapping it returns to the main library.
+    final library = ref.watch(libraryControllerProvider);
+    final viewingCollection = currentBranch == kSongsBranch &&
+        library.section == LibrarySection.collection;
+    final selectedDestination = destinations.indexWhere((d) {
+      if (d.branch == kSongsBranch && viewingCollection) return false;
+      return d.branch == currentBranch;
+    });
     final navAllowed = ref.watch(shellNavVisibleProvider);
     final showNavBar =
         navAllowed && !kBranchesWithoutNavBar.contains(currentBranch);
@@ -173,8 +191,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
                             alignment: Alignment.bottomCenter,
                             child: _FloatingNavBar(
                               selectedIndex: selectedDestination,
-                              onSelected: (index) =>
-                                  _goBranch(destinations[index].branch),
+                              onSelected: (index) {
+                                final branch = destinations[index].branch;
+                                if (branch == kSongsBranch) {
+                                  _goSongsHub();
+                                } else {
+                                  _goBranch(branch);
+                                }
+                              },
                               destinations: destinations,
                             ),
                           ),
@@ -198,8 +222,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
           bottomNavigationBar: showNavBar
               ? _FloatingNavBar(
                   selectedIndex: selectedDestination,
-                  onSelected: (index) =>
-                      _goBranch(destinations[index].branch),
+                  onSelected: (index) {
+                    final branch = destinations[index].branch;
+                    if (branch == kSongsBranch) {
+                      _goSongsHub();
+                    } else {
+                      _goBranch(branch);
+                    }
+                  },
                   destinations: destinations,
                 )
               : null,
