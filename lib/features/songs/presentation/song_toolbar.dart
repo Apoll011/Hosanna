@@ -226,29 +226,6 @@ class SongControlsSheet extends ConsumerWidget {
                 },
               ),
             ],
-
-            // Variant switcher — shown inside the sheet as well.
-            Builder(
-              builder: (context) {
-                final doc = ref.watch(songCurrentDocumentProvider);
-                if (doc == null || doc.variants.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                final all = [doc.defaultVersion, ...doc.variants];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Divider(height: 24),
-                    _SectionTitle(label: l10n.songVariant, value: ''),
-                    _VariantSelector(
-                      versions: all,
-                      selectedId: settings.variantId,
-                      onSelected: controller.setVariantId,
-                    ),
-                  ],
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -461,62 +438,6 @@ class _CapoChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ── Variant selector ─────────────────────────────────────────────────────────
-
-/// Chip-based (or dropdown) selector for ChordPro song variants.
-/// Shown inside [SongControlsSheet] when the current document has variants.
-class _VariantSelector extends StatelessWidget {
-  const _VariantSelector({
-    required this.versions,
-    required this.selectedId,
-    required this.onSelected,
-  });
-
-  final List<ChordProVersion> versions;
-  final String selectedId;
-  final void Function(String id) onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Use chips for ≤6 versions, dropdown for larger sets
-    if (versions.length <= 6) {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final version in versions)
-            _CapoChip(
-              label: version.name,
-              selected: selectedId == version.id,
-              onTap: () => onSelected(version.id),
-              theme: theme,
-            ),
-        ],
-      );
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: selectedId,
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
-        ),
-      ),
-      items: [
-        for (final version in versions)
-          DropdownMenuItem(value: version.id, child: Text(version.name)),
-      ],
-      onChanged: (id) {
-        if (id != null) onSelected(id);
-      },
     );
   }
 }
