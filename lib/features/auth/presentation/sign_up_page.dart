@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/hosanna_logo.dart';
 import '../domain/auth_controller.dart';
+import 'auth_scaffold.dart';
 import 'auth_ui_utils.dart';
 import 'social_sign_in_button.dart';
 
@@ -25,7 +25,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   String? _error;
   bool _obscure = true;
 
-  /// True while any account creation (email or social) is running.
   bool get _busy => _loading || _socialBusy;
 
   @override
@@ -84,122 +83,82 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const HosannaLogo(size: 72),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.authSignUpTitle,
-                    style: theme.textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.authSignUpSubtitle,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  if (_error != null) ...[
-                    AuthErrorBanner(message: _error!),
-                    const SizedBox(height: 16),
-                  ],
-                  TextField(
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.name],
-                    decoration: InputDecoration(
-                      labelText: l10n.authName,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    decoration: InputDecoration(
-                      labelText: l10n.authEmail,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _password,
-                    obscureText: _obscure,
-                    autofillHints: const [AutofillHints.newPassword],
-                    decoration: InputDecoration(
-                      labelText: l10n.authPassword,
-                      helperText: l10n.authPasswordMinLength,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscure
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _confirm,
-                    obscureText: _obscure,
-                    decoration: InputDecoration(
-                      labelText: l10n.authConfirmPassword,
-                      border: const OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _busy ? null : _submit,
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.authSignUpButton),
-                  ),
-                  // Same widget — and therefore the same Better Auth flow — as
-                  // the sign-in screen: the server decides whether the Google
-                  // identity is a new or an existing account.
-                  SocialSignInSection(
-                    enabled: !_loading,
-                    onBusyChanged: (busy) =>
-                        setState(() => _socialBusy = busy),
-                    onError: (message) => setState(() => _error = message),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Flexible so a long label or a large text scale wraps
-                      // instead of overflowing the row.
-                      Flexible(child: Text(l10n.authHaveAccount)),
-                      TextButton(
-                        onPressed: () => context.pop(),
-                        child: Text(l10n.authSignIn),
-                      ),
-                    ],
-                  ),
-                ],
+    return AuthScaffold(
+      title: l10n.authSignUpTitle,
+      subtitle: l10n.authSignUpSubtitle,
+      heroAsset: AuthHeroes.signUp,
+      heroFallbackIcon: Icons.person_add_alt_1_rounded,
+      footer: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(l10n.authHaveAccount),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(l10n.authSignIn),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+            AuthErrorBanner(message: _error!),
+            const SizedBox(height: 16),
+          ],
+          TextField(
+            controller: _name,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.name],
+            decoration: InputDecoration(labelText: l10n.authName),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
+            decoration: InputDecoration(labelText: l10n.authEmail),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _password,
+            obscureText: _obscure,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.newPassword],
+            decoration: InputDecoration(
+              labelText: l10n.authPassword,
+              helperText: l10n.authPasswordMinLength,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _confirm,
+            obscureText: _obscure,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(labelText: l10n.authConfirmPassword),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 20),
+          AuthPrimaryButton(
+            label: l10n.authSignUpButton,
+            loading: _loading,
+            onPressed: _busy ? null : _submit,
+          ),
+          SocialSignInSection(
+            enabled: !_loading,
+            onBusyChanged: (busy) => setState(() => _socialBusy = busy),
+            onError: (message) => setState(() => _error = message),
+          ),
+        ],
       ),
     );
   }

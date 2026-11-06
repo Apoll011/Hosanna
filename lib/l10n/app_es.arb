@@ -91,6 +91,46 @@
   "onboardingRole": "Rol",
   "onboardingLoadingInvites": "Cargando invitaciones…",
   "onboardingSignOut": "Cerrar Sesión",
+  "setupWelcomeTitle": "Configuremos Hosanna",
+  "setupWelcomeSubtitle": "Unas pocas opciones para que canciones y servicios se sientan bien según cómo sirves.",
+  "setupWelcomeCta": "Empezar",
+  "setupRoleTitle": "¿Cómo usas Hosanna?",
+  "setupRoleSubtitle": "Abriremos los servicios según tu rol. Puedes cambiarlo después en Ajustes.",
+  "setupRoleMusician": "Músico",
+  "setupRoleMusicianDesc": "Entra directo a las canciones con acordes, cejilla y diagramas.",
+  "setupRoleLeader": "Líder",
+  "setupRoleLeaderDesc": "Empieza por el orden del servicio y las notas del momento.",
+  "setupFocusTitle": "¿Qué tocas?",
+  "setupFocusSubtitle": "Esto define el instrumento predeterminado para los diagramas de acordes.",
+  "setupFocusGuitar": "Guitarra",
+  "setupFocusUkulele": "Ukelele",
+  "setupFocusPiano": "Piano / teclas",
+  "setupFocusVocals": "Voz",
+  "setupFocusVocalsDesc": "Letra primero — los acordes siguen disponibles cuando los necesites.",
+  "setupLeaderFocusTitle": "Cuando abres una canción…",
+  "setupLeaderFocusSubtitle": "Opcional — elige un instrumento para las cifras al revisar canciones.",
+  "setupPrefsTitle": "Ajustes listos para el escenario",
+  "setupPrefsSubtitle": "Opciones útiles para ensayos y culto en vivo.",
+  "setupPrefDiagrams": "Mostrar diagramas de acordes",
+  "setupPrefDiagramsDesc": "Digitaciones encima de la canción cuando estén disponibles.",
+  "setupPrefAwake": "Mantener la pantalla encendida",
+  "setupPrefAwakeDesc": "No oscurecer durante una canción o servicio.",
+  "setupLanguageTitle": "Idioma",
+  "setupLanguageSubtitle": "Elige el idioma de menús y etiquetas.",
+  "setupLanguageSystem": "Igual que el dispositivo",
+  "setupDoneTitle": "Listo",
+  "setupDoneSubtitle": "Hosanna está configurado para ti. Entra en tu biblioteca cuando quieras.",
+  "setupDoneCta": "Entrar a Hosanna",
+  "setupSkip": "Omitir por ahora",
+  "setupStepOf": "Paso {current} de {total}",
+  "@setupStepOf": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "settingsRedoSetup": "Volver a configurar",
+  "settingsRedoSetupDesc": "Responder de nuevo las preguntas de rol e instrumento.",
 
   "syncSyncing": "Sincronizando…",
   "syncSynced": "Sincronizado",
@@ -108,9 +148,42 @@
   "navSettings": "Ajustes",
   "navCircleOfFifths": "Círculo de Quintas",
   "navMetronome": "Metrónomo",
+  "navAgenda": "Agenda",
   "navExportPdf": "Exportar PDF",
   "navLibrarySection": "Biblioteca",
   "navToolsSection": "Herramientas",
+  "agendaEmptyTitle": "No hay eventos próximos",
+  "agendaEmptyBody": "Los eventos del calendario de tu iglesia aparecerán aquí al sincronizar.",
+  "agendaNoEventsForDay": "Nada en este día",
+  "agendaNoEventsForDayBody": "Elige otro día en la barra de arriba.",
+  "agendaEventDetails": "Evento",
+  "agendaEventNotFound": "Evento no encontrado",
+  "agendaEventNotFoundBody": "Este evento puede haberse eliminado o aún no se ha sincronizado.",
+  "agendaFieldDate": "Fecha",
+  "agendaFieldTime": "Hora",
+  "agendaFieldLocation": "Lugar",
+  "agendaFieldNotes": "Notas",
+  "agendaFieldResponsibilities": "Equipo",
+  "agendaLinkedService": "Servicio vinculado",
+  "agendaUnassigned": "Sin asignar",
+  "agendaMinutes": "{count} min",
+  "@agendaMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "agendaResponsibilityCount": "{count} asignados",
+  "@agendaResponsibilityCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "agendaAssigneeCount": "{count} personas",
+  "@agendaAssigneeCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "navAllSongs": "Todas las canciones",
   "navFavorites": "Favoritos",
   "navRecents": "Recientes",
@@ -147,8 +220,8 @@
   "songsNumberAny": "Cualquiera",
   "songsNumberOnly": "Numeradas",
   "songsNumberNone": "Sin número",
-  "songsSearchLyrics": "Buscar en la letra",
-  "songsWithChords": "Solo con acordes",
+  "songsSearchLyrics": "Buscar también en la letra",
+  "songsWithChords": "Mostrar solo canciones con acordes",
   "songsResetFilters": "Restablecer filtros",
   "songsClear": "Limpiar",
   "songsClearFilters": "Limpiar filtros",
@@ -159,6 +232,155 @@
   "songsTagsLabel": "Etiquetas",
   "songsChordPro": "ChordPro",
   "songsRawContent": "Contenido sin procesar (ChordPro)",
+  "songsCreate": "Nueva canción",
+  "songsEdit": "Editar canción",
+  "songsPreview": "Vista previa",
+  "songsFieldTitle": "Título",
+  "songsFieldSubtitle": "Subtítulo",
+  "songsFieldArtist": "Artista",
+  "songsFieldComposer": "Compositor",
+  "songsFieldLyricist": "Letrista",
+  "songsFieldTranslator": "Traductor",
+  "songsFieldArranger": "Arreglista",
+  "songsFieldSongNumber": "Número de canción",
+  "songsFieldKey": "Tonalidad",
+  "songsFieldOriginalKey": "Tonalidad original",
+  "songsFieldKeyNone": "Ninguna",
+  "songsFieldTempo": "Tempo (BPM)",
+  "songsFieldTime": "Compás",
+  "songsFieldDuration": "Duración (m:ss)",
+  "songsFieldCapo": "Cejilla",
+  "songsFieldKeyNote": "Nota de tonalidad",
+  "songsFieldAlbum": "Álbum",
+  "songsFieldYear": "Año",
+  "songsFieldCopyright": "Copyright",
+  "songsFieldCcli": "CCLI",
+  "songsFieldYoutube": "URL / ID de YouTube",
+  "songsFieldTagsHint": "Etiquetas separadas por comas",
+  "songsTabContent": "Letra y acordes",
+  "songsTabMetadata": "Detalles",
+  "songsTitleRequired": "El título es obligatorio.",
+  "songsChordProHint": "[G]Escribe la letra y los [C]acordes aquí…\nUsa las opciones de arriba para estrofa, estribillo y más.",
+  "songsEditorInsertVerse": "Estrofa",
+  "songsEditorInsertChorus": "Estribillo",
+  "songsEditorInsertBridge": "Puente",
+  "songsEditorInsertComment": "Comentario",
+  "songsEditorInsertVersion": "Versión",
+  "songsLintAllClear": "Sin problemas en el ChordPro.",
+  "songsLintSummary": "{errors} errores · {warnings} avisos · {infos} pistas",
+  "@songsLintSummary": {
+    "placeholders": {
+      "errors": { "type": "int" },
+      "warnings": { "type": "int" },
+      "infos": { "type": "int" }
+    }
+  },
+  "songsLintLine": "L{line}",
+  "@songsLintLine": {
+    "placeholders": {
+      "line": { "type": "int" }
+    }
+  },
+  "songsLintDetails": "Detalles",
+  "songsLintUnclosedBrace": "Llaves sin cerrar o desparejadas.",
+  "songsLintUnclosedBracket": "Corchetes de acorde sin cerrar o desparejados.",
+  "songsLintEmptyChord": "Acordes vacíos.",
+  "songsLintUnknownChord": "Acorde no reconocido \"{chord}\".",
+  "@songsLintUnknownChord": {
+    "placeholders": {
+      "chord": { "type": "String" }
+    }
+  },
+  "songsLintMalformedDirective": "Directiva mal formada — revisa llaves y nombre.",
+  "songsLintUnknownDirective": "Directiva no reconocida \"{name}\".",
+  "@songsLintUnknownDirective": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songsLintUnclosedSection": "Sección {section} sin cerrar — falta end_of_{section}.",
+  "@songsLintUnclosedSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintUnexpectedEndSection": "end_of_{section} inesperado sin inicio correspondiente.",
+  "@songsLintUnexpectedEndSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintInvalidYoutube": "El valor de YouTube no es una URL o ID válido.",
+  "songsLintInvalidKey": "Tonalidad inusual \"{value}\". Se espera G, Am, F#m, …",
+  "@songsLintInvalidKey": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "songsLintInvalidTempo": "El tempo debe ser un BPM entre 20 y 400.",
+  "songsLintInvalidCapo": "La cejilla debe ser un traste de 0 a 12.",
+  "songsLintInvalidTime": "El compás debe verse como 4/4 o 6/8.",
+  "songsLintInvalidDuration": "La duración debe ser segundos o m:ss (p. ej. 3:45).",
+  "songsNewSong": "Nueva canción",
+  "songsCreateManually": "Crear manualmente",
+  "songsCreateManuallyDesc": "Título, acordes y letra.",
+  "songsImportWithAi": "Importar con IA",
+  "songsImportWithAiDesc": "Desde PDF, imagen o foto.",
+  "songsAddSong": "Añadir canción",
+  "songsImportSheetMusic": "Importa tu partitura",
+  "songsImportSheetMusicBody": "Usa Logos AI para convertir PDFs, imágenes o fotos en canciones con letra, acordes y metadatos.",
+  "songsTakePhoto": "Tomar foto",
+  "songsChooseGallery": "Elegir de la galería",
+  "songsImportPdf": "Importar PDF",
+  "songsHowItWorks": "¿Cómo funciona?",
+  "songsAiAnalyzing": "Analizando la partitura…",
+  "songsAiAnalyzingBody": "Logos está extrayendo letra, acordes e información.",
+  "songsAiStepProcess": "Procesar el archivo",
+  "songsAiStepExtract": "Extraer letra y acordes",
+  "songsAiStepMetadata": "Identificar metadatos (título, tono, …)",
+  "songsAiStepVerify": "Verificar en línea y completar metadatos",
+  "songsAiStepDraft": "Preparar el borrador",
+  "songsAiPleaseWait": "Esto puede tardar unos segundos…",
+  "songsAiResultTitle": "Resultado de la importación",
+  "songsAiCreatedBanner": "Canción creada con IA. Confirma y ajusta antes de guardar.",
+  "songsAiSave": "Guardar",
+  "songsAiEditContent": "Editar",
+  "songsAiImportFailed": "No se pudo importar esta partitura",
+  "songsAiImportFailedBody": "Prueba otra foto o PDF, o crea la canción manualmente.",
+  "songsAiCancelledTitle": "No es una partitura",
+  "songsAiCancelledBody": "Logos canceló esta importación. Prueba una foto más nítida de una cifra, o crea la canción manualmente.",
+  "songsAiCancelledGeneric": "Esta imagen no parece una canción importable.",
+  "songsAiCancelledNotASong": "Esto no parece una partitura o cifra.",
+  "songsAiCancelledUnreadable": "La imagen está demasiado borrosa o oscura.",
+  "songsAiCancelledBlank": "La página parece en blanco o vacía.",
+  "songsAiCancelledWrongContent": "Hay texto, pero no es una canción / cifra.",
+  "songsAiCancelledMultiple": "Parecen varias canciones mezcladas sin una principal clara.",
+  "songsAiCancelImport": "Cancelar",
+  "songsAiDiscardDraft": "Descartar borrador",
+  "songsAiConfidence": "Confianza de la IA: {percent}%",
+  "@songsAiConfidence": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "songsAiLowConfidence": "Baja confianza — revisa bien la letra y los acordes antes de guardar.",
+  "songsAiSuccessTitle": "Importación completada",
+  "songsAiSuccessBody": "Se capturaron letra, acordes y metadatos.",
+  "songsAiViewSong": "Ver canción",
+  "songsAiImportAnother": "Importar otra",
+  "songsAiPossibleDuplicates": "Posibles coincidencias en tu biblioteca",
+  "songsAiPossibleDuplicatesHint": "Ábrela para comparar — volverás a este borrador. Guardar sigue creando una canción nueva.",
+  "songsAiOpenExisting": "Abrir",
+  "songsAiLintIssues": "Problemas de ChordPro",
+  "songsAiFieldComposer": "Compositor",
+  "songsAiFieldCcli": "CCLI",
+  "songsAiFieldDuration": "Duración",
+  "songsAiFieldYoutube": "YouTube",
+  "songsAiOpenYoutube": "Abrir YouTube",
+  "songsAiCaptureTip": "Usa luz uniforme y evita brillos o desenfoque para mejores resultados.",
+  "songsAiCaptureQualityHint": "Esta imagen parece pequeña o de baja calidad — prueba una foto más nítida y bien iluminada.",
+  "songsAiPdfMultiPageHint": "Se envían hasta 5 páginas en PDFs de varias páginas.",
+  "songsEmptyAddHint": "Añade una canción manualmente o impórtala con Logos AI.",
   "songsNoContent": "Sin contenido disponible.",
   "songKey": "Tonalidad",
   "songCapo": "Cejilla",
@@ -192,6 +414,49 @@
   "songAutoScrollStart": "Iniciar desplazamiento automático",
   "songAutoScrollPause": "Pausar desplazamiento",
   "songAutoScrollSpeed": "Velocidad de desplazamiento",
+  "songYoutubeOpenPlayer": "Escuchar en YouTube",
+  "songYoutubeClosePlayer": "Cerrar reproductor",
+  "songYoutubePlay": "Reproducir",
+  "songYoutubePause": "Pausar",
+  "songYoutubeRewind": "Retroceder 10 segundos",
+  "songYoutubeForward": "Avanzar 30 segundos",
+  "songYoutubeError": "No se pudo reproducir este video",
+  "songSectionChorus": "Estribillo",
+  "songSectionBridge": "Puente",
+  "songSectionTab": "Tablatura",
+  "songSectionInstrumental": "Instrumental",
+  "songRepeatChorus": "(Repetir estribillo)",
+  "songKeyPill": "Tono: {key}",
+  "songCapoPill": "Capo: traste {fret}",
+  "songShapePill": "Formas: {key}",
+  "songOriginalKeyPill": "Tono original: {key}",
+  "songTranslatorCredit": "Traducción: {name}",
+  "@songTranslatorCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songLyricistCredit": "Letra: {name}",
+  "@songLyricistCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songArrangerCredit": "Arreglo: {name}",
+  "@songArrangerCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songNumberPill": "Nº {number}",
+  "songCapoOnFret": "Capo en el traste {fret}",
+  "songChangeKey": "Cambiar tono",
+  "songChordTitle": "Acorde: {chord}",
+  "songChordNotFound": "Acorde \"{chord}\" no registrado",
+  "songChordNotes": "Notas: {notes}",
+  "songChordSemantics": "Acorde {chord}",
+  "songPreviousChord": "Acorde anterior",
+  "songNextChord": "Acorde siguiente",
   "songPrevious": "Anterior",
   "songNext": "Siguiente",
 

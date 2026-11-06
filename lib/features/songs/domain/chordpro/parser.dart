@@ -34,7 +34,7 @@ class LineAst {
   });
 
   final String
-  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section
+  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
@@ -122,6 +122,9 @@ class SongAst {
 
 final RegExp _timingRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _chordRegex = RegExp(r'\[([^\]]+)\]');
+final RegExp _barlineRegex = RegExp(r'\|\||\|:|:\||\|\]|\|');
+final RegExp _onlyBarsAndSpacesRegex = RegExp(r'^[\s|:\-.%]*$');
+final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 
 ({String chord, double? timing}) _parseChordTiming(String rawChord) {
   final match = _timingRegex.firstMatch(rawChord);
@@ -197,6 +200,13 @@ const Map<String, String> _aliasMap = {
   'time signature': 'time',
   'original_key': 'original_key',
   'original key': 'original_key',
+  'key_note': 'key_note',
+  'key note': 'key_note',
+  'keynote': 'key_note',
+  'key_notes': 'key_note',
+  'key notes': 'key_note',
+  'kn': 'key_note',
+  'yt': 'youtube',
   // variant directives
   'start_of_version': 'start_of_version',
   'end_of_version': 'end_of_version',
@@ -276,7 +286,7 @@ class _VersionContext {
 /// Metadata is cumulative: each variant inherits the fully resolved metadata
 /// of the previous version.
 ChordProDocument parseChordProDocument(String content) {
-  final lines = content.split(RegExp(r'\r?\n'));
+  final lines = content.split(_lineBreakRegex);
   final errors = <String>[];
 
   final defaultCtx = _VersionContext(
@@ -445,6 +455,15 @@ ChordProDocument parseChordProDocument(String content) {
           } else {
             ctx.sections.add(SectionAst(type: 'comment', lines: [cbLine]));
           }
+        case 'key_note':
+          ctx.metadata['keyNote'] = value;
+          ctx.metadata['key_note'] = value;
+          final knLine = LineAst(type: 'key_note', text: value);
+          if (ctx.currentSection != null) {
+            ctx.currentSection!.lines.add(knLine);
+          } else if (ctx.sections.isNotEmpty) {
+            ctx.sections.add(SectionAst(type: 'comment', lines: [knLine]));
+          }
         case 'repeat':
           final repeat = value.isEmpty ? '2' : value;
           if (ctx.currentSection != null) {
@@ -469,7 +488,11 @@ ChordProDocument parseChordProDocument(String content) {
           }
         default:
           if (value.isNotEmpty) {
-            ctx.metadata[_camelCaseMetaKey(name)] = value;
+            final camelKey = _camelCaseMetaKey(name);
+            ctx.metadata[camelKey] = value;
+            if (name != camelKey) {
+              ctx.metadata[name] = value;
+            }
           }
       }
       continue;
@@ -495,7 +518,7 @@ ChordProDocument parseChordProDocument(String content) {
     } else {
       parsedSegments = parseLineSegments(rawLine);
       final textContent = parsedSegments.map((s) => s.text).join();
-      final onlyBarsAndSpaces = RegExp(r'^[\s|:\-.%]*$').hasMatch(textContent);
+      final onlyBarsAndSpaces = _onlyBarsAndSpacesRegex.hasMatch(textContent);
       final hasBars = textContent.contains('|');
 
       if (ctx.isGrid || (onlyBarsAndSpaces && hasBars)) {
@@ -525,8 +548,7 @@ ChordProDocument parseChordProDocument(String content) {
           hasSeenChord = true;
         }
 
-        final barlineMatches = RegExp(r'\|\||:\||:\||\\|').allMatches(seg.text);
-        for (final m in barlineMatches) {
+        for (final m in _barlineRegex.allMatches(seg.text)) {
           final b = m.group(0)!;
           if (!hasSeenChord && !startBarlineFound) {
             startBarline = b;

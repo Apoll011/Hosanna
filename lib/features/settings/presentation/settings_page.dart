@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/design/illustrations.dart';
+import '../../../app/design/tokens.dart';
 import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell_leading_button.dart';
@@ -12,6 +15,7 @@ import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../services/data/service_repository.dart';
+import '../../setup/data/setup_controller.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
@@ -83,13 +87,14 @@ class _TabBar extends StatelessWidget {
       (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
     ];
 
+    final tokens = HosannaTokens.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        color: tokens.subtleFill,
+        borderRadius: BorderRadius.circular(HosannaRadii.md),
+        border: Border.all(color: tokens.cardBorder),
       ),
       child: Row(
         children: [
@@ -98,35 +103,37 @@ class _TabBar extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => onChanged(tab),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                   decoration: BoxDecoration(
                     color: selected == tab
                         ? theme.colorScheme.primary
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         icon,
-                        size: 16,
+                        size: 20,
                         color: selected == tab
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          label,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: selected == tab
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: selected == tab
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -273,18 +280,28 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
 
               final avatarAndInfo = Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    foregroundImage: imageUrl != null && imageUrl.isNotEmpty
-                        ? CachedNetworkImageProvider(imageUrl)
-                        : null,
-                    onForegroundImageError: (exception, stackTrace) {
-                      debugPrint('Failed to load avatar: $exception');
+                  Builder(
+                    builder: (context) {
+                      final hasImage =
+                          imageUrl != null && imageUrl.isNotEmpty;
+                      return CircleAvatar(
+                        radius: 30,
+                        foregroundImage: hasImage
+                            ? CachedNetworkImageProvider(imageUrl)
+                            : null,
+                        onForegroundImageError: hasImage
+                            ? (exception, stackTrace) {
+                                debugPrint(
+                                  'Failed to load avatar: $exception',
+                                );
+                              }
+                            : null,
+                        child: Text(
+                          _initials(user?.name ?? ''),
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      );
                     },
-                    child: Text(
-                      _initials(user?.name ?? ''),
-                      style: theme.textTheme.titleLarge,
-                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -764,6 +781,7 @@ class _ServiceTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
+    final displayController = ref.read(songDisplaySettingsProvider.notifier);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -775,7 +793,11 @@ class _ServiceTab extends ConsumerWidget {
             title: l10n.settingsMusicianMode,
             subtitle: l10n.settingsMusicianModeDesc,
             value: settings.musicianMode,
-            onChanged: settingsController.setMusicianMode,
+            onChanged: (value) {
+              settingsController.setMusicianMode(value);
+              // Musician mode implies chords; turning it off hides them too.
+              displayController.setShowChords(value);
+            },
           ),
         ),
         const SizedBox(height: 12),
@@ -809,6 +831,76 @@ class _ServiceTab extends ConsumerWidget {
             subtitle: l10n.settingsSyncAnnotationsDesc,
             value: settings.syncAnnotations,
             onChanged: settingsController.setSyncAnnotations,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Material(
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () async {
+              await ref.read(setupControllerProvider.notifier).reset();
+              if (!context.mounted) return;
+              context.go('/setup');
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      HosannaIllustrations.setupWelcome,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 72,
+                        height: 72,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.settingsRedoSetup,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.settingsRedoSetupDesc,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],

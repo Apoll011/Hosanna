@@ -11,12 +11,16 @@ import 'package:hosanna/core/auth/session_store.dart';
 import 'package:hosanna/core/config/app_config.dart';
 import 'package:hosanna/core/db/database.dart';
 import 'package:hosanna/core/network/api_client.dart';
+import 'package:hosanna/core/network/hosanna_api.dart';
+import 'package:hosanna/core/sync/replication_engine.dart';
+import 'package:hosanna/core/sync/sync_controller.dart';
 import 'package:hosanna/features/auth/data/auth_repository.dart';
 import 'package:hosanna/features/auth/domain/auth_controller.dart';
 import 'package:hosanna/features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'test_pump.dart';
 
 /// Authenticated controller with an org, so the router lands on /songs.
 class _TestAuthController extends AuthController {
@@ -42,6 +46,27 @@ class _TestAuthController extends AuthController {
       organization: org,
     );
   }
+}
+
+/// Avoids network sync during widget tests (auth → syncAll on org ready).
+class _NoopSyncController extends SyncController {
+  _NoopSyncController(SharedPreferences prefs, AppDatabase db)
+    : super(
+        ReplicationEngine(
+          api: HosannaApi.fromSharedDio(Dio(), config: AppConfig.instance),
+          prefs: prefs,
+          adapters: const [],
+        ),
+        prefs,
+        db,
+        () async {},
+      );
+
+  @override
+  Future<void> syncAll() async {}
+
+  @override
+  Future<void> resetForOrganizationSwitch() async {}
 }
 
 void main() {
@@ -71,47 +96,68 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           cookieJarProvider.overrideWithValue(CookieJar()),
           authControllerProvider.overrideWith((ref) => _TestAuthController()),
+          syncControllerProvider.overrideWith(
+            (ref) => _NoopSyncController(prefs, db),
+          ),
         ],
         child: Consumer(
           builder: (context, ref, _) => MaterialApp.router(
             routerConfig: ref.watch(goRouterProvider),
+            locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
           ),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpFrames(tester, const Duration(seconds: 1));
   }
 
-  testWidgets('phone: drawer tool item navigates to its shell branch', (
-    tester,
-  ) async {
+  /// Drop ProviderScope/Drift watchers and flush zero-duration cancel timers
+  /// before the binding's end-of-test invariant check (runs before tearDown).
+  Future<void> disposeApp(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    // Drift schedules Timer.run on stream cancel; flush a few frames.
+    await tester.idle();
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(Duration.zero);
+    }
+  }
+
+  testWidgets(
+    'phone: drawer tool item navigates to its shell branch',
+    (tester) async {
     await pumpApp(tester);
     expect(find.byType(SongLibraryPage), findsOneWidget);
 
     // Open the drawer via the hamburger.
     await tester.tap(find.byIcon(Icons.menu));
-    await tester.pumpAndSettle();
-    expect(find.text('Circle of Fifths'), findsOneWidget);
+    await pumpFrames(tester, const Duration(seconds: 1));
 
-    // Tap the Circle of Fifths tool row.
-    await tester.tap(find.text('Circle of Fifths'));
-    await tester.pumpAndSettle();
+    // Prefer icon — labels may be mid-animation / truncated in the drawer.
+    final tool = find.byIcon(Icons.donut_large);
+    expect(tool, findsWidgets);
+    await tester.ensureVisible(tool.first);
+    await tester.tap(tool.first);
+    await pumpFrames(tester, const Duration(seconds: 1));
 
     expect(find.byType(CircleOfFifthsPage), findsOneWidget);
+    await disposeApp(tester);
   });
 
-  testWidgets('tablet: sidebar tool item navigates to its shell branch', (
-    tester,
-  ) async {
+  testWidgets(
+    'tablet: sidebar tool item navigates to its shell branch',
+    (tester) async {
     await pumpApp(tester, logicalSize: const Size(1280, 800));
     expect(find.byType(SongLibraryPage), findsOneWidget);
-    expect(find.text('Circle of Fifths'), findsOneWidget);
 
-    await tester.tap(find.text('Circle of Fifths'));
-    await tester.pumpAndSettle();
+    final tool = find.byIcon(Icons.donut_large);
+    expect(tool, findsWidgets);
+    await tester.ensureVisible(tool.first);
+    await tester.tap(tool.first);
+    await pumpFrames(tester, const Duration(seconds: 1));
 
     expect(find.byType(CircleOfFifthsPage), findsOneWidget);
+    await disposeApp(tester);
   });
 }

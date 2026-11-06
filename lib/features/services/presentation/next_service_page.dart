@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../core/db/database.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -42,6 +43,7 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
       appBar: AppBar(title: Text(l10n.servicesNextService)),
       body: switch (servicesAsync) {
         AsyncValue(hasError: true) => ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),
@@ -55,7 +57,7 @@ class _NextServicePageState extends ConsumerState<NextServicePage> {
     final next = nextUpcomingService(services);
     if (next == null) {
       return EmptyState(
-        icon: Icons.event_available_outlined,
+        illustrationAsset: HosannaIllustrations.emptyNextService,
         title: l10n.servicesNoUpcoming,
         description: l10n.servicesNoUpcomingDesc,
       );

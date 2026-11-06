@@ -306,6 +306,122 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingSignOut => 'Cerrar Sesión';
 
   @override
+  String get setupWelcomeTitle => 'Configuremos Hosanna';
+
+  @override
+  String get setupWelcomeSubtitle =>
+      'Unas pocas opciones para que canciones y servicios se sientan bien según cómo sirves.';
+
+  @override
+  String get setupWelcomeCta => 'Empezar';
+
+  @override
+  String get setupRoleTitle => '¿Cómo usas Hosanna?';
+
+  @override
+  String get setupRoleSubtitle =>
+      'Abriremos los servicios según tu rol. Puedes cambiarlo después en Ajustes.';
+
+  @override
+  String get setupRoleMusician => 'Músico';
+
+  @override
+  String get setupRoleMusicianDesc =>
+      'Entra directo a las canciones con acordes, cejilla y diagramas.';
+
+  @override
+  String get setupRoleLeader => 'Líder';
+
+  @override
+  String get setupRoleLeaderDesc =>
+      'Empieza por el orden del servicio y las notas del momento.';
+
+  @override
+  String get setupFocusTitle => '¿Qué tocas?';
+
+  @override
+  String get setupFocusSubtitle =>
+      'Esto define el instrumento predeterminado para los diagramas de acordes.';
+
+  @override
+  String get setupFocusGuitar => 'Guitarra';
+
+  @override
+  String get setupFocusUkulele => 'Ukelele';
+
+  @override
+  String get setupFocusPiano => 'Piano / teclas';
+
+  @override
+  String get setupFocusVocals => 'Voz';
+
+  @override
+  String get setupFocusVocalsDesc =>
+      'Letra primero — los acordes siguen disponibles cuando los necesites.';
+
+  @override
+  String get setupLeaderFocusTitle => 'Cuando abres una canción…';
+
+  @override
+  String get setupLeaderFocusSubtitle =>
+      'Opcional — elige un instrumento para las cifras al revisar canciones.';
+
+  @override
+  String get setupPrefsTitle => 'Ajustes listos para el escenario';
+
+  @override
+  String get setupPrefsSubtitle =>
+      'Opciones útiles para ensayos y culto en vivo.';
+
+  @override
+  String get setupPrefDiagrams => 'Mostrar diagramas de acordes';
+
+  @override
+  String get setupPrefDiagramsDesc =>
+      'Digitaciones encima de la canción cuando estén disponibles.';
+
+  @override
+  String get setupPrefAwake => 'Mantener la pantalla encendida';
+
+  @override
+  String get setupPrefAwakeDesc =>
+      'No oscurecer durante una canción o servicio.';
+
+  @override
+  String get setupLanguageTitle => 'Idioma';
+
+  @override
+  String get setupLanguageSubtitle => 'Elige el idioma de menús y etiquetas.';
+
+  @override
+  String get setupLanguageSystem => 'Igual que el dispositivo';
+
+  @override
+  String get setupDoneTitle => 'Listo';
+
+  @override
+  String get setupDoneSubtitle =>
+      'Hosanna está configurado para ti. Entra en tu biblioteca cuando quieras.';
+
+  @override
+  String get setupDoneCta => 'Entrar a Hosanna';
+
+  @override
+  String get setupSkip => 'Omitir por ahora';
+
+  @override
+  String setupStepOf(int current, int total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get settingsRedoSetup => 'Volver a configurar';
+
+  @override
+  String get settingsRedoSetupDesc =>
+      'Responder de nuevo las preguntas de rol e instrumento.';
+
+  @override
   String get syncSyncing => 'Sincronizando…';
 
   @override
@@ -353,6 +469,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navMetronome => 'Metrónomo';
 
   @override
+  String get navAgenda => 'Agenda';
+
+  @override
   String get navExportPdf => 'Exportar PDF';
 
   @override
@@ -360,6 +479,66 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get navToolsSection => 'Herramientas';
+
+  @override
+  String get agendaEmptyTitle => 'No hay eventos próximos';
+
+  @override
+  String get agendaEmptyBody =>
+      'Los eventos del calendario de tu iglesia aparecerán aquí al sincronizar.';
+
+  @override
+  String get agendaNoEventsForDay => 'Nada en este día';
+
+  @override
+  String get agendaNoEventsForDayBody =>
+      'Elige otro día en la barra de arriba.';
+
+  @override
+  String get agendaEventDetails => 'Evento';
+
+  @override
+  String get agendaEventNotFound => 'Evento no encontrado';
+
+  @override
+  String get agendaEventNotFoundBody =>
+      'Este evento puede haberse eliminado o aún no se ha sincronizado.';
+
+  @override
+  String get agendaFieldDate => 'Fecha';
+
+  @override
+  String get agendaFieldTime => 'Hora';
+
+  @override
+  String get agendaFieldLocation => 'Lugar';
+
+  @override
+  String get agendaFieldNotes => 'Notas';
+
+  @override
+  String get agendaFieldResponsibilities => 'Equipo';
+
+  @override
+  String get agendaLinkedService => 'Servicio vinculado';
+
+  @override
+  String get agendaUnassigned => 'Sin asignar';
+
+  @override
+  String agendaMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String agendaResponsibilityCount(int count) {
+    return '$count asignados';
+  }
+
+  @override
+  String agendaAssigneeCount(int count) {
+    return '$count personas';
+  }
 
   @override
   String get navAllSongs => 'Todas las canciones';
@@ -471,10 +650,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsNumberNone => 'Sin número';
 
   @override
-  String get songsSearchLyrics => 'Buscar en la letra';
+  String get songsSearchLyrics => 'Buscar también en la letra';
 
   @override
-  String get songsWithChords => 'Solo con acordes';
+  String get songsWithChords => 'Mostrar solo canciones con acordes';
 
   @override
   String get songsResetFilters => 'Restablecer filtros';
@@ -505,6 +684,366 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songsRawContent => 'Contenido sin procesar (ChordPro)';
+
+  @override
+  String get songsCreate => 'Nueva canción';
+
+  @override
+  String get songsEdit => 'Editar canción';
+
+  @override
+  String get songsPreview => 'Vista previa';
+
+  @override
+  String get songsFieldTitle => 'Título';
+
+  @override
+  String get songsFieldSubtitle => 'Subtítulo';
+
+  @override
+  String get songsFieldArtist => 'Artista';
+
+  @override
+  String get songsFieldComposer => 'Compositor';
+
+  @override
+  String get songsFieldLyricist => 'Letrista';
+
+  @override
+  String get songsFieldTranslator => 'Traductor';
+
+  @override
+  String get songsFieldArranger => 'Arreglista';
+
+  @override
+  String get songsFieldSongNumber => 'Número de canción';
+
+  @override
+  String get songsFieldKey => 'Tonalidad';
+
+  @override
+  String get songsFieldOriginalKey => 'Tonalidad original';
+
+  @override
+  String get songsFieldKeyNone => 'Ninguna';
+
+  @override
+  String get songsFieldTempo => 'Tempo (BPM)';
+
+  @override
+  String get songsFieldTime => 'Compás';
+
+  @override
+  String get songsFieldDuration => 'Duración (m:ss)';
+
+  @override
+  String get songsFieldCapo => 'Cejilla';
+
+  @override
+  String get songsFieldKeyNote => 'Nota de tonalidad';
+
+  @override
+  String get songsFieldAlbum => 'Álbum';
+
+  @override
+  String get songsFieldYear => 'Año';
+
+  @override
+  String get songsFieldCopyright => 'Copyright';
+
+  @override
+  String get songsFieldCcli => 'CCLI';
+
+  @override
+  String get songsFieldYoutube => 'URL / ID de YouTube';
+
+  @override
+  String get songsFieldTagsHint => 'Etiquetas separadas por comas';
+
+  @override
+  String get songsTabContent => 'Letra y acordes';
+
+  @override
+  String get songsTabMetadata => 'Detalles';
+
+  @override
+  String get songsTitleRequired => 'El título es obligatorio.';
+
+  @override
+  String get songsChordProHint =>
+      '[G]Escribe la letra y los [C]acordes aquí…\nUsa las opciones de arriba para estrofa, estribillo y más.';
+
+  @override
+  String get songsEditorInsertVerse => 'Estrofa';
+
+  @override
+  String get songsEditorInsertChorus => 'Estribillo';
+
+  @override
+  String get songsEditorInsertBridge => 'Puente';
+
+  @override
+  String get songsEditorInsertComment => 'Comentario';
+
+  @override
+  String get songsEditorInsertVersion => 'Versión';
+
+  @override
+  String get songsLintAllClear => 'Sin problemas en el ChordPro.';
+
+  @override
+  String songsLintSummary(int errors, int warnings, int infos) {
+    return '$errors errores · $warnings avisos · $infos pistas';
+  }
+
+  @override
+  String songsLintLine(int line) {
+    return 'L$line';
+  }
+
+  @override
+  String get songsLintDetails => 'Detalles';
+
+  @override
+  String get songsLintUnclosedBrace => 'Llaves sin cerrar o desparejadas.';
+
+  @override
+  String get songsLintUnclosedBracket =>
+      'Corchetes de acorde sin cerrar o desparejados.';
+
+  @override
+  String get songsLintEmptyChord => 'Acordes vacíos.';
+
+  @override
+  String songsLintUnknownChord(String chord) {
+    return 'Acorde no reconocido \"$chord\".';
+  }
+
+  @override
+  String get songsLintMalformedDirective =>
+      'Directiva mal formada — revisa llaves y nombre.';
+
+  @override
+  String songsLintUnknownDirective(String name) {
+    return 'Directiva no reconocida \"$name\".';
+  }
+
+  @override
+  String songsLintUnclosedSection(String section) {
+    return 'Sección $section sin cerrar — falta end_of_$section.';
+  }
+
+  @override
+  String songsLintUnexpectedEndSection(String section) {
+    return 'end_of_$section inesperado sin inicio correspondiente.';
+  }
+
+  @override
+  String get songsLintInvalidYoutube =>
+      'El valor de YouTube no es una URL o ID válido.';
+
+  @override
+  String songsLintInvalidKey(String value) {
+    return 'Tonalidad inusual \"$value\". Se espera G, Am, F#m, …';
+  }
+
+  @override
+  String get songsLintInvalidTempo =>
+      'El tempo debe ser un BPM entre 20 y 400.';
+
+  @override
+  String get songsLintInvalidCapo => 'La cejilla debe ser un traste de 0 a 12.';
+
+  @override
+  String get songsLintInvalidTime => 'El compás debe verse como 4/4 o 6/8.';
+
+  @override
+  String get songsLintInvalidDuration =>
+      'La duración debe ser segundos o m:ss (p. ej. 3:45).';
+
+  @override
+  String get songsNewSong => 'Nueva canción';
+
+  @override
+  String get songsCreateManually => 'Crear manualmente';
+
+  @override
+  String get songsCreateManuallyDesc => 'Título, acordes y letra.';
+
+  @override
+  String get songsImportWithAi => 'Importar con IA';
+
+  @override
+  String get songsImportWithAiDesc => 'Desde PDF, imagen o foto.';
+
+  @override
+  String get songsAddSong => 'Añadir canción';
+
+  @override
+  String get songsImportSheetMusic => 'Importa tu partitura';
+
+  @override
+  String get songsImportSheetMusicBody =>
+      'Usa Logos AI para convertir PDFs, imágenes o fotos en canciones con letra, acordes y metadatos.';
+
+  @override
+  String get songsTakePhoto => 'Tomar foto';
+
+  @override
+  String get songsChooseGallery => 'Elegir de la galería';
+
+  @override
+  String get songsImportPdf => 'Importar PDF';
+
+  @override
+  String get songsHowItWorks => '¿Cómo funciona?';
+
+  @override
+  String get songsAiAnalyzing => 'Analizando la partitura…';
+
+  @override
+  String get songsAiAnalyzingBody =>
+      'Logos está extrayendo letra, acordes e información.';
+
+  @override
+  String get songsAiStepProcess => 'Procesar el archivo';
+
+  @override
+  String get songsAiStepExtract => 'Extraer letra y acordes';
+
+  @override
+  String get songsAiStepMetadata => 'Identificar metadatos (título, tono, …)';
+
+  @override
+  String get songsAiStepVerify => 'Verificar en línea y completar metadatos';
+
+  @override
+  String get songsAiStepDraft => 'Preparar el borrador';
+
+  @override
+  String get songsAiPleaseWait => 'Esto puede tardar unos segundos…';
+
+  @override
+  String get songsAiResultTitle => 'Resultado de la importación';
+
+  @override
+  String get songsAiCreatedBanner =>
+      'Canción creada con IA. Confirma y ajusta antes de guardar.';
+
+  @override
+  String get songsAiSave => 'Guardar';
+
+  @override
+  String get songsAiEditContent => 'Editar';
+
+  @override
+  String get songsAiImportFailed => 'No se pudo importar esta partitura';
+
+  @override
+  String get songsAiImportFailedBody =>
+      'Prueba otra foto o PDF, o crea la canción manualmente.';
+
+  @override
+  String get songsAiCancelledTitle => 'No es una partitura';
+
+  @override
+  String get songsAiCancelledBody =>
+      'Logos canceló esta importación. Prueba una foto más nítida de una cifra, o crea la canción manualmente.';
+
+  @override
+  String get songsAiCancelledGeneric =>
+      'Esta imagen no parece una canción importable.';
+
+  @override
+  String get songsAiCancelledNotASong =>
+      'Esto no parece una partitura o cifra.';
+
+  @override
+  String get songsAiCancelledUnreadable =>
+      'La imagen está demasiado borrosa o oscura.';
+
+  @override
+  String get songsAiCancelledBlank => 'La página parece en blanco o vacía.';
+
+  @override
+  String get songsAiCancelledWrongContent =>
+      'Hay texto, pero no es una canción / cifra.';
+
+  @override
+  String get songsAiCancelledMultiple =>
+      'Parecen varias canciones mezcladas sin una principal clara.';
+
+  @override
+  String get songsAiCancelImport => 'Cancelar';
+
+  @override
+  String get songsAiDiscardDraft => 'Descartar borrador';
+
+  @override
+  String songsAiConfidence(String percent) {
+    return 'Confianza de la IA: $percent%';
+  }
+
+  @override
+  String get songsAiLowConfidence =>
+      'Baja confianza — revisa bien la letra y los acordes antes de guardar.';
+
+  @override
+  String get songsAiSuccessTitle => 'Importación completada';
+
+  @override
+  String get songsAiSuccessBody => 'Se capturaron letra, acordes y metadatos.';
+
+  @override
+  String get songsAiViewSong => 'Ver canción';
+
+  @override
+  String get songsAiImportAnother => 'Importar otra';
+
+  @override
+  String get songsAiPossibleDuplicates =>
+      'Posibles coincidencias en tu biblioteca';
+
+  @override
+  String get songsAiPossibleDuplicatesHint =>
+      'Ábrela para comparar — volverás a este borrador. Guardar sigue creando una canción nueva.';
+
+  @override
+  String get songsAiOpenExisting => 'Abrir';
+
+  @override
+  String get songsAiLintIssues => 'Problemas de ChordPro';
+
+  @override
+  String get songsAiFieldComposer => 'Compositor';
+
+  @override
+  String get songsAiFieldCcli => 'CCLI';
+
+  @override
+  String get songsAiFieldDuration => 'Duración';
+
+  @override
+  String get songsAiFieldYoutube => 'YouTube';
+
+  @override
+  String get songsAiOpenYoutube => 'Abrir YouTube';
+
+  @override
+  String get songsAiCaptureTip =>
+      'Usa luz uniforme y evita brillos o desenfoque para mejores resultados.';
+
+  @override
+  String get songsAiCaptureQualityHint =>
+      'Esta imagen parece pequeña o de baja calidad — prueba una foto más nítida y bien iluminada.';
+
+  @override
+  String get songsAiPdfMultiPageHint =>
+      'Se envían hasta 5 páginas en PDFs de varias páginas.';
+
+  @override
+  String get songsEmptyAddHint =>
+      'Añade una canción manualmente o impórtala con Logos AI.';
 
   @override
   String get songsNoContent => 'Sin contenido disponible.';
@@ -612,6 +1151,116 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get songAutoScrollSpeed => 'Velocidad de desplazamiento';
+
+  @override
+  String get songYoutubeOpenPlayer => 'Escuchar en YouTube';
+
+  @override
+  String get songYoutubeClosePlayer => 'Cerrar reproductor';
+
+  @override
+  String get songYoutubePlay => 'Reproducir';
+
+  @override
+  String get songYoutubePause => 'Pausar';
+
+  @override
+  String get songYoutubeRewind => 'Retroceder 10 segundos';
+
+  @override
+  String get songYoutubeForward => 'Avanzar 30 segundos';
+
+  @override
+  String get songYoutubeError => 'No se pudo reproducir este video';
+
+  @override
+  String get songSectionChorus => 'Estribillo';
+
+  @override
+  String get songSectionBridge => 'Puente';
+
+  @override
+  String get songSectionTab => 'Tablatura';
+
+  @override
+  String get songSectionInstrumental => 'Instrumental';
+
+  @override
+  String get songRepeatChorus => '(Repetir estribillo)';
+
+  @override
+  String songKeyPill(Object key) {
+    return 'Tono: $key';
+  }
+
+  @override
+  String songCapoPill(Object fret) {
+    return 'Capo: traste $fret';
+  }
+
+  @override
+  String songShapePill(Object key) {
+    return 'Formas: $key';
+  }
+
+  @override
+  String songOriginalKeyPill(Object key) {
+    return 'Tono original: $key';
+  }
+
+  @override
+  String songTranslatorCredit(String name) {
+    return 'Traducción: $name';
+  }
+
+  @override
+  String songLyricistCredit(String name) {
+    return 'Letra: $name';
+  }
+
+  @override
+  String songArrangerCredit(String name) {
+    return 'Arreglo: $name';
+  }
+
+  @override
+  String songNumberPill(Object number) {
+    return 'Nº $number';
+  }
+
+  @override
+  String songCapoOnFret(Object fret) {
+    return 'Capo en el traste $fret';
+  }
+
+  @override
+  String get songChangeKey => 'Cambiar tono';
+
+  @override
+  String songChordTitle(Object chord) {
+    return 'Acorde: $chord';
+  }
+
+  @override
+  String songChordNotFound(Object chord) {
+    return 'Acorde \"$chord\" no registrado';
+  }
+
+  @override
+  String songChordNotes(Object notes) {
+    return 'Notas: $notes';
+  }
+
+  @override
+  String songChordSemantics(Object chord) {
+    return 'Acorde $chord';
+  }
+
+  @override
+  String get songPreviousChord => 'Acorde anterior';
+
+  @override
+  String get songNextChord => 'Acorde siguiente';
 
   @override
   String get songPrevious => 'Anterior';

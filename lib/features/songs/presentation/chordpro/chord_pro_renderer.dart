@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/chordpro/chord_dictionary.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/parser.dart';
 import '../../domain/chordpro/transpose.dart';
-import 'chord_diagrams.dart';
-import 'instrument_selector.dart';
+import 'widgets/chord_roll.dart';
+import 'widgets/chord_sheet.dart';
+import 'widgets/line_renderers.dart';
+import 'widgets/metadata_header.dart';
+import 'widgets/render_model.dart';
+import 'widgets/section_view.dart';
 
 /// Full ChordPro renderer, ported from `@hosanna/shared`'s ChordProRenderer.
 ///
 /// Renders metadata, a chord-roll (when diagrams are enabled), and the parsed
 /// sections (verses/choruses/bridges/tabs/grids/comments) with inline chords.
-/// Tapping a chord opens a guitar/piano diagram dialog.
+/// Tapping a chord opens the chord dictionary sheet.
+///
+/// Sections are laid out lazily, and the tokenized/transposed song is cached
+/// until the document, variant or effective transposition changes.
 class ChordProRenderer extends StatefulWidget {
   const ChordProRenderer({
     super.key,
-    required this.content,
+    required this.document,
     required this.showChords,
     this.transpose = 0,
     this.capo = 0,
@@ -29,9 +35,12 @@ class ChordProRenderer extends StatefulWidget {
     this.notes,
     this.variantId = 'default',
     this.instrumentPreferences = const InstrumentPreferences(),
+    this.bottomInset = 0,
+    this.onKeyTap,
+    this.onYoutubeTap,
   });
 
-  final String content;
+  final ChordProDocument document;
   final bool showChords;
   final int transpose;
   final int capo;
@@ -55,46 +64,23 @@ class ChordProRenderer extends StatefulWidget {
   /// Optional external controller for auto-scroll / programmatic scrolling.
   final ScrollController? scrollController;
 
+  /// Extra bottom padding so floating overlays never hide the last lines.
+  final double bottomInset;
+
+  /// Called when the key pill is tapped (e.g. to open transpose controls).
+  final VoidCallback? onKeyTap;
+
+  /// Called when the YouTube pill is tapped; the pill is hidden when null.
+  final VoidCallback? onYoutubeTap;
+
   @override
   State<ChordProRenderer> createState() => _ChordProRendererState();
 }
 
 class _ChordProRendererState extends State<ChordProRenderer> {
-  late ChordProDocument _document;
-  late SongAst _ast;
-  String? _selectedChord;
-  String _dialogInstrument = 'guitar';
-
-  void _rebuildAst() {
-    final version = selectVersion(_document, widget.variantId);
-    _ast = SongAst(
-      metadata: version.metadata,
-      sections: version.body,
-      defaultVersion: _document.defaultVersion,
-      variants: _document.variants,
-      errors: _document.errors,
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _document = parseChordProDocument(widget.content);
-    _rebuildAst();
-  }
-
-  @override
-  void didUpdateWidget(covariant ChordProRenderer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final contentChanged = oldWidget.content != widget.content;
-    final variantChanged = oldWidget.variantId != widget.variantId;
-    if (contentChanged) {
-      _document = parseChordProDocument(widget.content);
-    }
-    if (contentChanged || variantChanged) {
-      _rebuildAst();
-    }
-  }
+  late ChordProVersion _version;
+  late PreparedSong _song;
+  final Map<String, ChordFingering?> _fingerings = {};
 
   Instrument get _instrument => instrumentRegistry.resolve(widget.instrument);
 
@@ -102,1155 +88,157 @@ class _ChordProRendererState extends State<ChordProRenderer> {
 
   int get _effectiveTranspose => widget.transpose - _effectiveCapo;
 
-  List<String> get _uniqueChords {
-    final chords = <String>{};
-    for (final section in _ast.sections) {
-      for (final line in section.lines) {
-        for (final seg in line.segments ?? const <SegmentAst>[]) {
-          if (seg.chord.isNotEmpty) chords.add(seg.chord);
-        }
-        for (final m in line.measures ?? const <MeasureAst>[]) {
-          for (final c in m.chords) {
-            if (c.chord.isNotEmpty) chords.add(c.chord);
-          }
-        }
-      }
-    }
-    return chords.toList();
+  @override
+  void initState() {
+    super.initState();
+    _prepare();
   }
+
+  @override
+  void didUpdateWidget(covariant ChordProRenderer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldCapo =
+        instrumentRegistry.resolve(oldWidget.instrument).supportsCapo
+        ? oldWidget.capo
+        : 0;
+    if (!identical(oldWidget.document, widget.document) ||
+        oldWidget.variantId != widget.variantId ||
+        oldWidget.transpose - oldCapo != _effectiveTranspose) {
+      _prepare();
+    }
+    if (!identical(
+      oldWidget.instrumentPreferences,
+      widget.instrumentPreferences,
+    )) {
+      _fingerings.clear();
+    }
+  }
+
+  void _prepare() {
+    _version = selectVersion(widget.document, widget.variantId);
+    _song = prepareSong(_version.body, _effectiveTranspose);
+  }
+
+  ChordFingering? _fingeringFor(String chord) => _fingerings.putIfAbsent(
+    chord,
+    () => chordDictionary.getFingering(
+      chord,
+      preferences: widget.instrumentPreferences,
+    ),
+  );
 
   void _openChord(String chord) {
-    setState(() {
-      _selectedChord = chord;
-      _dialogInstrument = widget.instrument;
-    });
+    showChordSheet(
+      context,
+      chord: chord,
+      chords: _song.uniqueChords,
+      instrument: widget.instrument,
+      capo: _effectiveCapo,
+      preferences: widget.instrumentPreferences,
+      fingeringFor: _fingeringFor,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metadata = _ast.metadata;
+    final metadata = _version.metadata;
+    final fontSize =
+        widget.fontSize ?? theme.textTheme.bodyMedium?.fontSize ?? 14;
+    final lyricStyle = theme.textTheme.bodyMedium!.copyWith(
+      fontSize: fontSize,
+      height: 1.5,
+    );
+    final options = LineRenderOptions(
+      showChords: widget.showChords,
+      fontSize: fontSize,
+      onChordTap: _openChord,
+    );
 
-    return Stack(
-      children: [
-        SingleChildScrollView(
+    final notes = widget.notes?.trim();
+    final key = metadata['key'] ?? 'C';
+    final showRoll =
+        widget.showDiagrams &&
+        widget.showChords &&
+        _song.uniqueChords.isNotEmpty;
+
+    final leading = <Widget>[
+      MetadataHeader(
+        metadata: metadata,
+        soundingKey: transposeChord(key, widget.transpose),
+        renderedKey: transposeChord(key, _effectiveTranspose),
+        effectiveCapo: _effectiveCapo,
+        transposeVal: widget.transpose,
+        onKeyTap: widget.onKeyTap,
+        onYoutubeTap: widget.onYoutubeTap,
+      ),
+      if (notes != null && notes.isNotEmpty) NotesCard(notes: widget.notes!),
+      if (showRoll)
+        ChordRoll(
+          chords: _song.uniqueChords,
+          capo: _effectiveCapo,
+          instrument: widget.instrument,
+          preferences: widget.instrumentPreferences,
+          fingeringFor: _fingeringFor,
+          onChordTap: _openChord,
+        ),
+    ];
+
+    Widget sectionView(PreparedSection section) => SectionView(
+      section: section,
+      options: options,
+      colorBackground: widget.sectionColorBackground,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final sections = _song.sections;
+        final useTwoColumns =
+            widget.twoColumn &&
+            constraints.maxWidth - 32 >= 500 &&
+            sections.length > 1;
+        final bodyCount = useTwoColumns ? 1 : sections.length;
+
+        return CustomScrollView(
           controller: widget.scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _MetadataHeader(
-                metadata: metadata,
-                soundingKey: transposeChord(
-                  metadata['key'] ?? 'C',
-                  widget.transpose,
-                ),
-                renderedKey: transposeChord(
-                  metadata['key'] ?? 'C',
-                  _effectiveTranspose,
-                ),
-                effectiveCapo: _effectiveCapo,
-                transposeVal: widget.transpose,
-              ),
-              if (widget.notes != null && widget.notes!.trim().isNotEmpty)
-                _NotesCard(notes: widget.notes!),
-              if (widget.showDiagrams &&
-                  widget.showChords &&
-                  _uniqueChords.isNotEmpty)
-                _ChordRoll(
-                  uniqueChords: _uniqueChords,
-                  effectiveTranspose: _effectiveTranspose,
-                  capo: _effectiveCapo,
-                  instrument: widget.instrument,
-                  preferences: widget.instrumentPreferences,
-                  onChordTap: _openChord,
-                ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return DefaultTextStyle(
-                    style: theme.textTheme.bodyMedium!.copyWith(
-                      fontSize: widget.fontSize,
-                      height: 1.5,
-                    ),
-                    child: _buildSections(context, constraints),
-                  );
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 48 + widget.bottomInset),
+              sliver: SliverList.builder(
+                itemCount: leading.length + bodyCount,
+                itemBuilder: (context, i) {
+                  if (i < leading.length) return leading[i];
+                  final Widget body;
+                  if (useTwoColumns) {
+                    final (col1, col2) = _song.splitColumns();
+                    body = Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [for (final s in col1) sectionView(s)],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [for (final s in col2) sectionView(s)],
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    body = sectionView(sections[i - leading.length]);
+                  }
+                  return DefaultTextStyle(style: lyricStyle, child: body);
                 },
               ),
-            ],
-          ),
-        ),
-        if (_selectedChord != null)
-          _ChordDialog(
-            chord: _selectedChord!,
-            instrument: _dialogInstrument,
-            capo: _effectiveCapo,
-            preferences: widget.instrumentPreferences,
-            onInstrumentChange: (i) => setState(() => _dialogInstrument = i),
-            onClose: () => setState(() => _selectedChord = null),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSections(BuildContext context, BoxConstraints constraints) {
-    final useTwoColumns = widget.twoColumn && constraints.maxWidth >= 500;
-
-    if (!useTwoColumns || _ast.sections.length <= 1) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final section in _ast.sections) _renderSection(context, section),
-        ],
-      );
-    }
-
-    // Distribute sections evenly into 2 columns based on line count weights
-    final col1 = <SectionAst>[];
-    final col2 = <SectionAst>[];
-    final sectionWeights = _ast.sections
-        .map((s) => (s.lines.isEmpty ? 1 : s.lines.length) + 2)
-        .toList();
-    final totalWeight = sectionWeights.fold<int>(0, (a, b) => a + b);
-    final halfWeight = totalWeight / 2;
-
-    var currentWeight = 0;
-    for (var i = 0; i < _ast.sections.length; i++) {
-      final s = _ast.sections[i];
-      final w = sectionWeights[i];
-      if (col1.isEmpty ||
-          (currentWeight + w <= halfWeight && i < _ast.sections.length - 1)) {
-        col1.add(s);
-        currentWeight += w;
-      } else {
-        col2.add(s);
-      }
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final section in col1) _renderSection(context, section),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final section in col2) _renderSection(context, section),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _renderSection(BuildContext context, SectionAst section) {
-    final theme = Theme.of(context);
-
-    if (section.type == 'new_song') {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Row(
-          children: [
-            Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Icon(
-                Icons.music_note,
-                color: theme.colorScheme.outlineVariant,
-              ),
-            ),
-            Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
-          ],
-        ),
-      );
-    }
-
-    if (section.type == 'grid') {
-      final maxMeasures = section.lines.fold<int>(1, (m, l) {
-        final len = l.measures?.length ?? 1;
-        return len > m ? len : m;
-      });
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.grid_view,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  section.label?.isNotEmpty == true
-                      ? section.label!
-                      : 'Instrumental',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (final line in section.lines)
-              _LineRenderer(
-                line: line,
-                showChords: widget.showChords,
-                transpose: _effectiveTranspose,
-                onChordTap: _openChord,
-                maxGridMeasures: maxMeasures,
-              ),
-          ],
-        ),
-      );
-    }
-
-    if (section.type == 'tab') {
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 12),
-        padding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              section.label?.isNotEmpty == true ? section.label! : 'Tablatura',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: const Color(0xFFCBD5E1),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SelectableText(
-              section.lines.map((l) => l.text ?? '').join('\n'),
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-                height: 1.6,
-                color: Color(0xFFCBD5E1),
-              ),
             ),
           ],
-        ),
-      );
-    }
-
-    if (section.type == 'comment') {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final line in section.lines)
-              _LineRenderer(
-                line: line,
-                showChords: widget.showChords,
-                transpose: _effectiveTranspose,
-                onChordTap: _openChord,
-              ),
-          ],
-        ),
-      );
-    }
-
-    final isChorus = section.type == 'chorus';
-    final isBridge = section.type == 'bridge';
-    final isLabeled = isChorus || isBridge;
-
-    final accent = isChorus
-        ? theme.colorScheme.primary
-        : (isBridge
-              ? const Color(0xFFD97706)
-              : theme.colorScheme.outlineVariant);
-
-    final showBackground = widget.sectionColorBackground;
-    final backgroundColor = showBackground
-        ? (isChorus
-              ? theme.colorScheme.primary.withValues(alpha: 0.04)
-              : (isBridge
-                    ? const Color(0xFFD97706).withValues(alpha: 0.04)
-                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.04)))
-        : null;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: showBackground
-          ? const EdgeInsets.fromLTRB(12, 4, 8, 4)
-          : const EdgeInsets.only(left: 12),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: showBackground ? BorderRadius.circular(4) : null,
-        border: Border(
-          left: BorderSide(color: accent.withValues(alpha: 0.5), width: 2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (section.label?.isNotEmpty == true || isLabeled)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                _sectionLabel(section),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          if (section.lines.isEmpty && isChorus)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                '(Repete o refrão)',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          for (final line in section.lines)
-            _LineRenderer(
-              line: line,
-              showChords: widget.showChords,
-              transpose: _effectiveTranspose,
-              onChordTap: _openChord,
-            ),
-        ],
-      ),
-    );
-  }
-
-  String _sectionLabel(SectionAst section) {
-    final label = section.label;
-    if (label != null && label.isNotEmpty) return label;
-    return switch (section.type) {
-      'chorus' => 'Refrão',
-      'bridge' => 'Ponte',
-      _ => '',
-    };
-  }
-}
-
-// ── Metadata header ────────────────────────────────────────────────────────
-
-class _NotesCard extends StatelessWidget {
-  const _NotesCard({required this.notes});
-
-  final String notes;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.servicesNotes.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            notes,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetadataHeader extends StatelessWidget {
-  const _MetadataHeader({
-    required this.metadata,
-    required this.soundingKey,
-    required this.renderedKey,
-    required this.effectiveCapo,
-    required this.transposeVal,
-  });
-
-  final Map<String, String> metadata;
-  final String soundingKey;
-  final String renderedKey;
-  final int effectiveCapo;
-  final int transposeVal;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final title = metadata['title'];
-    final subtitle = metadata['subtitle'];
-    final artist = metadata['artist'];
-    final composer = metadata['composer'];
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null && title.isNotEmpty)
-            Text(title, style: theme.textTheme.headlineSmall),
-          if (subtitle != null && subtitle.isNotEmpty)
-            Text(
-              subtitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          if ((artist != null && artist.isNotEmpty) ||
-              (composer != null && composer.isNotEmpty))
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                [
-                  artist,
-                  composer,
-                ].where((e) => e != null && e.isNotEmpty).join(' / '),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          if (metadata.keys.any(
-            (k) => [
-              'key',
-              'originalKey',
-              'capo',
-              'tempo',
-              'time',
-              'ccli',
-              'songNumber',
-            ].contains(k),
-          ))
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  if (metadata['songNumber'] != null &&
-                      metadata['songNumber']!.isNotEmpty)
-                    _pill(context, 'Nº ${metadata['songNumber']}'),
-                  if ((metadata['key'] != null &&
-                          metadata['key']!.isNotEmpty) ||
-                      transposeVal != 0)
-                    _pill(context, 'Tom: $soundingKey'),
-                  if (effectiveCapo > 0)
-                    _pill(context, 'Capo: $effectiveCapoª casa'),
-                  if (effectiveCapo > 0)
-                    _pill(context, 'Formato: $renderedKey'),
-                  if (metadata['originalKey'] != null &&
-                      metadata['originalKey']!.isNotEmpty)
-                    _pill(context, 'Tom Orig: ${metadata['originalKey']}'),
-                  if (metadata['tempo'] != null &&
-                      metadata['tempo']!.isNotEmpty)
-                    _pill(context, '${metadata['tempo']} BPM'),
-                  if (metadata['time'] != null && metadata['time']!.isNotEmpty)
-                    _pill(context, metadata['time']!),
-                  if (metadata['ccli'] != null && metadata['ccli']!.isNotEmpty)
-                    _pill(context, 'CCLI: ${metadata['ccli']}'),
-                ],
-              ),
-            ),
-          if (metadata['copyright'] != null &&
-              metadata['copyright']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '© ${metadata['copyright']}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _pill(BuildContext context, String text) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        text,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Line renderers ─────────────────────────────────────────────────────────
-
-class _LineRenderer extends StatelessWidget {
-  const _LineRenderer({
-    required this.line,
-    required this.showChords,
-    required this.transpose,
-    required this.onChordTap,
-    this.maxGridMeasures,
-  });
-
-  final LineAst line;
-  final bool showChords;
-  final int transpose;
-  final void Function(String) onChordTap;
-  final int? maxGridMeasures;
-
-  @override
-  Widget build(BuildContext context) {
-    switch (line.type) {
-      case 'empty':
-        return const SizedBox(height: 8);
-      case 'comment':
-        return _CommentRenderer(line: line);
-      case 'comment_italic':
-        return _CommentItalicRenderer(line: line);
-      case 'comment_box':
-        return _CommentBoxRenderer(line: line);
-      case 'chord-section':
-        return _ChordSectionRenderer(
-          line: line,
-          showChords: showChords,
-          transpose: transpose,
-          onChordTap: onChordTap,
-          maxMeasures: maxGridMeasures,
         );
-      default:
-        return _LyricsRenderer(
-          line: line,
-          showChords: showChords,
-          transpose: transpose,
-          onChordTap: onChordTap,
-        );
-    }
-  }
-}
-
-/// Plain inline comment (`{c: ...}`): quiet, upright note text.
-class _CommentRenderer extends StatelessWidget {
-  const _CommentRenderer({required this.line});
-
-  final LineAst line;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 1),
-            child: Icon(
-              Icons.notes,
-              size: 13,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              line.text ?? '',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Emphasised italic comment (`{ci: ...}`): centred and set apart.
-class _CommentItalicRenderer extends StatelessWidget {
-  const _CommentItalicRenderer({required this.line});
-
-  final LineAst line;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        line.text ?? '',
-        textAlign: TextAlign.center,
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontStyle: FontStyle.italic,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-class _CommentBoxRenderer extends StatelessWidget {
-  const _CommentBoxRenderer({required this.line});
-
-  final LineAst line;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFEF3C7),
-        border: Border(left: BorderSide(color: Color(0xFFF59E0B), width: 4)),
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, size: 16, color: Color(0xFFB45309)),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              line.text ?? '',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF92400E),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LyricsRenderer extends StatelessWidget {
-  const _LyricsRenderer({
-    required this.line,
-    required this.showChords,
-    required this.transpose,
-    required this.onChordTap,
-  });
-
-  final LineAst line;
-  final bool showChords;
-  final int transpose;
-  final void Function(String) onChordTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final segments = line.segments ?? const <SegmentAst>[];
-    final chordFontSize = (theme.textTheme.bodyMedium?.fontSize ?? 14) * 0.85;
-
-    // Tokenize segments so chords align precisely above the target word/syllable
-    // and lines wrap naturally word-by-word.
-    final items = <({String chord, String text})>[];
-
-    for (final seg in segments) {
-      final text = seg.text;
-      if (text.isEmpty) {
-        items.add((chord: seg.chord, text: ''));
-        continue;
-      }
-
-      final matches = RegExp(r'\S+\s*|\s+').allMatches(text).toList();
-      if (matches.isEmpty) {
-        items.add((chord: seg.chord, text: text));
-      } else {
-        var chordAssigned = false;
-        for (var i = 0; i < matches.length; i++) {
-          final chunk = matches[i].group(0)!;
-          final isWord = chunk.trim().isNotEmpty;
-          if (!chordAssigned && (isWord || i == matches.length - 1)) {
-            items.add((chord: seg.chord, text: chunk));
-            chordAssigned = true;
-          } else {
-            items.add((chord: '', text: chunk));
-          }
-        }
-      }
-    }
-
-    final chordStyle = TextStyle(
-      color: theme.colorScheme.primary,
-      fontFamily: 'monospace',
-      fontWeight: FontWeight.w800,
-      fontSize: chordFontSize,
-      height: 1.2,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Wrap(
-        crossAxisAlignment: WrapCrossAlignment.end,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            _ChordLyricCell(
-              chord: items[i].chord.isEmpty
-                  ? ''
-                  : transposeChord(items[i].chord, transpose),
-              text: items[i].text,
-              showChords: showChords,
-              chordStyle: chordStyle,
-              chordFontSize: chordFontSize,
-              // Peek at the next chord-bearing cell so we can pad when two
-              // chords would otherwise glue together over short/empty lyrics.
-              nextHasChord: showChords &&
-                  i + 1 < items.length &&
-                  items[i + 1].chord.isNotEmpty,
-              onChordTap: onChordTap,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// One chord + lyric syllable. Pads the cell when the chord label is wider
-/// than the lyric (or the lyric is empty) so adjacent chords like `[Em][C]`
-/// don't render as `EmC`.
-class _ChordLyricCell extends StatelessWidget {
-  const _ChordLyricCell({
-    required this.chord,
-    required this.text,
-    required this.showChords,
-    required this.chordStyle,
-    required this.chordFontSize,
-    required this.nextHasChord,
-    required this.onChordTap,
-  });
-
-  final String chord;
-  final String text;
-  final bool showChords;
-  final TextStyle chordStyle;
-  final double chordFontSize;
-  final bool nextHasChord;
-  final void Function(String) onChordTap;
-
-  static double _measure(String value, TextStyle style) {
-    if (value.isEmpty) return 0;
-    final tp = TextPainter(
-      text: TextSpan(text: value, style: style),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout();
-    return tp.width;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lyric = text.isEmpty ? '\u00A0' : text;
-    final lyricStyle = const TextStyle(height: 1.3);
-
-    var minWidth = 0.0;
-    if (showChords && chord.isNotEmpty) {
-      final chordW = _measure(chord, chordStyle);
-      final lyricW = _measure(lyric, lyricStyle);
-      // Always keep the column at least as wide as the chord label.
-      minWidth = chordW;
-      // Extra gap when the next cell also has a chord and lyrics alone
-      // wouldn't separate them.
-      if (nextHasChord && lyricW < chordW + 4) {
-        minWidth = chordW + 6;
-      }
-    }
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(minWidth: minWidth),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showChords)
-            if (chord.isNotEmpty)
-              GestureDetector(
-                onTap: () => onChordTap(chord),
-                child: Text(chord, style: chordStyle),
-              )
-            else
-              SizedBox(height: chordFontSize * 1.2),
-          Text(lyric, style: lyricStyle),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChordSectionRenderer extends StatelessWidget {
-  const _ChordSectionRenderer({
-    required this.line,
-    required this.showChords,
-    required this.transpose,
-    required this.onChordTap,
-    this.maxMeasures,
-  });
-
-  final LineAst line;
-  final bool showChords;
-  final int transpose;
-  final void Function(String) onChordTap;
-  final int? maxMeasures;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!showChords) return const SizedBox.shrink();
-    final theme = Theme.of(context);
-    final measures = line.measures ?? const <MeasureAst>[];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: [
-          if (line.startBarline != null && line.startBarline!.isNotEmpty)
-            _Barline(barline: line.startBarline!),
-          for (final measure in measures) ...[
-            for (final c in measure.chords)
-              GestureDetector(
-                onTap: () => onChordTap(transposeChord(c.chord, transpose)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Text(
-                    transposeChord(c.chord, transpose),
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ),
-            if (measure.endBarline.isNotEmpty)
-              _Barline(barline: measure.endBarline),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Barline extends StatelessWidget {
-  const _Barline({required this.barline});
-
-  final String barline;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final symbol = switch (barline) {
-      '|:' => '𝄆',
-      ':|' => '𝄇',
-      '||' => '‖',
-      '|]' => '𝄂',
-      '|' => '|',
-      _ => barline,
-    };
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Text(
-        symbol,
-        style: TextStyle(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Chord roll + dictionary dialog ─────────────────────────────────────────
-
-class _ChordRoll extends StatelessWidget {
-  const _ChordRoll({
-    required this.uniqueChords,
-    required this.effectiveTranspose,
-    required this.capo,
-    required this.instrument,
-    required this.preferences,
-    required this.onChordTap,
-  });
-
-  final List<String> uniqueChords;
-  final int effectiveTranspose;
-  final int capo;
-  final String instrument;
-  final InstrumentPreferences preferences;
-  final void Function(String) onChordTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final pref = preferences.forId(instrument);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (instrumentRegistry.resolve(instrument).supportsCapo && capo > 0)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                'Capo na $capoª casa',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFFB45309),
-                ),
-              ),
-            ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final chord in uniqueChords)
-                  _ChordRollItem(
-                    chord: chord,
-                    transposed: transposeChord(chord, effectiveTranspose),
-                    instrument: instrument,
-                    capo: capo,
-                    preference: pref,
-                    preferences: preferences,
-                    onTap: onChordTap,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChordRollItem extends StatelessWidget {
-  const _ChordRollItem({
-    required this.chord,
-    required this.transposed,
-    required this.instrument,
-    required this.capo,
-    required this.preference,
-    required this.preferences,
-    required this.onTap,
-  });
-
-  final String chord;
-  final String transposed;
-  final String instrument;
-  final int capo;
-  final InstrumentPreference preference;
-  final InstrumentPreferences preferences;
-  final void Function(String) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final voicing = chordDictionary
-        .getFingering(transposed, preferences: preferences)
-        ?.forInstrument(instrument);
-
-    return InkWell(
-      onTap: () => onTap(transposed),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Column(
-          children: [
-            Text(
-              transposed,
-              style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              height: 116,
-              child: InstrumentDiagram(
-                fingering: voicing,
-                capo: capo,
-                showFingerNumbers: preference.showFingerNumbers,
-                showCapoMarker: preference.showCapoMarker,
-              ),
-            ),
-            if (voicing != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  voicing.notes.join(' - '),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ChordDialog extends StatelessWidget {
-  const _ChordDialog({
-    required this.chord,
-    required this.instrument,
-    required this.capo,
-    required this.preferences,
-    required this.onInstrumentChange,
-    required this.onClose,
-  });
-
-  final String chord;
-  final String instrument;
-  final int capo;
-  final InstrumentPreferences preferences;
-  final void Function(String) onInstrumentChange;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final fingering =
-        chordDictionary.getFingering(chord, preferences: preferences);
-    final voicing = fingering?.forInstrument(instrument);
-    final supportsCapo = instrumentRegistry.resolve(instrument).supportsCapo;
-    final diagramCapo = supportsCapo ? capo : 0;
-    final pref = preferences.forId(instrument);
-
-    return Positioned.fill(
-      child: GestureDetector(
-        onTap: onClose,
-        child: Container(
-          color: Colors.black54,
-          alignment: Alignment.center,
-          child: GestureDetector(
-            onTap: () {},
-            child: Container(
-              margin: const EdgeInsets.all(24),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Dicionário: $chord',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: onClose,
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  InstrumentSelector(
-                    selected: instrument,
-                    onChanged: onInstrumentChange,
-                  ),
-                  if (diagramCapo > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Capo na $diagramCapoª casa',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: const Color(0xFFB45309),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  if (fingering != null)
-                    InstrumentDiagram(
-                      fingering: voicing,
-                      capo: diagramCapo,
-                      showFingerNumbers: pref.showFingerNumbers,
-                      showCapoMarker: pref.showCapoMarker,
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Acorde "$chord" não registado',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  if (voicing != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(
-                        'Notas: ${voicing.notes.join(' - ')}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      },
     );
   }
 }

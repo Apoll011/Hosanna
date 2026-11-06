@@ -9,7 +9,11 @@ import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
 /// props (transpose, capo, show chords, two-column, font size, instrument,
-/// diagrams). Appearance settings are persisted; transpose/capo are transient.
+/// diagrams).
+///
+/// Appearance settings are persisted globally. Transpose/capo are transient for
+/// standalone song views, and persisted per `(serviceId, songId)` while reading
+/// inside a service.
 class SongDisplaySettings {
   /// Shared font-size range for the song reader toolbar and Settings.
   static const double minFontSize = 12;
@@ -104,6 +108,11 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _diagramsKey = 'songDisplay.showDiagrams';
   static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
   static const _instrumentPreferencesKey = 'songDisplay.instrumentPreferences';
+  static const _serviceTranspositionsKey = 'songDisplay.serviceTranspositions';
+
+  /// Active service-song scope (`serviceId|songId`), or `null` when reading a
+  /// standalone song / nothing. Changes under a scope are written to prefs.
+  String? _transpositionScopeKey;
 
   void _restore() {
     InstrumentPreferences instrumentPreferences =
@@ -136,12 +145,83 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     );
   }
 
-  void setTranspose(int value) => state = state.copyWith(transpose: value);
+  void setTranspose(int value) {
+    if (state.transpose == value) return;
+    state = state.copyWith(transpose: value);
+    _persistScopedTransposition();
+  }
 
-  void setCapo(int value) => state = state.copyWith(capo: value);
+  void setCapo(int value) {
+    if (state.capo == value) return;
+    state = state.copyWith(capo: value);
+    _persistScopedTransposition();
+  }
 
-  void resetTransposition() =>
-      state = state.copyWith(transpose: 0, capo: 0);
+  void resetTransposition() {
+    if (state.transpose == 0 && state.capo == 0) {
+      _persistScopedTransposition();
+      return;
+    }
+    state = state.copyWith(transpose: 0, capo: 0);
+    _persistScopedTransposition();
+  }
+
+  /// Loads the saved transpose/capo for this service song (or 0/0) and makes
+  /// later changes persist under that pair.
+  void enterServiceSong({required String serviceId, required String songId}) {
+    final key = _scopeKey(serviceId, songId);
+    if (_transpositionScopeKey == key) return;
+    _transpositionScopeKey = key;
+    final stored = _readScopedTransposition(key);
+    state = state.copyWith(transpose: stored.transpose, capo: stored.capo);
+  }
+
+  /// Clears the service-song scope and resets transpose/capo to 0.
+  ///
+  /// Call when leaving a [SongReader] (service or standalone) so the next song
+  /// never inherits the previous one's transposition.
+  void leaveTranspositionScope() {
+    _transpositionScopeKey = null;
+    if (state.transpose == 0 && state.capo == 0) return;
+    state = state.copyWith(transpose: 0, capo: 0);
+  }
+
+  static String _scopeKey(String serviceId, String songId) =>
+      '$serviceId|$songId';
+
+  ({int transpose, int capo}) _readScopedTransposition(String key) {
+    final map = _loadTranspositionMap();
+    final entry = map[key];
+    if (entry is! Map) return (transpose: 0, capo: 0);
+    final transpose = (entry['t'] as num?)?.toInt() ?? 0;
+    final capo = (entry['c'] as num?)?.toInt() ?? 0;
+    return (transpose: transpose, capo: capo);
+  }
+
+  void _persistScopedTransposition() {
+    final key = _transpositionScopeKey;
+    if (key == null) return;
+
+    final map = _loadTranspositionMap();
+    if (state.transpose == 0 && state.capo == 0) {
+      map.remove(key);
+    } else {
+      map[key] = {'t': state.transpose, 'c': state.capo};
+    }
+    _prefs.setString(_serviceTranspositionsKey, jsonEncode(map));
+  }
+
+  Map<String, dynamic> _loadTranspositionMap() {
+    final raw = _prefs.getString(_serviceTranspositionsKey);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {
+      // Corrupt prefs — start fresh.
+    }
+    return {};
+  }
 
   void setVariantId(String id) {
     if (state.variantId == id) return;
@@ -194,9 +274,13 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void toggleDiagrams() {
-    final v = !state.showDiagrams;
-    _prefs.setBool(_diagramsKey, v);
-    state = state.copyWith(showDiagrams: v);
+    setShowDiagrams(!state.showDiagrams);
+  }
+
+  void setShowDiagrams(bool value) {
+    if (state.showDiagrams == value) return;
+    _prefs.setBool(_diagramsKey, value);
+    state = state.copyWith(showDiagrams: value);
   }
 
   void setAutoScrollSpeed(double value) {

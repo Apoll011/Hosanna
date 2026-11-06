@@ -2,7 +2,6 @@
   "@@locale": "pt",
   "appTitle": "Hosanna",
   "appTagline": "A sua biblioteca e planos de louvor, sempre sincronizados.",
-
   "commonCancel": "Cancelar",
   "commonSave": "Guardar",
   "commonDelete": "Eliminar",
@@ -88,7 +87,6 @@
   "authSocialNetworkError": "Sem ligação ao servidor. Verifique a sua Internet.",
   "authSocialServerError": "O servidor não conseguiu concluir o início de sessão. Tente novamente.",
   "authSocialError": "Não foi possível iniciar sessão.",
-
   "onboardingTitle": "Bem-vindo ao Hosanna",
   "onboardingSubtitle": "Aceite um convite para entrar na organização da sua igreja.",
   "onboardingPendingInvites": "{count, plural, =1{1 convite pendente} other{{count} convites pendentes}}",
@@ -99,7 +97,46 @@
   "onboardingRole": "Função",
   "onboardingLoadingInvites": "A carregar convites…",
   "onboardingSignOut": "Terminar Sessão",
-
+  "setupWelcomeTitle": "Vamos configurar o Hosanna",
+  "setupWelcomeSubtitle": "Algumas escolhas rápidas para que canções e cultos fiquem certos para a forma como serve.",
+  "setupWelcomeCta": "Começar",
+  "setupRoleTitle": "Como usa o Hosanna?",
+  "setupRoleSubtitle": "Abrimos os cultos da forma que melhor se adequa ao seu papel. Pode mudar isto depois nas Definições.",
+  "setupRoleMusician": "Músico",
+  "setupRoleMusicianDesc": "Entre direto nas canções com acordes, capo e diagramas.",
+  "setupRoleLeader": "Líder",
+  "setupRoleLeaderDesc": "Comece pela ordem do culto e pelas notas do momento.",
+  "setupFocusTitle": "O que toca?",
+  "setupFocusSubtitle": "Isto define o instrumento predefinido para os diagramas de acordes.",
+  "setupFocusGuitar": "Guitarra",
+  "setupFocusUkulele": "Ukulele",
+  "setupFocusPiano": "Piano / teclas",
+  "setupFocusVocals": "Voz",
+  "setupFocusVocalsDesc": "Letra em primeiro — os acordes ficam disponíveis quando precisar.",
+  "setupLeaderFocusTitle": "Quando abre uma canção…",
+  "setupLeaderFocusSubtitle": "Opcional — escolha um instrumento para as cifras ao rever canções.",
+  "setupPrefsTitle": "Predefinições para o palco",
+  "setupPrefsSubtitle": "Opções úteis para ensaios e culto ao vivo.",
+  "setupPrefDiagrams": "Mostrar diagramas de acordes",
+  "setupPrefDiagramsDesc": "Digitação acima da canção quando disponível.",
+  "setupPrefAwake": "Manter o ecrã ligado",
+  "setupPrefAwakeDesc": "Não escurecer durante uma canção ou culto.",
+  "setupLanguageTitle": "Idioma",
+  "setupLanguageSubtitle": "Escolha o idioma dos menus e etiquetas.",
+  "setupLanguageSystem": "Seguir o dispositivo",
+  "setupDoneTitle": "Está pronto",
+  "setupDoneSubtitle": "O Hosanna está configurado para si. Entre na biblioteca quando quiser.",
+  "setupDoneCta": "Entrar no Hosanna",
+  "setupSkip": "Saltar por agora",
+  "setupStepOf": "Passo {current} de {total}",
+  "@setupStepOf": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "settingsRedoSetup": "Repetir configuração",
+  "settingsRedoSetupDesc": "Voltar a responder às perguntas de função e instrumento.",
   "syncSyncing": "A sincronizar…",
   "syncSynced": "Sincronizado",
   "syncError": "Erro de sincronização",
@@ -108,7 +145,6 @@
   "syncNever": "Nunca sincronizado",
   "syncNow": "Sincronizar agora",
   "syncPullToRefresh": "Puxe para sincronizar",
-
   "navSongs": "Cânticos",
   "navServices": "Cultos",
   "navFolders": "Pastas",
@@ -116,13 +152,51 @@
   "navSettings": "Definições",
   "navCircleOfFifths": "Círculo de Quintas",
   "navMetronome": "Metrónomo",
+  "navAgenda": "Agenda",
   "navExportPdf": "Exportar PDF",
   "navLibrarySection": "Biblioteca",
   "navToolsSection": "Ferramentas",
+  "agendaEmptyTitle": "Sem eventos próximos",
+  "agendaEmptyBody": "Os eventos do calendário da igreja aparecem aqui depois de sincronizar.",
+  "agendaNoEventsForDay": "Nada neste dia",
+  "agendaNoEventsForDayBody": "Escolha outro dia na barra acima.",
+  "agendaEventDetails": "Evento",
+  "agendaEventNotFound": "Evento não encontrado",
+  "agendaEventNotFoundBody": "Este evento pode ter sido removido ou ainda não sincronizou.",
+  "agendaFieldDate": "Data",
+  "agendaFieldTime": "Hora",
+  "agendaFieldLocation": "Local",
+  "agendaFieldNotes": "Notas",
+  "agendaFieldResponsibilities": "Equipa",
+  "agendaLinkedService": "Culto associado",
+  "agendaUnassigned": "Sem atribuição",
+  "agendaMinutes": "{count} min",
+  "@agendaMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agendaResponsibilityCount": "{count} atribuídos",
+  "@agendaResponsibilityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agendaAssigneeCount": "{count} pessoas",
+  "@agendaAssigneeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "navAllSongs": "Todos os cânticos",
   "navFavorites": "Favoritos",
   "navRecents": "Recentes",
-
   "songsTitle": "Cânticos",
   "songsSearchHint": "Pesquisar cânticos…",
   "songsEmpty": "Ainda sem cânticos",
@@ -155,8 +229,8 @@
   "songsNumberAny": "Qualquer",
   "songsNumberOnly": "Numerados",
   "songsNumberNone": "Sem número",
-  "songsSearchLyrics": "Pesquisar na letra",
-  "songsWithChords": "Apenas com acordes",
+  "songsSearchLyrics": "Pesquisar também na letra",
+  "songsWithChords": "Mostrar apenas cânticos com acordes",
   "songsResetFilters": "Repor filtros",
   "songsClear": "Limpar",
   "songsClearFilters": "Limpar filtros",
@@ -167,6 +241,155 @@
   "songsTagsLabel": "Etiquetas",
   "songsChordPro": "ChordPro",
   "songsRawContent": "Conteúdo em bruto (ChordPro)",
+  "songsCreate": "Nova canção",
+  "songsEdit": "Editar canção",
+  "songsPreview": "Pré-visualizar",
+  "songsFieldTitle": "Título",
+  "songsFieldSubtitle": "Subtítulo",
+  "songsFieldArtist": "Artista",
+  "songsFieldComposer": "Compositor",
+  "songsFieldLyricist": "Letrista",
+  "songsFieldTranslator": "Tradutor",
+  "songsFieldArranger": "Arranjador",
+  "songsFieldSongNumber": "Número da canção",
+  "songsFieldKey": "Tom",
+  "songsFieldOriginalKey": "Tom original",
+  "songsFieldKeyNone": "Nenhum",
+  "songsFieldTempo": "Tempo (BPM)",
+  "songsFieldTime": "Compasso",
+  "songsFieldDuration": "Duração (m:ss)",
+  "songsFieldCapo": "Capo",
+  "songsFieldKeyNote": "Nota de tom",
+  "songsFieldAlbum": "Álbum",
+  "songsFieldYear": "Ano",
+  "songsFieldCopyright": "Copyright",
+  "songsFieldCcli": "CCLI",
+  "songsFieldYoutube": "URL / ID do YouTube",
+  "songsFieldTagsHint": "Etiquetas separadas por vírgula",
+  "songsTabContent": "Letra e acordes",
+  "songsTabMetadata": "Detalhes",
+  "songsTitleRequired": "O título é obrigatório.",
+  "songsChordProHint": "[G]Escreva a letra e os [C]acordes aqui…\nUse as opções acima para verso, refrão e mais.",
+  "songsEditorInsertVerse": "Verso",
+  "songsEditorInsertChorus": "Refrão",
+  "songsEditorInsertBridge": "Ponte",
+  "songsEditorInsertComment": "Comentário",
+  "songsEditorInsertVersion": "Versão",
+  "songsLintAllClear": "Nenhum problema no ChordPro.",
+  "songsLintSummary": "{errors} erros · {warnings} avisos · {infos} dicas",
+  "@songsLintSummary": {
+    "placeholders": {
+      "errors": { "type": "int" },
+      "warnings": { "type": "int" },
+      "infos": { "type": "int" }
+    }
+  },
+  "songsLintLine": "L{line}",
+  "@songsLintLine": {
+    "placeholders": {
+      "line": { "type": "int" }
+    }
+  },
+  "songsLintDetails": "Detalhes",
+  "songsLintUnclosedBrace": "Chavetas por fechar ou desalinhadas.",
+  "songsLintUnclosedBracket": "Parênteses de acorde por fechar ou desalinhados.",
+  "songsLintEmptyChord": "Acordes vazios.",
+  "songsLintUnknownChord": "Acorde não reconhecido \"{chord}\".",
+  "@songsLintUnknownChord": {
+    "placeholders": {
+      "chord": { "type": "String" }
+    }
+  },
+  "songsLintMalformedDirective": "Diretiva malformada — verifique chavetas e nome.",
+  "songsLintUnknownDirective": "Diretiva não reconhecida \"{name}\".",
+  "@songsLintUnknownDirective": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songsLintUnclosedSection": "Secção {section} por fechar — falta end_of_{section}.",
+  "@songsLintUnclosedSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintUnexpectedEndSection": "end_of_{section} inesperado sem início correspondente.",
+  "@songsLintUnexpectedEndSection": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "songsLintInvalidYoutube": "O valor do YouTube não é um URL ou ID válido.",
+  "songsLintInvalidKey": "Tom invulgar \"{value}\". Esperado G, Am, F#m, …",
+  "@songsLintInvalidKey": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "songsLintInvalidTempo": "O tempo deve ser um BPM entre 20 e 400.",
+  "songsLintInvalidCapo": "O capo deve ser um traste de 0 a 12.",
+  "songsLintInvalidTime": "O compasso deve parecer 4/4 ou 6/8.",
+  "songsLintInvalidDuration": "A duração deve ser segundos ou m:ss (ex. 3:45).",
+  "songsNewSong": "Nova canção",
+  "songsCreateManually": "Criar manualmente",
+  "songsCreateManuallyDesc": "Título, acordes e letra.",
+  "songsImportWithAi": "Importar com IA",
+  "songsImportWithAiDesc": "De PDF, imagem ou fotografia.",
+  "songsAddSong": "Adicionar canção",
+  "songsImportSheetMusic": "Importe a sua folha de música",
+  "songsImportSheetMusicBody": "Use a Logos AI para converter PDFs, imagens ou fotos em canções com letra, acordes e metadados.",
+  "songsTakePhoto": "Tirar fotografia",
+  "songsChooseGallery": "Escolher da galeria",
+  "songsImportPdf": "Importar PDF",
+  "songsHowItWorks": "Como funciona?",
+  "songsAiAnalyzing": "A analisar a folha de música…",
+  "songsAiAnalyzingBody": "A Logos está a extrair letra, acordes e informação.",
+  "songsAiStepProcess": "Processar o ficheiro",
+  "songsAiStepExtract": "Extrair letra e acordes",
+  "songsAiStepMetadata": "Identificar metadados (título, tom, …)",
+  "songsAiStepVerify": "Verificar online e completar metadados",
+  "songsAiStepDraft": "Preparar o rascunho",
+  "songsAiPleaseWait": "Isto pode demorar alguns segundos…",
+  "songsAiResultTitle": "Resultado da importação",
+  "songsAiCreatedBanner": "Canção criada com IA. Confirme e ajuste as informações antes de guardar.",
+  "songsAiSave": "Guardar",
+  "songsAiEditContent": "Editar",
+  "songsAiImportFailed": "Não foi possível importar esta folha",
+  "songsAiImportFailedBody": "Tente outra foto ou PDF, ou crie a canção manualmente.",
+  "songsAiCancelledTitle": "Não é uma partitura",
+  "songsAiCancelledBody": "O Logos cancelou esta importação. Tente uma foto mais nítida de uma cifra, ou crie a canção manualmente.",
+  "songsAiCancelledGeneric": "Esta imagem não parece uma canção importável.",
+  "songsAiCancelledNotASong": "Isto não parece uma partitura ou cifra.",
+  "songsAiCancelledUnreadable": "A imagem está demasiado desfocada ou escura.",
+  "songsAiCancelledBlank": "A página parece em branco ou vazia.",
+  "songsAiCancelledWrongContent": "Há texto, mas não é uma canção / cifra.",
+  "songsAiCancelledMultiple": "Parecem várias canções misturadas sem uma principal clara.",
+  "songsAiCancelImport": "Cancelar",
+  "songsAiDiscardDraft": "Descartar rascunho",
+  "songsAiConfidence": "Confiança da IA: {percent}%",
+  "@songsAiConfidence": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "songsAiLowConfidence": "Baixa confiança — reveja bem a letra e os acordes antes de guardar.",
+  "songsAiSuccessTitle": "Importação concluída",
+  "songsAiSuccessBody": "Letra, acordes e metadados foram capturados.",
+  "songsAiViewSong": "Ver canção",
+  "songsAiImportAnother": "Importar outra",
+  "songsAiPossibleDuplicates": "Possíveis correspondências na biblioteca",
+  "songsAiPossibleDuplicatesHint": "Abra para comparar — volta a este rascunho depois. Guardar cria sempre uma canção nova.",
+  "songsAiOpenExisting": "Abrir",
+  "songsAiLintIssues": "Problemas ChordPro",
+  "songsAiFieldComposer": "Compositor",
+  "songsAiFieldCcli": "CCLI",
+  "songsAiFieldDuration": "Duração",
+  "songsAiFieldYoutube": "YouTube",
+  "songsAiOpenYoutube": "Abrir YouTube",
+  "songsAiCaptureTip": "Use luz uniforme e evite reflexos ou desfoque para melhores resultados.",
+  "songsAiCaptureQualityHint": "Esta imagem parece pequena ou de baixa qualidade — tente uma foto mais nítida e bem iluminada.",
+  "songsAiPdfMultiPageHint": "Até 5 páginas são enviadas em PDFs com várias páginas.",
+  "songsEmptyAddHint": "Adicione uma canção manualmente ou importe com a Logos AI.",
   "songsNoContent": "Sem conteúdo disponível.",
   "songKey": "Tom",
   "songCapo": "Capo",
@@ -200,9 +423,51 @@
   "songAutoScrollStart": "Iniciar scroll automático",
   "songAutoScrollPause": "Pausar scroll",
   "songAutoScrollSpeed": "Velocidade do scroll",
+  "songYoutubeOpenPlayer": "Ouvir no YouTube",
+  "songYoutubeClosePlayer": "Fechar leitor",
+  "songYoutubePlay": "Reproduzir",
+  "songYoutubePause": "Pausar",
+  "songYoutubeRewind": "Recuar 10 segundos",
+  "songYoutubeForward": "Avançar 30 segundos",
+  "songYoutubeError": "Não foi possível reproduzir este vídeo",
+  "songSectionChorus": "Refrão",
+  "songSectionBridge": "Ponte",
+  "songSectionTab": "Tablatura",
+  "songSectionInstrumental": "Instrumental",
+  "songRepeatChorus": "(Repete o refrão)",
+  "songKeyPill": "Tom: {key}",
+  "songCapoPill": "Capo: {fret}ª casa",
+  "songShapePill": "Formato: {key}",
+  "songOriginalKeyPill": "Tom Orig: {key}",
+  "songTranslatorCredit": "Tradução: {name}",
+  "@songTranslatorCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songLyricistCredit": "Letra: {name}",
+  "@songLyricistCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songArrangerCredit": "Arranjo: {name}",
+  "@songArrangerCredit": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "songNumberPill": "Nº {number}",
+  "songCapoOnFret": "Capo na {fret}ª casa",
+  "songChangeKey": "Mudar tom",
+  "songChordTitle": "Dicionário: {chord}",
+  "songChordNotFound": "Acorde \"{chord}\" não registado",
+  "songChordNotes": "Notas: {notes}",
+  "songChordSemantics": "Acorde {chord}",
+  "songPreviousChord": "Acorde anterior",
+  "songNextChord": "Acorde seguinte",
   "songPrevious": "Anterior",
   "songNext": "Seguinte",
-
   "foldersTitle": "Pastas",
   "foldersEmpty": "Ainda sem pastas",
   "foldersEmptyDesc": "As pastas organizam a biblioteca de cânticos da sua igreja.",
@@ -214,7 +479,6 @@
   "foldersRoot": "Raiz",
   "foldersViewGrid": "Ver em grelha",
   "foldersViewList": "Ver em lista",
-
   "servicesTitle": "Cultos",
   "servicesEmpty": "Ainda sem cultos",
   "servicesEmptyDesc": "Os cultos e planos de louvor da sua igreja aparecem aqui.",
@@ -283,13 +547,17 @@
   "servicesScheduledWindow": "Agendado {window}",
   "@servicesScheduledWindow": {
     "placeholders": {
-      "window": { "type": "String" }
+      "window": {
+        "type": "String"
+      }
     }
   },
   "servicesItemRunning": "Este item · {elapsed}",
   "@servicesItemRunning": {
     "placeholders": {
-      "elapsed": { "type": "String" }
+      "elapsed": {
+        "type": "String"
+      }
     }
   },
   "servicesNotStarted": "Não iniciado",
@@ -383,7 +651,6 @@
   "noteSugConnectionReminder": "Lembrete de ligação",
   "servicesElementEmpty": "Nada preparado para este momento",
   "servicesElementEmptyDesc": "Ainda não há passagem, conteúdo ou notas neste item.",
-
   "settingsTitle": "Definições",
   "settingsAppearance": "Aspeto",
   "settingsTheme": "Tema",
@@ -443,7 +710,6 @@
   "notificationConsentNotNow": "Agora não",
   "notificationOpenAction": "Abrir",
   "settingsSessionsOnly": "Apenas a sessão atual deste dispositivo está ativa.",
-
   "metronomeTitle": "Metrónomo",
   "metronomeDescription": "Tempo e compasso para ensaios.",
   "metronomeTapTempo": "Toque o Tempo",
@@ -452,7 +718,6 @@
   "metronomePlay": "Reproduzir",
   "metronomePause": "Pausar",
   "metronomeAudioUnavailable": "O som do metrónomo não está disponível neste dispositivo.",
-
   "circleOfFifthsTitle": "Círculo de Quintas",
   "circleOfFifthsDescription": "Referência de tons e relativas.",
   "circleOfFifthsHarmonicField": "Campo Harmónico",
@@ -467,7 +732,6 @@
   "@circleOfFifthsRelativeMinor": {
     "description": "Label for the vi degree (relative minor) chord card"
   },
-
   "exportPdfTitle": "Exportar PDF",
   "comingSoon": "Em breve",
   "comingSoonDescription": "Esta funcionalidade estará disponível numa próxima versão.",
@@ -495,7 +759,9 @@
   "songVariantTooltip": "Versão: {name}",
   "@songVariantTooltip": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsLanguageSystem": "Sistema",

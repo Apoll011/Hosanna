@@ -1,0 +1,722 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/design/illustrations.dart';
+import '../../../core/db/database.dart';
+import '../../../core/sync/sync_controller.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../data/song_repository.dart';
+import '../domain/chordpro/diagnostics.dart';
+import '../domain/chordpro_content.dart';
+import 'chordpro_editor/chordpro_editor.dart';
+import 'chordpro_editor/chordpro_syntax_controller.dart';
+import 'song_reader.dart';
+
+/// Create or edit a song (metadata + ChordPro body).
+class SongEditorPage extends ConsumerStatefulWidget {
+  const SongEditorPage({
+    super.key,
+    this.songId,
+    this.initialTitle,
+    this.initialArtist,
+    this.initialContent,
+    this.initialFolderId,
+    this.initialTags = const [],
+  });
+
+  /// Null ⇒ create mode.
+  final String? songId;
+
+  /// Prefill when arriving from AI import review.
+  final String? initialTitle;
+  final String? initialArtist;
+  final String? initialContent;
+  final String? initialFolderId;
+  final List<String> initialTags;
+
+  bool get isCreate => songId == null;
+
+  @override
+  ConsumerState<SongEditorPage> createState() => _SongEditorPageState();
+}
+
+class _SongEditorPageState extends ConsumerState<SongEditorPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  final _title = TextEditingController();
+  final _subtitle = TextEditingController();
+  final _artist = TextEditingController();
+  final _composer = TextEditingController();
+  final _lyricist = TextEditingController();
+  final _translator = TextEditingController();
+  final _arranger = TextEditingController();
+  final _songNumber = TextEditingController();
+  final _key = TextEditingController();
+  final _originalKey = TextEditingController();
+  final _tempo = TextEditingController();
+  final _time = TextEditingController();
+  final _duration = TextEditingController();
+  final _capo = TextEditingController();
+  final _keyNote = TextEditingController();
+  final _album = TextEditingController();
+  final _year = TextEditingController();
+  final _copyright = TextEditingController();
+  final _ccli = TextEditingController();
+  final _youtube = TextEditingController();
+  final _tagsField = TextEditingController();
+  final _content = ChordProSyntaxController();
+  final _contentFocus = FocusNode();
+
+  bool _saving = false;
+  bool _hydrated = false;
+  String? _folderId;
+  List<String> _tags = const [];
+  String? _error;
+  List<ChordProDiagnostic> _diagnostics = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 2, vsync: this);
+    for (final c in [_key, _tempo, _time, _duration, _capo, _youtube]) {
+      c.addListener(_onMetadataLintFieldsChanged);
+    }
+    if (widget.isCreate) {
+      _hydrateCreate();
+    }
+  }
+
+  void _onMetadataLintFieldsChanged() {
+    if (!_hydrated || !mounted) return;
+    setState(_relint);
+  }
+
+  void _hydrateCreate() {
+    final title = widget.initialTitle?.trim() ?? '';
+    final artist = widget.initialArtist?.trim() ?? '';
+    final raw = widget.initialContent?.trim().isNotEmpty == true
+        ? widget.initialContent!
+        : defaultChordProContent(
+            title: title.isEmpty ? 'Untitled' : title,
+            artist: artist,
+          );
+    _tags = widget.initialTags;
+    _applyFromContent(raw, titleOverride: title, artistOverride: artist);
+    _folderId = widget.initialFolderId;
+    _hydrated = true;
+    _relint();
+  }
+
+  void _relint() {
+    _diagnostics = lintChordPro(
+      _content.text,
+      youtube: _youtube.text,
+      key: _key.text,
+      tempo: _tempo.text,
+      capo: _capo.text,
+      timeSignature: _time.text,
+      duration: _duration.text,
+    );
+  }
+
+  void _hydrateFromSong(SongRow song) {
+    if (_hydrated) return;
+    _hydrated = true;
+    _tags = song.tags;
+    _applyFromContent(
+      song.content,
+      titleOverride: song.title,
+      artistOverride: song.artist,
+    );
+    _folderId = song.folderId;
+    _relint();
+  }
+
+  void _applyFromContent(
+    String raw, {
+    String? titleOverride,
+    String? artistOverride,
+  }) {
+    _title.text = (titleOverride != null && titleOverride.isNotEmpty)
+        ? titleOverride
+        : (readChordProDirective(raw, 'title') ?? '');
+    _subtitle.text = readChordProDirective(raw, 'subtitle') ?? '';
+    _artist.text = (artistOverride != null && artistOverride.isNotEmpty)
+        ? artistOverride
+        : (readChordProDirective(raw, 'artist') ?? '');
+    _composer.text = readChordProDirective(raw, 'composer') ?? '';
+    _lyricist.text = readChordProDirective(raw, 'lyricist') ?? '';
+    _translator.text = readChordProDirective(raw, 'translator') ?? '';
+    _arranger.text = readChordProDirective(raw, 'arranger') ?? '';
+    _songNumber.text = readChordProDirective(
+          raw,
+          'song_number',
+          aliases: const ['songNumber'],
+        ) ??
+        '';
+    _key.text = readChordProDirective(raw, 'key') ?? 'G';
+    _originalKey.text = readChordProDirective(
+          raw,
+          'original_key',
+          aliases: const ['originalKey'],
+        ) ??
+        '';
+    _tempo.text = readChordProDirective(raw, 'tempo') ?? '';
+    _time.text = readChordProDirective(
+          raw,
+          'time',
+          aliases: const ['time_signature'],
+        ) ??
+        '4/4';
+    _duration.text = _formatDurationForField(
+      readChordProDirective(raw, 'duration'),
+    );
+    _capo.text = readChordProDirective(raw, 'capo') ?? '';
+    _keyNote.text = readChordProDirective(
+          raw,
+          'key_note',
+          aliases: const ['keyNote'],
+        ) ??
+        '';
+    _album.text = readChordProDirective(raw, 'album') ?? '';
+    _year.text = readChordProDirective(raw, 'year') ?? '';
+    _copyright.text = readChordProDirective(raw, 'copyright') ?? '';
+    _ccli.text = readChordProDirective(raw, 'ccli') ?? '';
+    _youtube.text = readChordProDirective(raw, 'youtube') ?? '';
+    final contentTags = readChordProDirective(raw, 'tags');
+    if (contentTags != null && contentTags.isNotEmpty) {
+      _tags = _parseTags(contentTags);
+    }
+    _tagsField.text = _tags.join(', ');
+    _content.text = stripManagedDirectives(raw);
+  }
+
+  List<String> _parseTags(String raw) => raw
+      .split(',')
+      .map((t) => t.trim())
+      .where((t) => t.isNotEmpty)
+      .toList(growable: false);
+
+  List<String> _tagsFromField() => _parseTags(_tagsField.text);
+
+  /// Parser stores duration as seconds; show m:ss in the field when numeric.
+  String _formatDurationForField(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
+    final seconds = int.tryParse(raw);
+    if (seconds == null) return raw;
+    final m = seconds ~/ 60;
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_key, _tempo, _time, _duration, _capo, _youtube]) {
+      c.removeListener(_onMetadataLintFieldsChanged);
+    }
+    _tabs.dispose();
+    _title.dispose();
+    _subtitle.dispose();
+    _artist.dispose();
+    _composer.dispose();
+    _lyricist.dispose();
+    _translator.dispose();
+    _arranger.dispose();
+    _songNumber.dispose();
+    _key.dispose();
+    _originalKey.dispose();
+    _tempo.dispose();
+    _time.dispose();
+    _duration.dispose();
+    _capo.dispose();
+    _keyNote.dispose();
+    _album.dispose();
+    _year.dispose();
+    _copyright.dispose();
+    _ccli.dispose();
+    _youtube.dispose();
+    _tagsField.dispose();
+    _content.dispose();
+    _contentFocus.dispose();
+    super.dispose();
+  }
+
+  String _composedContent() {
+    _tags = _tagsFromField();
+    return applyChordProMetadata(
+      _content.text,
+      title: _title.text,
+      subtitle: _subtitle.text,
+      artist: _artist.text,
+      composer: _composer.text,
+      lyricist: _lyricist.text,
+      translator: _translator.text,
+      arranger: _arranger.text,
+      key: _key.text,
+      originalKey: _originalKey.text,
+      tempo: _tempo.text,
+      timeSignature: _time.text,
+      duration: _duration.text,
+      capo: _capo.text,
+      copyright: _copyright.text,
+      ccli: _ccli.text,
+      songNumber: _songNumber.text,
+      keyNote: _keyNote.text,
+      album: _album.text,
+      year: _year.text,
+      youtube: _youtube.text,
+      tags: _tags.join(', '),
+    );
+  }
+
+  Future<void> _preview() async {
+    final content = _composedContent();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (previewContext) => Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip:
+                  MaterialLocalizations.of(previewContext).backButtonTooltip,
+              onPressed: () => Navigator.of(previewContext).pop(),
+            ),
+            title: Text(
+              _title.text.trim().isEmpty
+                  ? l10n.songsPreview
+                  : _title.text.trim(),
+            ),
+          ),
+          body: SongReader(content: content),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
+    final title = _title.text.trim();
+    if (title.isEmpty) {
+      setState(() {
+        _error = l10n.songsTitleRequired;
+        _tabs.index = 1;
+      });
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final content = _composedContent();
+      final repo = ref.read(songRepositoryProvider);
+      final SongRow saved;
+      if (widget.isCreate) {
+        saved = await repo.createSong(
+          title: title,
+          artist: _artist.text,
+          content: content,
+          folderId: _folderId,
+          tags: _tags,
+        );
+      } else {
+        saved = await repo.updateSong(
+          id: widget.songId!,
+          title: title,
+          artist: _artist.text,
+          content: content,
+          folderId: _folderId,
+          clearFolderId: _folderId == null,
+          tags: _tags,
+        );
+      }
+
+      unawaited(ref.read(syncControllerProvider.notifier).syncAll());
+
+      if (!mounted) return;
+      context.go('/songs');
+      context.push('/songs/${saved.id}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = l10n.commonError;
+      });
+    }
+  }
+
+  Widget _field(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    int maxLines = 1,
+    TextInputAction textInputAction = TextInputAction.next,
+    String? hintText,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLines: maxLines,
+      textInputAction: textInputAction,
+      textCapitalization: maxLines > 1
+          ? TextCapitalization.sentences
+          : TextCapitalization.words,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _keyDropdown({
+    required TextEditingController controller,
+    required String label,
+    required bool allowEmpty,
+    required String emptyLabel,
+  }) {
+    final current = controller.text.trim();
+    final items = <String?>[
+      if (allowEmpty) null,
+      ...kMusicalKeys,
+    ];
+    // Keep a custom / unexpected value selectable so we don't wipe it.
+    final String? value = current.isEmpty
+        ? (allowEmpty ? null : 'G')
+        : current;
+    if (value != null && !kMusicalKeys.contains(value)) {
+      items.add(value);
+    }
+
+    return DropdownButtonFormField<String?>(
+      key: ValueKey('$label|$value'),
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+      ),
+      items: [
+        for (final key in items)
+          DropdownMenuItem<String?>(
+            value: key,
+            child: Text(key ?? emptyLabel),
+          ),
+      ],
+      onChanged: (next) {
+        controller.text = next ?? '';
+        _onMetadataLintFieldsChanged();
+      },
+    );
+  }
+
+  List<ChordProDiagnostic> get _metadataDiagnostics =>
+      _diagnostics.where((d) => d.line <= 0).toList(growable: false);
+
+  Widget _metadataForm(AppLocalizations l10n) {
+    final metaDiags = _metadataDiagnostics;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        if (_error != null) ...[
+          Text(
+            _error!,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (metaDiags.isNotEmpty) ...[
+          ...metaDiags.map((d) {
+            final scheme = Theme.of(context).colorScheme;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: scheme.tertiary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      d.message,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 4),
+        ],
+        _field(_title, l10n.songsFieldTitle),
+        const SizedBox(height: 10),
+        _field(_subtitle, l10n.songsFieldSubtitle),
+        const SizedBox(height: 10),
+        _field(_artist, l10n.songsFieldArtist),
+        const SizedBox(height: 10),
+        _field(_composer, l10n.songsFieldComposer),
+        const SizedBox(height: 10),
+        _field(_lyricist, l10n.songsFieldLyricist),
+        const SizedBox(height: 10),
+        _field(_translator, l10n.songsFieldTranslator),
+        const SizedBox(height: 10),
+        _field(_arranger, l10n.songsFieldArranger),
+        const SizedBox(height: 10),
+        _field(
+          _songNumber,
+          l10n.songsFieldSongNumber,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _keyDropdown(
+                controller: _key,
+                label: l10n.songsFieldKey,
+                allowEmpty: false,
+                emptyLabel: l10n.songsFieldKeyNone,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _keyDropdown(
+                controller: _originalKey,
+                label: l10n.songsFieldOriginalKey,
+                allowEmpty: true,
+                emptyLabel: l10n.songsFieldKeyNone,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _field(
+                _tempo,
+                l10n.songsFieldTempo,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_time, l10n.songsFieldTime)),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_duration, l10n.songsFieldDuration)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _field(
+                _capo,
+                l10n.songsFieldCapo,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: _field(_ccli, l10n.songsFieldCcli)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _field(_keyNote, l10n.songsFieldKeyNote),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _field(_album, l10n.songsFieldAlbum)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _field(
+                _year,
+                l10n.songsFieldYear,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _field(_copyright, l10n.songsFieldCopyright),
+        const SizedBox(height: 10),
+        _field(
+          _youtube,
+          l10n.songsFieldYoutube,
+          keyboardType: TextInputType.url,
+        ),
+        const SizedBox(height: 10),
+        _field(
+          _tagsField,
+          l10n.songsTagsLabel,
+          hintText: l10n.songsFieldTagsHint,
+          textInputAction: TextInputAction.done,
+        ),
+      ],
+    );
+  }
+
+  Widget _bodyEditor(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: ChordProEditor(
+        controller: _content,
+        focusNode: _contentFocus,
+        diagnostics: _diagnostics,
+        hintText: l10n.songsChordProHint,
+        onLintRequested: () {
+          if (!mounted) return;
+          setState(_relint);
+        },
+      ),
+    );
+  }
+
+  List<Widget> _appBarActions(AppLocalizations l10n, ColorScheme scheme) {
+    return [
+      IconButton(
+        tooltip: l10n.songsPreview,
+        onPressed: _saving ? null : _preview,
+        icon: const Icon(Icons.visibility_outlined),
+      ),
+      IconButton(
+        tooltip: l10n.commonSave,
+        onPressed: _saving ? null : _save,
+        icon: _saving
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: scheme.primary,
+                ),
+              )
+            : const Icon(Icons.check_rounded),
+      ),
+    ];
+  }
+
+  PreferredSizeWidget _editorAppBar({
+    required String title,
+    required AppLocalizations l10n,
+    required ColorScheme scheme,
+    bool showTabs = false,
+  }) {
+    final canPop = context.canPop();
+    return AppBar(
+      leading: canPop
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: () => context.go('/songs'),
+            ),
+      title: Text(title),
+      actions: _appBarActions(l10n, scheme),
+      bottom: showTabs
+          ? TabBar(
+              controller: _tabs,
+              tabs: [
+                Tab(text: l10n.songsTabContent),
+                Tab(text: l10n.songsTabMetadata),
+              ],
+            )
+          : null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    if (!widget.isCreate) {
+      final async = ref.watch(songByIdProvider(widget.songId!));
+
+      if (async.isLoading && !_hydrated) {
+        return Scaffold(
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
+          body: const Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (async.hasError) {
+        return Scaffold(
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
+          body: ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
+            title: l10n.commonError,
+            description: l10n.commonErrorDesc,
+          ),
+        );
+      }
+      final song = async.valueOrNull;
+      if (song == null) {
+        return Scaffold(
+          appBar: _editorAppBar(
+            title: l10n.songsEdit,
+            l10n: l10n,
+            scheme: scheme,
+          ),
+          body: EmptyState(
+            illustrationAsset: HosannaIllustrations.emptySongs,
+            title: l10n.songsNotFound,
+            description: l10n.songsNotFoundDesc,
+          ),
+        );
+      }
+      if (!_hydrated) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() => _hydrateFromSong(song));
+        });
+      }
+    }
+
+    return Scaffold(
+      appBar: _editorAppBar(
+        title: widget.isCreate ? l10n.songsCreate : l10n.songsEdit,
+        l10n: l10n,
+        scheme: scheme,
+        showTabs: true,
+      ),
+      body: TabBarView(
+        controller: _tabs,
+        children: [
+          SafeArea(child: _bodyEditor(l10n)),
+          SafeArea(child: _metadataForm(l10n)),
+        ],
+      ),
+    );
+  }
+}

@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
 
+import '../../app/design/tokens.dart';
+import 'shell_insets.dart';
+
+/// Scales empty-state art for phone / tablet / large layouts.
+double emptyStateIllustrationSize(BuildContext context, {double base = 200}) {
+  final shortest = MediaQuery.sizeOf(context).shortestSide;
+  if (shortest >= 900) return (base * 1.7).clamp(280.0, 360.0);
+  if (shortest >= 600) return (base * 1.45).clamp(260.0, 320.0);
+  return base;
+}
+
 /// Friendly empty / zero-data placeholder.
 ///
-/// Visually distinct from [ErrorState]: soft primary tint, calm copy, and
-/// optional actions that invite the next step (clear filters, sync) rather
-/// than implying something broke.
+/// Prefer [illustrationAsset] from [HosannaIllustrations] when an illustration
+/// fits the context; [icon] remains as a fallback.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
-    required this.icon,
     required this.title,
+    this.icon,
+    this.illustrationAsset,
+    this.illustrationSize,
     this.description,
     this.primaryIcon = Icons.filter_alt_off_outlined,
     this.primaryLabel,
@@ -17,9 +29,13 @@ class EmptyState extends StatelessWidget {
     this.secondaryLabel,
     this.onSecondary,
     this.scrollable = false,
-  });
+  }) : assert(icon != null || illustrationAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? illustrationAsset;
+
+  /// Explicit size override. When null, scales with screen size.
+  final double? illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -36,6 +52,8 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = _EmptyStateBody(
       icon: icon,
+      illustrationAsset: illustrationAsset,
+      illustrationSize: illustrationSize,
       title: title,
       description: description,
       primaryIcon: primaryIcon,
@@ -46,18 +64,9 @@ class EmptyState extends StatelessWidget {
       tone: _EmptyTone.calm,
     );
 
-    if (!scrollable) {
-      return Center(child: content);
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: constraints.maxHeight,
-          child: Center(child: content),
-        ),
-      ),
+    return _OpticallyCentered(
+      scrollable: scrollable,
+      child: content,
     );
   }
 }
@@ -71,6 +80,7 @@ class ErrorState extends StatelessWidget {
     this.retryLabel,
     this.onRetry,
     this.scrollable = false,
+    this.illustrationAsset,
   });
 
   final String title;
@@ -78,11 +88,14 @@ class ErrorState extends StatelessWidget {
   final String? retryLabel;
   final VoidCallback? onRetry;
   final bool scrollable;
+  final String? illustrationAsset;
 
   @override
   Widget build(BuildContext context) {
     final content = _EmptyStateBody(
       icon: Icons.cloud_off_outlined,
+      illustrationAsset: illustrationAsset,
+      illustrationSize: null,
       title: title,
       description: description,
       primaryIcon: Icons.refresh,
@@ -91,16 +104,39 @@ class ErrorState extends StatelessWidget {
       tone: _EmptyTone.error,
     );
 
-    if (!scrollable) {
-      return Center(child: content);
-    }
+    return _OpticallyCentered(
+      scrollable: scrollable,
+      child: content,
+    );
+  }
+}
+
+/// Centers [child] in the visible area above the floating nav pill.
+class _OpticallyCentered extends StatelessWidget {
+  const _OpticallyCentered({
+    required this.child,
+    required this.scrollable,
+  });
+
+  final Widget child;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = ShellOpticalInsets.bottomOverlayOf(context);
+    final centered = Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Center(child: child),
+    );
+
+    if (!scrollable) return centered;
 
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: SizedBox(
           height: constraints.maxHeight,
-          child: Center(child: content),
+          child: centered,
         ),
       ),
     );
@@ -111,10 +147,12 @@ enum _EmptyTone { calm, error }
 
 class _EmptyStateBody extends StatelessWidget {
   const _EmptyStateBody({
-    required this.icon,
     required this.title,
     required this.tone,
     required this.primaryIcon,
+    this.icon,
+    this.illustrationAsset,
+    this.illustrationSize,
     this.description,
     this.primaryLabel,
     this.onPrimary,
@@ -122,7 +160,9 @@ class _EmptyStateBody extends StatelessWidget {
     this.onSecondary,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? illustrationAsset;
+  final double? illustrationSize;
   final String title;
   final String? description;
   final IconData primaryIcon;
@@ -137,6 +177,9 @@ class _EmptyStateBody extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isError = tone == _EmptyTone.error;
+    final artSize =
+        illustrationSize ?? emptyStateIllustrationSize(context, base: 200);
+    final contentWidth = artSize + 80;
 
     final circleColor = isError
         ? scheme.errorContainer
@@ -144,32 +187,81 @@ class _EmptyStateBody extends StatelessWidget {
     final iconColor =
         isError ? scheme.onErrorContainer : scheme.onPrimaryContainer;
 
+    final ctaShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    );
+    final ctaStyle = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      shape: ctaShape,
+      textStyle: theme.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+    );
+    final outlinedStyle = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      shape: ctaShape,
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      padding: const EdgeInsets.symmetric(
+        horizontal: HosannaSpacing.xl,
+        vertical: HosannaSpacing.md,
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: BoxConstraints(maxWidth: contentWidth.clamp(320, 420)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: circleColor,
-                shape: BoxShape.circle,
+            if (illustrationAsset != null)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      isError
+                          ? scheme.error.withValues(alpha: 0.08)
+                          : scheme.primary.withValues(alpha: 0.08),
+                      scheme.surface.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      illustrationAsset!,
+                      width: artSize,
+                      height: artSize,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: circleColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 40, color: iconColor),
               ),
-              child: Icon(icon, size: 40, color: iconColor),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: HosannaSpacing.md),
             Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
               ),
               textAlign: TextAlign.center,
             ),
             if (description != null && description!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: HosannaSpacing.xs),
               Text(
                 description!,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -180,25 +272,26 @@ class _EmptyStateBody extends StatelessWidget {
               ),
             ],
             if (primaryLabel != null && onPrimary != null) ...[
-              const SizedBox(height: 24),
-              if (isError)
-                FilledButton.icon(
+              const SizedBox(height: HosannaSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
                   onPressed: onPrimary,
-                  icon: Icon(primaryIcon),
-                  label: Text(primaryLabel!),
-                )
-              else
-                FilledButton.tonalIcon(
-                  onPressed: onPrimary,
+                  style: ctaStyle,
                   icon: Icon(primaryIcon),
                   label: Text(primaryLabel!),
                 ),
+              ),
             ],
             if (secondaryLabel != null && onSecondary != null) ...[
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onSecondary,
-                child: Text(secondaryLabel!),
+              const SizedBox(height: HosannaSpacing.xs),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onSecondary,
+                  style: outlinedStyle,
+                  child: Text(secondaryLabel!),
+                ),
               ),
             ],
           ],

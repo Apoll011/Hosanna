@@ -22,6 +22,7 @@ class AuthState {
     required this.status,
     this.session,
     this.organization,
+    this.memberRole,
     this.resolvingOrganization = false,
     this.hasActiveSubscription = true,
   });
@@ -29,6 +30,10 @@ class AuthState {
   final AuthStatus status;
   final AuthSession? session;
   final Organization? organization;
+
+  /// Better Auth org membership role for the signed-in user in [organization]
+  /// (e.g. `owner`, `admin`, `musician`, `guest`). Used for local RBAC gates.
+  final String? memberRole;
 
   /// True while the active organization is being fetched after sign-in/sign-up
   /// (or when re-resolving it), so the router can show a loading screen instead
@@ -44,14 +49,19 @@ class AuthState {
     AuthStatus? status,
     AuthSession? session,
     Organization? organization,
+    String? memberRole,
     bool? resolvingOrganization,
     bool? hasActiveSubscription,
     bool clearSession = false,
+    bool clearMemberRole = false,
   }) {
     return AuthState(
       status: status ?? this.status,
       session: clearSession ? null : (session ?? this.session),
       organization: clearSession ? null : (organization ?? this.organization),
+      memberRole: clearSession || clearMemberRole
+          ? null
+          : (memberRole ?? this.memberRole),
       resolvingOrganization: resolvingOrganization ?? this.resolvingOrganization,
       hasActiveSubscription:
           hasActiveSubscription ?? this.hasActiveSubscription,
@@ -423,15 +433,22 @@ class AuthController extends StateNotifier<AuthState> {
           fcm: session.fcm,
           notify: session.notify,
         );
+        final role = await _repository.resolveMemberRole(
+          userId: session.user.id,
+        );
         await _store.writeSession(merged);
         state = state.copyWith(
           session: merged,
           organization: org,
+          memberRole: role,
           resolvingOrganization: false,
         );
         await _refreshEntitlement();
       } else {
-        state = state.copyWith(resolvingOrganization: false);
+        state = state.copyWith(
+          resolvingOrganization: false,
+          clearMemberRole: true,
+        );
       }
     } catch (_) {
       // Non-fatal: sync will surface any missing active-org as a 403.

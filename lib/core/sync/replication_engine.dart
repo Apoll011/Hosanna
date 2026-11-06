@@ -1,5 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../network/hosanna_api.dart';
 
 /// RxDB-style replication checkpoint: `{ updatedAt: epoch-ms, id: string }`.
 class ReplicationCheckpoint {
@@ -31,11 +32,6 @@ class ChangeRow {
   final String id;
   final Map<String, dynamic> newDocumentState;
   final Map<String, dynamic>? assumedMasterState;
-
-  Map<String, dynamic> toJson() => {
-        'newDocumentState': newDocumentState,
-        'assumedMasterState': assumedMasterState,
-      };
 }
 
 /// Resource-specific adapter bridging a wire document collection and its
@@ -46,16 +42,23 @@ abstract class ReplicationAdapter {
   String get resourceName;
 
   /// Upsert a batch of pulled wire documents into the local table.
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs);
+  ///
+  /// When [overwriteDirty] is false (pull), locally dirty rows are left alone
+  /// so an in-flight edit is not wiped by an older server snapshot.
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  });
 
   /// Collect locally-created/modified/deleted rows since the last push.
   Future<List<ChangeRow>> collectChanges();
 
   /// Server-wins reconciliation: overwrite local rows with the returned
-  /// conflicting server documents.
+  /// conflicting server documents (including dirty ones).
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs);
 
-  /// Clear the dirty flag for rows the server has accepted.
+  /// Clear the dirty flag for rows the server has accepted and advance the
+  /// local server-updatedAt baseline to the pushed value.
   Future<void> markPushed(Iterable<String> ids);
 
   /// Recompute locally-derived values that are never replicated (e.g. folder
@@ -65,57 +68,53 @@ abstract class ReplicationAdapter {
 }
 
 /// Generic, resource-agnostic pull/push engine for every replicated
-/// collection. Mirrors the exact `/api/replication/{resource}/{pull|push}`
-/// contract confirmed in the Hosanna server (`replication.service.ts`).
+/// collection. Uses OpenAPI `pullCollection` / `pushCollection`.
 class ReplicationEngine {
   ReplicationEngine({
-    required this._dio,
-    required this._prefs,
-    required this._adapters,
+    required this.api,
+    required this.prefs,
+    required this.adapters,
   });
 
   static const int batchLimit = 100;
 
-  final Dio _dio;
-  final SharedPreferences _prefs;
-  final List<ReplicationAdapter> _adapters;
+  final HosannaApi api;
+  final SharedPreferences prefs;
+  final List<ReplicationAdapter> adapters;
 
   String _checkpointKey(String resource) => 'replication.checkpoint.$resource';
 
   Future<void> pullAll() async {
-    for (final adapter in _adapters) {
+    for (final adapter in adapters) {
       await pullOne(adapter);
     }
     // Counts are derived from the other tables, so resolve them only once the
     // full pull (songs included) has landed.
-    for (final adapter in _adapters) {
+    for (final adapter in adapters) {
       await adapter.refreshLocalCounts();
     }
   }
 
   Future<void> pullOne(ReplicationAdapter adapter) async {
     var checkpoint = await _loadCheckpoint(adapter.resourceName);
+    final collection = replicationCollectionFor(adapter.resourceName);
 
     while (true) {
-      final res = await _dio.post<dynamic>(
-        '/api/replication/${adapter.resourceName}/pull',
-        data: {
-          'checkpoint': checkpoint?.toJson(),
-          'limit': batchLimit,
-        },
+      final data = await api.replication.pullCollection(
+        collection: collection,
+        pullRequest: PullRequest(
+          checkpoint: checkpoint?.toJson(),
+          limit: batchLimit,
+        ),
       );
 
-      final data = res.data as Map<String, dynamic>;
-      final docs = (data['documents'] as List? ?? const [])
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+      final docs = data.documents;
 
       if (docs.isNotEmpty) {
         await adapter.upsertFromWire(docs);
       }
 
-      final next = ReplicationCheckpoint.fromJson(data['checkpoint']);
+      final next = ReplicationCheckpoint.fromJson(data.checkpoint);
       if (next != null) {
         checkpoint = next;
         await _saveCheckpoint(adapter.resourceName, checkpoint);
@@ -127,7 +126,7 @@ class ReplicationEngine {
   }
 
   Future<void> pushAll() async {
-    for (final adapter in _adapters) {
+    for (final adapter in adapters) {
       await pushOne(adapter);
     }
   }
@@ -136,6 +135,8 @@ class ReplicationEngine {
     final changes = await adapter.collectChanges();
     if (changes.isEmpty) return;
 
+    final collection = replicationCollectionFor(adapter.resourceName);
+
     // Server caps push batches at 100 rows.
     for (var i = 0; i < changes.length; i += batchLimit) {
       final chunk = changes.sublist(
@@ -143,36 +144,45 @@ class ReplicationEngine {
         i + batchLimit > changes.length ? changes.length : i + batchLimit,
       );
 
-      final res = await _dio.post<dynamic>(
-        '/api/replication/${adapter.resourceName}/push',
-        data: {
-          'changeRows': chunk.map((c) => c.toJson()).toList(),
-        },
+      final conflicts = await api.replication.pushCollection(
+        collection: collection,
+        changeRows: chunk
+            .map(
+              (c) => ChangeRowBody(
+                newDocumentState: c.newDocumentState,
+                assumedMasterState: c.assumedMasterState,
+              ),
+            )
+            .toList(),
       );
 
-      final conflicts = (res.data as List? ?? const [])
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-
+      final conflictIds = <String>{};
       if (conflicts.isNotEmpty) {
+        for (final doc in conflicts) {
+          final id = doc['id'];
+          if (id is String && id.isNotEmpty) conflictIds.add(id);
+        }
         await adapter.applyServerConflicts(conflicts);
       }
-    }
 
-    await adapter.markPushed(changes.map((c) => c.id));
+      // Only clear dirty on rows the server accepted — conflicted rows stay
+      // dirty after applying the server snapshot (dirty cleared by upsert).
+      final accepted =
+          chunk.map((c) => c.id).where((id) => !conflictIds.contains(id));
+      await adapter.markPushed(accepted);
+    }
   }
 
   /// Drops every resource checkpoint so the next pull starts from scratch
   /// (required after switching organizations).
   Future<void> clearAllCheckpoints() async {
-    for (final adapter in _adapters) {
-      await _prefs.remove(_checkpointKey(adapter.resourceName));
+    for (final adapter in adapters) {
+      await prefs.remove(_checkpointKey(adapter.resourceName));
     }
   }
 
   Future<ReplicationCheckpoint?> _loadCheckpoint(String resource) async {
-    final raw = _prefs.getString(_checkpointKey(resource));
+    final raw = prefs.getString(_checkpointKey(resource));
     if (raw == null || raw.isEmpty) return null;
     return ReplicationCheckpoint.fromJson(
       _prefsToJson(raw),
@@ -183,7 +193,7 @@ class ReplicationEngine {
     String resource,
     ReplicationCheckpoint checkpoint,
   ) async {
-    await _prefs.setString(
+    await prefs.setString(
       _checkpointKey(resource),
       '${checkpoint.updatedAt}|${checkpoint.id}',
     );

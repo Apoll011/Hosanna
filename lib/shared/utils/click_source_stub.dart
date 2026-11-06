@@ -6,6 +6,11 @@ import 'package:audioplayers/audioplayers.dart';
 
 import 'click_synth.dart';
 
-Future<Source> createClickSource({required double frequency}) async {
-  return BytesSource(ClickSynth.generate(frequency: frequency));
+Future<Source> createClickSource({
+  required double frequency,
+  bool accent = false,
+}) async {
+  return BytesSource(
+    ClickSynth.generate(frequency: frequency, accent: accent),
+  );
 }

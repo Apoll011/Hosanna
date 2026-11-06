@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell.dart';
 import '../../../core/db/database.dart';
@@ -96,11 +97,20 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
     final useSideRail = _useSideRail(context);
 
     return serviceAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.servicesTitle),
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.servicesTitle),
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
         body: ErrorState(
+          illustrationAsset: HosannaIllustrations.stateError,
           title: l10n.commonError,
           description: l10n.commonErrorDesc,
         ),
@@ -108,8 +118,12 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
       data: (service) {
         if (service == null) {
           return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.servicesTitle),
+              leading: BackButton(onPressed: () => context.pop()),
+            ),
             body: EmptyState(
-              icon: Icons.event_busy_outlined,
+              illustrationAsset: HosannaIllustrations.emptyServices,
               title: l10n.servicesNotFound,
               description: l10n.servicesNotFoundDesc,
             ),
@@ -671,7 +685,7 @@ class _OrderListTab extends ConsumerWidget {
 
     if (elements.isEmpty) {
       return EmptyState(
-        icon: Icons.playlist_add_outlined,
+        illustrationAsset: HosannaIllustrations.emptyServiceItems,
         title: l10n.servicesNoItems,
         description: l10n.servicesNoItemsDesc,
       );
@@ -968,19 +982,22 @@ class _OrderRow extends ConsumerWidget {
         ? (song?.artist ?? l10n.servicesElementSong)
         : meta.label;
 
-    final borderColor = switch (status) {
-      _ItemStatus.current => theme.colorScheme.primary.withValues(alpha: 0.45),
-      _ => theme.colorScheme.outlineVariant,
-    };
+    final isCurrent = status == _ItemStatus.current;
+    final borderColor = isCurrent
+        ? theme.colorScheme.primary.withValues(alpha: 0.45)
+        : theme.colorScheme.outlineVariant;
+    final bg = isCurrent
+        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.45)
+        : theme.colorScheme.surface;
 
     return Material(
-      color: theme.colorScheme.surface,
+      color: bg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: borderColor),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -992,7 +1009,9 @@ class _OrderRow extends ConsumerWidget {
                   '${index + 1}',
                   style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: isCurrent
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -1002,7 +1021,7 @@ class _OrderRow extends ConsumerWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: meta.color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(meta.icon, size: 18, color: meta.color),
               ),
@@ -1549,7 +1568,7 @@ class _NonSongDetailBody extends StatelessWidget {
         if (!hasBody) ...[
           const SizedBox(height: 24),
           EmptyState(
-            icon: Icons.notes_outlined,
+            illustrationAsset: HosannaIllustrations.emptyNotes,
             title: l10n.servicesElementEmpty,
             description: l10n.servicesElementEmptyDesc,
           ),
@@ -1611,12 +1630,13 @@ class _SongDetailBody extends ConsumerWidget {
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => ErrorState(
+        illustrationAsset: HosannaIllustrations.stateError,
         title: l10n.commonError,
         description: l10n.commonErrorDesc,
       ),
       data: (song) => song == null
           ? EmptyState(
-              icon: Icons.music_off_outlined,
+              illustrationAsset: HosannaIllustrations.emptySongs,
               title: l10n.songsNotFound,
               description: l10n.songsNotFoundDesc,
             )

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../app/shell.dart';
 import '../../../core/db/database.dart';
@@ -68,11 +69,25 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     final service = serviceAsync.valueOrNull;
     final useSideRail = _useSideRail(context);
 
+    final elementsEmpty = service != null && _sorted(service).isEmpty;
+    final needsBackBar =
+        serviceAsync.hasError || service == null || elementsEmpty;
+
     return Scaffold(
       key: _scaffoldKey,
       // Edge-drag open fights horizontal prev/next swipes in the song reader.
       drawerEnableOpenDragGesture: false,
-      drawer: (service == null || useSideRail)
+      appBar: needsBackBar
+          ? AppBar(
+              title: Text(
+                service?.name.trim().isNotEmpty == true
+                    ? service!.name
+                    : l10n.servicesTitle,
+              ),
+              leading: BackButton(onPressed: () => context.pop()),
+            )
+          : null,
+      drawer: (service == null || useSideRail || elementsEmpty)
           ? null
           : _OrderDrawer(
               service: service,
@@ -100,13 +115,14 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         child: serviceAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => ErrorState(
+            illustrationAsset: HosannaIllustrations.stateError,
             title: l10n.commonError,
             description: l10n.commonErrorDesc,
           ),
           data: (service) {
             if (service == null) {
               return EmptyState(
-                icon: Icons.event_busy_outlined,
+                illustrationAsset: HosannaIllustrations.emptyServices,
                 title: l10n.servicesNotFound,
                 description: l10n.servicesNotFoundDesc,
               );
@@ -198,7 +214,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
     if (elements.isEmpty) {
       return EmptyState(
-        icon: Icons.playlist_add_outlined,
+        illustrationAsset: HosannaIllustrations.emptyServiceItems,
         title: l10n.servicesNoItems,
         description: l10n.servicesNoItemsDesc,
       );
@@ -384,7 +400,7 @@ class _MusicianTopBar extends StatelessWidget {
             if (isSong) ...[
               IconButton(
                 icon: Icon(
-                  isAnnotating ? Icons.edit : Icons.edit_outlined,
+                  isAnnotating ? Icons.draw : Icons.draw_outlined,
                   color: isAnnotating ? theme.colorScheme.primary : null,
                 ),
                 tooltip: l10n.annotationModeTitle,
@@ -459,12 +475,13 @@ class _SongElementView extends ConsumerWidget {
     return songAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => ErrorState(
+        illustrationAsset: HosannaIllustrations.stateError,
         title: l10n.commonError,
         description: l10n.commonErrorDesc,
       ),
       data: (song) => song == null
           ? EmptyState(
-              icon: Icons.music_off_outlined,
+              illustrationAsset: HosannaIllustrations.emptySongs,
               title: l10n.songsNotFound,
               description: l10n.songsNotFoundDesc,
             )
@@ -607,7 +624,7 @@ class _NonSongElementView extends StatelessWidget {
                 if (!hasBody) ...[
                   const SizedBox(height: 24),
                   EmptyState(
-                    icon: Icons.notes_outlined,
+                    illustrationAsset: HosannaIllustrations.emptyNotes,
                     title: l10n.servicesElementEmpty,
                     description: l10n.servicesElementEmptyDesc,
                   ),

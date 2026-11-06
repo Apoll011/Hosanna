@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../shared/widgets/shell_insets.dart';
+import 'design/tokens.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
 import 'providers.dart';
@@ -21,7 +23,9 @@ const double kTabletBreakpoint = 750;
 const Set<int> kBranchesWithoutNavBar = {
   kMetronomeBranch,
   kCircleOfFifthsBranch,
+  kFoldersBranch,
   kSettingsBranch,
+  kAgendaBranch,
 };
 
 /// Responsive shell: phones get a slide-in drawer + floating bottom bar;
@@ -44,6 +48,29 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final shell = widget.navigationShell;
     if (index < 0 || index >= shell.route.branches.length) return;
     shell.goBranch(index, initialLocation: index == shell.currentIndex);
+  }
+
+  void _syncBranchIndex() {
+    final index = widget.navigationShell.currentIndex;
+    if (ref.read(shellBranchIndexProvider) == index) return;
+    ref.read(shellBranchIndexProvider.notifier).state = index;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncBranchIndex();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HosannaShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.navigationShell.currentIndex !=
+        widget.navigationShell.currentIndex) {
+      _syncBranchIndex();
+    }
   }
 
   @override
@@ -71,15 +98,23 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final selectedDestination = destinations.indexWhere(
       (d) => d.branch == currentBranch,
     );
-    final showNavBar = !kBranchesWithoutNavBar.contains(currentBranch);
+    final navAllowed = ref.watch(shellNavVisibleProvider);
+    final showNavBar =
+        navAllowed && !kBranchesWithoutNavBar.contains(currentBranch);
     final auth = ref.watch(authControllerProvider);
     final showSubWarning =
         auth.isAuthenticated && !auth.hasActiveSubscription;
 
+    Widget withOpticalInsets(Widget child) {
+      final overlay =
+          showNavBar ? shellBottomContentPadding(context) : 0.0;
+      return ShellOpticalInsets(bottomNavOverlay: overlay, child: child);
+    }
+
     Widget withSubscriptionBanner(Widget child) {
-      if (!showSubWarning) return child;
+      if (!showSubWarning) return withOpticalInsets(child);
       final theme = Theme.of(context);
-      return Column(
+      return withOpticalInsets(Column(
         children: [
           Material(
             color: theme.colorScheme.errorContainer,
@@ -111,7 +146,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
           ),
           Expanded(child: child),
         ],
-      );
+      ));
     }
 
     return LayoutBuilder(
@@ -195,7 +230,7 @@ class _TabletSidebar extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOutCubic,
       width: width,
-      color: theme.colorScheme.surfaceContainerLow,
+      color: theme.colorScheme.surface,
       child: SafeArea(
         child: HosannaNavContent(
           collapsed: collapsed,
@@ -222,21 +257,17 @@ class _FloatingNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final tokens = HosannaTokens.of(context);
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(56, 0, 56, 12),
       child: Container(
         height: 64,
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(42),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: theme.colorScheme.surface,
+          borderRadius: HosannaRadii.navPill,
+          border: Border.all(color: tokens.cardBorder),
+          boxShadow: HosannaElevation.floating(theme.brightness),
         ),
         child: Row(
           children: [
@@ -269,28 +300,36 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = HosannaTokens.of(context);
     final color = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(selected ? item.selectedIcon : item.icon, color: color),
-          const SizedBox(height: 2),
-          Text(
-            item.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Material(
+        color: selected ? tokens.selectedNav : Colors.transparent,
+        borderRadius: BorderRadius.circular(HosannaRadii.pill),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(HosannaRadii.pill),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(selected ? item.selectedIcon : item.icon, color: color),
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

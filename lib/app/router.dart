@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/agenda/presentation/agenda_event_page.dart';
+import '../features/agenda/presentation/agenda_page.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/auth/presentation/email_verification_page.dart';
 import '../features/auth/presentation/forgot_password_page.dart';
@@ -12,11 +14,19 @@ import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/setup/data/setup_controller.dart';
+import '../features/setup/presentation/setup_page.dart';
 import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
 import '../features/settings/presentation/settings_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_models.dart';
+import '../features/songs/presentation/ai_import/ai_import_nav.dart';
+import '../features/songs/presentation/ai_import/ai_import_progress_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_review_page.dart';
+import '../features/songs/presentation/ai_import/ai_import_source_page.dart';
 import '../features/songs/presentation/song_detail_page.dart';
+import '../features/songs/presentation/song_editor_page.dart';
 import '../features/songs/presentation/song_library_page.dart';
 import '../shared/widgets/hosanna_logo.dart';
 import 'shell.dart';
@@ -32,12 +42,14 @@ bool _isAuthRoute(String path) {
 final goRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.listen(authControllerProvider, (_, _) => refresh.value++);
+  ref.listen(setupControllerProvider, (_, _) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
+      final setupComplete = ref.read(setupControllerProvider);
       final path = state.uri.path;
       final loading = auth.status == AuthStatus.loading;
       final loggedIn = auth.isAuthenticated;
@@ -56,15 +68,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return path == '/splash' ? null : '/splash';
       }
 
-      if (onAuthRoute) return hasOrg ? '/songs' : '/onboarding';
+      if (onAuthRoute) {
+        if (!hasOrg) return '/onboarding';
+        return setupComplete ? '/songs' : '/setup';
+      }
 
       if (!hasOrg) {
         // Org-less users may only see onboarding until they join one.
         return path == '/onboarding' ? null : '/onboarding';
       }
 
-      // Has an org — no longer allow the pre-org screens.
-      if (path == '/onboarding' || path == '/splash') return '/songs';
+      if (!setupComplete) {
+        return path == '/setup' ? null : '/setup';
+      }
+
+      // Has an org + finished setup — leave the pre-app screens.
+      if (path == '/onboarding' || path == '/setup' || path == '/splash') {
+        return '/songs';
+      }
       return null;
     },
     routes: [
@@ -85,6 +106,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const EmailVerificationPage(),
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
+      GoRoute(path: '/setup', builder: (_, _) => const SetupPage()),
       // Branch order must match the kSongsBranch..kSettingsBranch constants in
       // nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(
@@ -149,7 +171,84 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/agenda',
+                builder: (_, _) => const AgendaPage(),
+              ),
+            ],
+          ),
         ],
+      ),
+      // Outside the shell (same pattern as /songs/:id) so the shell drawer
+      // stays available on the agenda list via ShellLeadingButton.
+      GoRoute(
+        path: '/agenda/:id',
+        builder: (_, state) =>
+            AgendaEventPage(eventId: state.pathParameters['id']!),
+      ),
+      // Static song paths before `/songs/:id` so "new" / "import" are not
+      // swallowed as ids.
+      GoRoute(
+        path: '/songs/new',
+        builder: (_, state) {
+          final q = state.uri.queryParameters;
+          final extra = state.extra;
+          String? title = q['title'];
+          String? artist = q['artist'];
+          String? content = q['content'];
+          String? folderId = q['folderId'];
+          if (extra is Map) {
+            title ??= extra['title'] as String?;
+            artist ??= extra['artist'] as String?;
+            content ??= extra['content'] as String?;
+            folderId ??= extra['folderId'] as String?;
+          }
+          return SongEditorPage(
+            initialTitle: title,
+            initialArtist: artist,
+            initialContent: content,
+            initialFolderId: folderId,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/songs/import/ai',
+        builder: (_, state) {
+          String? folderId = state.uri.queryParameters['folderId'];
+          final extra = state.extra;
+          if (extra is Map) {
+            folderId ??= extra['folderId'] as String?;
+          }
+          return AiImportSourcePage(folderId: folderId);
+        },
+      ),
+      GoRoute(
+        path: '/songs/import/ai/progress',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is! AiImportJobRequest) {
+            // Avoid nesting a second source page on a dead progress route.
+            return const AiImportMissingPayloadRedirect();
+          }
+          return AiImportProgressPage(request: extra);
+        },
+      ),
+      GoRoute(
+        path: '/songs/import/ai/review',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is! AiImportDraft) {
+            return const AiImportMissingPayloadRedirect();
+          }
+          return AiImportReviewPage(draft: extra);
+        },
+      ),
+      GoRoute(
+        path: '/songs/:id/edit',
+        builder: (_, state) =>
+            SongEditorPage(songId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/songs/:id',
@@ -177,15 +276,37 @@ class _SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const HosannaLogo(size: 96),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
-          ],
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              scheme.primary.withValues(alpha: 0.10),
+              scheme.surface,
+              scheme.surface,
+            ],
+            stops: const [0, 0.4, 1],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const HosannaLogo(size: 96),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

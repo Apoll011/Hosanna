@@ -2,6 +2,8 @@
 /// `get-session` response surface actually used by the React app.
 library;
 
+import 'dart:convert';
+
 class AuthUser {
   const AuthUser({
     required this.id,
@@ -40,19 +42,59 @@ class Organization {
     required this.id,
     required this.name,
     required this.slug,
+    this.metadata,
   });
 
   final String id;
   final String name;
   final String slug;
 
+  /// Better Auth org metadata (object or JSON string). Used for agenda
+  /// responsibility categories and other workspace settings.
+  final Map<String, dynamic>? metadata;
+
+  /// `settings.agenda.responsibilityCategories` from [metadata], if present.
+  List<Map<String, dynamic>> get responsibilityCategoryMaps {
+    final agenda = metadata?['settings'];
+    if (agenda is! Map) return const [];
+    final agendaMap = Map<String, dynamic>.from(agenda);
+    final agendaSettings = agendaMap['agenda'];
+    if (agendaSettings is! Map) return const [];
+    final categories = Map<String, dynamic>.from(agendaSettings)['responsibilityCategories'];
+    if (categories is! List) return const [];
+    return [
+      for (final c in categories)
+        if (c is Map) Map<String, dynamic>.from(c),
+    ];
+  }
+
   factory Organization.fromJson(Map<String, dynamic> json) => Organization(
         id: json['id'] as String,
         name: (json['name'] ?? '') as String,
         slug: (json['slug'] ?? '') as String,
+        metadata: _parseMetadata(json['metadata']),
       );
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'slug': slug};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'slug': slug,
+        if (metadata != null) 'metadata': metadata,
+      };
+
+  static Map<String, dynamic>? _parseMetadata(Object? raw) {
+    if (raw == null) return null;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
 }
 
 /// A pending invitation to join an organization, as returned by Better Auth's

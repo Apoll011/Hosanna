@@ -96,12 +96,18 @@ class ServiceElementListConverter
 /// Columns shared by every replicated table.
 ///
 /// `isDeleted` is the soft-delete (trash) flag; `dirty` marks rows that were
-/// changed locally and still need to be pushed. `purgeAt` is the server's
-/// hard-delete timestamp for trashed rows.
+/// changed locally and still need to be pushed. `purgeAt` is when the row may
+/// be hard-removed (server cron + local purge). Wire `_deleted` is a
+/// hard-delete tombstone and must stay false while the row is only trashed.
+///
+/// `serverUpdatedAt` is the last `updatedAt` this client has acknowledged from
+/// the server (pull or successful push). It is the RxDB conflict token sent as
+/// `assumedMasterState.updatedAt`. Null means "never seen on server" (insert).
 mixin SyncMetadata on Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get dirty => boolean().withDefault(const Constant(false))();
   TextColumn get purgeAt => text().nullable()();
+  TextColumn get serverUpdatedAt => text().nullable()();
 }
 
 @TableIndex(name: 'songs_folder_idx', columns: {#folderId})
@@ -187,6 +193,44 @@ class Services extends Table with SyncMetadata {
       .map(const ServiceElementListConverter())
       .withDefault(const Constant('[]'))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  TextColumn get createdAt => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Converts arbitrary JSON (Map/List) to/from a text column.
+class JsonConverter extends TypeConverter<Object?, String> {
+  const JsonConverter();
+
+  @override
+  Object? fromSql(String fromDb) {
+    if (fromDb.isEmpty) return null;
+    return jsonDecode(fromDb);
+  }
+
+  @override
+  String toSql(Object? value) => jsonEncode(value);
+}
+
+/// Org agenda / calendar events (Studio replication collection `agendaEvents`).
+@TableIndex(name: 'agenda_date_idx', columns: {#date})
+@DataClassName('AgendaEventRow')
+class AgendaEvents extends Table with SyncMetadata {
+  TextColumn get id => text()();
+  TextColumn get date => text()();
+  TextColumn get title => text()();
+  TextColumn get type => text()();
+  TextColumn get time => text()();
+  IntColumn get durationMinutes => integer().withDefault(const Constant(0))();
+  TextColumn get location => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get reminder =>
+      text().map(const JsonConverter()).withDefault(const Constant('{}'))();
+  TextColumn get linkedServiceId => text().nullable()();
+  TextColumn get responsibilities =>
+      text().map(const JsonConverter()).withDefault(const Constant('[]'))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
 

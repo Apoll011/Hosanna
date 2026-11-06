@@ -10,6 +10,12 @@ import 'click_source_stub.dart'
 /// feed those bytes straight to the audio engine, but Android's low-latency
 /// player (SoundPool) cannot play raw byte buffers, so on Android the WAV is
 /// written to a temp file and exposed as a [DeviceFileSource] instead.
-Future<Source> createClickSource({required double frequency}) {
-  return click_source_impl.createClickSource(frequency: frequency);
+Future<Source> createClickSource({
+  required double frequency,
+  bool accent = false,
+}) {
+  return click_source_impl.createClickSource(
+    frequency: frequency,
+    accent: accent,
+  );
 }

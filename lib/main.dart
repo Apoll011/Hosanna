@@ -3,7 +3,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'app/providers.dart';
@@ -17,11 +16,6 @@ Future<void> main() async {
   final db = await AppDatabase.open();
   final cookieJar = await createCookieJar();
   final prefs = await SharedPreferences.getInstance();
-
-  await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL'),
-    publishableKey: const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
-  );
 
   // Firebase uses the native config: `android/app/google-services.json` (read
   // by the Google Services Gradle plugin) and `ios/Runner/GoogleService-

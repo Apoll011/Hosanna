@@ -7,6 +7,7 @@ import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/notifications/presentation/foreground_notification_listener.dart';
 import '../features/notifications/presentation/notification_consent_gate.dart';
+import '../features/setup/data/setup_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
 import 'providers.dart';
@@ -24,6 +25,7 @@ class HosannaApp extends ConsumerStatefulWidget {
 class _HosannaAppState extends ConsumerState<HosannaApp>
     with WidgetsBindingObserver {
   ProviderSubscription<AuthState>? _authSubscription;
+  ProviderSubscription<bool>? _setupSubscription;
   StreamSubscription<Uri>? _launcherLinks;
   StreamSubscription<String>? _notificationTaps;
   ProviderContainer? _container;
@@ -55,6 +57,16 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     _authSubscription = ref.listenManual<AuthState>(
       authControllerProvider,
       (previous, next) => _onAuthChanged(previous, next),
+    );
+    // Flush deferred launcher/notification targets once setup finishes —
+    // otherwise the /setup redirect clears them before “Enter Hosanna”.
+    _setupSubscription = ref.listenManual<bool>(
+      setupControllerProvider,
+      (previous, next) {
+        if (next && previous != true && _pendingLocation != null) {
+          Future.microtask(_openPendingLocation);
+        }
+      },
     );
 
     // Deferred past the first frame: `checkSession`/`restore` mutate provider
@@ -100,6 +112,12 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     if (location == null || !mounted) return;
     final auth = ref.read(authControllerProvider);
     if (auth.status == AuthStatus.loading || auth.resolvingOrganization) return;
+    // Hold the target through org join + setup; navigating early lets the
+    // router redirect to /setup and drops the original deep link.
+    if (auth.isAuthenticated) {
+      if (auth.organization == null) return;
+      if (!ref.read(setupControllerProvider)) return;
+    }
     _pendingLocation = null;
     ref.read(goRouterProvider).go(location);
   }
@@ -122,6 +140,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     _launcherLinks?.cancel();
     _notificationTaps?.cancel();
     _authSubscription?.close();
+    _setupSubscription?.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

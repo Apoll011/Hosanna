@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/chordpro/parser.dart';
 import 'chordpro/instrument_selector.dart';
@@ -44,10 +45,8 @@ Future<void> showSongControlsSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(borderRadius: HosannaRadii.sheet),
     builder: (_) => const SongControlsSheet(),
   );
 }
@@ -72,34 +71,36 @@ class SongControlsSheet extends ConsumerWidget {
           children: [
             const SizedBox(height: 4),
 
-            // Transpose.
-            _SectionTitle(
-              label: l10n.songTranspose,
-              value: settings.transpose > 0
-                  ? '+${settings.transpose} ${l10n.songSemitones}'
-                  : '${settings.transpose} ${l10n.songSemitones}',
-            ),
-            _StepperRow(
-              onDec: () => controller.setTranspose(settings.transpose - 1),
-              onInc: () => controller.setTranspose(settings.transpose + 1),
-              onReset: () => controller.setTranspose(0),
-              resetLabel: l10n.songOriginal,
-            ),
-            const SizedBox(height: 16),
-
-            // Capo (only for instruments where it changes the pitch).
-            if (settings.instrumentSupportsCapo) ...[
+            // Transpose / capo only matter when chords are visible.
+            if (settings.showChords) ...[
               _SectionTitle(
-                label: l10n.songCapo,
-                value: settings.capo == 0
-                    ? l10n.songCapoNone
-                    : l10n.songCapoFret(settings.capo),
+                label: l10n.songTranspose,
+                value: settings.transpose > 0
+                    ? '+${settings.transpose} ${l10n.songSemitones}'
+                    : '${settings.transpose} ${l10n.songSemitones}',
               ),
-              _CapoSelector(
-                value: settings.capo,
-                onChanged: controller.setCapo,
+              _StepperRow(
+                onDec: () => controller.setTranspose(settings.transpose - 1),
+                onInc: () => controller.setTranspose(settings.transpose + 1),
+                onReset: () => controller.setTranspose(0),
+                resetLabel: l10n.songOriginal,
               ),
               const SizedBox(height: 16),
+
+              // Capo (only for instruments where it changes the pitch).
+              if (settings.instrumentSupportsCapo) ...[
+                _SectionTitle(
+                  label: l10n.songCapo,
+                  value: settings.capo == 0
+                      ? l10n.songCapoNone
+                      : l10n.songCapoFret(settings.capo),
+                ),
+                _CapoSelector(
+                  value: settings.capo,
+                  onChanged: controller.setCapo,
+                ),
+                const SizedBox(height: 16),
+              ],
             ],
 
             // Font size.
@@ -170,12 +171,13 @@ class SongControlsSheet extends ConsumerWidget {
               value: settings.twoColumn,
               onChanged: (_) => controller.toggleTwoColumn(),
             ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.songShowDiagrams),
-              value: settings.showDiagrams,
-              onChanged: (_) => controller.toggleDiagrams(),
-            ),
+            if (settings.showChords)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.songShowDiagrams),
+                value: settings.showDiagrams,
+                onChanged: (_) => controller.toggleDiagrams(),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.songSectionBackground),
@@ -183,12 +185,14 @@ class SongControlsSheet extends ConsumerWidget {
               onChanged: (_) => controller.toggleSectionColorBackground(),
             ),
 
-            const SizedBox(height: 8),
-            _SectionTitle(label: l10n.songInstrument, value: ''),
-            InstrumentSelector(
-              selected: settings.instrument,
-              onChanged: controller.setInstrument,
-            ),
+            if (settings.showChords) ...[
+              const SizedBox(height: 8),
+              _SectionTitle(label: l10n.songInstrument, value: ''),
+              InstrumentSelector(
+                selected: settings.instrument,
+                onChanged: controller.setInstrument,
+              ),
+            ],
 
             // Variant switcher — shown inside the sheet as well.
             Builder(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
+import 'auth_scaffold.dart';
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
   const EmailVerificationPage({super.key});
@@ -35,46 +36,29 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final verified =
+        ref.watch(authControllerProvider).session?.user.emailVerified == true;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.authVerifyEmail)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.mark_email_read_outlined,
-                  size: 64, color: theme.colorScheme.primary),
-              const SizedBox(height: 24),
-              Text(
-                l10n.authVerifyEmailTitle,
-                style: theme.textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.authVerifyEmailMessage,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: _sending ? null : _resend,
-                icon: _sending
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send),
-                label: Text(l10n.authResendEmail),
-              ),
-            ],
-          ),
-        ),
+    if (verified) {
+      return AuthScaffold(
+        title: l10n.authEmailVerified,
+        heroAsset: AuthHeroes.emailVerified,
+        heroFallbackIcon: Icons.verified_rounded,
+        showBack: false,
+        child: const SizedBox.shrink(),
+      );
+    }
+
+    return AuthScaffold(
+      title: l10n.authVerifyEmailTitle,
+      subtitle: l10n.authVerifyEmailMessage,
+      heroAsset: AuthHeroes.verifyEmail,
+      heroFallbackIcon: Icons.mark_email_read_outlined,
+      showBack: false,
+      child: AuthPrimaryButton(
+        label: l10n.authResendEmail,
+        loading: _sending,
+        onPressed: _resend,
       ),
     );
   }

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/design/illustrations.dart';
 import '../../../app/providers.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
+import '../../setup/data/setup_controller.dart';
 
-/// Asks the user — once, after the first authenticated session — whether the
+/// Asks the user — once, after first-run setup is complete — whether the
 /// server may send notifications to this device, then records the answer and
 /// mirrors it onto the current session's `notify` field.
 ///
 /// It is mounted from `MaterialApp.builder`, i.e. *above* the Navigator, so
 /// the prompt is rendered as an in-tree modal overlay instead of a dialog.
+///
+/// Deferred until the user has an organization **and** finished the setup
+/// wizard so the prompt does not stack on top of join/setup.
 ///
 /// The answer is intentionally distinct from the OS notification permission:
 /// "Allow" records consent and *also* requests the OS permission, while
@@ -42,6 +47,14 @@ class _NotificationConsentGateState
       if (next.isAuthenticated && previous?.isAuthenticated != true) {
         _maybeAsk();
       }
+      if (next.organization != null && previous?.organization == null) {
+        _maybeAsk();
+      }
+    });
+    ref.listen(setupControllerProvider, (previous, next) {
+      if (next && previous != true) {
+        _maybeAsk();
+      }
     });
 
     return Stack(
@@ -55,7 +68,9 @@ class _NotificationConsentGateState
   Future<void> _maybeAsk() async {
     if (_prompting || !mounted) return;
     if (await ref.read(notificationConsentStoreProvider).read() != null) return;
-    if (!ref.read(authControllerProvider).isAuthenticated) return;
+    final auth = ref.read(authControllerProvider);
+    if (!auth.isAuthenticated || auth.organization == null) return;
+    if (!ref.read(setupControllerProvider)) return;
     if (!mounted) return;
     setState(() => _prompting = true);
   }
@@ -86,6 +101,7 @@ class _NotificationConsentGateState
   Widget _buildPrompt(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return Positioned.fill(
       child: Material(
@@ -93,46 +109,81 @@ class _NotificationConsentGateState
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              margin: const EdgeInsets.all(24),
+            child: Material(
+              color: scheme.surface,
+              elevation: 8,
+              shadowColor: Colors.black.withValues(alpha: 0.35),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.notifications_active_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 32,
+                    ColoredBox(
+                      color: scheme.surface,
+                      child: Image.asset(
+                        HosannaIllustrations.notificationConsent,
+                        height: 140,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.notifications_active_outlined,
+                          color: scheme.primary,
+                          size: 48,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.notificationConsentTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       l10n.notificationConsentMessage,
+                      textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 22),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                          onPressed:
-                              _busy ? null : () => _answer(false),
-                          child: Text(l10n.notificationConsentNotNow),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _busy ? null : () => _answer(false),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(l10n.notificationConsentNotNow),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _busy ? null : () => _answer(true),
-                          child: Text(l10n.notificationConsentAllow),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: _busy ? null : () => _answer(true),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(l10n.notificationConsentAllow),
+                          ),
                         ),
                       ],
                     ),

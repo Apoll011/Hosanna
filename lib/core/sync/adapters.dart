@@ -27,6 +27,12 @@ List<ServiceElement> _elements(dynamic v) {
       .toList();
 }
 
+/// RxDB assumedMasterState: only id + last-known server updatedAt.
+Map<String, dynamic>? _assumedMaster(String id, String? serverUpdatedAt) {
+  if (serverUpdatedAt == null || serverUpdatedAt.isEmpty) return null;
+  return {'id': id, 'updatedAt': serverUpdatedAt};
+}
+
 // ── Songs ──────────────────────────────────────────────────────────────────
 
 class SongReplicationAdapter extends ReplicationAdapter {
@@ -38,16 +44,50 @@ class SongReplicationAdapter extends ReplicationAdapter {
   String get resourceName => 'songs';
 
   @override
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.songs,
-        docs.map(_songCompanion).toList(),
-      );
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  }) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+
+    final dirtyIds = overwriteDirty
+        ? const <String>{}
+        : await _dirtySongIds();
+
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.songs)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      final toWrite = live
+          .where((d) => !dirtyIds.contains(_str(d['id'])))
+          .map(_songCompanion)
+          .toList();
+      if (toWrite.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.songs, toWrite);
+        });
+      }
     });
   }
 
+  Future<Set<String>> _dirtySongIds() async {
+    final rows = await (_db.select(_db.songs)
+          ..where((t) => t.dirty.equals(true)))
+        .get();
+    return rows.map((r) => r.id).toSet();
+  }
+
   SongsCompanion _songCompanion(Map<String, dynamic> d) {
+    final updatedAt = _str(d['updatedAt']);
     return SongsCompanion.insert(
       id: _str(d['id']),
       title: _str(d['title']),
@@ -58,24 +98,24 @@ class SongReplicationAdapter extends ReplicationAdapter {
       tags: Value(_tags(d['tags'])),
       songNumber: Value(_int(d['song_number'])),
       createdAt: _str(d['createdAt']),
-      updatedAt: _str(d['updatedAt']),
+      updatedAt: updatedAt,
       isDeleted: Value(_bool(d['isDeleted'])),
       dirty: const Value(false),
       purgeAt: Value(_nullableStr(d['purgeAt'])),
+      serverUpdatedAt: Value(updatedAt),
     );
   }
 
   @override
   Future<List<ChangeRow>> collectChanges() async {
-    final query = _db.select(_db.songs)
-      ..where((t) => t.dirty.equals(true));
+    final query = _db.select(_db.songs)..where((t) => t.dirty.equals(true));
     final rows = await query.get();
     return rows.map((r) {
       final wire = _songToWire(r);
       return ChangeRow(
         id: r.id,
         newDocumentState: wire,
-        assumedMasterState: wire,
+        assumedMasterState: _assumedMaster(r.id, r.serverUpdatedAt),
       );
     }).toList();
   }
@@ -93,19 +133,33 @@ class SongReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+        // hard-delete tombstones (not used by this client yet).
+        '_deleted': false,
       };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
-      upsertFromWire(serverDocs);
+      upsertFromWire(serverDocs, overwriteDirty: true);
 
   @override
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final stmt = _db.update(_db.songs)..where((t) => t.id.isIn(list));
-    await stmt.write(const SongsCompanion(dirty: Value(false)));
+    final rows =
+        await (_db.select(_db.songs)..where((t) => t.id.isIn(list))).get();
+    await _db.batch((b) {
+      for (final r in rows) {
+        b.update(
+          _db.songs,
+          SongsCompanion(
+            dirty: const Value(false),
+            serverUpdatedAt: Value(r.updatedAt),
+          ),
+          where: (t) => t.id.equals(r.id),
+        );
+      }
+    });
   }
 }
 
@@ -120,16 +174,49 @@ class FolderReplicationAdapter extends ReplicationAdapter {
   String get resourceName => 'folders';
 
   @override
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.folders,
-        docs.map(_folderCompanion).toList(),
-      );
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  }) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    final dirtyIds = overwriteDirty
+        ? const <String>{}
+        : await _dirtyFolderIds();
+
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.folders)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      final toWrite = live
+          .where((d) => !dirtyIds.contains(_str(d['id'])))
+          .map(_folderCompanion)
+          .toList();
+      if (toWrite.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.folders, toWrite);
+        });
+      }
     });
   }
 
+  Future<Set<String>> _dirtyFolderIds() async {
+    final rows = await (_db.select(_db.folders)
+          ..where((t) => t.dirty.equals(true)))
+        .get();
+    return rows.map((r) => r.id).toSet();
+  }
+
   FoldersCompanion _folderCompanion(Map<String, dynamic> d) {
+    final updatedAt = _str(d['updatedAt']);
     return FoldersCompanion.insert(
       id: _str(d['id']),
       name: _str(d['name']),
@@ -137,24 +224,24 @@ class FolderReplicationAdapter extends ReplicationAdapter {
       icon: Value(_str(d['icon'], 'default')),
       parentId: Value(_nullableStr(d['parentId'])),
       createdAt: _str(d['createdAt']),
-      updatedAt: _str(d['updatedAt']),
+      updatedAt: updatedAt,
       isDeleted: Value(_bool(d['isDeleted'])),
       dirty: const Value(false),
       purgeAt: Value(_nullableStr(d['purgeAt'])),
+      serverUpdatedAt: Value(updatedAt),
     );
   }
 
   @override
   Future<List<ChangeRow>> collectChanges() async {
-    final query = _db.select(_db.folders)
-      ..where((t) => t.dirty.equals(true));
+    final query = _db.select(_db.folders)..where((t) => t.dirty.equals(true));
     final rows = await query.get();
     return rows.map((r) {
       final wire = _folderToWire(r);
       return ChangeRow(
         id: r.id,
         newDocumentState: wire,
-        assumedMasterState: wire,
+        assumedMasterState: _assumedMaster(r.id, r.serverUpdatedAt),
       );
     }).toList();
   }
@@ -169,23 +256,33 @@ class FolderReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        '_deleted': false,
       };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
-      upsertFromWire(serverDocs);
+      upsertFromWire(serverDocs, overwriteDirty: true);
 
   @override
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final stmt = _db.update(_db.folders)..where((t) => t.id.isIn(list));
-    await stmt.write(const FoldersCompanion(dirty: Value(false)));
+    final rows =
+        await (_db.select(_db.folders)..where((t) => t.id.isIn(list))).get();
+    await _db.batch((b) {
+      for (final r in rows) {
+        b.update(
+          _db.folders,
+          FoldersCompanion(
+            dirty: const Value(false),
+            serverUpdatedAt: Value(r.updatedAt),
+          ),
+          where: (t) => t.id.equals(r.id),
+        );
+      }
+    });
   }
 
-  /// `songCount`/`folderCount` are local-only, so recompute them from the rows
-  /// that actually exist locally instead of trusting the server.
   @override
   Future<void> refreshLocalCounts() async {
     final songs = await (_db.select(_db.songs)
@@ -242,16 +339,50 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
   String get resourceName => 'collections';
 
   @override
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.collections,
-        docs.map(_collectionCompanion).toList(),
-      );
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  }) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    final dirtyIds = overwriteDirty
+        ? const <String>{}
+        : await _dirtyCollectionIds();
+
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.collections)
+              ..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      final toWrite = live
+          .where((d) => !dirtyIds.contains(_str(d['id'])))
+          .map(_collectionCompanion)
+          .toList();
+      if (toWrite.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.collections, toWrite);
+        });
+      }
     });
   }
 
+  Future<Set<String>> _dirtyCollectionIds() async {
+    final rows = await (_db.select(_db.collections)
+          ..where((t) => t.dirty.equals(true)))
+        .get();
+    return rows.map((r) => r.id).toSet();
+  }
+
   CollectionsCompanion _collectionCompanion(Map<String, dynamic> d) {
+    final updatedAt = _str(d['updatedAt']);
     return CollectionsCompanion.insert(
       id: _str(d['id']),
       name: _str(d['name']),
@@ -261,10 +392,11 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
       image: Value(_nullableStr(d['image'])),
       songIds: Value(_tags(d['songIds'])),
       createdAt: _str(d['createdAt']),
-      updatedAt: _str(d['updatedAt']),
+      updatedAt: updatedAt,
       isDeleted: Value(_bool(d['isDeleted'])),
       dirty: const Value(false),
       purgeAt: Value(_nullableStr(d['purgeAt'])),
+      serverUpdatedAt: Value(updatedAt),
     );
   }
 
@@ -278,7 +410,7 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
       return ChangeRow(
         id: r.id,
         newDocumentState: wire,
-        assumedMasterState: wire,
+        assumedMasterState: _assumedMaster(r.id, r.serverUpdatedAt),
       );
     }).toList();
   }
@@ -295,23 +427,34 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        '_deleted': false,
       };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
-      upsertFromWire(serverDocs);
+      upsertFromWire(serverDocs, overwriteDirty: true);
 
   @override
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final stmt = _db.update(_db.collections)..where((t) => t.id.isIn(list));
-    await stmt.write(const CollectionsCompanion(dirty: Value(false)));
+    final rows = await (_db.select(_db.collections)
+          ..where((t) => t.id.isIn(list)))
+        .get();
+    await _db.batch((b) {
+      for (final r in rows) {
+        b.update(
+          _db.collections,
+          CollectionsCompanion(
+            dirty: const Value(false),
+            serverUpdatedAt: Value(r.updatedAt),
+          ),
+          where: (t) => t.id.equals(r.id),
+        );
+      }
+    });
   }
 
-  /// `songCount` is local-only, so recompute it from the songs that actually
-  /// exist locally rather than trusting the server.
   @override
   Future<void> refreshLocalCounts() async {
     final collections = await (_db.select(_db.collections)
@@ -347,16 +490,49 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
   String get resourceName => 'services';
 
   @override
-  Future<void> upsertFromWire(List<Map<String, dynamic>> docs) async {
-    await _db.batch((b) {
-      b.insertAllOnConflictUpdate(
-        _db.services,
-        docs.map(_serviceCompanion).toList(),
-      );
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  }) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    final dirtyIds = overwriteDirty
+        ? const <String>{}
+        : await _dirtyServiceIds();
+
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.services)..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      final toWrite = live
+          .where((d) => !dirtyIds.contains(_str(d['id'])))
+          .map(_serviceCompanion)
+          .toList();
+      if (toWrite.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.services, toWrite);
+        });
+      }
     });
   }
 
+  Future<Set<String>> _dirtyServiceIds() async {
+    final rows = await (_db.select(_db.services)
+          ..where((t) => t.dirty.equals(true)))
+        .get();
+    return rows.map((r) => r.id).toSet();
+  }
+
   ServicesCompanion _serviceCompanion(Map<String, dynamic> d) {
+    final updatedAt = _str(d['updatedAt']);
     return ServicesCompanion.insert(
       id: _str(d['id']),
       name: _str(d['name']),
@@ -365,24 +541,24 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
       elements: Value(_elements(d['elements'])),
       archived: Value(_bool(d['archived'])),
       createdAt: _str(d['createdAt']),
-      updatedAt: _str(d['updatedAt']),
+      updatedAt: updatedAt,
       isDeleted: Value(_bool(d['isDeleted'])),
       dirty: const Value(false),
       purgeAt: Value(_nullableStr(d['purgeAt'])),
+      serverUpdatedAt: Value(updatedAt),
     );
   }
 
   @override
   Future<List<ChangeRow>> collectChanges() async {
-    final query = _db.select(_db.services)
-      ..where((t) => t.dirty.equals(true));
+    final query = _db.select(_db.services)..where((t) => t.dirty.equals(true));
     final rows = await query.get();
     return rows.map((r) {
       final wire = _serviceToWire(r);
       return ChangeRow(
         id: r.id,
         newDocumentState: wire,
-        assumedMasterState: wire,
+        assumedMasterState: _assumedMaster(r.id, r.serverUpdatedAt),
       );
     }).toList();
   }
@@ -398,18 +574,166 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
         'updatedAt': r.updatedAt,
         'isDeleted': r.isDeleted,
         'purgeAt': r.purgeAt,
-        '_deleted': r.isDeleted,
+        '_deleted': false,
       };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
-      upsertFromWire(serverDocs);
+      upsertFromWire(serverDocs, overwriteDirty: true);
 
   @override
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final stmt = _db.update(_db.services)..where((t) => t.id.isIn(list));
-    await stmt.write(const ServicesCompanion(dirty: Value(false)));
+    final rows =
+        await (_db.select(_db.services)..where((t) => t.id.isIn(list))).get();
+    await _db.batch((b) {
+      for (final r in rows) {
+        b.update(
+          _db.services,
+          ServicesCompanion(
+            dirty: const Value(false),
+            serverUpdatedAt: Value(r.updatedAt),
+          ),
+          where: (t) => t.id.equals(r.id),
+        );
+      }
+    });
+  }
+}
+
+// ── Agenda events ──────────────────────────────────────────────────────────
+
+class AgendaEventReplicationAdapter extends ReplicationAdapter {
+  AgendaEventReplicationAdapter(this._db);
+
+  final AppDatabase _db;
+
+  @override
+  String get resourceName => 'agendaEvents';
+
+  @override
+  Future<void> upsertFromWire(
+    List<Map<String, dynamic>> docs, {
+    bool overwriteDirty = false,
+  }) async {
+    final live = <Map<String, dynamic>>[];
+    final tombstoneIds = <String>[];
+    for (final d in docs) {
+      if (_bool(d['_deleted'])) {
+        tombstoneIds.add(_str(d['id']));
+      } else {
+        live.add(d);
+      }
+    }
+    final dirtyIds = overwriteDirty
+        ? const <String>{}
+        : await _dirtyAgendaIds();
+
+    await _db.transaction(() async {
+      if (tombstoneIds.isNotEmpty) {
+        await (_db.delete(_db.agendaEvents)
+              ..where((t) => t.id.isIn(tombstoneIds)))
+            .go();
+      }
+      final toWrite = live
+          .where((d) => !dirtyIds.contains(_str(d['id'])))
+          .map(_agendaCompanion)
+          .toList();
+      if (toWrite.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.agendaEvents, toWrite);
+        });
+      }
+    });
+  }
+
+  Future<Set<String>> _dirtyAgendaIds() async {
+    final rows = await (_db.select(_db.agendaEvents)
+          ..where((t) => t.dirty.equals(true)))
+        .get();
+    return rows.map((r) => r.id).toSet();
+  }
+
+  AgendaEventsCompanion _agendaCompanion(Map<String, dynamic> d) {
+    final updatedAt = _str(d['updatedAt']);
+    return AgendaEventsCompanion.insert(
+      id: _str(d['id']),
+      date: _str(d['date']),
+      title: _str(d['title']),
+      type: _str(d['type'], 'event'),
+      time: _str(d['time'], '00:00'),
+      durationMinutes: Value(_int(d['durationMinutes']) ?? 0),
+      location: Value(_nullableStr(d['location'])),
+      notes: Value(_nullableStr(d['notes'])),
+      reminder: Value(d['reminder'] ?? const {'enabled': false, 'label': ''}),
+      linkedServiceId: Value(_nullableStr(d['linkedServiceId'])),
+      responsibilities: Value(d['responsibilities'] ?? const []),
+      createdAt: _str(d['createdAt']),
+      updatedAt: updatedAt,
+      isDeleted: Value(_bool(d['isDeleted'])),
+      dirty: const Value(false),
+      purgeAt: Value(_nullableStr(d['purgeAt'])),
+      serverUpdatedAt: Value(updatedAt),
+    );
+  }
+
+  @override
+  Future<List<ChangeRow>> collectChanges() async {
+    final query = _db.select(_db.agendaEvents)
+      ..where((t) => t.dirty.equals(true));
+    final rows = await query.get();
+    return rows.map((r) {
+      final wire = _agendaToWire(r);
+      return ChangeRow(
+        id: r.id,
+        newDocumentState: wire,
+        assumedMasterState: _assumedMaster(r.id, r.serverUpdatedAt),
+      );
+    }).toList();
+  }
+
+  Map<String, dynamic> _agendaToWire(AgendaEventRow r) => {
+        'id': r.id,
+        'date': r.date,
+        'title': r.title,
+        'type': r.type,
+        'time': r.time,
+        'durationMinutes': r.durationMinutes,
+        'location': r.location,
+        'notes': r.notes,
+        'reminder': r.reminder,
+        'linkedServiceId': r.linkedServiceId,
+        'responsibilities': r.responsibilities,
+        'createdAt': r.createdAt,
+        'updatedAt': r.updatedAt,
+        'isDeleted': r.isDeleted,
+        'purgeAt': r.purgeAt,
+        '_deleted': false,
+      };
+
+  @override
+  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
+      upsertFromWire(serverDocs, overwriteDirty: true);
+
+  @override
+  Future<void> markPushed(Iterable<String> ids) async {
+    final list = ids.toList();
+    if (list.isEmpty) return;
+    final rows = await (_db.select(_db.agendaEvents)
+          ..where((t) => t.id.isIn(list)))
+        .get();
+    await _db.batch((b) {
+      for (final r in rows) {
+        b.update(
+          _db.agendaEvents,
+          AgendaEventsCompanion(
+            dirty: const Value(false),
+            serverUpdatedAt: Value(r.updatedAt),
+          ),
+          where: (t) => t.id.equals(r.id),
+        );
+      }
+    });
   }
 }

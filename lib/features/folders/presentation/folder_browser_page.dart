@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/design/illustrations.dart';
 import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/shell_insets.dart';
 import '../../collections/data/collection_repository.dart';
@@ -150,20 +152,9 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                   onPressed: () => explorer.open(current?.parentId),
                 ),
           title: _searchOpen
-              ? TextField(
+              ? AppBarSearchField(
                   controller: _search,
-                  autofocus: true,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: l10n.songsSearchHint,
-                    hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
+                  hintText: l10n.songsSearchHint,
                   onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => setState(() {}),
                 )
@@ -214,7 +205,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                 child: isEmpty
                     ? hasQuery || !_settings.isDefault
                         ? EmptyState(
-                            icon: Icons.search_off_outlined,
+                            illustrationAsset:
+                                HosannaIllustrations.emptySearch,
                             title: l10n.songsNoResults,
                             description: l10n.foldersNoResultsDesc,
                             primaryLabel: hasQuery
@@ -229,7 +221,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                             scrollable: true,
                           )
                         : EmptyState(
-                            icon: Icons.folder_open_outlined,
+                            illustrationAsset:
+                                HosannaIllustrations.emptyFolders,
                             title: l10n.foldersEmpty,
                             description: l10n.foldersEmptyDesc,
                             scrollable: true,

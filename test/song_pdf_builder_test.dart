@@ -72,5 +72,24 @@ void main() {
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
     });
+
+    test('builds with key_note directive', () async {
+      const content = '''
+{title: Amazing Grace}
+{key: C}
+{key_note: Verso 4 e final modulam para D (meio tom acima)}
+
+{start_of_verse}
+[C]Graça sem fim
+{key_note: Modulação}
+[D]Glória
+{end_of_verse}
+''';
+      final bytes = await buildSongPdf(
+        content: content,
+      );
+      expect(bytes.length, greaterThan(0));
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
   });
 }

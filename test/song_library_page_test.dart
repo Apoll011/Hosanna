@@ -8,6 +8,7 @@ import 'package:hosanna/core/db/database.dart';
 import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'test_pump.dart';
 
 void main() {
   late AppDatabase db;
@@ -68,26 +69,27 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
         ],
         child: MaterialApp(
+          locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const SongLibraryPage(),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
   }
 
   Future<void> openFilters(WidgetTester tester) async {
     await tester.tap(find.byIcon(Icons.filter_list));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
   }
 
   Future<void> tapChip(WidgetTester tester, String label) async {
     final finder = find.widgetWithText(FilterChip, label);
     await tester.ensureVisible(finder);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     await tester.tap(finder);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
   }
 
   FilterChip chip(WidgetTester tester, String label) =>
@@ -117,7 +119,7 @@ void main() {
       expect(find.text('Song B'), findsOneWidget);
 
       await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
     });
 
     testWidgets('sort choice chip shows pressed state', (tester) async {
@@ -133,9 +135,9 @@ void main() {
 
       await openFilters(tester);
       await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Song number'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Song number'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
 
       final chip = tester.widget<ChoiceChip>(
         find.widgetWithText(ChoiceChip, 'Song number'),
@@ -175,7 +177,7 @@ void main() {
 
       // Switching to "match any" widens the result set.
       await tester.tap(find.text('Match any'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       expect(find.text('Song B'), findsOneWidget);
       expect(find.text('Song C'), findsOneWidget);
       expect(find.text('Song D'), findsNothing);
@@ -211,9 +213,9 @@ void main() {
 
       await openFilters(tester);
       await tester.ensureVisible(find.text('Only with chords'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       await tester.tap(find.text('Only with chords'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
 
       final tile = tester.widget<SwitchListTile>(
         find.widgetWithText(SwitchListTile, 'Only with chords'),
@@ -259,7 +261,7 @@ void main() {
       await openFilters(tester);
       await tapChip(tester, 'worship');
       await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
 
       // Badge on the filter button reflects one active filter.
       expect(find.text('1'), findsOneWidget);
@@ -274,7 +276,7 @@ void main() {
         of: tagChip,
         matching: find.byIcon(Icons.clear),
       ));
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
       expect(find.text('Song B'), findsOneWidget);
       expect(find.widgetWithText(InputChip, 'worship'), findsNothing);
       expect(find.text('1'), findsNothing);

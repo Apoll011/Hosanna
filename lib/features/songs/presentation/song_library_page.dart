@@ -2,14 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/design/illustrations.dart';
+import '../../../app/design/tokens.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
+import '../../../core/permissions/permissions.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
+import '../../../shared/widgets/shell_modal.dart';
 import '../../collections/data/collection_repository.dart';
 import '../../folders/data/folder_repository.dart';
+import '../data/ai_settings_provider.dart';
 import '../data/song_repository.dart';
 import '../domain/library_controller.dart';
 import 'song_filter_widgets.dart';
@@ -41,6 +48,18 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
   Future<void> _refresh() =>
       ref.read(syncControllerProvider.notifier).syncAll();
 
+  void _openAiImport() {
+    final library = ref.read(libraryControllerProvider);
+    final folderId = library.section == LibrarySection.folder
+        ? library.folderId
+        : null;
+    if (folderId == null) {
+      context.push('/songs/import/ai');
+      return;
+    }
+    context.push('/songs/import/ai?folderId=$folderId');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -49,6 +68,11 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final collectionsAsync = ref.watch(collectionsStreamProvider);
     final library = ref.watch(libraryControllerProvider);
     final libraryController = ref.read(libraryControllerProvider.notifier);
+    // Watch so add / AI affordances appear once role + AI settings resolve.
+    final canCreateSong =
+        ref.watch(canPermissionProvider(AppPermission.songCreate));
+    final canImportWithAi = ref.watch(aiImportAvailableProvider);
+    final canAddSongs = canCreateSong || canImportWithAi;
 
     final songs = songsAsync.valueOrNull ?? const <SongRow>[];
     if (!identical(_metaCacheSongs, songs)) {
@@ -69,19 +93,9 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     return Scaffold(
       appBar: AppBar(
         title: _searchOpen
-            ? TextField(
+            ? AppBarSearchField(
                 controller: _search,
-                autofocus: true,
-                style: Theme.of(context).textTheme.titleLarge,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.songsSearchHint,
-                  hintStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  border: InputBorder.none,
-                  isDense: true,
-                ),
+                hintText: l10n.songsSearchHint,
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => setState(() {}),
               )
@@ -104,6 +118,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
             activeCount: _settings.activeFilterCount,
             onPressed: _openFilterSheet,
           ),
+          if (canAddSongs)
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
+              tooltip: l10n.songsNewSong,
+              onPressed: _showNewSongSheet,
+            ),
         ],
       ),
       body: Column(
@@ -115,6 +135,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               onRefresh: _refresh,
               child: switch (songsAsync) {
                 AsyncValue(hasError: true) => ErrorState(
+                    illustrationAsset: HosannaIllustrations.stateError,
                     title: l10n.commonError,
                     description: l10n.commonErrorDesc,
                     retryLabel: l10n.commonRetry,
@@ -132,6 +153,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     folderNames: folderNames,
                     favorites: library.favoriteIds,
                     library: library,
+                    canCreateSong: canCreateSong,
+                    canImportWithAi: canImportWithAi,
                     onToggleFavorite: libraryController.toggleFavorite,
                     onOpenSong: (id) {
                       libraryController.markPlayed(id);
@@ -178,8 +201,10 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         (id: c.id, name: c.name),
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-    // The collection filter is left out when the page is already scoped to a
-    // single collection.
+    // Folder/collection filters are contextual: hidden on the main library,
+    // folder filter only when browsing a collection, collection filter only
+    // when browsing a folder.
+    final section = ref.read(libraryControllerProvider).section;
     showSongFilterSheet(
       context,
       initial: _settings,
@@ -188,9 +213,8 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       collectionOptions: collectionOptions,
       keyOptions: keyOptionsFrom(_metaBySongId),
       onChanged: (next) => setState(() => _settings = next),
-      showCollectionFilter:
-          ref.read(libraryControllerProvider).section !=
-              LibrarySection.collection,
+      showFolderFilter: section == LibrarySection.collection,
+      showCollectionFilter: section == LibrarySection.folder,
     );
   }
 
@@ -289,60 +313,223 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     setState(() => _settings = const FilterSettings());
   }
 
+  Future<void> _showNewSongSheet() async {
+    final canCreate =
+        ref.read(canPermissionProvider(AppPermission.songCreate));
+    final canImport = ref.read(aiImportAvailableProvider);
+    if (!canCreate && !canImport) return;
+
+    // Single option → skip the chooser sheet.
+    if (canCreate && !canImport) {
+      context.push('/songs/new');
+      return;
+    }
+    if (!canCreate && canImport) {
+      _openAiImport();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = HosannaTokens.of(context);
+    await showShellModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.songsNewSong,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: HosannaSpacing.md),
+                HosannaSurface(
+                  elevated: false,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push('/songs/new');
+                  },
+                  child: Row(
+                    children: [
+                      HosannaLeadingBadge(icon: Icons.edit_outlined),
+                      const SizedBox(width: HosannaSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.songsCreateManually,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              l10n.songsCreateManuallyDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: HosannaSpacing.sm),
+                HosannaSurface(
+                  elevated: false,
+                  selected: true,
+                  color: tokens.selectedNav,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openAiImport();
+                  },
+                  child: Row(
+                    children: [
+                      HosannaLeadingBadge(
+                        icon: Icons.auto_awesome_rounded,
+                      ),
+                      const SizedBox(width: HosannaSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.songsImportWithAi,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              l10n.songsImportWithAiDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _songList({
     required List<SongRow> songs,
     required Map<String, String> folderNames,
     required List<String> favorites,
     required LibraryState library,
+    required bool canCreateSong,
+    required bool canImportWithAi,
     required ValueChanged<String> onToggleFavorite,
     required ValueChanged<String> onOpenSong,
   }) {
     final l10n = AppLocalizations.of(context);
     if (songs.isEmpty) {
-      return _buildEmpty(l10n, library);
+      return _buildEmpty(
+        l10n,
+        library,
+        canCreateSong: canCreateSong,
+        canImportWithAi: canImportWithAi,
+      );
     }
-    return ListView.builder(
+    final theme = Theme.of(context);
+    return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(bottom: shellBottomContentPadding(context)),
+      padding: EdgeInsets.fromLTRB(
+        HosannaSpacing.md,
+        HosannaSpacing.xs,
+        HosannaSpacing.md,
+        shellBottomContentPadding(context),
+      ),
       itemCount: songs.length,
+      separatorBuilder: (_, _) => const SizedBox(height: HosannaSpacing.xs),
       itemBuilder: (context, index) {
         final song = songs[index];
         final folder = song.folderId == null
             ? null
             : folderNames[song.folderId];
         final isFav = favorites.contains(song.id);
-        return ListTile(
-          leading: SongBadge(songNumber: song.songNumber),
-          title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            [
-              song.artist,
-              ?folder,
-              if (song.tags.isNotEmpty) song.tags.join(', '),
-            ].where((e) => e.isNotEmpty).join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              isFav ? Icons.favorite : Icons.favorite_border,
-              color: isFav ? Theme.of(context).colorScheme.error : null,
-            ),
-            tooltip: isFav ? l10n.navFavorites : l10n.navFavorites,
-            onPressed: () => onToggleFavorite(song.id),
+        final meta = _metaBySongId[song.id];
+        final metaBits = <String>[
+          if (song.artist.isNotEmpty) song.artist,
+          if (meta?.key != null && meta!.key!.isNotEmpty) meta.key!,
+          if (folder != null && folder.isNotEmpty) folder,
+        ];
+        return HosannaSurface(
+          elevated: false,
+          padding: const EdgeInsets.symmetric(
+            horizontal: HosannaSpacing.sm,
+            vertical: HosannaSpacing.xs,
           ),
           onTap: () => onOpenSong(song.id),
+          child: Row(
+            children: [
+              SongBadge(songNumber: song.songNumber),
+              const SizedBox(width: HosannaSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (metaBits.isNotEmpty)
+                      Text(
+                        metaBits.join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: isFav ? theme.colorScheme.primary : null,
+                ),
+                tooltip: l10n.navFavorites,
+                onPressed: () => onToggleFavorite(song.id),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildEmpty(AppLocalizations l10n, LibraryState library) {
+  Widget _buildEmpty(
+    AppLocalizations l10n,
+    LibraryState library, {
+    required bool canCreateSong,
+    required bool canImportWithAi,
+  }) {
     final hasFilters = !_settings.isDefault || _search.text.trim().isNotEmpty;
 
     if (hasFilters) {
       return EmptyState(
-        icon: Icons.search_off_outlined,
+        illustrationAsset: HosannaIllustrations.emptySearch,
         title: l10n.songsNoResults,
         description: l10n.songsNoResultsDesc,
         primaryLabel: l10n.songsClearFilters,
@@ -358,13 +545,13 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
 
     return switch (library.section) {
       LibrarySection.favorites => EmptyState(
-          icon: Icons.favorite_border,
+          illustrationAsset: HosannaIllustrations.emptyFavorites,
           title: l10n.songsFavoritesEmpty,
           description: l10n.songsFavoritesEmptyDesc,
           scrollable: true,
         ),
       LibrarySection.recent => EmptyState(
-          icon: Icons.history,
+          illustrationAsset: HosannaIllustrations.emptyRecents,
           title: l10n.songsRecentsEmpty,
           description: l10n.songsRecentsEmptyDesc,
           scrollable: true,
@@ -372,15 +559,22 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
       LibrarySection.folder ||
       LibrarySection.collection =>
         EmptyState(
-          icon: Icons.music_note_outlined,
+          illustrationAsset: HosannaIllustrations.emptyFolders,
           title: l10n.songsEmpty,
           description: l10n.songsEmptyDesc,
           scrollable: true,
         ),
       LibrarySection.all => EmptyState(
-          icon: Icons.library_music_outlined,
+          illustrationAsset: HosannaIllustrations.emptySongs,
           title: l10n.songsEmpty,
-          description: l10n.songsEmptyDesc,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.songsEmptyAddHint
+              : l10n.songsEmptyDesc,
+          primaryLabel: canCreateSong ? l10n.songsAddSong : null,
+          primaryIcon: Icons.add_rounded,
+          onPrimary: canCreateSong ? _showNewSongSheet : null,
+          secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
+          onSecondary: canImportWithAi ? _openAiImport : null,
           scrollable: true,
         ),
     };

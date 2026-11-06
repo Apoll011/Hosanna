@@ -634,6 +634,210 @@ abstract class AppLocalizations {
   /// **'Terminar Sessão'**
   String get onboardingSignOut;
 
+  /// No description provided for @setupWelcomeTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vamos configurar o Hosanna'**
+  String get setupWelcomeTitle;
+
+  /// No description provided for @setupWelcomeSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Algumas escolhas rápidas para que canções e cultos fiquem certos para a forma como serve.'**
+  String get setupWelcomeSubtitle;
+
+  /// No description provided for @setupWelcomeCta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar'**
+  String get setupWelcomeCta;
+
+  /// No description provided for @setupRoleTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como usa o Hosanna?'**
+  String get setupRoleTitle;
+
+  /// No description provided for @setupRoleSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrimos os cultos da forma que melhor se adequa ao seu papel. Pode mudar isto depois nas Definições.'**
+  String get setupRoleSubtitle;
+
+  /// No description provided for @setupRoleMusician.
+  ///
+  /// In pt, this message translates to:
+  /// **'Músico'**
+  String get setupRoleMusician;
+
+  /// No description provided for @setupRoleMusicianDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre direto nas canções com acordes, capo e diagramas.'**
+  String get setupRoleMusicianDesc;
+
+  /// No description provided for @setupRoleLeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Líder'**
+  String get setupRoleLeader;
+
+  /// No description provided for @setupRoleLeaderDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comece pela ordem do culto e pelas notas do momento.'**
+  String get setupRoleLeaderDesc;
+
+  /// No description provided for @setupFocusTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'O que toca?'**
+  String get setupFocusTitle;
+
+  /// No description provided for @setupFocusSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto define o instrumento predefinido para os diagramas de acordes.'**
+  String get setupFocusSubtitle;
+
+  /// No description provided for @setupFocusGuitar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guitarra'**
+  String get setupFocusGuitar;
+
+  /// No description provided for @setupFocusUkulele.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ukulele'**
+  String get setupFocusUkulele;
+
+  /// No description provided for @setupFocusPiano.
+  ///
+  /// In pt, this message translates to:
+  /// **'Piano / teclas'**
+  String get setupFocusPiano;
+
+  /// No description provided for @setupFocusVocals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voz'**
+  String get setupFocusVocals;
+
+  /// No description provided for @setupFocusVocalsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra em primeiro — os acordes ficam disponíveis quando precisar.'**
+  String get setupFocusVocalsDesc;
+
+  /// No description provided for @setupLeaderFocusTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando abre uma canção…'**
+  String get setupLeaderFocusTitle;
+
+  /// No description provided for @setupLeaderFocusSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opcional — escolha um instrumento para as cifras ao rever canções.'**
+  String get setupLeaderFocusSubtitle;
+
+  /// No description provided for @setupPrefsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Predefinições para o palco'**
+  String get setupPrefsTitle;
+
+  /// No description provided for @setupPrefsSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções úteis para ensaios e culto ao vivo.'**
+  String get setupPrefsSubtitle;
+
+  /// No description provided for @setupPrefDiagrams.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar diagramas de acordes'**
+  String get setupPrefDiagrams;
+
+  /// No description provided for @setupPrefDiagramsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digitação acima da canção quando disponível.'**
+  String get setupPrefDiagramsDesc;
+
+  /// No description provided for @setupPrefAwake.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manter o ecrã ligado'**
+  String get setupPrefAwake;
+
+  /// No description provided for @setupPrefAwakeDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não escurecer durante uma canção ou culto.'**
+  String get setupPrefAwakeDesc;
+
+  /// No description provided for @setupLanguageTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma'**
+  String get setupLanguageTitle;
+
+  /// No description provided for @setupLanguageSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha o idioma dos menus e etiquetas.'**
+  String get setupLanguageSubtitle;
+
+  /// No description provided for @setupLanguageSystem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguir o dispositivo'**
+  String get setupLanguageSystem;
+
+  /// No description provided for @setupDoneTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Está pronto'**
+  String get setupDoneTitle;
+
+  /// No description provided for @setupDoneSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Hosanna está configurado para si. Entre na biblioteca quando quiser.'**
+  String get setupDoneSubtitle;
+
+  /// No description provided for @setupDoneCta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrar no Hosanna'**
+  String get setupDoneCta;
+
+  /// No description provided for @setupSkip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saltar por agora'**
+  String get setupSkip;
+
+  /// No description provided for @setupStepOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passo {current} de {total}'**
+  String setupStepOf(int current, int total);
+
+  /// No description provided for @settingsRedoSetup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repetir configuração'**
+  String get settingsRedoSetup;
+
+  /// No description provided for @settingsRedoSetupDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar a responder às perguntas de função e instrumento.'**
+  String get settingsRedoSetupDesc;
+
   /// No description provided for @syncSyncing.
   ///
   /// In pt, this message translates to:
@@ -724,6 +928,12 @@ abstract class AppLocalizations {
   /// **'Metrónomo'**
   String get navMetronome;
 
+  /// No description provided for @navAgenda.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agenda'**
+  String get navAgenda;
+
   /// No description provided for @navExportPdf.
   ///
   /// In pt, this message translates to:
@@ -741,6 +951,108 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ferramentas'**
   String get navToolsSection;
+
+  /// No description provided for @agendaEmptyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem eventos próximos'**
+  String get agendaEmptyTitle;
+
+  /// No description provided for @agendaEmptyBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os eventos do calendário da igreja aparecem aqui depois de sincronizar.'**
+  String get agendaEmptyBody;
+
+  /// No description provided for @agendaNoEventsForDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada neste dia'**
+  String get agendaNoEventsForDay;
+
+  /// No description provided for @agendaNoEventsForDayBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha outro dia na barra acima.'**
+  String get agendaNoEventsForDayBody;
+
+  /// No description provided for @agendaEventDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Evento'**
+  String get agendaEventDetails;
+
+  /// No description provided for @agendaEventNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Evento não encontrado'**
+  String get agendaEventNotFound;
+
+  /// No description provided for @agendaEventNotFoundBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este evento pode ter sido removido ou ainda não sincronizou.'**
+  String get agendaEventNotFoundBody;
+
+  /// No description provided for @agendaFieldDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data'**
+  String get agendaFieldDate;
+
+  /// No description provided for @agendaFieldTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora'**
+  String get agendaFieldTime;
+
+  /// No description provided for @agendaFieldLocation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Local'**
+  String get agendaFieldLocation;
+
+  /// No description provided for @agendaFieldNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas'**
+  String get agendaFieldNotes;
+
+  /// No description provided for @agendaFieldResponsibilities.
+  ///
+  /// In pt, this message translates to:
+  /// **'Equipa'**
+  String get agendaFieldResponsibilities;
+
+  /// No description provided for @agendaLinkedService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Culto associado'**
+  String get agendaLinkedService;
+
+  /// No description provided for @agendaUnassigned.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atribuição'**
+  String get agendaUnassigned;
+
+  /// No description provided for @agendaMinutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} min'**
+  String agendaMinutes(int count);
+
+  /// No description provided for @agendaResponsibilityCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} atribuídos'**
+  String agendaResponsibilityCount(int count);
+
+  /// No description provided for @agendaAssigneeCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} pessoas'**
+  String agendaAssigneeCount(int count);
 
   /// No description provided for @navAllSongs.
   ///
@@ -955,13 +1267,13 @@ abstract class AppLocalizations {
   /// No description provided for @songsSearchLyrics.
   ///
   /// In pt, this message translates to:
-  /// **'Pesquisar na letra'**
+  /// **'Pesquisar também na letra'**
   String get songsSearchLyrics;
 
   /// No description provided for @songsWithChords.
   ///
   /// In pt, this message translates to:
-  /// **'Apenas com acordes'**
+  /// **'Mostrar apenas cânticos com acordes'**
   String get songsWithChords;
 
   /// No description provided for @songsResetFilters.
@@ -1023,6 +1335,648 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Conteúdo em bruto (ChordPro)'**
   String get songsRawContent;
+
+  /// No description provided for @songsCreate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova canção'**
+  String get songsCreate;
+
+  /// No description provided for @songsEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar canção'**
+  String get songsEdit;
+
+  /// No description provided for @songsPreview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pré-visualizar'**
+  String get songsPreview;
+
+  /// No description provided for @songsFieldTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título'**
+  String get songsFieldTitle;
+
+  /// No description provided for @songsFieldSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subtítulo'**
+  String get songsFieldSubtitle;
+
+  /// No description provided for @songsFieldArtist.
+  ///
+  /// In pt, this message translates to:
+  /// **'Artista'**
+  String get songsFieldArtist;
+
+  /// No description provided for @songsFieldComposer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compositor'**
+  String get songsFieldComposer;
+
+  /// No description provided for @songsFieldLyricist.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letrista'**
+  String get songsFieldLyricist;
+
+  /// No description provided for @songsFieldTranslator.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradutor'**
+  String get songsFieldTranslator;
+
+  /// No description provided for @songsFieldArranger.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arranjador'**
+  String get songsFieldArranger;
+
+  /// No description provided for @songsFieldSongNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Número da canção'**
+  String get songsFieldSongNumber;
+
+  /// No description provided for @songsFieldKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom'**
+  String get songsFieldKey;
+
+  /// No description provided for @songsFieldOriginalKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom original'**
+  String get songsFieldOriginalKey;
+
+  /// No description provided for @songsFieldKeyNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum'**
+  String get songsFieldKeyNone;
+
+  /// No description provided for @songsFieldTempo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo (BPM)'**
+  String get songsFieldTempo;
+
+  /// No description provided for @songsFieldTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compasso'**
+  String get songsFieldTime;
+
+  /// No description provided for @songsFieldDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração (m:ss)'**
+  String get songsFieldDuration;
+
+  /// No description provided for @songsFieldCapo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo'**
+  String get songsFieldCapo;
+
+  /// No description provided for @songsFieldKeyNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de tom'**
+  String get songsFieldKeyNote;
+
+  /// No description provided for @songsFieldAlbum.
+  ///
+  /// In pt, this message translates to:
+  /// **'Álbum'**
+  String get songsFieldAlbum;
+
+  /// No description provided for @songsFieldYear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ano'**
+  String get songsFieldYear;
+
+  /// No description provided for @songsFieldCopyright.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copyright'**
+  String get songsFieldCopyright;
+
+  /// No description provided for @songsFieldCcli.
+  ///
+  /// In pt, this message translates to:
+  /// **'CCLI'**
+  String get songsFieldCcli;
+
+  /// No description provided for @songsFieldYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'URL / ID do YouTube'**
+  String get songsFieldYoutube;
+
+  /// No description provided for @songsFieldTagsHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiquetas separadas por vírgula'**
+  String get songsFieldTagsHint;
+
+  /// No description provided for @songsTabContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra e acordes'**
+  String get songsTabContent;
+
+  /// No description provided for @songsTabMetadata.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhes'**
+  String get songsTabMetadata;
+
+  /// No description provided for @songsTitleRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'O título é obrigatório.'**
+  String get songsTitleRequired;
+
+  /// No description provided for @songsChordProHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'[G]Escreva a letra e os [C]acordes aqui…\nUse as opções acima para verso, refrão e mais.'**
+  String get songsChordProHint;
+
+  /// No description provided for @songsEditorInsertVerse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verso'**
+  String get songsEditorInsertVerse;
+
+  /// No description provided for @songsEditorInsertChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refrão'**
+  String get songsEditorInsertChorus;
+
+  /// No description provided for @songsEditorInsertBridge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponte'**
+  String get songsEditorInsertBridge;
+
+  /// No description provided for @songsEditorInsertComment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentário'**
+  String get songsEditorInsertComment;
+
+  /// No description provided for @songsEditorInsertVersion.
+  ///
+  /// In pt, this message translates to:
+  /// **'Versão'**
+  String get songsEditorInsertVersion;
+
+  /// No description provided for @songsLintAllClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum problema no ChordPro.'**
+  String get songsLintAllClear;
+
+  /// No description provided for @songsLintSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{errors} erros · {warnings} avisos · {infos} dicas'**
+  String songsLintSummary(int errors, int warnings, int infos);
+
+  /// No description provided for @songsLintLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'L{line}'**
+  String songsLintLine(int line);
+
+  /// No description provided for @songsLintDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhes'**
+  String get songsLintDetails;
+
+  /// No description provided for @songsLintUnclosedBrace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chavetas por fechar ou desalinhadas.'**
+  String get songsLintUnclosedBrace;
+
+  /// No description provided for @songsLintUnclosedBracket.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parênteses de acorde por fechar ou desalinhados.'**
+  String get songsLintUnclosedBracket;
+
+  /// No description provided for @songsLintEmptyChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acordes vazios.'**
+  String get songsLintEmptyChord;
+
+  /// No description provided for @songsLintUnknownChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde não reconhecido \"{chord}\".'**
+  String songsLintUnknownChord(String chord);
+
+  /// No description provided for @songsLintMalformedDirective.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diretiva malformada — verifique chavetas e nome.'**
+  String get songsLintMalformedDirective;
+
+  /// No description provided for @songsLintUnknownDirective.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diretiva não reconhecida \"{name}\".'**
+  String songsLintUnknownDirective(String name);
+
+  /// No description provided for @songsLintUnclosedSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Secção {section} por fechar — falta end_of_{section}.'**
+  String songsLintUnclosedSection(String section);
+
+  /// No description provided for @songsLintUnexpectedEndSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'end_of_{section} inesperado sem início correspondente.'**
+  String songsLintUnexpectedEndSection(String section);
+
+  /// No description provided for @songsLintInvalidYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'O valor do YouTube não é um URL ou ID válido.'**
+  String get songsLintInvalidYoutube;
+
+  /// No description provided for @songsLintInvalidKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom invulgar \"{value}\". Esperado G, Am, F#m, …'**
+  String songsLintInvalidKey(String value);
+
+  /// No description provided for @songsLintInvalidTempo.
+  ///
+  /// In pt, this message translates to:
+  /// **'O tempo deve ser um BPM entre 20 e 400.'**
+  String get songsLintInvalidTempo;
+
+  /// No description provided for @songsLintInvalidCapo.
+  ///
+  /// In pt, this message translates to:
+  /// **'O capo deve ser um traste de 0 a 12.'**
+  String get songsLintInvalidCapo;
+
+  /// No description provided for @songsLintInvalidTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'O compasso deve parecer 4/4 ou 6/8.'**
+  String get songsLintInvalidTime;
+
+  /// No description provided for @songsLintInvalidDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'A duração deve ser segundos ou m:ss (ex. 3:45).'**
+  String get songsLintInvalidDuration;
+
+  /// No description provided for @songsNewSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova canção'**
+  String get songsNewSong;
+
+  /// No description provided for @songsCreateManually.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar manualmente'**
+  String get songsCreateManually;
+
+  /// No description provided for @songsCreateManuallyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título, acordes e letra.'**
+  String get songsCreateManuallyDesc;
+
+  /// No description provided for @songsImportWithAi.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar com IA'**
+  String get songsImportWithAi;
+
+  /// No description provided for @songsImportWithAiDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'De PDF, imagem ou fotografia.'**
+  String get songsImportWithAiDesc;
+
+  /// No description provided for @songsAddSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar canção'**
+  String get songsAddSong;
+
+  /// No description provided for @songsImportSheetMusic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importe a sua folha de música'**
+  String get songsImportSheetMusic;
+
+  /// No description provided for @songsImportSheetMusicBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use a Logos AI para converter PDFs, imagens ou fotos em canções com letra, acordes e metadados.'**
+  String get songsImportSheetMusicBody;
+
+  /// No description provided for @songsTakePhoto.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar fotografia'**
+  String get songsTakePhoto;
+
+  /// No description provided for @songsChooseGallery.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher da galeria'**
+  String get songsChooseGallery;
+
+  /// No description provided for @songsImportPdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar PDF'**
+  String get songsImportPdf;
+
+  /// No description provided for @songsHowItWorks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como funciona?'**
+  String get songsHowItWorks;
+
+  /// No description provided for @songsAiAnalyzing.
+  ///
+  /// In pt, this message translates to:
+  /// **'A analisar a folha de música…'**
+  String get songsAiAnalyzing;
+
+  /// No description provided for @songsAiAnalyzingBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'A Logos está a extrair letra, acordes e informação.'**
+  String get songsAiAnalyzingBody;
+
+  /// No description provided for @songsAiStepProcess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Processar o ficheiro'**
+  String get songsAiStepProcess;
+
+  /// No description provided for @songsAiStepExtract.
+  ///
+  /// In pt, this message translates to:
+  /// **'Extrair letra e acordes'**
+  String get songsAiStepExtract;
+
+  /// No description provided for @songsAiStepMetadata.
+  ///
+  /// In pt, this message translates to:
+  /// **'Identificar metadados (título, tom, …)'**
+  String get songsAiStepMetadata;
+
+  /// No description provided for @songsAiStepVerify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar online e completar metadados'**
+  String get songsAiStepVerify;
+
+  /// No description provided for @songsAiStepDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preparar o rascunho'**
+  String get songsAiStepDraft;
+
+  /// No description provided for @songsAiPleaseWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto pode demorar alguns segundos…'**
+  String get songsAiPleaseWait;
+
+  /// No description provided for @songsAiResultTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado da importação'**
+  String get songsAiResultTitle;
+
+  /// No description provided for @songsAiCreatedBanner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Canção criada com IA. Confirme e ajuste as informações antes de guardar.'**
+  String get songsAiCreatedBanner;
+
+  /// No description provided for @songsAiSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar'**
+  String get songsAiSave;
+
+  /// No description provided for @songsAiEditContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get songsAiEditContent;
+
+  /// No description provided for @songsAiImportFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível importar esta folha'**
+  String get songsAiImportFailed;
+
+  /// No description provided for @songsAiImportFailedBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tente outra foto ou PDF, ou crie a canção manualmente.'**
+  String get songsAiImportFailedBody;
+
+  /// No description provided for @songsAiCancelledTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não é uma partitura'**
+  String get songsAiCancelledTitle;
+
+  /// No description provided for @songsAiCancelledBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Logos cancelou esta importação. Tente uma foto mais nítida de uma cifra, ou crie a canção manualmente.'**
+  String get songsAiCancelledBody;
+
+  /// No description provided for @songsAiCancelledGeneric.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta imagem não parece uma canção importável.'**
+  String get songsAiCancelledGeneric;
+
+  /// No description provided for @songsAiCancelledNotASong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Isto não parece uma partitura ou cifra.'**
+  String get songsAiCancelledNotASong;
+
+  /// No description provided for @songsAiCancelledUnreadable.
+  ///
+  /// In pt, this message translates to:
+  /// **'A imagem está demasiado desfocada ou escura.'**
+  String get songsAiCancelledUnreadable;
+
+  /// No description provided for @songsAiCancelledBlank.
+  ///
+  /// In pt, this message translates to:
+  /// **'A página parece em branco ou vazia.'**
+  String get songsAiCancelledBlank;
+
+  /// No description provided for @songsAiCancelledWrongContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Há texto, mas não é uma canção / cifra.'**
+  String get songsAiCancelledWrongContent;
+
+  /// No description provided for @songsAiCancelledMultiple.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parecem várias canções misturadas sem uma principal clara.'**
+  String get songsAiCancelledMultiple;
+
+  /// No description provided for @songsAiCancelImport.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get songsAiCancelImport;
+
+  /// No description provided for @songsAiDiscardDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar rascunho'**
+  String get songsAiDiscardDraft;
+
+  /// No description provided for @songsAiConfidence.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confiança da IA: {percent}%'**
+  String songsAiConfidence(String percent);
+
+  /// No description provided for @songsAiLowConfidence.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixa confiança — reveja bem a letra e os acordes antes de guardar.'**
+  String get songsAiLowConfidence;
+
+  /// No description provided for @songsAiSuccessTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importação concluída'**
+  String get songsAiSuccessTitle;
+
+  /// No description provided for @songsAiSuccessBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra, acordes e metadados foram capturados.'**
+  String get songsAiSuccessBody;
+
+  /// No description provided for @songsAiViewSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver canção'**
+  String get songsAiViewSong;
+
+  /// No description provided for @songsAiImportAnother.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar outra'**
+  String get songsAiImportAnother;
+
+  /// No description provided for @songsAiPossibleDuplicates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Possíveis correspondências na biblioteca'**
+  String get songsAiPossibleDuplicates;
+
+  /// No description provided for @songsAiPossibleDuplicatesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abra para comparar — volta a este rascunho depois. Guardar cria sempre uma canção nova.'**
+  String get songsAiPossibleDuplicatesHint;
+
+  /// No description provided for @songsAiOpenExisting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get songsAiOpenExisting;
+
+  /// No description provided for @songsAiLintIssues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Problemas ChordPro'**
+  String get songsAiLintIssues;
+
+  /// No description provided for @songsAiFieldComposer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compositor'**
+  String get songsAiFieldComposer;
+
+  /// No description provided for @songsAiFieldCcli.
+  ///
+  /// In pt, this message translates to:
+  /// **'CCLI'**
+  String get songsAiFieldCcli;
+
+  /// No description provided for @songsAiFieldDuration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração'**
+  String get songsAiFieldDuration;
+
+  /// No description provided for @songsAiFieldYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'YouTube'**
+  String get songsAiFieldYoutube;
+
+  /// No description provided for @songsAiOpenYoutube.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir YouTube'**
+  String get songsAiOpenYoutube;
+
+  /// No description provided for @songsAiCaptureTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use luz uniforme e evite reflexos ou desfoque para melhores resultados.'**
+  String get songsAiCaptureTip;
+
+  /// No description provided for @songsAiCaptureQualityHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta imagem parece pequena ou de baixa qualidade — tente uma foto mais nítida e bem iluminada.'**
+  String get songsAiCaptureQualityHint;
+
+  /// No description provided for @songsAiPdfMultiPageHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Até 5 páginas são enviadas em PDFs com várias páginas.'**
+  String get songsAiPdfMultiPageHint;
+
+  /// No description provided for @songsEmptyAddHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicione uma canção manualmente ou importe com a Logos AI.'**
+  String get songsEmptyAddHint;
 
   /// No description provided for @songsNoContent.
   ///
@@ -1221,6 +2175,174 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Velocidade do scroll'**
   String get songAutoScrollSpeed;
+
+  /// No description provided for @songYoutubeOpenPlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ouvir no YouTube'**
+  String get songYoutubeOpenPlayer;
+
+  /// No description provided for @songYoutubeClosePlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar leitor'**
+  String get songYoutubeClosePlayer;
+
+  /// No description provided for @songYoutubePlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reproduzir'**
+  String get songYoutubePlay;
+
+  /// No description provided for @songYoutubePause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar'**
+  String get songYoutubePause;
+
+  /// No description provided for @songYoutubeRewind.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuar 10 segundos'**
+  String get songYoutubeRewind;
+
+  /// No description provided for @songYoutubeForward.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançar 30 segundos'**
+  String get songYoutubeForward;
+
+  /// No description provided for @songYoutubeError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível reproduzir este vídeo'**
+  String get songYoutubeError;
+
+  /// No description provided for @songSectionChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refrão'**
+  String get songSectionChorus;
+
+  /// No description provided for @songSectionBridge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponte'**
+  String get songSectionBridge;
+
+  /// No description provided for @songSectionTab.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tablatura'**
+  String get songSectionTab;
+
+  /// No description provided for @songSectionInstrumental.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instrumental'**
+  String get songSectionInstrumental;
+
+  /// No description provided for @songRepeatChorus.
+  ///
+  /// In pt, this message translates to:
+  /// **'(Repete o refrão)'**
+  String get songRepeatChorus;
+
+  /// No description provided for @songKeyPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom: {key}'**
+  String songKeyPill(Object key);
+
+  /// No description provided for @songCapoPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo: {fret}ª casa'**
+  String songCapoPill(Object fret);
+
+  /// No description provided for @songShapePill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formato: {key}'**
+  String songShapePill(Object key);
+
+  /// No description provided for @songOriginalKeyPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tom Orig: {key}'**
+  String songOriginalKeyPill(Object key);
+
+  /// No description provided for @songTranslatorCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradução: {name}'**
+  String songTranslatorCredit(String name);
+
+  /// No description provided for @songLyricistCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra: {name}'**
+  String songLyricistCredit(String name);
+
+  /// No description provided for @songArrangerCredit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arranjo: {name}'**
+  String songArrangerCredit(String name);
+
+  /// No description provided for @songNumberPill.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nº {number}'**
+  String songNumberPill(Object number);
+
+  /// No description provided for @songCapoOnFret.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capo na {fret}ª casa'**
+  String songCapoOnFret(Object fret);
+
+  /// No description provided for @songChangeKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mudar tom'**
+  String get songChangeKey;
+
+  /// No description provided for @songChordTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dicionário: {chord}'**
+  String songChordTitle(Object chord);
+
+  /// No description provided for @songChordNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde \"{chord}\" não registado'**
+  String songChordNotFound(Object chord);
+
+  /// No description provided for @songChordNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas: {notes}'**
+  String songChordNotes(Object notes);
+
+  /// No description provided for @songChordSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde {chord}'**
+  String songChordSemantics(Object chord);
+
+  /// No description provided for @songPreviousChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde anterior'**
+  String get songPreviousChord;
+
+  /// No description provided for @songNextChord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acorde seguinte'**
+  String get songNextChord;
 
   /// No description provided for @songPrevious.
   ///
