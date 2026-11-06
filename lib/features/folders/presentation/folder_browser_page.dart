@@ -223,8 +223,15 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                         : EmptyState(
                             illustrationAsset:
                                 HosannaIllustrations.emptyFolders,
-                            title: l10n.foldersEmpty,
-                            description: l10n.foldersEmptyDesc,
+                            // Root = no folders in the library yet.
+                            // Nested folder = this specific folder has no
+                            // songs or subfolders.
+                            title: activeId == null
+                                ? l10n.foldersEmpty
+                                : l10n.folderContentsEmpty,
+                            description: activeId == null
+                                ? l10n.foldersEmptyDesc
+                                : l10n.folderContentsEmptyReadonlyDesc,
                             scrollable: true,
                           )
                     : _gridView

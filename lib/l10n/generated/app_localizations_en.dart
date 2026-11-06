@@ -1275,6 +1275,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Folders help organize your church’s song library.';
 
   @override
+  String get folderContentsEmpty => 'This folder is empty';
+
+  @override
+  String get folderContentsEmptyDesc =>
+      'No songs or subfolders here yet. Add a song, import with Logos AI, or move songs into this folder from Studio.';
+
+  @override
+  String get folderContentsEmptyReadonlyDesc =>
+      'No songs or subfolders here yet. Ask a leader to add songs in Studio, or check back after the next sync.';
+
+  @override
   String get foldersNoResultsDesc =>
       'Try a different search or clear your filters.';
 
@@ -1284,6 +1295,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get collectionsEmptyDesc =>
       'Collections appear here when your church creates them.';
+
+  @override
+  String get collectionContentsEmpty => 'This collection is empty';
+
+  @override
+  String get collectionContentsEmptyDesc =>
+      'No songs in this collection yet. Add songs to it from Studio — a song can belong to several collections at once.';
+
+  @override
+  String get collectionContentsEmptyReadonlyDesc =>
+      'No songs in this collection yet. Ask a leader to add some in Studio, or check back after the next sync.';
 
   @override
   String get foldersSubfolders => 'Subfolders';

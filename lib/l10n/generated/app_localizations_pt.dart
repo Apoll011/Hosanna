@@ -1278,6 +1278,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'As pastas organizam a biblioteca de cânticos da sua igreja.';
 
   @override
+  String get folderContentsEmpty => 'Esta pasta está vazia';
+
+  @override
+  String get folderContentsEmptyDesc =>
+      'Ainda não há cânticos nem subpastas aqui. Adicione um cântico, importe com a Logos AI, ou mova cânticos para esta pasta no Studio.';
+
+  @override
+  String get folderContentsEmptyReadonlyDesc =>
+      'Ainda não há cânticos nem subpastas aqui. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.';
+
+  @override
   String get foldersNoResultsDesc =>
       'Experimente outra pesquisa ou limpe os filtros.';
 
@@ -1287,6 +1298,17 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get collectionsEmptyDesc =>
       'As coleções aparecem aqui quando a sua igreja as criar.';
+
+  @override
+  String get collectionContentsEmpty => 'Esta coleção está vazia';
+
+  @override
+  String get collectionContentsEmptyDesc =>
+      'Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.';
+
+  @override
+  String get collectionContentsEmptyReadonlyDesc =>
+      'Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.';
 
   @override
   String get foldersSubfolders => 'Subpastas';

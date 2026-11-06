@@ -556,12 +556,25 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           description: l10n.songsRecentsEmptyDesc,
           scrollable: true,
         ),
-      LibrarySection.folder ||
-      LibrarySection.collection =>
-        EmptyState(
+      LibrarySection.folder => EmptyState(
           illustrationAsset: HosannaIllustrations.emptyFolders,
-          title: l10n.songsEmpty,
-          description: l10n.songsEmptyDesc,
+          title: l10n.folderContentsEmpty,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.folderContentsEmptyDesc
+              : l10n.folderContentsEmptyReadonlyDesc,
+          primaryLabel: canCreateSong ? l10n.songsAddSong : null,
+          primaryIcon: Icons.add_rounded,
+          onPrimary: canCreateSong ? _showNewSongSheet : null,
+          secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
+          onSecondary: canImportWithAi ? _openAiImport : null,
+          scrollable: true,
+        ),
+      LibrarySection.collection => EmptyState(
+          illustrationAsset: HosannaIllustrations.emptyFolders,
+          title: l10n.collectionContentsEmpty,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.collectionContentsEmptyDesc
+              : l10n.collectionContentsEmptyReadonlyDesc,
           scrollable: true,
         ),
       LibrarySection.all => EmptyState(

@@ -1279,6 +1279,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las carpetas organizan la biblioteca de canciones de tu iglesia.';
 
   @override
+  String get folderContentsEmpty => 'Esta carpeta está vacía';
+
+  @override
+  String get folderContentsEmptyDesc =>
+      'Aún no hay canciones ni subcarpetas aquí. Añade una canción, impórtala con Logos AI, o muévelas a esta carpeta desde Studio.';
+
+  @override
+  String get folderContentsEmptyReadonlyDesc =>
+      'Aún no hay canciones ni subcarpetas aquí. Pide a un líder que las añada en Studio, o vuelve tras la próxima sincronización.';
+
+  @override
   String get foldersNoResultsDesc =>
       'Prueba otra búsqueda o limpia los filtros.';
 
@@ -1288,6 +1299,17 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get collectionsEmptyDesc =>
       'Las colecciones aparecen aquí cuando tu iglesia las cree.';
+
+  @override
+  String get collectionContentsEmpty => 'Esta colección está vacía';
+
+  @override
+  String get collectionContentsEmptyDesc =>
+      'Aún no hay canciones en esta colección. Añádelas desde Studio — una canción puede pertenecer a varias colecciones a la vez.';
+
+  @override
+  String get collectionContentsEmptyReadonlyDesc =>
+      'Aún no hay canciones en esta colección. Pide a un líder que las añada en Studio, o vuelve tras la próxima sincronización.';
 
   @override
   String get foldersSubfolders => 'Subcarpetas';

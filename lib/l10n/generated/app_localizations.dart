@@ -2374,6 +2374,24 @@ abstract class AppLocalizations {
   /// **'As pastas organizam a biblioteca de cânticos da sua igreja.'**
   String get foldersEmptyDesc;
 
+  /// No description provided for @folderContentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta pasta está vazia'**
+  String get folderContentsEmpty;
+
+  /// No description provided for @folderContentsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nem subpastas aqui. Adicione um cântico, importe com a Logos AI, ou mova cânticos para esta pasta no Studio.'**
+  String get folderContentsEmptyDesc;
+
+  /// No description provided for @folderContentsEmptyReadonlyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nem subpastas aqui. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.'**
+  String get folderContentsEmptyReadonlyDesc;
+
   /// No description provided for @foldersNoResultsDesc.
   ///
   /// In pt, this message translates to:
@@ -2391,6 +2409,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'As coleções aparecem aqui quando a sua igreja as criar.'**
   String get collectionsEmptyDesc;
+
+  /// No description provided for @collectionContentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta coleção está vazia'**
+  String get collectionContentsEmpty;
+
+  /// No description provided for @collectionContentsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.'**
+  String get collectionContentsEmptyDesc;
+
+  /// No description provided for @collectionContentsEmptyReadonlyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.'**
+  String get collectionContentsEmptyReadonlyDesc;
 
   /// No description provided for @foldersSubfolders.
   ///
