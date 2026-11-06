@@ -9,6 +9,7 @@ import '../../../core/db/database.dart';
 import '../../../core/permissions/permissions.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../auth/domain/auth_controller.dart';
 import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
@@ -45,8 +46,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     super.dispose();
   }
 
-  Future<void> _refresh() =>
-      ref.read(syncControllerProvider.notifier).syncAll();
+  Future<void> _refresh() {
+    final orgId = ref.read(authControllerProvider).organization?.id;
+    return ref
+        .read(syncControllerProvider.notifier)
+        .syncAll(organizationId: orgId);
+  }
 
   void _openAiImport() {
     final library = ref.read(libraryControllerProvider);

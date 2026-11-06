@@ -191,7 +191,7 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       if (prevOrg != null || sync.needsResetFor(nextOrg)) {
         await sync.resetForOrganizationSwitch(organizationId: nextOrg);
       } else {
-        await sync.syncAll();
+        await sync.syncAll(organizationId: nextOrg);
       }
     });
   }

@@ -78,15 +78,43 @@ class ReplicationEngine {
 
   static const int batchLimit = 100;
 
+  /// Pre-org-scoped keys. Kept only so [clearLegacyCheckpoints] can drop a
+  /// cursor that advanced while the local DB was empty/partial — that pattern
+  /// made org switches look like "missing data" until a lucky full pull.
+  static const _legacyCheckpointPrefix = 'replication.checkpoint.';
+
   final HosannaApi api;
   final SharedPreferences prefs;
   final List<ReplicationAdapter> adapters;
 
-  String _checkpointKey(String resource) => 'replication.checkpoint.$resource';
+  /// Active tenant for checkpoint namespacing. Pull/push no-op their cursor
+  /// IO until this is set so a checkpoint from org A can never resume on B.
+  String? _organizationId;
+
+  /// Binds checkpoint keys to [organizationId]. Pass null to clear the bind
+  /// (e.g. sign-out); subsequent pulls then start with a null checkpoint.
+  void bindOrganization(String? organizationId) {
+    _organizationId = organizationId;
+  }
+
+  String? get organizationId => _organizationId;
+
+  String _checkpointKey(String resource) {
+    final org = _organizationId;
+    if (org == null || org.isEmpty) {
+      // Unbound — use a throwaway key space so we never read/write a real
+      // tenant cursor by accident.
+      return 'replication.checkpoint._unbound.$resource';
+    }
+    return 'replication.checkpoint.$org.$resource';
+  }
+
+  String _legacyCheckpointKey(String resource) =>
+      '$_legacyCheckpointPrefix$resource';
 
   /// When [shouldContinue] returns false (e.g. a newer org-switch epoch), stop
-  /// before the next network round-trip / checkpoint write so a superseded
-  /// pull cannot leave a foreign tenant's cursor on disk.
+  /// before the next network round-trip so a superseded pull cannot leave a
+  /// foreign tenant's cursor on disk.
   Future<void> pullAll({bool Function()? shouldContinue}) async {
     for (final adapter in adapters) {
       if (shouldContinue != null && !shouldContinue()) return;
@@ -107,6 +135,10 @@ class ReplicationEngine {
   }) async {
     var checkpoint = await _loadCheckpoint(adapter.resourceName);
     final collection = replicationCollectionFor(adapter.resourceName);
+    // Hold the advanced cursor in memory until this resource is fully drained.
+    // Persisting per-batch was what left "end of catalog" checkpoints against
+    // an empty/partial DB after an aborted org-switch pull.
+    ReplicationCheckpoint? completedCheckpoint = checkpoint;
 
     while (true) {
       if (shouldContinue != null && !shouldContinue()) return;
@@ -132,11 +164,18 @@ class ReplicationEngine {
       final next = ReplicationCheckpoint.fromJson(data.checkpoint);
       if (next != null) {
         checkpoint = next;
-        await _saveCheckpoint(adapter.resourceName, checkpoint);
+        completedCheckpoint = next;
       }
 
       // A short batch means the server has no more rows after this one.
       if (docs.length < batchLimit) break;
+    }
+
+    if (shouldContinue != null && !shouldContinue()) return;
+
+    // Persist only after the resource has been fully drained.
+    if (completedCheckpoint != null) {
+      await _saveCheckpoint(adapter.resourceName, completedCheckpoint);
     }
   }
 
@@ -196,12 +235,50 @@ class ReplicationEngine {
     }
   }
 
-  /// Drops every resource checkpoint so the next pull starts from scratch
-  /// (required after switching organizations).
+  /// Drops every resource checkpoint for the bound org (and legacy unscoped
+  /// keys) so the next pull starts from scratch.
   Future<void> clearAllCheckpoints() async {
+    final org = _organizationId;
+    if (org != null && org.isNotEmpty) {
+      final prefix = 'replication.checkpoint.$org.';
+      for (final key
+          in prefs.getKeys().where((k) => k.startsWith(prefix)).toList()) {
+        await prefs.remove(key);
+      }
+    }
     for (final adapter in adapters) {
       await prefs.remove(_checkpointKey(adapter.resourceName));
+      await prefs.remove(_legacyCheckpointKey(adapter.resourceName));
     }
+    await clearLegacyCheckpoints();
+  }
+
+  /// Removes pre-org-scoped checkpoint keys. Safe to call repeatedly; used to
+  /// heal installs that advanced a global cursor while local rows were gone.
+  Future<void> clearLegacyCheckpoints() async {
+    final keys = prefs.getKeys()
+        .where(
+          (k) =>
+              k.startsWith(_legacyCheckpointPrefix) &&
+              // Keep org-scoped keys: replication.checkpoint.<orgId>.<resource>
+              // Legacy form is exactly replication.checkpoint.<resource>.
+              k.split('.').length == 3,
+        )
+        .toList();
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+  }
+
+  /// True when any bound-org (or legacy) checkpoint is still on disk.
+  bool get hasAnyCheckpoint {
+    for (final adapter in adapters) {
+      final scoped = prefs.getString(_checkpointKey(adapter.resourceName));
+      if (scoped != null && scoped.isNotEmpty) return true;
+      final legacy = prefs.getString(_legacyCheckpointKey(adapter.resourceName));
+      if (legacy != null && legacy.isNotEmpty) return true;
+    }
+    return false;
   }
 
   Future<ReplicationCheckpoint?> _loadCheckpoint(String resource) async {

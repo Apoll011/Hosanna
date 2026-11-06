@@ -54,6 +54,11 @@ class SyncController extends StateNotifier<SyncState> {
   /// looks "caught up" for the wrong (or incomplete) tenant.
   static const _localOrgKey = 'sync.localOrganizationId';
 
+  /// One-shot flag: after upgrading to org-scoped checkpoints we force a full
+  /// wipe+pull once so a leftover global cursor cannot keep hiding older rows.
+  static const _checkpointSchemeKey = 'sync.checkpointScheme';
+  static const _checkpointSchemeVersion = 2;
+
   final ReplicationEngine _engine;
   final SharedPreferences _prefs;
   final AppDatabase _db;
@@ -72,9 +77,14 @@ class SyncController extends StateNotifier<SyncState> {
   String? get localOrganizationId => _prefs.getString(_localOrgKey);
 
   /// True when local tenant state must be wiped before syncing [organizationId]
-  /// (different org, or no successful bind yet after sign-out / failed reset).
-  bool needsResetFor(String organizationId) =>
-      localOrganizationId != organizationId;
+  /// (different org, no successful bind yet, or checkpoint-scheme migration).
+  bool needsResetFor(String organizationId) {
+    if (localOrganizationId != organizationId) return true;
+    if (_prefs.getInt(_checkpointSchemeKey) != _checkpointSchemeVersion) {
+      return true;
+    }
+    return false;
+  }
 
   void restore() {
     final millis = _prefs.getInt(_lastSyncedKey);
@@ -83,6 +93,9 @@ class SyncController extends StateNotifier<SyncState> {
         lastSyncedAt: DateTime.fromMillisecondsSinceEpoch(millis),
       );
     }
+    // Drop pre-scoping cursors immediately so a resume sync cannot continue
+    // from a cursor that advanced while local rows were missing.
+    unawaited(_engine.clearLegacyCheckpoints());
   }
 
   /// Completes when the sync/reset queue is idle (including work scheduled
@@ -125,6 +138,7 @@ class SyncController extends StateNotifier<SyncState> {
 
   Future<void> _clearLocalTenantBody(int epoch) async {
     if (!_isCurrent(epoch)) return;
+    _engine.bindOrganization(null);
     await _clearLocalData();
     if (!_isCurrent(epoch)) return;
     await _engine.clearAllCheckpoints();
@@ -141,15 +155,34 @@ class SyncController extends StateNotifier<SyncState> {
   ///
   /// Only safe when [localOrganizationId] already matches the active org —
   /// otherwise call [resetForOrganizationSwitch].
-  Future<void> syncAll() {
+  Future<void> syncAll({String? organizationId}) {
     final epoch = _orgEpoch;
-    return _enqueue(() => _syncAllBody(epoch));
+    return _enqueue(() => _syncAllBody(epoch, organizationId));
   }
 
-  Future<void> _syncAllBody(int epoch) async {
+  Future<void> _syncAllBody(int epoch, String? organizationId) async {
     // An org switch started after this sync was requested — skip so we do not
     // push the previous church's dirty rows into the new tenant.
     if (!_isCurrent(epoch)) return;
+
+    final orgId = organizationId ?? localOrganizationId;
+    if (orgId != null && needsResetFor(orgId)) {
+      // Heal stuck installs (legacy global cursor / unbound local org) with a
+      // full wipe+pull instead of an incremental resume.
+      await _resetBody(epoch, orgId);
+      return;
+    }
+
+    if (orgId != null) {
+      _engine.bindOrganization(orgId);
+    }
+    await _engine.clearLegacyCheckpoints();
+
+    // Checkpoint without rows = cursor advanced while the DB was empty. Drop
+    // the cursor and pull from scratch rather than only fetching "newer" docs.
+    if (await _hasOrphanedCheckpoints()) {
+      await _engine.clearAllCheckpoints();
+    }
 
     state = state.copyWith(status: SyncStatus.syncing, clearError: true);
 
@@ -163,6 +196,7 @@ class SyncController extends StateNotifier<SyncState> {
 
       final now = DateTime.now();
       await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);
+      await _prefs.setInt(_checkpointSchemeKey, _checkpointSchemeVersion);
       if (!_isCurrent(epoch)) return;
       state = state.copyWith(status: SyncStatus.synced, lastSyncedAt: now);
     } on ApiException catch (e) {
@@ -207,11 +241,15 @@ class SyncController extends StateNotifier<SyncState> {
       await _clearLocalData();
       if (!_isCurrent(epoch)) return;
 
+      // Bind before clear/pull so we drop this org's scoped keys and never
+      // read another tenant's cursor.
+      _engine.bindOrganization(organizationId);
       await _engine.clearAllCheckpoints();
       await _prefs.remove(_lastSyncedKey);
       if (!_isCurrent(epoch)) return;
 
-      // Empty local DB after org switch — pull the new tenant first.
+      // Empty local DB after org switch — pull the new tenant from a null
+      // checkpoint (clearAllCheckpoints above). Do not resume any prior cursor.
       await _engine.pullAll(shouldContinue: () => _isCurrent(epoch));
       if (!_isCurrent(epoch)) return;
 
@@ -223,6 +261,7 @@ class SyncController extends StateNotifier<SyncState> {
 
       final now = DateTime.now();
       await _prefs.setInt(_lastSyncedKey, now.millisecondsSinceEpoch);
+      await _prefs.setInt(_checkpointSchemeKey, _checkpointSchemeVersion);
       if (organizationId != null && organizationId.isNotEmpty) {
         await _prefs.setString(_localOrgKey, organizationId);
       }
@@ -241,6 +280,16 @@ class SyncController extends StateNotifier<SyncState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// True when a checkpoint exists but the songs table is empty — the classic
+  /// "advanced cursor, missing catalog" failure mode after a bad org switch.
+  Future<bool> _hasOrphanedCheckpoints() async {
+    if (!_engine.hasAnyCheckpoint) return false;
+    final row = await _db
+        .customSelect('SELECT COUNT(*) AS c FROM songs')
+        .getSingle();
+    return row.read<int>('c') == 0;
   }
 }
 
