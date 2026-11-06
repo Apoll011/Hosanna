@@ -544,12 +544,18 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
   Future<void> _switchOrg(String slug) async {
     setState(() => _switching = true);
     try {
+      final sync = ref.read(syncControllerProvider.notifier);
+      // Abort any in-flight push/pull *before* set-active changes the tenant
+      // cookie, otherwise a late batch can write the previous church's cursor
+      // (or rows) against the new org.
+      await sync.prepareOrganizationSwitch();
+      if (!mounted) return;
       await ref.read(authControllerProvider.notifier).switchOrganization(slug);
       // Auth listener schedules the wipe+pull on a microtask; flush it, then
       // wait so rapid taps cannot start another switch on half-migrated data.
       await Future<void>.delayed(Duration.zero);
       if (!mounted) return;
-      await ref.read(syncControllerProvider.notifier).waitUntilIdle();
+      await sync.waitUntilIdle();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -84,22 +84,33 @@ class ReplicationEngine {
 
   String _checkpointKey(String resource) => 'replication.checkpoint.$resource';
 
-  Future<void> pullAll() async {
+  /// When [shouldContinue] returns false (e.g. a newer org-switch epoch), stop
+  /// before the next network round-trip / checkpoint write so a superseded
+  /// pull cannot leave a foreign tenant's cursor on disk.
+  Future<void> pullAll({bool Function()? shouldContinue}) async {
     for (final adapter in adapters) {
-      await pullOne(adapter);
+      if (shouldContinue != null && !shouldContinue()) return;
+      await pullOne(adapter, shouldContinue: shouldContinue);
     }
+    if (shouldContinue != null && !shouldContinue()) return;
     // Counts are derived from the other tables, so resolve them only once the
     // full pull (songs included) has landed.
     for (final adapter in adapters) {
+      if (shouldContinue != null && !shouldContinue()) return;
       await adapter.refreshLocalCounts();
     }
   }
 
-  Future<void> pullOne(ReplicationAdapter adapter) async {
+  Future<void> pullOne(
+    ReplicationAdapter adapter, {
+    bool Function()? shouldContinue,
+  }) async {
     var checkpoint = await _loadCheckpoint(adapter.resourceName);
     final collection = replicationCollectionFor(adapter.resourceName);
 
     while (true) {
+      if (shouldContinue != null && !shouldContinue()) return;
+
       final data = await api.replication.pullCollection(
         collection: collection,
         pullRequest: PullRequest(
@@ -108,11 +119,15 @@ class ReplicationEngine {
         ),
       );
 
+      if (shouldContinue != null && !shouldContinue()) return;
+
       final docs = data.documents;
 
       if (docs.isNotEmpty) {
         await adapter.upsertFromWire(docs);
       }
+
+      if (shouldContinue != null && !shouldContinue()) return;
 
       final next = ReplicationCheckpoint.fromJson(data.checkpoint);
       if (next != null) {
@@ -125,13 +140,17 @@ class ReplicationEngine {
     }
   }
 
-  Future<void> pushAll() async {
+  Future<void> pushAll({bool Function()? shouldContinue}) async {
     for (final adapter in adapters) {
-      await pushOne(adapter);
+      if (shouldContinue != null && !shouldContinue()) return;
+      await pushOne(adapter, shouldContinue: shouldContinue);
     }
   }
 
-  Future<void> pushOne(ReplicationAdapter adapter) async {
+  Future<void> pushOne(
+    ReplicationAdapter adapter, {
+    bool Function()? shouldContinue,
+  }) async {
     final changes = await adapter.collectChanges();
     if (changes.isEmpty) return;
 
@@ -139,6 +158,8 @@ class ReplicationEngine {
 
     // Server caps push batches at 100 rows.
     for (var i = 0; i < changes.length; i += batchLimit) {
+      if (shouldContinue != null && !shouldContinue()) return;
+
       final chunk = changes.sublist(
         i,
         i + batchLimit > changes.length ? changes.length : i + batchLimit,
@@ -155,6 +176,8 @@ class ReplicationEngine {
             )
             .toList(),
       );
+
+      if (shouldContinue != null && !shouldContinue()) return;
 
       final conflictIds = <String>{};
       if (conflicts.isNotEmpty) {

@@ -154,8 +154,23 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       Future.microtask(_openPendingLocation);
     }
 
+    final wasAuthenticated = previous?.isAuthenticated ?? false;
     final prevOrg = previous?.organization?.id;
     final nextOrg = next.organization?.id;
+
+    // Sign-out: drop tenant rows/checkpoints so the next sign-in cannot
+    // incremental-sync from a half-written or foreign-org cursor.
+    if (wasAuthenticated && !next.isAuthenticated) {
+      Future.microtask(() async {
+        final container = _container;
+        if (container == null) return;
+        container.read(libraryControllerProvider.notifier).bindOrganization(null);
+        container.read(folderExplorerProvider.notifier).open(null);
+        await container.read(syncControllerProvider.notifier).clearLocalTenantState();
+      });
+      return;
+    }
+
     if (!next.isAuthenticated || nextOrg == null || nextOrg == prevOrg) return;
 
     // Defer so sync (which mutates SyncController state) never runs
@@ -163,18 +178,18 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     // widgets while the tree is mid-build. Read via the captured container so
     // this stays valid even if the element has since been deactivated.
     //
-    // When switching orgs, wipe local rows + checkpoints first so the previous
-    // church's data cannot linger or be pushed to the new tenant. Rapid switches
-    // are coalesced inside SyncController (org epoch) — never dropped.
+    // Wipe+pull whenever the local DB is not already bound to this org
+    // (org switch, first bind after sign-in, or recovery after a failed
+    // reset). Rapid switches are coalesced via SyncController's org epoch.
     Future.microtask(() async {
       final container = _container;
       if (container == null) return;
       final sync = container.read(syncControllerProvider.notifier);
-      // Drop browse context that belonged to the previous tenant.
+      // Drop browse context / favorites that belonged to the previous tenant.
       container.read(folderExplorerProvider.notifier).open(null);
-      container.read(libraryControllerProvider.notifier).selectAll();
-      if (prevOrg != null) {
-        await sync.resetForOrganizationSwitch();
+      container.read(libraryControllerProvider.notifier).bindOrganization(nextOrg);
+      if (prevOrg != null || sync.needsResetFor(nextOrg)) {
+        await sync.resetForOrganizationSwitch(organizationId: nextOrg);
       } else {
         await sync.syncAll();
       }

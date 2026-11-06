@@ -82,6 +82,13 @@ class HosannaNavContent extends ConsumerWidget {
     final folders = ref.watch(foldersStreamProvider).valueOrNull ?? const [];
     final collections =
         ref.watch(collectionsStreamProvider).valueOrNull ?? const [];
+    // Count only ids that exist in the current org's library so favorites /
+    // recents from a previous church (or not-yet-pulled rows) never inflate
+    // the badge.
+    final songIds = songs.map((s) => s.id).toSet();
+    final favoriteCount =
+        library.favoriteIds.where(songIds.contains).length;
+    final recentCount = library.recentIds.where(songIds.contains).length;
 
     final user = auth.session?.user;
     final org = auth.organization;
@@ -221,7 +228,7 @@ class HosannaNavContent extends ConsumerWidget {
                   _NavItem(
                     icon: Icons.favorite_outline,
                     label: l10n.navFavorites,
-                    count: library.favoriteIds.length,
+                    count: favoriteCount,
                     selected: currentBranch == kSongsBranch &&
                         library.section == LibrarySection.favorites,
                     collapsed: collapsed,
@@ -230,7 +237,7 @@ class HosannaNavContent extends ConsumerWidget {
                   _NavItem(
                     icon: Icons.history,
                     label: l10n.navRecents,
-                    count: library.recentIds.length,
+                    count: recentCount,
                     selected: currentBranch == kSongsBranch &&
                         library.section == LibrarySection.recent,
                     collapsed: collapsed,
