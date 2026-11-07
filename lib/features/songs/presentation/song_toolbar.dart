@@ -70,7 +70,7 @@ Future<void> showSongControlsSheet(
 }
 
 /// Transpose / capo / font size / toggles, laid out like the React popover.
-class SongControlsSheet extends ConsumerWidget {
+class SongControlsSheet extends ConsumerStatefulWidget {
   const SongControlsSheet({
     super.key,
     this.variantAsChips = false,
@@ -80,14 +80,23 @@ class SongControlsSheet extends ConsumerWidget {
   final bool variantAsChips;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SongControlsSheet> createState() => _SongControlsSheetState();
+}
+
+class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
+  /// Instrument picker starts collapsed so the sheet opens compact.
+  bool _instrumentExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
     final doc = ref.watch(songCurrentDocumentProvider);
-    final versions = variantAsChips && doc != null && doc.variants.isNotEmpty
-        ? [doc.defaultVersion, ...doc.variants]
-        : const <ChordProVersion>[];
+    final versions =
+        widget.variantAsChips && doc != null && doc.variants.isNotEmpty
+            ? [doc.defaultVersion, ...doc.variants]
+            : const <ChordProVersion>[];
 
     return SafeArea(
       top: false,
@@ -226,13 +235,92 @@ class SongControlsSheet extends ConsumerWidget {
 
             if (settings.showChords) ...[
               const SizedBox(height: 8),
-              _SectionTitle(label: l10n.songInstrument, value: ''),
-              InstrumentSelector(
-                selected: settings.instrument,
-                onChanged: controller.setInstrument,
+              _CollapsibleInstrumentHeader(
+                label: l10n.songInstrument,
+                selectedLabel:
+                    settings.instrumentInfo.localizedLabel(l10n),
+                expanded: _instrumentExpanded,
+                onToggle: () {
+                  setState(() => _instrumentExpanded = !_instrumentExpanded);
+                },
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: _instrumentExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: InstrumentSelector(
+                          selected: settings.instrument,
+                          onChanged: controller.setInstrument,
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable instrument row: shows the current choice and a rotating chevron.
+class _CollapsibleInstrumentHeader extends StatelessWidget {
+  const _CollapsibleInstrumentHeader({
+    required this.label,
+    required this.selectedLabel,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  final String label;
+  final String selectedLabel;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                selectedLabel,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 4),
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: Icon(
+                  Icons.expand_more_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
