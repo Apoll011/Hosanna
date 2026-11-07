@@ -512,7 +512,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               IconButton(
                 icon: Icon(
                   isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? theme.colorScheme.primary : null,
+                  color: isFav ? Colors.red : null,
                 ),
                 tooltip: l10n.navFavorites,
                 onPressed: () => onToggleFavorite(song.id),
