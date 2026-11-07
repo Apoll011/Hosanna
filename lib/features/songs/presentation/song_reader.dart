@@ -42,6 +42,7 @@ class SongReader extends ConsumerStatefulWidget {
     this.serviceId,
     this.songId,
     this.isAnnotating = false,
+    this.onToggleAnnotation,
     this.onPrev,
     this.onNext,
     this.canPrev = false,
@@ -60,6 +61,9 @@ class SongReader extends ConsumerStatefulWidget {
 
   /// Whether annotation mode is currently active.
   final bool isAnnotating;
+
+  /// When set (service song reader), shows a floating annotation toggle.
+  final VoidCallback? onToggleAnnotation;
 
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
@@ -780,7 +784,15 @@ class _SongReaderState extends ConsumerState<SongReader>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.isAnnotating)
+                if (widget.isAnnotating) ...[
+                  if (widget.onToggleAnnotation != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16, bottom: 12),
+                        child: _buildAnnotationFab(theme: theme, l10n: l10n),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: _HosannaAnnotationToolbar(
@@ -798,8 +810,8 @@ class _SongReaderState extends ConsumerState<SongReader>
                         _saveCurrentAnnotation();
                       },
                     ),
-                  )
-                else
+                  ),
+                ] else
                   Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
@@ -880,6 +892,10 @@ class _SongReaderState extends ConsumerState<SongReader>
             _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
           ),
         ),
+        if (widget.onToggleAnnotation != null) ...[
+          const SizedBox(height: 12),
+          _buildAnnotationFab(theme: theme, l10n: l10n),
+        ],
         if (showNav) const SizedBox(height: 12),
         if (showNav)
           _ReaderNav(
@@ -890,6 +906,25 @@ class _SongReaderState extends ConsumerState<SongReader>
             onNext: _goNext,
           ),
       ],
+    );
+  }
+
+  Widget _buildAnnotationFab({
+    required ThemeData theme,
+    required AppLocalizations l10n,
+  }) {
+    return _SongReaderFab(
+      onPressed: widget.onToggleAnnotation!,
+      backgroundColor: widget.isAnnotating
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.primary,
+      foregroundColor: widget.isAnnotating
+          ? theme.colorScheme.surface
+          : theme.colorScheme.onPrimary,
+      tooltip: l10n.annotationModeTitle,
+      child: Icon(
+        widget.isAnnotating ? Icons.draw : Icons.draw_outlined,
+      ),
     );
   }
 }

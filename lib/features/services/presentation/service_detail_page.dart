@@ -291,12 +291,6 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           ),
           onLeave: () => context.pop(),
           isSong: isSong,
-          isAnnotating: _isAnnotating,
-          onToggleAnnotation: () {
-            setState(() {
-              _isAnnotating = !_isAnnotating;
-            });
-          },
         ),
         Expanded(
           child: isSong
@@ -305,6 +299,11 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                   songId: current.songId!,
                   notes: current.notes,
                   isAnnotating: _isAnnotating,
+                  onToggleAnnotation: () {
+                    setState(() {
+                      _isAnnotating = !_isAnnotating;
+                    });
+                  },
                   canPrev: canPrev,
                   canNext: canNext,
                   positionLabel: positionLabel,
@@ -336,8 +335,6 @@ class _MusicianTopBar extends StatelessWidget {
     required this.onLeave,
     required this.isSong,
     this.showOrderButton = true,
-    this.isAnnotating = false,
-    this.onToggleAnnotation,
   });
 
   final String serviceId;
@@ -348,8 +345,6 @@ class _MusicianTopBar extends StatelessWidget {
   final VoidCallback onOpenNotes;
   final VoidCallback onLeave;
   final bool isSong;
-  final bool isAnnotating;
-  final VoidCallback? onToggleAnnotation;
 
   @override
   Widget build(BuildContext context) {
@@ -397,17 +392,7 @@ class _MusicianTopBar extends StatelessWidget {
               tooltip: l10n.servicesNotes,
               onPressed: onOpenNotes,
             ),
-            if (isSong) ...[
-              IconButton(
-                icon: Icon(
-                  isAnnotating ? Icons.draw : Icons.draw_outlined,
-                  color: isAnnotating ? theme.colorScheme.primary : null,
-                ),
-                tooltip: l10n.annotationModeTitle,
-                onPressed: onToggleAnnotation,
-              ),
-              const SongToolbarButton(),
-            ],
+            if (isSong) const SongToolbarButton(),
             // Icon-only Leave avoids overflow on narrow phones; keep the
             // labelled button when there is room.
             LayoutBuilder(
@@ -446,6 +431,7 @@ class _SongElementView extends ConsumerWidget {
     required this.songId,
     required this.notes,
     required this.isAnnotating,
+    required this.onToggleAnnotation,
     required this.canPrev,
     required this.canNext,
     required this.positionLabel,
@@ -461,6 +447,7 @@ class _SongElementView extends ConsumerWidget {
   final String? notes;
 
   final bool isAnnotating;
+  final VoidCallback onToggleAnnotation;
   final bool canPrev;
   final bool canNext;
   final String positionLabel;
@@ -492,6 +479,7 @@ class _SongElementView extends ConsumerWidget {
               serviceId: serviceId,
               songId: songId,
               isAnnotating: isAnnotating,
+              onToggleAnnotation: onToggleAnnotation,
               canPrev: canPrev,
               canNext: canNext,
               positionLabel: positionLabel,
