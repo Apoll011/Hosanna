@@ -366,30 +366,28 @@ class _NavButton extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
+    // No Material ink splash — it sits still while the sliding indicator moves
+    // and reads as a second highlight until it fades.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(HosannaRadii.pill),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(HosannaRadii.pill),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(selected ? item.selectedIcon : item.icon, color: color),
-              const SizedBox(height: 2),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(selected ? item.selectedIcon : item.icon, color: color),
+            const SizedBox(height: 2),
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
