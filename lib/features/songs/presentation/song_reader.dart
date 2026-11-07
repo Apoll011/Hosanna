@@ -846,10 +846,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (videoId != null) ...[
-          FloatingActionButton.small(
-            heroTag: null,
-            elevation: 1,
-            highlightElevation: 2,
+          _SongReaderFab(
             onPressed: () {
               if (playerOpen) {
                 _closeYoutubePlayer();
@@ -857,8 +854,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                 setState(() => _playerVideoId = videoId);
               }
             },
-            backgroundColor: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.8),
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             foregroundColor: playerOpen
                 ? theme.colorScheme.primary
                 : theme.colorScheme.onSurfaceVariant,
@@ -869,8 +865,7 @@ class _SongReaderState extends ConsumerState<SongReader>
           ),
           const SizedBox(height: 12),
         ],
-        FloatingActionButton.small(
-          heroTag: null,
+        _SongReaderFab(
           onPressed: _toggleAutoScroll,
           backgroundColor: _isScrolling
               ? theme.colorScheme.onSurface
@@ -895,6 +890,45 @@ class _SongReaderState extends ConsumerState<SongReader>
             onNext: _goNext,
           ),
       ],
+    );
+  }
+}
+
+/// Circular, semi-transparent song-reader floating action button.
+class _SongReaderFab extends StatelessWidget {
+  const _SongReaderFab({
+    required this.onPressed,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.tooltip,
+    required this.child,
+  });
+
+  static const double _size = 52;
+  static const double _opacity = 0.5;
+
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final String tooltip;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _size,
+      height: _size,
+      child: FloatingActionButton(
+        heroTag: null,
+        elevation: 1,
+        highlightElevation: 2,
+        shape: const CircleBorder(),
+        backgroundColor: backgroundColor.withValues(alpha: _opacity),
+        foregroundColor: foregroundColor,
+        tooltip: tooltip,
+        onPressed: onPressed,
+        child: child,
+      ),
     );
   }
 }
