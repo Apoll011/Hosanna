@@ -278,6 +278,9 @@ class _FloatingNavBar extends StatelessWidget {
     required this.destinations,
   });
 
+  static const Duration _indicatorDuration = Duration(milliseconds: 280);
+  static const Curve _indicatorCurve = Curves.easeOutCubic;
+
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final List<_NavItem> destinations;
@@ -298,17 +301,47 @@ class _FloatingNavBar extends StatelessWidget {
           border: Border.all(color: tokens.cardBorder),
           boxShadow: HosannaElevation.floating(theme.brightness),
         ),
-        child: Row(
-          children: [
-            for (var i = 0; i < destinations.length; i++)
-              Expanded(
-                child: _NavButton(
-                  item: destinations[i],
-                  selected: i == selectedIndex,
-                  onTap: () => onSelected(i),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final count = destinations.length;
+            final slotWidth =
+                count == 0 ? 0.0 : constraints.maxWidth / count;
+            final showIndicator =
+                selectedIndex >= 0 && selectedIndex < count;
+
+            return Stack(
+              children: [
+                if (showIndicator)
+                  AnimatedPositioned(
+                    duration: _indicatorDuration,
+                    curve: _indicatorCurve,
+                    left: selectedIndex * slotWidth + 4,
+                    width: slotWidth - 8,
+                    top: 6,
+                    bottom: 6,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: tokens.selectedNav,
+                        borderRadius:
+                            BorderRadius.circular(HosannaRadii.pill),
+                      ),
+                    ),
+                  ),
+                Row(
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      Expanded(
+                        child: _NavButton(
+                          item: destinations[i],
+                          selected: i == selectedIndex,
+                          onTap: () => onSelected(i),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -329,7 +362,6 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = HosannaTokens.of(context);
     final color = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
@@ -337,7 +369,7 @@ class _NavButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Material(
-        color: selected ? tokens.selectedNav : Colors.transparent,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(HosannaRadii.pill),
         child: InkWell(
           onTap: onTap,
