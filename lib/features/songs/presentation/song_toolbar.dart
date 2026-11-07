@@ -9,15 +9,17 @@ import 'chordpro/song_display_settings.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
 /// React `SongView` "Ajustes de Leitura" popover.
-/// Also displays a variant switcher directly on the toolbar when variants exist.
+///
+/// Standalone song views show a compact variant dropdown beside the button.
+/// Service song views keep variants inside [SongControlsSheet] as chips.
 class SongToolbarButton extends ConsumerWidget {
   const SongToolbarButton({
     super.key,
     this.variantAsChips = false,
   });
 
-  /// When true (service song reader), variants render as a chip selector
-  /// instead of a compact dropdown.
+  /// When true (service song reader), variants appear as chips inside the
+  /// song controls sheet instead of a dropdown on the service top bar.
   final bool variantAsChips;
 
   @override
@@ -33,22 +35,19 @@ class SongToolbarButton extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (versions.isNotEmpty)
-          variantAsChips
-              ? _ToolbarVariantChips(
-                  versions: versions,
-                  selectedId: settings.variantId,
-                  onSelected: controller.setVariantId,
-                )
-              : _ToolbarVariantButton(
-                  versions: versions,
-                  selectedId: settings.variantId,
-                  onSelected: controller.setVariantId,
-                ),
+        if (!variantAsChips && versions.isNotEmpty)
+          _ToolbarVariantButton(
+            versions: versions,
+            selectedId: settings.variantId,
+            onSelected: controller.setVariantId,
+          ),
         IconButton(
           icon: const Icon(Icons.tune),
           tooltip: l10n.songControlsTitle,
-          onPressed: () => showSongControlsSheet(context),
+          onPressed: () => showSongControlsSheet(
+            context,
+            variantAsChips: variantAsChips,
+          ),
         ),
       ],
     );
@@ -56,26 +55,39 @@ class SongToolbarButton extends ConsumerWidget {
 }
 
 /// Opens the reading-settings popup as a rounded bottom sheet.
-Future<void> showSongControlsSheet(BuildContext context) {
+Future<void> showSongControlsSheet(
+  BuildContext context, {
+  bool variantAsChips = false,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(borderRadius: HosannaRadii.sheet),
-    builder: (_) => const SongControlsSheet(),
+    builder: (_) => SongControlsSheet(variantAsChips: variantAsChips),
   );
 }
 
 /// Transpose / capo / font size / toggles, laid out like the React popover.
 class SongControlsSheet extends ConsumerWidget {
-  const SongControlsSheet({super.key});
+  const SongControlsSheet({
+    super.key,
+    this.variantAsChips = false,
+  });
+
+  /// When true, show a chip variant selector at the top of this sheet.
+  final bool variantAsChips;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final doc = ref.watch(songCurrentDocumentProvider);
+    final versions = variantAsChips && doc != null && doc.variants.isNotEmpty
+        ? [doc.defaultVersion, ...doc.variants]
+        : const <ChordProVersion>[];
 
     return SafeArea(
       top: false,
@@ -86,6 +98,16 @@ class SongControlsSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 4),
+
+            if (versions.isNotEmpty) ...[
+              _SectionTitle(label: l10n.songVariant, value: ''),
+              _ToolbarVariantChips(
+                versions: versions,
+                selectedId: settings.variantId,
+                onSelected: controller.setVariantId,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Transpose / capo only matter when chords are visible.
             if (settings.showChords) ...[
@@ -523,7 +545,7 @@ class _ToolbarVariantButton extends StatelessWidget {
   }
 }
 
-/// Horizontal chip selector used on the service song toolbar.
+/// Chip selector used inside [SongControlsSheet] for service song variants.
 class _ToolbarVariantChips extends StatelessWidget {
   const _ToolbarVariantChips({
     required this.versions,
@@ -539,32 +561,22 @@ class _ToolbarVariantChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 220),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final version in versions)
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: ChoiceChip(
-                  label: Text(version.name),
-                  selected: version.id == selectedId,
-                  onSelected: (_) => onSelected(version.id),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  labelStyle: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: version.id == selectedId
-                        ? FontWeight.w700
-                        : FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final version in versions)
+          ChoiceChip(
+            label: Text(version.name),
+            selected: version.id == selectedId,
+            onSelected: (_) => onSelected(version.id),
+            labelStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: version.id == selectedId
+                  ? FontWeight.w700
+                  : FontWeight.w600,
+            ),
+          ),
+      ],
     );
   }
 }
