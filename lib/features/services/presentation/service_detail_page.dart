@@ -859,7 +859,7 @@ class _OrderItem extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           child: Row(
             children: [
               SizedBox(

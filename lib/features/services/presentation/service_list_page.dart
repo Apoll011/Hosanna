@@ -248,7 +248,7 @@ class _ServiceList extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: HosannaSpacing.sm),
           child: HosannaSurface(
             elevated: false,
-            padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+            padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
             onTap: () => context.push('/services/${service.id}'),
             child: Row(
               children: [
