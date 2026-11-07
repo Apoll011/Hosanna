@@ -392,7 +392,7 @@ class _MusicianTopBar extends StatelessWidget {
               tooltip: l10n.servicesNotes,
               onPressed: onOpenNotes,
             ),
-            if (isSong) const SongToolbarButton(),
+            if (isSong) const SongToolbarButton(variantAsChips: true),
             // Icon-only Leave avoids overflow on narrow phones; keep the
             // labelled button when there is room.
             LayoutBuilder(

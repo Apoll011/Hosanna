@@ -11,7 +11,14 @@ import 'chordpro/song_display_settings.dart';
 /// React `SongView` "Ajustes de Leitura" popover.
 /// Also displays a variant switcher directly on the toolbar when variants exist.
 class SongToolbarButton extends ConsumerWidget {
-  const SongToolbarButton({super.key});
+  const SongToolbarButton({
+    super.key,
+    this.variantAsChips = false,
+  });
+
+  /// When true (service song reader), variants render as a chip selector
+  /// instead of a compact dropdown.
+  final bool variantAsChips;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,16 +26,25 @@ class SongToolbarButton extends ConsumerWidget {
     final doc = ref.watch(songCurrentDocumentProvider);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final versions = doc != null && doc.variants.isNotEmpty
+        ? [doc.defaultVersion, ...doc.variants]
+        : const <ChordProVersion>[];
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (doc != null && doc.variants.isNotEmpty)
-          _ToolbarVariantButton(
-            versions: [doc.defaultVersion, ...doc.variants],
-            selectedId: settings.variantId,
-            onSelected: controller.setVariantId,
-          ),
+        if (versions.isNotEmpty)
+          variantAsChips
+              ? _ToolbarVariantChips(
+                  versions: versions,
+                  selectedId: settings.variantId,
+                  onSelected: controller.setVariantId,
+                )
+              : _ToolbarVariantButton(
+                  versions: versions,
+                  selectedId: settings.variantId,
+                  onSelected: controller.setVariantId,
+                ),
         IconButton(
           icon: const Icon(Icons.tune),
           tooltip: l10n.songControlsTitle,
@@ -501,6 +517,52 @@ class _ToolbarVariantButton extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Horizontal chip selector used on the service song toolbar.
+class _ToolbarVariantChips extends StatelessWidget {
+  const _ToolbarVariantChips({
+    required this.versions,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<ChordProVersion> versions;
+  final String selectedId;
+  final void Function(String id) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final version in versions)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text(version.name),
+                  selected: version.id == selectedId,
+                  onSelected: (_) => onSelected(version.id),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  labelStyle: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: version.id == selectedId
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

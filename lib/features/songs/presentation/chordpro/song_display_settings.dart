@@ -11,9 +11,9 @@ import '../../../songs/domain/chordpro/parser.dart';
 /// props (transpose, capo, show chords, two-column, font size, instrument,
 /// diagrams).
 ///
-/// Appearance settings are persisted globally. Transpose/capo are transient for
-/// standalone song views, and persisted per `(serviceId, songId)` while reading
-/// inside a service.
+/// Appearance settings are persisted globally. Transpose/capo/variant are
+/// transient for standalone song views, and persisted per `(serviceId, songId)`
+/// while reading inside a service.
 class SongDisplaySettings {
   /// Shared font-size range for the song reader toolbar and Settings.
   static const double minFontSize = 12;
@@ -46,7 +46,7 @@ class SongDisplaySettings {
   /// Auto-scroll speed, 1..10 (transient).
   final double autoScrollSpeed;
 
-  /// Active variant id (transient — not persisted).
+  /// Active variant id. Persisted only while scoped to a service song.
   final String variantId;
 
   /// Per-instrument voicing / diagram preferences.
@@ -166,36 +166,52 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     _persistScopedTransposition();
   }
 
-  /// Loads the saved transpose/capo for this service song (or 0/0) and makes
-  /// later changes persist under that pair.
+  /// Loads the saved transpose/capo/variant for this service song (or defaults)
+  /// and makes later changes persist under that pair.
   void enterServiceSong({required String serviceId, required String songId}) {
     final key = _scopeKey(serviceId, songId);
     if (_transpositionScopeKey == key) return;
     _transpositionScopeKey = key;
-    final stored = _readScopedTransposition(key);
-    state = state.copyWith(transpose: stored.transpose, capo: stored.capo);
+    final stored = _readScopedSongSettings(key);
+    state = state.copyWith(
+      transpose: stored.transpose,
+      capo: stored.capo,
+      variantId: stored.variantId,
+    );
   }
 
-  /// Clears the service-song scope and resets transpose/capo to 0.
+  /// Clears the service-song scope and resets transpose/capo/variant.
   ///
   /// Call when leaving a [SongReader] (service or standalone) so the next song
-  /// never inherits the previous one's transposition.
+  /// never inherits the previous one's transposition or variant.
   void leaveTranspositionScope() {
     _transpositionScopeKey = null;
-    if (state.transpose == 0 && state.capo == 0) return;
-    state = state.copyWith(transpose: 0, capo: 0);
+    if (state.transpose == 0 &&
+        state.capo == 0 &&
+        state.variantId == 'default') {
+      return;
+    }
+    state = state.copyWith(transpose: 0, capo: 0, variantId: 'default');
   }
 
   static String _scopeKey(String serviceId, String songId) =>
       '$serviceId|$songId';
 
-  ({int transpose, int capo}) _readScopedTransposition(String key) {
+  ({int transpose, int capo, String variantId}) _readScopedSongSettings(
+    String key,
+  ) {
     final map = _loadTranspositionMap();
     final entry = map[key];
-    if (entry is! Map) return (transpose: 0, capo: 0);
+    if (entry is! Map) {
+      return (transpose: 0, capo: 0, variantId: 'default');
+    }
     final transpose = (entry['t'] as num?)?.toInt() ?? 0;
     final capo = (entry['c'] as num?)?.toInt() ?? 0;
-    return (transpose: transpose, capo: capo);
+    final variantRaw = entry['v'];
+    final variantId = variantRaw is String && variantRaw.isNotEmpty
+        ? variantRaw
+        : 'default';
+    return (transpose: transpose, capo: capo, variantId: variantId);
   }
 
   void _persistScopedTransposition() {
@@ -203,10 +219,16 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     if (key == null) return;
 
     final map = _loadTranspositionMap();
-    if (state.transpose == 0 && state.capo == 0) {
+    if (state.transpose == 0 &&
+        state.capo == 0 &&
+        state.variantId == 'default') {
       map.remove(key);
     } else {
-      map[key] = {'t': state.transpose, 'c': state.capo};
+      map[key] = {
+        't': state.transpose,
+        'c': state.capo,
+        if (state.variantId != 'default') 'v': state.variantId,
+      };
     }
     _prefs.setString(_serviceTranspositionsKey, jsonEncode(map));
   }
@@ -226,6 +248,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   void setVariantId(String id) {
     if (state.variantId == id) return;
     state = state.copyWith(variantId: id);
+    _persistScopedTransposition();
   }
 
   void toggleShowChords() {

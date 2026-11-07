@@ -1338,7 +1338,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
         ),
         title: Text(l10n.servicesItemDetail),
         actions: [
-          if (isSong) const SongToolbarButton(),
+          if (isSong) const SongToolbarButton(variantAsChips: true),
           if (widget.compactTimerStyle != null)
             Padding(
               padding: const EdgeInsets.only(left: 2, right: 4),
@@ -1408,7 +1408,7 @@ class _ViewerTopBar extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSong) const SongToolbarButton(),
+            if (isSong) const SongToolbarButton(variantAsChips: true),
             if (compactTimerStyle != null)
               Padding(
                 padding: const EdgeInsets.only(left: 2, right: 4),
