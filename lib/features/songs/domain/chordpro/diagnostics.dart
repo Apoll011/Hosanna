@@ -161,7 +161,6 @@ const Set<String> _noChordTokens = {
 
 final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 final RegExp _chordTokenRegex = RegExp(r'\[([^\]]*)\]');
-final RegExp _timingSuffixRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _parserLineRegex = RegExp(r'^Line (\d+):\s*(.*)$');
 final RegExp _unclosedVariantRegex = RegExp(
   r'variant "([^"]+)".*started at line (\d+)',
@@ -397,9 +396,7 @@ void _scanLines(
           continue;
         }
 
-        final timingMatch = _timingSuffixRegex.firstMatch(rawChord.trim());
-        final symbol =
-            (timingMatch?.group(1) ?? rawChord).trim().replaceAll('()', '');
+        final symbol = rawChord.trim().replaceAll('()', '');
         final normalized = symbol.toLowerCase();
         if (_noChordTokens.contains(normalized)) continue;
 

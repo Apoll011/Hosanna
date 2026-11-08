@@ -10,11 +10,10 @@
 library;
 
 class SegmentAst {
-  const SegmentAst({required this.chord, required this.text, this.timing});
+  const SegmentAst({required this.chord, required this.text});
 
   final String chord;
   final String text;
-  final double? timing;
 }
 
 class MeasureAst {
@@ -120,53 +119,37 @@ class SongAst {
   final List<String>? errors;
 }
 
-final RegExp _timingRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _chordRegex = RegExp(r'\[([^\]]+)\]');
 final RegExp _barlineRegex = RegExp(r'\|\||\|:|:\||\|\]|\|');
 final RegExp _onlyBarsAndSpacesRegex = RegExp(r'^[\s|:\-.%]*$');
 final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 
-({String chord, double? timing}) _parseChordTiming(String rawChord) {
-  final match = _timingRegex.firstMatch(rawChord);
-  if (match != null) {
-    return (chord: match.group(1)!, timing: double.tryParse(match.group(2)!));
-  }
-  return (chord: rawChord, timing: null);
-}
-
 List<SegmentAst> parseLineSegments(String lineText) {
   final segments = <SegmentAst>[];
   var lastIndex = 0;
   var currentChord = '';
-  double? currentTiming;
 
   for (final match in _chordRegex.allMatches(lineText)) {
-    final rawChord = match.group(1)!;
-    final parsed = _parseChordTiming(rawChord);
-    final chord = parsed.chord;
-    final timing = parsed.timing;
+    final chord = match.group(1)!;
     final textBefore = lineText.substring(lastIndex, match.start);
 
     if (lastIndex == 0 && textBefore.isEmpty) {
       currentChord = chord;
-      currentTiming = timing;
     } else {
       segments.add(
         SegmentAst(
           chord: currentChord,
           text: textBefore,
-          timing: currentTiming,
         ),
       );
       currentChord = chord;
-      currentTiming = timing;
     }
     lastIndex = match.end;
   }
 
   final remainingText = lineText.substring(lastIndex);
   segments.add(
-    SegmentAst(chord: currentChord, text: remainingText, timing: currentTiming),
+    SegmentAst(chord: currentChord, text: remainingText),
   );
 
   return segments;
@@ -543,7 +526,7 @@ ChordProDocument parseChordProDocument(String content) {
       for (final seg in parsedSegments) {
         if (seg.chord.isNotEmpty) {
           currentChords.add(
-            SegmentAst(chord: seg.chord, text: '', timing: seg.timing),
+            SegmentAst(chord: seg.chord, text: ''),
           );
           hasSeenChord = true;
         }
