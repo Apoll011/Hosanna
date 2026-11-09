@@ -723,6 +723,8 @@
   "settingsMusicianModeDesc": "Abre los servicios en la primera canción con acordes y anotaciones. Desactívalo para la vista de orden del servicio con letras y tiempos.",
   "settingsServiceOrderSidePanel": "Panel lateral del orden del servicio",
   "settingsServiceOrderSidePanelDesc": "En tablets, mantiene el orden del servicio visible junto al elemento actual en los modos músico y no músico.",
+  "servicesCollapseOrderPanel": "Contraer panel del orden",
+  "servicesExpandOrderPanel": "Expandir panel del orden",
   "settingsKeepAwake": "Mantener Pantalla Encendida",
   "settingsKeepAwakeDesc": "Evita que la pantalla se suspenda al ver canciones.",
   "settingsSyncAnnotations": "Sincronizar anotaciones",

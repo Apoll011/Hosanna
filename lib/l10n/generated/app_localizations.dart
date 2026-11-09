@@ -3922,6 +3922,18 @@ abstract class AppLocalizations {
   /// **'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.'**
   String get settingsServiceOrderSidePanelDesc;
 
+  /// No description provided for @servicesCollapseOrderPanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recolher painel da ordem'**
+  String get servicesCollapseOrderPanel;
+
+  /// No description provided for @servicesExpandOrderPanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expandir painel da ordem'**
+  String get servicesExpandOrderPanel;
+
   /// No description provided for @settingsKeepAwake.
   ///
   /// In pt, this message translates to:

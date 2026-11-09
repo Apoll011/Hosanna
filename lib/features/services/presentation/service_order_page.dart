@@ -44,8 +44,10 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
   DateTime? _startedAt;
   /// When the focused item became current (for per-item elapsed).
   DateTime? _itemStartedAt;
+  bool _sideRailCollapsed = false;
 
-  static const _sideRailWidth = 220.0;
+  static const _sideRailExpandedWidth = 220.0;
+  static const _sideRailCollapsedWidth = 56.0;
 
   @override
   void initState() {
@@ -140,13 +142,21 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: _sideRailWidth,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    width: _sideRailCollapsed
+                        ? _sideRailCollapsedWidth
+                        : _sideRailExpandedWidth,
                     child: _ServiceOrderSideRail(
                       elements: elements,
                       completedIds: _completedIds,
                       currentElementId: _currentElementId,
                       startedAt: _startedAt,
+                      collapsed: _sideRailCollapsed,
+                      onToggleCollapsed: () => setState(
+                        () => _sideRailCollapsed = !_sideRailCollapsed,
+                      ),
                       onStart: _startService,
                       onSelect: (element) =>
                           _openElement(context, element, useSideRail: true),
@@ -249,7 +259,11 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
         completedIds: _completedIds,
         startedAt: _startedAt,
         itemStartedAt: _itemStartedAt,
-        compactTimerStyle: _ServiceTimerStyle.orbOnly,
+        // Full elapsed in the viewer when the rail is collapsed; orb-only
+        // when the rail footer already shows the clock.
+        compactTimerStyle: _sideRailCollapsed
+            ? _ServiceTimerStyle.orbWithTime
+            : _ServiceTimerStyle.orbOnly,
         embedded: true,
         onIndexChanged: (i) {
           setState(() {
@@ -732,6 +746,8 @@ class _ServiceOrderSideRail extends StatelessWidget {
     required this.currentElementId,
     required this.onSelect,
     required this.onStart,
+    required this.collapsed,
+    required this.onToggleCollapsed,
     this.startedAt,
   });
 
@@ -740,6 +756,8 @@ class _ServiceOrderSideRail extends StatelessWidget {
   final String? currentElementId;
   final ValueChanged<ServiceElement> onSelect;
   final VoidCallback onStart;
+  final bool collapsed;
+  final VoidCallback onToggleCollapsed;
   final DateTime? startedAt;
 
   @override
@@ -754,84 +772,122 @@ class _ServiceOrderSideRail extends StatelessWidget {
       shadowColor: Colors.transparent,
       child: SafeArea(
         right: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: collapsed
+            ? Column(
                 children: [
-                  Text(
-                    l10n.servicesOrderTitle,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: IconButton(
+                      icon: const Icon(Icons.chevron_right_rounded),
+                      tooltip: l10n.servicesExpandOrderPanel,
+                      onPressed: onToggleCollapsed,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.servicesMoments(elements.length),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: startedAt == null
+                        ? IconButton.filledTonal(
+                            onPressed: onStart,
+                            tooltip: l10n.servicesStartService,
+                            icon: const Icon(Icons.play_arrow_rounded),
+                          )
+                        : _ServiceTimerStrip(
+                            startedAt: startedAt,
+                            style: _ServiceTimerStyle.orbOnly,
+                          ),
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 4, 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.servicesOrderTitle,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.servicesMoments(elements.length),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left_rounded),
+                          tooltip: l10n.servicesCollapseOrderPanel,
+                          onPressed: onToggleCollapsed,
+                        ),
+                      ],
                     ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: elements.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Text(
+                                l10n.servicesNoItems,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 6,
+                            ),
+                            itemCount: elements.length,
+                            itemBuilder: (context, i) {
+                              final element = elements[i];
+                              final selected = element.id == currentElementId;
+                              return _SideRailItem(
+                                index: i,
+                                element: element,
+                                window: windows[i],
+                                selected: selected,
+                                status: completedIds.contains(element.id)
+                                    ? _ItemStatus.done
+                                    : selected
+                                        ? _ItemStatus.current
+                                        : _ItemStatus.upcoming,
+                                onTap: () => onSelect(element),
+                              );
+                            },
+                          ),
+                  ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                    child: startedAt == null
+                        ? FilledButton.tonal(
+                            onPressed: onStart,
+                            child: Text(l10n.servicesStartService),
+                          )
+                        : _ServiceTimerStrip(
+                            startedAt: startedAt,
+                            style: _ServiceTimerStyle.rail,
+                          ),
                   ),
                 ],
               ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: elements.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          l10n.servicesNoItems,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 6,
-                      ),
-                      itemCount: elements.length,
-                      itemBuilder: (context, i) {
-                        final element = elements[i];
-                        final selected = element.id == currentElementId;
-                        return _SideRailItem(
-                          index: i,
-                          element: element,
-                          window: windows[i],
-                          selected: selected,
-                          status: completedIds.contains(element.id)
-                              ? _ItemStatus.done
-                              : selected
-                                  ? _ItemStatus.current
-                                  : _ItemStatus.upcoming,
-                          onTap: () => onSelect(element),
-                        );
-                      },
-                    ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: startedAt == null
-                  ? FilledButton.tonal(
-                      onPressed: onStart,
-                      child: Text(l10n.servicesStartService),
-                    )
-                  : _ServiceTimerStrip(
-                      startedAt: startedAt,
-                      style: _ServiceTimerStyle.rail,
-                    ),
-            ),
-          ],
-        ),
       ),
     );
   }

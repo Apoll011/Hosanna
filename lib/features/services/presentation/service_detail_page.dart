@@ -36,6 +36,10 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _currentElementId;
   bool _isAnnotating = false;
+  bool _sideRailCollapsed = false;
+
+  static const _sideRailExpandedWidth = 220.0;
+  static const _sideRailCollapsedWidth = 56.0;
 
   @override
   void initState() {
@@ -132,11 +136,19 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  width: 220,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: _sideRailCollapsed
+                      ? _sideRailCollapsedWidth
+                      : _sideRailExpandedWidth,
                   child: _OrderSideRail(
                     service: service,
                     currentElementId: _currentElementId,
+                    collapsed: _sideRailCollapsed,
+                    onToggleCollapsed: () => setState(
+                      () => _sideRailCollapsed = !_sideRailCollapsed,
+                    ),
                     onSelect: (id) => setState(() => _currentElementId = id),
                     onLeave: () => context.pop(),
                   ),
@@ -685,6 +697,7 @@ class _OrderListBody extends StatelessWidget {
     required this.onSelect,
     required this.onLeave,
     this.showClose = false,
+    this.onCollapse,
   });
 
   final ServiceRow service;
@@ -692,6 +705,7 @@ class _OrderListBody extends StatelessWidget {
   final ValueChanged<String> onSelect;
   final VoidCallback onLeave;
   final bool showClose;
+  final VoidCallback? onCollapse;
 
   @override
   Widget build(BuildContext context) {
@@ -703,7 +717,7 @@ class _OrderListBody extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
           child: Row(
             children: [
               Expanded(
@@ -726,6 +740,12 @@ class _OrderListBody extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onCollapse != null)
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  tooltip: l10n.servicesCollapseOrderPanel,
+                  onPressed: onCollapse,
+                ),
               if (showClose)
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -799,28 +819,59 @@ class _OrderSideRail extends StatelessWidget {
   const _OrderSideRail({
     required this.service,
     required this.currentElementId,
+    required this.collapsed,
+    required this.onToggleCollapsed,
     required this.onSelect,
     required this.onLeave,
   });
 
   final ServiceRow service;
   final String? currentElementId;
+  final bool collapsed;
+  final VoidCallback onToggleCollapsed;
   final ValueChanged<String> onSelect;
   final VoidCallback onLeave;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       child: SafeArea(
         right: false,
-        child: _OrderListBody(
-          service: service,
-          currentElementId: currentElementId,
-          onSelect: onSelect,
-          onLeave: onLeave,
-        ),
+        child: collapsed
+            ? Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: IconButton(
+                      icon: const Icon(Icons.chevron_right_rounded),
+                      tooltip: l10n.servicesExpandOrderPanel,
+                      onPressed: onToggleCollapsed,
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.logout,
+                        color: theme.colorScheme.error,
+                      ),
+                      tooltip: l10n.servicesLeaveMode,
+                      onPressed: onLeave,
+                    ),
+                  ),
+                ],
+              )
+            : _OrderListBody(
+                service: service,
+                currentElementId: currentElementId,
+                onSelect: onSelect,
+                onLeave: onLeave,
+                onCollapse: onToggleCollapsed,
+              ),
       ),
     );
   }

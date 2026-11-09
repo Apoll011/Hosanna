@@ -2097,6 +2097,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'On tablets, keep the service order visible beside the current item in both musician and non-musician modes.';
 
   @override
+  String get servicesCollapseOrderPanel => 'Collapse order panel';
+
+  @override
+  String get servicesExpandOrderPanel => 'Expand order panel';
+
+  @override
   String get settingsKeepAwake => 'Keep Screen Awake';
 
   @override

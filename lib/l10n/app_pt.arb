@@ -743,6 +743,8 @@
   "settingsMusicianModeDesc": "Abre os cultos no primeiro cântico com acordes e anotações. Desative para a vista de ordem do culto com letras e tempos.",
   "settingsServiceOrderSidePanel": "Painel lateral da ordem do culto",
   "settingsServiceOrderSidePanelDesc": "Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.",
+  "servicesCollapseOrderPanel": "Recolher painel da ordem",
+  "servicesExpandOrderPanel": "Expandir painel da ordem",
   "settingsKeepAwake": "Manter Ecrã Ligado",
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
   "settingsSyncAnnotations": "Sincronizar anotações",

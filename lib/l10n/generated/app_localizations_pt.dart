@@ -2103,6 +2103,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.';
 
   @override
+  String get servicesCollapseOrderPanel => 'Recolher painel da ordem';
+
+  @override
+  String get servicesExpandOrderPanel => 'Expandir painel da ordem';
+
+  @override
   String get settingsKeepAwake => 'Manter Ecrã Ligado';
 
   @override
