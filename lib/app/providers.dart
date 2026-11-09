@@ -67,7 +67,7 @@ final dioProvider = Provider<Dio>((ref) {
 });
 
 /// Typed OpenAPI client for `/api` REST (replication, notes, annotations, …).
-/// Auth (`/api/auth/*`) stays on [dioProvider] via [AuthRepository].
+/// Auth (`/api/auth/*`) uses [dioProvider] (auth host) via [AuthRepository].
 final hosannaApiProvider = Provider<HosannaApi>((ref) {
   return HosannaApi.fromSharedDio(
     ref.watch(dioProvider),

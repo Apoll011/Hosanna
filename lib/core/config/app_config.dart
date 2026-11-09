@@ -4,7 +4,8 @@
 /// different environments without code changes:
 ///
 ///   flutter run --dart-define=HOSANNA_API_URL=https://api.example.com
-///   flutter run --dart-define=HOSANNA_TURNSTILE_URL=https://studio.hosanna.live/captcha
+///   flutter run --dart-define=HOSANNA_AUTH_URL=https://auth.hosanna.live
+///   flutter run --dart-define=HOSANNA_TURNSTILE_URL=https://auth.hosanna.live/captcha
 ///   flutter run --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=1234.apps.googleusercontent.com
 ///
 /// The API URL defaults to the Hosanna production API.
@@ -13,6 +14,7 @@ library;
 class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
+    required this.authBaseUrl,
     required this.turnstileUrl,
     required this.origin,
     this.googleServerClientId = '',
@@ -22,11 +24,14 @@ class AppConfig {
   /// Base URL of the Hosanna backend (no trailing slash, no `/api`).
   final String apiBaseUrl;
 
+  /// Better Auth host (no trailing slash). Serves `/api/auth/*`.
+  final String authBaseUrl;
+
   /// URL of the hosted Turnstile captcha page.
   ///
   /// Turnstile validates the hostname of the page that renders the widget, so
   /// the challenge must be served from a domain listed in Cloudflare's
-  /// "Hostname Management" (default: the Studio captcha page). The hosted page
+  /// "Hostname Management" (default: the auth app captcha page). The hosted page
   /// must call `TurnstileCallback.postMessage(token)` in its success callback.
   final String turnstileUrl;
 
@@ -72,9 +77,13 @@ class AppConfig {
       'HOSANNA_API_URL',
       defaultValue: 'https://api.hosanna.live',
     ),
+    authBaseUrl: String.fromEnvironment(
+      'HOSANNA_AUTH_URL',
+      defaultValue: 'https://auth.hosanna.live',
+    ),
     turnstileUrl: String.fromEnvironment(
       'HOSANNA_TURNSTILE_URL',
-      defaultValue: 'https://studio.hosanna.live/captcha',
+      defaultValue: 'https://auth.hosanna.live/captcha',
     ),
     origin: String.fromEnvironment(
       'HOSANNA_ORIGIN',

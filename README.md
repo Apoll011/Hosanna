@@ -96,6 +96,8 @@ Compile-time config via `--dart-define`:
 | Key | Purpose | Default |
 | --- | --- | --- |
 | `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://api.hosanna.live` |
+| `HOSANNA_AUTH_URL` | Better Auth origin (no trailing slash) | `https://auth.hosanna.live` |
+| `HOSANNA_TURNSTILE_URL` | Hosted Turnstile captcha page | `https://auth.hosanna.live/captcha` |
 | `HOSANNA_ORIGIN` | `Origin` header on state-changing requests | `http://localhost` |
 | `HOSANNA_GOOGLE_SERVER_CLIENT_ID` | Google web/server OAuth client ID for native sign-in | *(unset)* |
 | `HOSANNA_GOOGLE_NONCE` | Send a nonce with the Google ID token | `false` |
@@ -108,7 +110,7 @@ flutter run \
 
 > **Turnstile is required.** The backend enforces Cloudflare Turnstile on
 > `/sign-up/email`, `/sign-in/email`, and `/request-password-reset`. The app
-> loads the Studio captcha page at `https://studio.hosanna.live/captcha`.
+> loads the auth captcha page at `https://auth.hosanna.live/captcha`.
 
 ## Architecture
 
