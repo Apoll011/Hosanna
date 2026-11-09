@@ -17,9 +17,8 @@ const double kTabletBreakpoint = 750;
 
 /// Branches that hide the floating bottom nav bar.
 ///
-/// The bar only ever links to Songs and Services. Folders (and an open
-/// collection, which still lives on the songs branch) keep it visible so
-/// musicians can jump back to those hubs with nothing selected; tools
+/// The bar only ever links to Songs and Services. Folders and Collections
+/// keep it visible so musicians can jump back to those hubs; tools
 /// (metronome, circle of fifths), Settings, and Agenda hide it so it does not
 /// cover content without a selected destination. Those branches are reached
 /// through the drawer/sidebar instead.
@@ -52,9 +51,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     shell.goBranch(index, initialLocation: index == shell.currentIndex);
   }
 
-  /// Bottom-bar Songs tap: always land on the full library (clears an open
-  /// collection the same way leaving Folders does). Not used for drawer
-  /// collection/favorites navigation, which also calls [_goBranch].
+  /// Bottom-bar Songs tap: always land on the full library.
   void _goSongsHub() {
     ref.read(libraryControllerProvider.notifier).selectAll();
     _goBranch(kSongsBranch);
@@ -105,16 +102,9 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
         label: l10n.navServices,
       ),
     ];
-    // Collections render inside the songs branch (unlike folders, which have
-    // their own). Treat an open collection like folders: leave Songs
-    // unselected so tapping it returns to the main library.
-    final library = ref.watch(libraryControllerProvider);
-    final viewingCollection = currentBranch == kSongsBranch &&
-        library.section == LibrarySection.collection;
-    final selectedDestination = destinations.indexWhere((d) {
-      if (d.branch == kSongsBranch && viewingCollection) return false;
-      return d.branch == currentBranch;
-    });
+    final selectedDestination = destinations.indexWhere(
+      (d) => d.branch == currentBranch,
+    );
     final navAllowed = ref.watch(shellNavVisibleProvider);
     final showNavBar =
         navAllowed && !kBranchesWithoutNavBar.contains(currentBranch);

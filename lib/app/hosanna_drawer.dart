@@ -254,43 +254,13 @@ class HosannaNavContent extends ConsumerWidget {
                       onNavigate(kFoldersBranch);
                     },
                   ),
-
-                  _RevealBlock(
-                    visible: !collapsed,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 4),
-                        HosannaSectionLabel(l10n.navCollections),
-                        if (collections.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-                            child: Text(
-                              l10n.collectionsEmpty,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          )
-                        else
-                          for (final collection in collections)
-                            _NavItem(
-                              icon: Icons.collections_bookmark_outlined,
-                              label: collection.name,
-                              count: collection.songCount,
-                              selected: currentBranch == kSongsBranch &&
-                                  library.section ==
-                                      LibrarySection.collection &&
-                                  library.collectionId == collection.id,
-                              collapsed: collapsed,
-                              onTap: () => selectSection(
-                                LibrarySection.collection,
-                                collectionId: collection.id,
-                              ),
-                            ),
-                      ],
-                    ),
+                  _NavItem(
+                    icon: Icons.collections_bookmark_outlined,
+                    label: l10n.navCollections,
+                    count: collections.length,
+                    selected: currentBranch == kCollectionsBranch,
+                    collapsed: collapsed,
+                    onTap: () => onNavigate(kCollectionsBranch),
                   ),
 
                   _RevealBlock(

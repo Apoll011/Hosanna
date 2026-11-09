@@ -1358,6 +1358,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'As coleções aparecem aqui quando a sua igreja as criar.';
 
   @override
+  String get collectionsSearchHint => 'Pesquisar coleções…';
+
+  @override
   String get collectionContentsEmpty => 'Esta coleção está vazia';
 
   @override

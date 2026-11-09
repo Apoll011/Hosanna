@@ -481,6 +481,7 @@
   "foldersNoResultsDesc": "Try a different search or clear your filters.",
   "collectionsEmpty": "No collections yet",
   "collectionsEmptyDesc": "Collections appear here when your church creates them.",
+  "collectionsSearchHint": "Search collections…",
   "collectionContentsEmpty": "This collection is empty",
   "collectionContentsEmptyDesc": "No songs in this collection yet. Add songs to it from Studio — a song can belong to several collections at once.",
   "collectionContentsEmptyReadonlyDesc": "No songs in this collection yet. Ask a leader to add some in Studio, or check back after the next sync.",

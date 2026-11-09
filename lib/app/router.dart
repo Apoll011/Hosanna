@@ -11,6 +11,8 @@ import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
 import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
+import '../features/collections/presentation/collection_detail_page.dart';
+import '../features/collections/presentation/collections_page.dart';
 import '../features/folders/presentation/folder_browser_page.dart';
 import '../features/metronome/presentation/metronome_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
@@ -107,7 +109,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
       GoRoute(path: '/setup', builder: (_, _) => const SetupPage()),
-      // Branch order must match the kSongsBranch..kSettingsBranch constants in
+      // Branch order must match the kSongsBranch..kAgendaBranch constants in
       // nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
@@ -156,6 +158,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/collections',
+                builder: (_, _) => const CollectionsPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/settings',
                 builder: (_, state) {
                   final tab = state.uri.queryParameters['tab'];
@@ -183,6 +193,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       // Outside the shell (same pattern as /songs/:id) so the shell drawer
       // stays available on the agenda list via ShellLeadingButton.
+      GoRoute(
+        path: '/collections/:id',
+        builder: (_, state) => CollectionDetailPage(
+          collectionId: state.pathParameters['id']!,
+        ),
+      ),
       GoRoute(
         path: '/agenda/:id',
         builder: (_, state) =>

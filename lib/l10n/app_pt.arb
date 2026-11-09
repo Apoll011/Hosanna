@@ -495,6 +495,7 @@
   "foldersNoResultsDesc": "Experimente outra pesquisa ou limpe os filtros.",
   "collectionsEmpty": "Ainda sem coleções",
   "collectionsEmptyDesc": "As coleções aparecem aqui quando a sua igreja as criar.",
+  "collectionsSearchHint": "Pesquisar coleções…",
   "collectionContentsEmpty": "Esta coleção está vazia",
   "collectionContentsEmptyDesc": "Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.",
   "collectionContentsEmptyReadonlyDesc": "Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.",

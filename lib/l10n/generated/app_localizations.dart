@@ -2518,6 +2518,12 @@ abstract class AppLocalizations {
   /// **'As coleções aparecem aqui quando a sua igreja as criar.'**
   String get collectionsEmptyDesc;
 
+  /// No description provided for @collectionsSearchHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pesquisar coleções…'**
+  String get collectionsSearchHint;
+
   /// No description provided for @collectionContentsEmpty.
   ///
   /// In pt, this message translates to:
