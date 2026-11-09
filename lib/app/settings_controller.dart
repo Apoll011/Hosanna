@@ -14,7 +14,7 @@ class AppSettings {
     this.keepScreenAwake = false,
     this.musicianMode = true,
     this.syncAnnotations = false,
-    this.serviceOrderSidePanel = true,
+    this.serviceOrderSidePanel = false,
   });
 
   final AppThemeMode themeMode;
@@ -84,8 +84,7 @@ class SettingsController extends StateNotifier<AppSettings> {
       keepScreenAwake: _prefs.getBool(_keepAwakeKey) ?? false,
       musicianMode: _prefs.getBool(_musicianModeKey) ?? true,
       syncAnnotations: _prefs.getBool(_syncAnnotation) ?? true,
-      serviceOrderSidePanel:
-          _prefs.getBool(_serviceOrderSidePanelKey) ?? true,
+      serviceOrderSidePanel: _prefs.getBool(_serviceOrderSidePanelKey) ?? false,
     );
   }
 
