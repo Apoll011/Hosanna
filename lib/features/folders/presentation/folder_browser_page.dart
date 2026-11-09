@@ -16,6 +16,7 @@ import '../../songs/domain/library_controller.dart';
 import '../../songs/presentation/song_filter_widgets.dart';
 import '../../songs/presentation/song_filters.dart';
 import '../data/folder_repository.dart';
+import '../domain/folder_customization.dart';
 import '../domain/folder_explorer_controller.dart';
 
 /// File-explorer style browser for the song library's folders.
@@ -578,14 +579,15 @@ class _FolderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final hasContents = folder.songCount > 0 || subfolderCount > 0;
+    final color = folderColorOf(folder.color);
+    final icon = folderIconOf(folder.icon, hasContents: hasContents);
 
     return _ExplorerTile(
       onTap: onOpen,
       icon: _ExplorerIcon(
-        icon: hasContents ? Icons.folder_rounded : Icons.folder_outlined,
-        color: theme.colorScheme.primary,
+        icon: icon,
+        color: color,
         size: 58,
         iconScale: 0.6,
         badgeCount: folder.songCount,
@@ -702,12 +704,13 @@ class _FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final hasContents = folder.songCount > 0 || subfolderCount > 0;
+    final color = folderColorOf(folder.color);
+    final icon = folderIconOf(folder.icon, hasContents: hasContents);
     return ListTile(
       leading: _ExplorerIcon(
-        icon: hasContents ? Icons.folder_rounded : Icons.folder_outlined,
-        color: theme.colorScheme.primary,
+        icon: icon,
+        color: color,
         badgeCount: folder.songCount,
       ),
       title: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
