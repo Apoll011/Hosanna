@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/chordpro/chord_dictionary.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
@@ -145,7 +146,10 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     final metadata = _version.metadata;
     final fontSize =
         widget.fontSize ?? theme.textTheme.bodyMedium?.fontSize ?? 14;
-    final lyricStyle = theme.textTheme.bodyMedium!.copyWith(
+    // Match suite chord sheets: Source Serif 4 for lyric text only
+    // (`.hosanna-sheet .font-sans` → `--font-lyric`).
+    final lyricStyle = GoogleFonts.sourceSerif4(
+      textStyle: theme.textTheme.bodyMedium,
       fontSize: fontSize,
       height: 1.5,
     );
