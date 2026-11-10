@@ -2,7 +2,7 @@ name: hosanna
 description: "Hosanna — ChordPro songbook and worship planning app for church musicians (transpose, metronome, auto-scroll, PDF, offline sync)."
 publish_to: "none"
 
-version: 2.6.3
+version: 2.7.0
 
 environment:
   sdk: ^3.13.2
