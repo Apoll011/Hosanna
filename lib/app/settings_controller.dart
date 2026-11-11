@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../features/input/pedal_bindings.dart';
 import 'providers.dart';
 import 'theme.dart';
 
@@ -15,6 +16,11 @@ class AppSettings {
     this.musicianMode = true,
     this.syncAnnotations = false,
     this.serviceOrderSidePanel = false,
+    this.pedalEnabled = true,
+    this.pedalActionMode = PedalActionMode.navigateSongs,
+    this.pedalPreset = PedalPreset.universal,
+    this.pedalCustomNextKeyId,
+    this.pedalCustomPrevKeyId,
   });
 
   final AppThemeMode themeMode;
@@ -36,6 +42,21 @@ class AppSettings {
   /// Non-musician tablet layout: keep the service order visible in a side rail.
   final bool serviceOrderSidePanel;
 
+  /// Whether Bluetooth HID page-turner pedals drive prev/next.
+  final bool pedalEnabled;
+
+  /// Navigate songs vs scroll one page within the song.
+  final PedalActionMode pedalActionMode;
+
+  /// Named pedal key layout, or [PedalPreset.custom].
+  final PedalPreset pedalPreset;
+
+  /// LogicalKeyboardKey.keyId for custom Next (when preset is custom).
+  final int? pedalCustomNextKeyId;
+
+  /// LogicalKeyboardKey.keyId for custom Prev (when preset is custom).
+  final int? pedalCustomPrevKeyId;
+
   Locale? get locale => localeCode == null ? null : Locale(localeCode!);
 
   AppSettings copyWith({
@@ -47,6 +68,13 @@ class AppSettings {
     bool? musicianMode,
     bool? syncAnnotations,
     bool? serviceOrderSidePanel,
+    bool? pedalEnabled,
+    PedalActionMode? pedalActionMode,
+    PedalPreset? pedalPreset,
+    int? pedalCustomNextKeyId,
+    int? pedalCustomPrevKeyId,
+    bool clearPedalCustomNext = false,
+    bool clearPedalCustomPrev = false,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -57,6 +85,15 @@ class AppSettings {
       syncAnnotations: syncAnnotations ?? this.syncAnnotations,
       serviceOrderSidePanel:
           serviceOrderSidePanel ?? this.serviceOrderSidePanel,
+      pedalEnabled: pedalEnabled ?? this.pedalEnabled,
+      pedalActionMode: pedalActionMode ?? this.pedalActionMode,
+      pedalPreset: pedalPreset ?? this.pedalPreset,
+      pedalCustomNextKeyId: clearPedalCustomNext
+          ? null
+          : (pedalCustomNextKeyId ?? this.pedalCustomNextKeyId),
+      pedalCustomPrevKeyId: clearPedalCustomPrev
+          ? null
+          : (pedalCustomPrevKeyId ?? this.pedalCustomPrevKeyId),
     );
   }
 }
@@ -73,6 +110,11 @@ class SettingsController extends StateNotifier<AppSettings> {
   static const _musicianModeKey = 'settings.musicianMode';
   static const _syncAnnotation = 'settings.syncAnnotation';
   static const _serviceOrderSidePanelKey = 'settings.serviceOrderSidePanel';
+  static const _pedalEnabledKey = 'settings.pedalEnabled';
+  static const _pedalActionModeKey = 'settings.pedalActionMode';
+  static const _pedalPresetKey = 'settings.pedalPreset';
+  static const _pedalCustomNextKey = 'settings.pedalCustomNextKeyId';
+  static const _pedalCustomPrevKey = 'settings.pedalCustomPrevKeyId';
 
   final SharedPreferences _prefs;
 
@@ -85,6 +127,13 @@ class SettingsController extends StateNotifier<AppSettings> {
       musicianMode: _prefs.getBool(_musicianModeKey) ?? true,
       syncAnnotations: _prefs.getBool(_syncAnnotation) ?? true,
       serviceOrderSidePanel: _prefs.getBool(_serviceOrderSidePanelKey) ?? false,
+      pedalEnabled: _prefs.getBool(_pedalEnabledKey) ?? true,
+      pedalActionMode: pedalActionModeFromName(
+        _prefs.getString(_pedalActionModeKey),
+      ),
+      pedalPreset: pedalPresetFromName(_prefs.getString(_pedalPresetKey)),
+      pedalCustomNextKeyId: _prefs.getInt(_pedalCustomNextKey),
+      pedalCustomPrevKeyId: _prefs.getInt(_pedalCustomPrevKey),
     );
   }
 
@@ -134,6 +183,41 @@ class SettingsController extends StateNotifier<AppSettings> {
   void setServiceOrderSidePanel(bool value) {
     state = state.copyWith(serviceOrderSidePanel: value);
     _prefs.setBool(_serviceOrderSidePanelKey, value);
+  }
+
+  void setPedalEnabled(bool value) {
+    state = state.copyWith(pedalEnabled: value);
+    _prefs.setBool(_pedalEnabledKey, value);
+  }
+
+  void setPedalActionMode(PedalActionMode mode) {
+    state = state.copyWith(pedalActionMode: mode);
+    _prefs.setString(_pedalActionModeKey, mode.name);
+  }
+
+  void setPedalPreset(PedalPreset preset) {
+    state = state.copyWith(pedalPreset: preset);
+    _prefs.setString(_pedalPresetKey, preset.name);
+  }
+
+  void setPedalCustomNextKeyId(int? keyId) {
+    if (keyId == null) {
+      state = state.copyWith(clearPedalCustomNext: true);
+      _prefs.remove(_pedalCustomNextKey);
+    } else {
+      state = state.copyWith(pedalCustomNextKeyId: keyId);
+      _prefs.setInt(_pedalCustomNextKey, keyId);
+    }
+  }
+
+  void setPedalCustomPrevKeyId(int? keyId) {
+    if (keyId == null) {
+      state = state.copyWith(clearPedalCustomPrev: true);
+      _prefs.remove(_pedalCustomPrevKey);
+    } else {
+      state = state.copyWith(pedalCustomPrevKeyId: keyId);
+      _prefs.setInt(_pedalCustomPrevKey, keyId);
+    }
   }
 }
 

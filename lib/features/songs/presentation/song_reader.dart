@@ -9,6 +9,7 @@ import 'package:hosanna/app/providers.dart';
 
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../input/pedal_navigator.dart';
 import '../../services/data/service_annotation_repository.dart';
 import '../domain/chordpro/parser.dart';
 import '../domain/youtube.dart';
@@ -498,6 +499,48 @@ class _SongReaderState extends ConsumerState<SongReader>
     _completeSwipe(-1);
   }
 
+  /// Scroll ~one viewport up; at the top edge, fall through to previous song.
+  void _pedalScrollPrev() {
+    if (_swipeController.isAnimating) return;
+    if (!_scrollController.hasClients) {
+      _goPrev();
+      return;
+    }
+    final pos = _scrollController.position;
+    if (pos.pixels > pos.minScrollExtent + 4) {
+      _stopAutoScroll();
+      final page = pos.viewportDimension * 0.9;
+      _scrollController.animateTo(
+        math.max(pos.minScrollExtent, pos.pixels - page),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+    _goPrev();
+  }
+
+  /// Scroll ~one viewport down; at the bottom edge, fall through to next song.
+  void _pedalScrollNext() {
+    if (_swipeController.isAnimating) return;
+    if (!_scrollController.hasClients) {
+      _goNext();
+      return;
+    }
+    final pos = _scrollController.position;
+    if (pos.pixels < pos.maxScrollExtent - 4) {
+      _stopAutoScroll();
+      final page = pos.viewportDimension * 0.9;
+      _scrollController.animateTo(
+        math.min(pos.maxScrollExtent, pos.pixels + page),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+    _goNext();
+  }
+
   void _completeSwipe(int dir) {
     // Stop YouTube as soon as navigation starts (buttons or swipe).
     _closeYoutubePlayer();
@@ -660,57 +703,63 @@ class _SongReaderState extends ConsumerState<SongReader>
         (!widget.isAnnotating && showNav ? 60 : 0) +
         (playerVideoId != null ? 124 : 0);
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: _swipeEnabled
-                ? _onHorizontalDragStart
-                : null,
-            onHorizontalDragUpdate: _swipeEnabled
-                ? _onHorizontalDragUpdate
-                : null,
-            onHorizontalDragEnd: _swipeEnabled ? _onHorizontalDragEnd : null,
-            onHorizontalDragCancel: _swipeEnabled
-                ? _onHorizontalDragCancel
-                : null,
-            child: Stack(
-              children: [
-                Transform.translate(
-                  offset: Offset(_offset, 0),
-                  child: Stack(
-                    children: [
-                      NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          _onScrollUpdated();
-                          return false;
-                        },
-                        child: SongBodyRenderer(
-                          content: widget.content,
-                          notes: widget.notes,
-                          scrollController: _scrollController,
-                          bottomInset: bottomInset,
-                          onYoutubeTap: videoId == null
-                              ? null
-                              : () => setState(() => _playerVideoId = videoId),
-                        ),
-                      ),
-                      if (hasServiceSong)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            ignoring: !widget.isAnnotating,
-                            child: _buildCanvasOverlay(),
+    return PedalNavigator(
+      onPrev: widget.canPrev ? _goPrev : null,
+      onNext: widget.canNext ? _goNext : null,
+      onScrollPrev: _pedalScrollPrev,
+      onScrollNext: _pedalScrollNext,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: _swipeEnabled
+                  ? _onHorizontalDragStart
+                  : null,
+              onHorizontalDragUpdate: _swipeEnabled
+                  ? _onHorizontalDragUpdate
+                  : null,
+              onHorizontalDragEnd: _swipeEnabled ? _onHorizontalDragEnd : null,
+              onHorizontalDragCancel: _swipeEnabled
+                  ? _onHorizontalDragCancel
+                  : null,
+              child: Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(_offset, 0),
+                    child: Stack(
+                      children: [
+                        NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            _onScrollUpdated();
+                            return false;
+                          },
+                          child: SongBodyRenderer(
+                            content: widget.content,
+                            notes: widget.notes,
+                            scrollController: _scrollController,
+                            bottomInset: bottomInset,
+                            onYoutubeTap: videoId == null
+                                ? null
+                                : () =>
+                                    setState(() => _playerVideoId = videoId),
                           ),
                         ),
-                    ],
+                        if (hasServiceSong)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              ignoring: !widget.isAnnotating,
+                              child: _buildCanvasOverlay(),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
-              ],
+                  if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
+                ],
+              ),
             ),
           ),
-        ),
 
         if (widget.isAnnotating && _hasPendingRemoteUpdate)
           Positioned(
@@ -841,7 +890,8 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

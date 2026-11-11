@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import '../../../core/auth/auth_session.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
+import '../../input/pedal_bindings.dart';
 import '../../services/data/service_repository.dart';
 import '../../setup/data/setup_controller.dart';
 import '../../songs/data/song_repository.dart';
@@ -847,6 +849,112 @@ class _ServiceTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SwitchRow(
+                icon: Icons.keyboard_alt_outlined,
+                iconColor: theme.colorScheme.secondary,
+                title: l10n.settingsPedalEnabled,
+                subtitle: l10n.settingsPedalEnabledDesc,
+                value: settings.pedalEnabled,
+                onChanged: settingsController.setPedalEnabled,
+              ),
+              if (settings.pedalEnabled) ...[
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.settingsPedalActionMode,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                RadioGroup<PedalActionMode>(
+                  groupValue: settings.pedalActionMode,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    settingsController.setPedalActionMode(value);
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<PedalActionMode>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(l10n.settingsPedalActionNavigate),
+                        value: PedalActionMode.navigateSongs,
+                      ),
+                      RadioListTile<PedalActionMode>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(l10n.settingsPedalActionScroll),
+                        value: PedalActionMode.scrollPage,
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsPedalPreset),
+                  trailing: DropdownButton<PedalPreset>(
+                    value: settings.pedalPreset,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      DropdownMenuItem(
+                        value: PedalPreset.universal,
+                        child: Text(l10n.settingsPedalPresetUniversal),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.airTurn,
+                        child: Text(l10n.settingsPedalPresetAirTurn),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.blueTurn,
+                        child: Text(l10n.settingsPedalPresetBlueTurn),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.donner,
+                        child: Text(l10n.settingsPedalPresetDonner),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.custom,
+                        child: Text(l10n.settingsPedalPresetCustom),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      settingsController.setPedalPreset(value);
+                    },
+                  ),
+                ),
+                if (settings.pedalPreset == PedalPreset.custom) ...[
+                  _PedalCustomKeyRow(
+                    label: l10n.settingsPedalCustomPrev,
+                    keyId: settings.pedalCustomPrevKeyId,
+                    onCapture: () async {
+                      final keyId = await _capturePedalKey(context);
+                      if (keyId != null) {
+                        settingsController.setPedalCustomPrevKeyId(keyId);
+                      }
+                    },
+                  ),
+                  _PedalCustomKeyRow(
+                    label: l10n.settingsPedalCustomNext,
+                    keyId: settings.pedalCustomNextKeyId,
+                    onCapture: () async {
+                      final keyId = await _capturePedalKey(context);
+                      if (keyId != null) {
+                        settingsController.setPedalCustomNextKeyId(keyId);
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Material(
           color: theme.colorScheme.surface,
           shape: RoundedRectangleBorder(
@@ -1526,6 +1634,109 @@ class _SwitchRow extends StatelessWidget {
           ),
         ),
         Switch(value: value, onChanged: enabled ? onChanged : null),
+      ],
+    );
+  }
+}
+
+class _PedalCustomKeyRow extends StatelessWidget {
+  const _PedalCustomKeyRow({
+    required this.label,
+    required this.keyId,
+    required this.onCapture,
+  });
+
+  final String label;
+  final int? keyId;
+  final VoidCallback onCapture;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final value = keyId == null
+        ? l10n.settingsPedalCustomUnset
+        : describeLogicalKey(LogicalKeyboardKey(keyId!));
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      subtitle: Text(
+        value,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: TextButton(
+        onPressed: onCapture,
+        child: Text(l10n.settingsEdit),
+      ),
+    );
+  }
+}
+
+Future<int?> _capturePedalKey(BuildContext context) {
+  return showDialog<int>(
+    context: context,
+    builder: (context) => const _PedalKeyCaptureDialog(),
+  );
+}
+
+class _PedalKeyCaptureDialog extends StatefulWidget {
+  const _PedalKeyCaptureDialog();
+
+  @override
+  State<_PedalKeyCaptureDialog> createState() => _PedalKeyCaptureDialogState();
+}
+
+class _PedalKeyCaptureDialogState extends State<_PedalKeyCaptureDialog> {
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    super.dispose();
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is! KeyDownEvent) return false;
+    final key = event.logicalKey;
+    // Ignore pure modifiers so the user can still cancel with the dialog button.
+    if (key == LogicalKeyboardKey.shift ||
+        key == LogicalKeyboardKey.shiftLeft ||
+        key == LogicalKeyboardKey.shiftRight ||
+        key == LogicalKeyboardKey.control ||
+        key == LogicalKeyboardKey.controlLeft ||
+        key == LogicalKeyboardKey.controlRight ||
+        key == LogicalKeyboardKey.alt ||
+        key == LogicalKeyboardKey.altLeft ||
+        key == LogicalKeyboardKey.altRight ||
+        key == LogicalKeyboardKey.meta ||
+        key == LogicalKeyboardKey.metaLeft ||
+        key == LogicalKeyboardKey.metaRight ||
+        key == LogicalKeyboardKey.escape) {
+      return false;
+    }
+    if (!mounted) return false;
+    Navigator.of(context).pop(key.keyId);
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.settingsPedalCustomCaptureTitle),
+      content: Text(l10n.settingsPedalCustomCaptureMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.settingsPedalCustomCaptureCancel),
+        ),
       ],
     );
   }

@@ -2125,6 +2125,59 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permite que las anotaciones se compartan en vivo entre todos los usuarios';
 
   @override
+  String get settingsPedalEnabled => 'Pedales page-turner';
+
+  @override
+  String get settingsPedalEnabledDesc =>
+      'Usa un pedal Bluetooth emparejado en los ajustes del sistema. La mayoría de pedales aparecen como teclado.';
+
+  @override
+  String get settingsPedalActionMode => 'Acción del pedal';
+
+  @override
+  String get settingsPedalActionNavigate => 'Canción siguiente / anterior';
+
+  @override
+  String get settingsPedalActionScroll => 'Desplazar página';
+
+  @override
+  String get settingsPedalPreset => 'Disposición del pedal';
+
+  @override
+  String get settingsPedalPresetUniversal => 'Universal';
+
+  @override
+  String get settingsPedalPresetAirTurn => 'AirTurn';
+
+  @override
+  String get settingsPedalPresetBlueTurn => 'iRig BlueTurn';
+
+  @override
+  String get settingsPedalPresetDonner => 'Donner / genérico';
+
+  @override
+  String get settingsPedalPresetCustom => 'Personalizado';
+
+  @override
+  String get settingsPedalCustomNext => 'Tecla siguiente';
+
+  @override
+  String get settingsPedalCustomPrev => 'Tecla anterior';
+
+  @override
+  String get settingsPedalCustomUnset => 'Sin definir';
+
+  @override
+  String get settingsPedalCustomCaptureTitle => 'Pulsa una tecla del pedal';
+
+  @override
+  String get settingsPedalCustomCaptureMessage =>
+      'Pulsa el botón del pedal que quieres asignar. Empareja el pedal primero en los ajustes Bluetooth del sistema.';
+
+  @override
+  String get settingsPedalCustomCaptureCancel => 'Cancelar';
+
+  @override
   String get settingsNotifications =>
       'Permitir notificaciones en este dispositivo';
 

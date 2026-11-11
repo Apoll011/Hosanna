@@ -3958,6 +3958,108 @@ abstract class AppLocalizations {
   /// **'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores'**
   String get settingsSyncAnnotationsDesc;
 
+  /// No description provided for @settingsPedalEnabled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pedais page-turner'**
+  String get settingsPedalEnabled;
+
+  /// No description provided for @settingsPedalEnabledDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usa um pedal Bluetooth emparelhado nas definições do sistema. A maioria dos pedais aparece como teclado.'**
+  String get settingsPedalEnabledDesc;
+
+  /// No description provided for @settingsPedalActionMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ação do pedal'**
+  String get settingsPedalActionMode;
+
+  /// No description provided for @settingsPedalActionNavigate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cântico seguinte / anterior'**
+  String get settingsPedalActionNavigate;
+
+  /// No description provided for @settingsPedalActionScroll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deslizar página'**
+  String get settingsPedalActionScroll;
+
+  /// No description provided for @settingsPedalPreset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disposição do pedal'**
+  String get settingsPedalPreset;
+
+  /// No description provided for @settingsPedalPresetUniversal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Universal'**
+  String get settingsPedalPresetUniversal;
+
+  /// No description provided for @settingsPedalPresetAirTurn.
+  ///
+  /// In pt, this message translates to:
+  /// **'AirTurn'**
+  String get settingsPedalPresetAirTurn;
+
+  /// No description provided for @settingsPedalPresetBlueTurn.
+  ///
+  /// In pt, this message translates to:
+  /// **'iRig BlueTurn'**
+  String get settingsPedalPresetBlueTurn;
+
+  /// No description provided for @settingsPedalPresetDonner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Donner / genérico'**
+  String get settingsPedalPresetDonner;
+
+  /// No description provided for @settingsPedalPresetCustom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personalizado'**
+  String get settingsPedalPresetCustom;
+
+  /// No description provided for @settingsPedalCustomNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tecla seguinte'**
+  String get settingsPedalCustomNext;
+
+  /// No description provided for @settingsPedalCustomPrev.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tecla anterior'**
+  String get settingsPedalCustomPrev;
+
+  /// No description provided for @settingsPedalCustomUnset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não definida'**
+  String get settingsPedalCustomUnset;
+
+  /// No description provided for @settingsPedalCustomCaptureTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prima uma tecla do pedal'**
+  String get settingsPedalCustomCaptureTitle;
+
+  /// No description provided for @settingsPedalCustomCaptureMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prima o botão do pedal que pretende atribuir. Emparelhe o pedal primeiro nas definições Bluetooth do sistema.'**
+  String get settingsPedalCustomCaptureMessage;
+
+  /// No description provided for @settingsPedalCustomCaptureCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get settingsPedalCustomCaptureCancel;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In pt, this message translates to:
