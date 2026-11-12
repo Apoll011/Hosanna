@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/folders/domain/folder_explorer_controller.dart';
+import '../features/notifications/data/local_notification_service.dart';
 import '../features/notifications/presentation/foreground_notification_listener.dart';
 import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../features/setup/data/setup_controller.dart';
@@ -31,9 +32,6 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   StreamSubscription<Uri>? _launcherLinks;
   StreamSubscription<String>? _notificationTaps;
   ProviderContainer? _container;
-
-  /// Root messenger used to surface foreground FCM messages in-app.
-  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Launcher shortcut target waiting for the session/organization to resolve.
   String? _pendingLocation;
@@ -79,6 +77,9 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       ref.read(authControllerProvider.notifier).checkSession();
       ref.read(syncControllerProvider.notifier).restore();
       _ensureNotificationPermission();
+      // Initialise the local notification plugin so foreground FCM messages
+      // are shown as proper OS banners instead of in-app SnackBars.
+      LocalNotificationService.instance.init();
     });
 
     // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
@@ -236,13 +237,10 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      // Lets the app present foreground FCM messages from above the Navigator.
-      scaffoldMessengerKey: _messengerKey,
-      // Both sit above the Navigator: the listener surfaces foreground pushes,
-      // and the gate overlays the first-run notification consent prompt.
+      // Both sit above the Navigator: the listener re-posts foreground FCM
+      // messages as proper OS banners, and the gate overlays the first-run
+      // notification consent prompt.
       builder: (context, child) => ForegroundNotificationListener(
-        messengerKey: _messengerKey,
-        onOpen: _openLocation,
         child: NotificationConsentGate(
           child: child ?? const SizedBox.shrink(),
         ),

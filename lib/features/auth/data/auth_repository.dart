@@ -93,6 +93,42 @@ class AuthRepository {
     );
   }
 
+  /// POST /api/notifications/devices — register/rotate the canonical PushDevice.
+  ///
+  /// Prefer this over session.fcm alone; the unified notification system sends
+  /// to PushDevice rows and prunes invalid tokens from there.
+  Future<void> registerPushDevice({
+    required String token,
+    bool enabled = true,
+    String platform = 'unknown',
+    String appId = 'musician',
+  }) async {
+    await _guard(
+      () => _dio.post<dynamic>(
+        '/api/notifications/devices',
+        data: {
+          'token': token,
+          'enabled': enabled,
+          'platform': platform,
+          'appId': appId,
+        },
+      ),
+    );
+  }
+
+  /// DELETE /api/notifications/devices — disable a token for this user.
+  Future<void> disablePushDevice({String? token}) async {
+    await _guard(
+      () => _dio.delete<dynamic>(
+        '/api/notifications/devices',
+        data: {
+          'token': ?token,
+          'enabled': false,
+        },
+      ),
+    );
+  }
+
   /// Signs in (or signs up) with a native provider credential.
   ///
   /// POSTs Better Auth's `/api/auth/sign-in/social` with the provider id and

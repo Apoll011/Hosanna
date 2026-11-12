@@ -219,37 +219,66 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    // The session naturally stops being valid server-side; the FCM token is
-    // intentionally left on the (now dead) session rather than deleted first.
+    // Disable the PushDevice before revoking the session so the server does
+    // not keep delivering to a token that no longer belongs to an active login.
+    final token = state.session?.fcm;
+    if (token != null && token.isNotEmpty) {
+      try {
+        await _repository.disablePushDevice(token: token);
+      } catch (_) {
+        // Best-effort — session revoke hooks also detach devices by sessionId.
+      }
+    }
     await _repository.signOut();
     await _clearSession();
   }
 
   // ── FCM / per-session notifications ──────────────────────────────────────
 
-  /// Pushes this device's current FCM token onto the authenticated session.
+  /// Registers this device's FCM token with the PushDevice registry (and keeps
+  /// session.fcm in sync for backwards compatibility).
   ///
   /// Centralised so sign-in, sign-up, startup and token refresh all funnel
-  /// through one place. No request is made when the token is missing or the
-  /// session already carries the same token. Does nothing when signed out.
+  /// through one place. No request is made when the token is missing. Does
+  /// nothing when signed out.
   Future<void> syncFcmToken() async {
     final session = state.session;
     if (session == null) return;
     final token = await _fcm.getToken();
     if (token == null || token.isEmpty) return;
-    if (session.fcm == token) return;
     try {
-      await updateCurrentSession(fcm: token);
+      final consented = await _consent.read();
+      await _repository.registerPushDevice(
+        token: token,
+        enabled: consented == true,
+      );
+      // Mirror onto the session model so local UI stays consistent.
+      if (session.fcm != token || session.notify != (consented == true)) {
+        await updateCurrentSession(fcm: token, notify: consented == true);
+      }
     } catch (_) {
       // Best-effort backstop — retried on the next startup/token refresh, so a
       // failed sync never turns a successful sign-in into a failure.
     }
   }
 
-  /// Enables/disables server notifications for **this** session only
-  /// (`session.notify`), flipping it between true and false. Independent of the
-  /// OS notification permission.
-  Future<void> setNotify(bool value) => updateCurrentSession(notify: value);
+  /// Enables/disables server notifications for **this** device.
+  /// Updates PushDevice.enabled and session.notify together.
+  Future<void> setNotify(bool value) async {
+    final token = await _fcm.getToken() ?? state.session?.fcm;
+    if (token != null && token.isNotEmpty) {
+      try {
+        if (value) {
+          await _repository.registerPushDevice(token: token, enabled: true);
+        } else {
+          await _repository.disablePushDevice(token: token);
+        }
+      } catch (_) {
+        // Fall through to session update.
+      }
+    }
+    await updateCurrentSession(notify: value, fcm: token);
+  }
 
   /// Records the user's consent decision for this device.
   Future<void> recordNotificationConsent(bool consented) =>
@@ -298,9 +327,14 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> _onFcmTokenRefresh(String token) async {
     final session = state.session;
-    if (session == null || token.isEmpty || session.fcm == token) return;
+    if (session == null || token.isEmpty) return;
     try {
-      await updateCurrentSession(fcm: token);
+      final consented = await _consent.read();
+      await _repository.registerPushDevice(
+        token: token,
+        enabled: consented == true,
+      );
+      await updateCurrentSession(fcm: token, notify: consented == true);
     } catch (_) {
       // A failed sync is retried on the next refresh/startup.
     }

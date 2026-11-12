@@ -63,7 +63,7 @@ class _NoopSyncController extends SyncController {
       );
 
   @override
-  Future<void> syncAll() async {}
+  Future<void> syncAll({String? organizationId}) async {}
 
   @override
   Future<void> resetForOrganizationSwitch({String? organizationId}) async {}
