@@ -41,7 +41,7 @@ class LocalNotificationService {
     );
 
     try {
-      await _plugin.initialize(settings);
+      await _plugin.initialize(settings: settings);
 
       // Create the notification channel on Android 8+.  This is idempotent;
       // Android ignores duplicate-channel calls for an already-registered id.
