@@ -856,7 +856,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get songsLintInvalidCapo =>
-      'Capo should be a fret number from 0 to 12.';
+      'Capo should be a fret number from 0 to 11.';
+
+  @override
+  String get songsLintInvalidKeyShift =>
+      'Key Shift should be a positive number.';
 
   @override
   String get songsLintInvalidTime =>

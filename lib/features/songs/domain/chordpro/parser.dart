@@ -32,8 +32,7 @@ class LineAst {
     this.startBarline,
   });
 
-  final String
-  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
+  final String type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
@@ -136,21 +135,14 @@ List<SegmentAst> parseLineSegments(String lineText) {
     if (lastIndex == 0 && textBefore.isEmpty) {
       currentChord = chord;
     } else {
-      segments.add(
-        SegmentAst(
-          chord: currentChord,
-          text: textBefore,
-        ),
-      );
+      segments.add(SegmentAst(chord: currentChord, text: textBefore));
       currentChord = chord;
     }
     lastIndex = match.end;
   }
 
   final remainingText = lineText.substring(lastIndex);
-  segments.add(
-    SegmentAst(chord: currentChord, text: remainingText),
-  );
+  segments.add(SegmentAst(chord: currentChord, text: remainingText));
 
   return segments;
 }
@@ -189,6 +181,8 @@ const Map<String, String> _aliasMap = {
   'key_notes': 'key_note',
   'key notes': 'key_note',
   'kn': 'key_note',
+  'keyshift': 'key_shift',
+  'key_shift': 'key_shift',
   'yt': 'youtube',
   // variant directives
   'start_of_version': 'start_of_version',
@@ -525,9 +519,7 @@ ChordProDocument parseChordProDocument(String content) {
 
       for (final seg in parsedSegments) {
         if (seg.chord.isNotEmpty) {
-          currentChords.add(
-            SegmentAst(chord: seg.chord, text: ''),
-          );
+          currentChords.add(SegmentAst(chord: seg.chord, text: ''));
           hasSeenChord = true;
         }
 

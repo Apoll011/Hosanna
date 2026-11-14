@@ -118,10 +118,10 @@ class _ChordProEditorState extends State<ChordProEditor> {
 
   TextStyle _baseStyle(BuildContext context) {
     return Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontFamily: 'monospace',
-          fontSize: _fontSize,
-          height: _lineHeight,
-        );
+      fontFamily: 'monospace',
+      fontSize: _fontSize,
+      height: _lineHeight,
+    );
   }
 
   /// Visual height of each logical line after soft-wrapping to [maxWidth].
@@ -154,7 +154,9 @@ class _ChordProEditorState extends State<ChordProEditor> {
     if (d.offset < 0 || d.line <= 0) return;
     final text = widget.controller.text;
     final offset = d.offset.clamp(0, text.length).toInt();
-    final end = (d.offset + math.max(d.length, 0)).clamp(0, text.length).toInt();
+    final end = (d.offset + math.max(d.length, 0))
+        .clamp(0, text.length)
+        .toInt();
     widget.controller.selection = TextSelection(
       baseOffset: offset,
       extentOffset: end,
@@ -255,6 +257,8 @@ class _ChordProEditorState extends State<ChordProEditor> {
         return l10n.songsLintInvalidTime;
       case ChordProDiagnosticCode.invalidDuration:
         return l10n.songsLintInvalidDuration;
+      case ChordProDiagnosticCode.invalidKeyShift:
+        return l10n.songsLintInvalidKeyShift;
     }
   }
 
@@ -279,8 +283,8 @@ class _ChordProEditorState extends State<ChordProEditor> {
       ChordProSeverity.info,
     );
 
-    final gutterWidth = 12.0 +
-        (math.max(2, _lineCount.toString().length) * (_fontSize * 0.62));
+    final gutterWidth =
+        12.0 + (math.max(2, _lineCount.toString().length) * (_fontSize * 0.62));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -312,7 +316,11 @@ class _ChordProEditorState extends State<ChordProEditor> {
                 builder: (context, constraints) {
                   final textWidth = math.max(
                     1.0,
-                    constraints.maxWidth - gutterWidth - 1 - _padLeft - _padRight,
+                    constraints.maxWidth -
+                        gutterWidth -
+                        1 -
+                        _padLeft -
+                        _padRight,
                   );
                   if ((textWidth - _editorWidth).abs() > 0.5) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -349,8 +357,9 @@ class _ChordProEditorState extends State<ChordProEditor> {
                                   padTop: _padTop,
                                   textStyle: baseStyle.copyWith(
                                     fontSize: _fontSize * 0.85,
-                                    color: scheme.onSurfaceVariant
-                                        .withValues(alpha: 0.65),
+                                    color: scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.65,
+                                    ),
                                     fontWeight: FontWeight.w500,
                                     height: 1,
                                   ),
@@ -385,8 +394,9 @@ class _ChordProEditorState extends State<ChordProEditor> {
                             filled: false,
                             hintText: widget.hintText ?? l10n.songsChordProHint,
                             hintStyle: baseStyle.copyWith(
-                              color: scheme.onSurfaceVariant
-                                  .withValues(alpha: 0.45),
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.45,
+                              ),
                               fontWeight: FontWeight.w400,
                             ),
                             border: InputBorder.none,
@@ -474,16 +484,8 @@ class _InsertToolbar extends StatelessWidget {
               label: l10n.songsEditorInsertBridge,
               onPressed: onBridge,
             ),
-            _Chip(
-              icon: Icons.grid_on_outlined,
-              label: 'Tab',
-              onPressed: onTab,
-            ),
-            _Chip(
-              icon: Icons.tag_outlined,
-              label: '[ ]',
-              onPressed: onChord,
-            ),
+            _Chip(icon: Icons.grid_on_outlined, label: 'Tab', onPressed: onTab),
+            _Chip(icon: Icons.tag_outlined, label: '[ ]', onPressed: onChord),
             _Chip(
               icon: Icons.comment_outlined,
               label: l10n.songsEditorInsertComment,
@@ -568,9 +570,8 @@ class _DiagnosticsBar extends StatelessWidget {
             Expanded(
               child: Text(
                 l10n.songsLintAllClear,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
           ],
@@ -606,9 +607,8 @@ class _DiagnosticsBar extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   l10n.songsLintSummary(errors, warnings, infos),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -645,8 +645,7 @@ class _DiagnosticsBar extends StatelessWidget {
                           Icon(
                             switch (d.severity) {
                               ChordProSeverity.error => Icons.error_rounded,
-                              ChordProSeverity.warning =>
-                                Icons.warning_rounded,
+                              ChordProSeverity.warning => Icons.warning_rounded,
                               ChordProSeverity.info => Icons.info_outline,
                             },
                             size: 14,
@@ -657,9 +656,7 @@ class _DiagnosticsBar extends StatelessWidget {
                             width: 52,
                             child: Text(
                               lineLabel,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
+                              style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                     fontFeatures: const [
@@ -671,9 +668,7 @@ class _DiagnosticsBar extends StatelessWidget {
                           Expanded(
                             child: Text(
                               localize(d),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(height: 1.25),
                             ),
                           ),
@@ -726,14 +721,10 @@ class _GutterPainter extends CustomPainter {
       if (severity == ChordProSeverity.error ||
           severity == ChordProSeverity.warning) {
         final paint = Paint()
-          ..color = (severity == ChordProSeverity.error
-                  ? errorColor
-                  : warningColor)
-              .withValues(alpha: 0.18);
-        canvas.drawRect(
-          Rect.fromLTWH(0, y - 1, size.width, extent),
-          paint,
-        );
+          ..color =
+              (severity == ChordProSeverity.error ? errorColor : warningColor)
+                  .withValues(alpha: 0.18);
+        canvas.drawRect(Rect.fromLTWH(0, y - 1, size.width, extent), paint);
       }
 
       final tp = TextPainter(
@@ -743,7 +734,10 @@ class _GutterPainter extends CustomPainter {
       )..layout(minWidth: size.width - 8, maxWidth: size.width - 8);
       tp.paint(
         canvas,
-        Offset(4, y + (math.min(extent, textStyle.fontSize! * 1.45) - tp.height) / 2),
+        Offset(
+          4,
+          y + (math.min(extent, textStyle.fontSize! * 1.45) - tp.height) / 2,
+        ),
       );
       y += extent;
     }

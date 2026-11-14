@@ -52,6 +52,7 @@ class MetadataHeader extends StatelessWidget {
     required this.renderedKey,
     required this.effectiveCapo,
     required this.transposeVal,
+    this.capoLabel,
     this.onKeyTap,
     this.onYoutubeTap,
   });
@@ -61,6 +62,7 @@ class MetadataHeader extends StatelessWidget {
   final String renderedKey;
   final int effectiveCapo;
   final int transposeVal;
+  final String? capoLabel;
 
   /// Opens the transpose controls; makes the key pill tappable when set.
   final VoidCallback? onKeyTap;
@@ -111,7 +113,9 @@ class MetadataHeader extends StatelessWidget {
           onTap: onKeyTap,
           highlighted: transposeVal != 0,
         ),
-      if (effectiveCapo > 0) ...[
+      if (capoLabel != null) ...[
+        _Pill(text: capoLabel!),
+      ] else if (effectiveCapo > 0) ...[
         _Pill(text: l10n.songCapoPill('$effectiveCapo')),
         _Pill(text: l10n.songShapePill(renderedKey)),
       ],

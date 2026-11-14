@@ -862,6 +862,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songsLintInvalidCapo => 'La cejilla debe ser un traste de 0 a 12.';
 
   @override
+  String get songsLintInvalidKeyShift =>
+      'El cambio de tonalidad debe ser un número positivo.';
+
+  @override
   String get songsLintInvalidTime => 'El compás debe verse como 4/4 o 6/8.';
 
   @override

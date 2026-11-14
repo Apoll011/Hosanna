@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/chordpro/chord_dictionary.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/parser.dart';
+import '../../domain/chordpro/resolve_chords.dart';
 import '../../domain/chordpro/transpose.dart';
 import 'widgets/chord_roll.dart';
 import 'widgets/chord_sheet.dart';
@@ -37,6 +38,7 @@ class ChordProRenderer extends StatefulWidget {
     this.variantId = 'default',
     this.instrumentPreferences = const InstrumentPreferences(),
     this.bottomInset = 0,
+    this.capoLabel,
     this.onKeyTap,
     this.onYoutubeTap,
   });
@@ -50,6 +52,7 @@ class ChordProRenderer extends StatefulWidget {
   final String instrument;
   final bool showDiagrams;
   final bool sectionColorBackground;
+  final String? capoLabel;
 
   /// Active variant id — delegates variant selection to the caller.
   /// Defaults to `'default'` (the main song body).
@@ -173,6 +176,14 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         renderedKey: transposeChord(key, _effectiveTranspose),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
+        capoLabel: widget.capoLabel ??
+            resolveChords(
+              chords: _song.uniqueChords,
+              key: metadata['key'],
+              keyShift: widget.transpose,
+              capo: widget.capo,
+              instrument: widget.instrument,
+            ).capoLabel,
         onKeyTap: widget.onKeyTap,
         onYoutubeTap: widget.onYoutubeTap,
       ),

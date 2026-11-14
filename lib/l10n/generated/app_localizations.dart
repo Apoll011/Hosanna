@@ -1648,6 +1648,12 @@ abstract class AppLocalizations {
   /// **'O capo deve ser um traste de 0 a 12.'**
   String get songsLintInvalidCapo;
 
+  /// No description provided for @songsLintInvalidKeyShift.
+  ///
+  /// In pt, this message translates to:
+  /// **'A mudança de tonalidade deve ser um número positivo.'**
+  String get songsLintInvalidKeyShift;
+
   /// No description provided for @songsLintInvalidTime.
   ///
   /// In pt, this message translates to:

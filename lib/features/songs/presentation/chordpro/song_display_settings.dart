@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/providers.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
+import '../../domain/chordpro/resolve_chords.dart';
 import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
@@ -114,6 +115,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   /// standalone song / nothing. Changes under a scope are written to prefs.
   String? _transpositionScopeKey;
 
+  /// Directive defaults for the current song ({keyshift}, {capo}).
+  ({int transpose, int capo}) _directiveDefaults = (transpose: 0, capo: 0);
+
   void _restore() {
     InstrumentPreferences instrumentPreferences =
         const InstrumentPreferences();
@@ -152,30 +156,82 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void setCapo(int value) {
-    if (state.capo == value) return;
-    state = state.copyWith(capo: value);
+    final clamped = value.clamp(0, 11);
+    if (state.capo == clamped) return;
+    state = state.copyWith(capo: clamped);
     _persistScopedTransposition();
   }
 
   void resetTransposition() {
-    if (state.transpose == 0 && state.capo == 0) {
+    if (state.transpose == _directiveDefaults.transpose &&
+        state.capo == _directiveDefaults.capo) {
       _persistScopedTransposition();
       return;
     }
-    state = state.copyWith(transpose: 0, capo: 0);
+    state = state.copyWith(
+      transpose: _directiveDefaults.transpose,
+      capo: _directiveDefaults.capo,
+    );
     _persistScopedTransposition();
+  }
+
+  /// Seeds transposition defaults from document directives ({keyshift}, {capo}).
+  void seedDirectiveDefaults({
+    required int keyShift,
+    required int capo,
+  }) {
+    _directiveDefaults = (transpose: keyShift, capo: capo);
+    if (_transpositionScopeKey != null) {
+      final stored = _readScopedSongSettings(_transpositionScopeKey!);
+      if (!stored.hasStored) {
+        state = state.copyWith(transpose: keyShift, capo: capo);
+      }
+    } else {
+      state = state.copyWith(transpose: keyShift, capo: capo);
+    }
+  }
+
+  /// Enters a standalone song view.
+  void enterSongStandalone({required String songId, SongAst? song}) {
+    final key = 'standalone|$songId';
+    if (_transpositionScopeKey == key) return;
+    _transpositionScopeKey = key;
+    if (song != null) {
+      _directiveDefaults = (
+        transpose: parseKeyShiftValue(song.metadata['keyShift']),
+        capo: parseCapoValue(song.metadata['capo']),
+      );
+    }
+    final stored = _readScopedSongSettings(key);
+    state = state.copyWith(
+      transpose:
+          stored.hasStored ? stored.transpose : _directiveDefaults.transpose,
+      capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
+      variantId: stored.variantId,
+    );
   }
 
   /// Loads the saved transpose/capo/variant for this service song (or defaults)
   /// and makes later changes persist under that pair.
-  void enterServiceSong({required String serviceId, required String songId}) {
+  void enterServiceSong({
+    required String serviceId,
+    required String songId,
+    SongAst? song,
+  }) {
     final key = _scopeKey(serviceId, songId);
     if (_transpositionScopeKey == key) return;
     _transpositionScopeKey = key;
+    if (song != null) {
+      _directiveDefaults = (
+        transpose: parseKeyShiftValue(song.metadata['keyShift']),
+        capo: parseCapoValue(song.metadata['capo']),
+      );
+    }
     final stored = _readScopedSongSettings(key);
     state = state.copyWith(
-      transpose: stored.transpose,
-      capo: stored.capo,
+      transpose:
+          stored.hasStored ? stored.transpose : _directiveDefaults.transpose,
+      capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
       variantId: stored.variantId,
     );
   }
@@ -186,6 +242,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   /// never inherits the previous one's transposition or variant.
   void leaveTranspositionScope() {
     _transpositionScopeKey = null;
+    _directiveDefaults = (transpose: 0, capo: 0);
     if (state.transpose == 0 &&
         state.capo == 0 &&
         state.variantId == 'default') {
@@ -197,13 +254,17 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static String _scopeKey(String serviceId, String songId) =>
       '$serviceId|$songId';
 
-  ({int transpose, int capo, String variantId}) _readScopedSongSettings(
-    String key,
-  ) {
+  ({bool hasStored, int transpose, int capo, String variantId})
+  _readScopedSongSettings(String key) {
     final map = _loadTranspositionMap();
     final entry = map[key];
     if (entry is! Map) {
-      return (transpose: 0, capo: 0, variantId: 'default');
+      return (
+        hasStored: false,
+        transpose: _directiveDefaults.transpose,
+        capo: _directiveDefaults.capo,
+        variantId: 'default',
+      );
     }
     final transpose = (entry['t'] as num?)?.toInt() ?? 0;
     final capo = (entry['c'] as num?)?.toInt() ?? 0;
@@ -211,7 +272,12 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     final variantId = variantRaw is String && variantRaw.isNotEmpty
         ? variantRaw
         : 'default';
-    return (transpose: transpose, capo: capo, variantId: variantId);
+    return (
+      hasStored: true,
+      transpose: transpose,
+      capo: capo,
+      variantId: variantId,
+    );
   }
 
   void _persistScopedTransposition() {
@@ -219,8 +285,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     if (key == null) return;
 
     final map = _loadTranspositionMap();
-    if (state.transpose == 0 &&
-        state.capo == 0 &&
+    if (state.transpose == _directiveDefaults.transpose &&
+        state.capo == _directiveDefaults.capo &&
         state.variantId == 'default') {
       map.remove(key);
     } else {

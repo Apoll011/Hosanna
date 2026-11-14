@@ -142,12 +142,14 @@ class _SongReaderState extends ConsumerState<SongReader>
     _loadAnnotationForCurrentSong();
   }
 
-  /// Service songs restore their own transpose/capo; standalone songs start at 0.
+  /// Service songs restore their own transpose/capo; standalone songs seed from directives.
   void _applyTranspositionScope() {
     final serviceId = widget.serviceId;
     final songId = widget.songId;
     if (serviceId != null && songId != null) {
       _displaySettings.enterServiceSong(serviceId: serviceId, songId: songId);
+    } else if (songId != null) {
+      _displaySettings.enterSongStandalone(songId: songId);
     } else {
       _displaySettings.leaveTranspositionScope();
     }

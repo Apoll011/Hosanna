@@ -471,20 +471,41 @@ class _CapoSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
+    return Column(
       children: [
-        for (final fret in [0, 1, 2, 3, 4, 5])
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: _CapoChip(
-                label: fret == 0 ? '-' : '$fret',
-                selected: value == fret,
-                onTap: () => onChanged(fret),
-                theme: theme,
+        Row(
+          children: [
+            for (final fret in [0, 1, 2, 3, 4, 5])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _CapoChip(
+                    label: fret == 0 ? '-' : '$fret',
+                    selected: value == fret,
+                    onTap: () => onChanged(fret),
+                    theme: theme,
+                  ),
+                ),
               ),
-            ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            for (final fret in [6, 7, 8, 9, 10, 11])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _CapoChip(
+                    label: '$fret',
+                    selected: value == fret,
+                    onTap: () => onChanged(fret),
+                    theme: theme,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }

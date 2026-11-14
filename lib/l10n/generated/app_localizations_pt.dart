@@ -860,6 +860,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsLintInvalidCapo => 'O capo deve ser um traste de 0 a 12.';
 
   @override
+  String get songsLintInvalidKeyShift =>
+      'A mudança de tonalidade deve ser um número positivo.';
+
+  @override
   String get songsLintInvalidTime => 'O compasso deve parecer 4/4 ou 6/8.';
 
   @override
