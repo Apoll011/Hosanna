@@ -1701,6 +1701,7 @@ class _SongDetailBody extends ConsumerWidget {
               content: song.content,
               notes: notes,
               serviceId: serviceId,
+              showYoutube: false,
               songId: songId,
               canPrev: canPrev,
               canNext: canNext,
