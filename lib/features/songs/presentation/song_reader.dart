@@ -49,6 +49,7 @@ class SongReader extends ConsumerStatefulWidget {
     this.canPrev = false,
     this.canNext = false,
     this.positionLabel,
+    this.showYoutube = true,
   });
 
   final String content;
@@ -62,6 +63,9 @@ class SongReader extends ConsumerStatefulWidget {
 
   /// Whether annotation mode is currently active.
   final bool isAnnotating;
+
+  ///If set to true even with videoURL does not show the video button
+  final bool showYoutube;
 
   /// When set (service song reader), shows a floating annotation toggle.
   final VoidCallback? onToggleAnnotation;
@@ -744,7 +748,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                             onYoutubeTap: videoId == null
                                 ? null
                                 : () =>
-                                    setState(() => _playerVideoId = videoId),
+                                      setState(() => _playerVideoId = videoId),
                           ),
                         ),
                         if (hasServiceSong)
@@ -763,135 +767,135 @@ class _SongReaderState extends ConsumerState<SongReader>
             ),
           ),
 
-        if (widget.isAnnotating && _hasPendingRemoteUpdate)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 12,
-            child: SafeArea(
-              bottom: false,
-              child: Material(
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.sync_rounded,
-                            size: 18,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onTertiaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.annotationRemoteChanges,
-                              style: Theme.of(context).textTheme.bodyMedium,
+          if (widget.isAnnotating && _hasPendingRemoteUpdate)
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 12,
+              child: SafeArea(
+                bottom: false,
+                child: Material(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sync_rounded,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onTertiaryContainer,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          TextButton(
-                            onPressed: _dismissPendingRemoteUpdate,
-                            child: Text(l10n.annotationKeepMine),
-                          ),
-                          FilledButton(
-                            onPressed: _acceptPendingRemoteUpdate,
-                            child: Text(l10n.annotationReload),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.annotationRemoteChanges,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            TextButton(
+                              onPressed: _dismissPendingRemoteUpdate,
+                              child: Text(l10n.annotationKeepMine),
+                            ),
+                            FilledButton(
+                              onPressed: _acceptPendingRemoteUpdate,
+                              child: Text(l10n.annotationReload),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-        // Bottom overlay: annotation toolbar or floating controls, stacked
-        // above the YouTube mini player when it is open.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 20,
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (widget.isAnnotating) ...[
-                  if (widget.onToggleAnnotation != null)
+          // Bottom overlay: annotation toolbar or floating controls, stacked
+          // above the YouTube mini player when it is open.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.isAnnotating) ...[
+                    if (widget.onToggleAnnotation != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16, bottom: 12),
+                          child: _buildAnnotationFab(theme: theme, l10n: l10n),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _HosannaAnnotationToolbar(
+                        canvasKey: _canvasKey,
+                        tool: _canvasTool,
+                        onToolChanged: (t) => setState(() => _canvasTool = t),
+                        color: _canvasColor,
+                        onColorChanged: (c) => setState(() => _canvasColor = c),
+                        strokeWidth: _canvasStrokeWidth,
+                        onStrokeWidthChanged: (w) =>
+                            setState(() => _canvasStrokeWidth = w),
+                        onStrokeCommitted: _saveCurrentAnnotation,
+                        onClearAll: () {
+                          setState(() {});
+                          _saveCurrentAnnotation();
+                        },
+                      ),
+                    ),
+                  ] else
                     Align(
                       alignment: Alignment.centerRight,
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 16, bottom: 12),
-                        child: _buildAnnotationFab(theme: theme, l10n: l10n),
+                        padding: const EdgeInsets.only(right: 16),
+                        child: _buildFloatingControls(
+                          theme: theme,
+                          l10n: l10n,
+                          showNav: showNav,
+                          videoId: videoId,
+                          playerOpen: playerVideoId != null,
+                        ),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: _HosannaAnnotationToolbar(
-                      canvasKey: _canvasKey,
-                      tool: _canvasTool,
-                      onToolChanged: (t) => setState(() => _canvasTool = t),
-                      color: _canvasColor,
-                      onColorChanged: (c) => setState(() => _canvasColor = c),
-                      strokeWidth: _canvasStrokeWidth,
-                      onStrokeWidthChanged: (w) =>
-                          setState(() => _canvasStrokeWidth = w),
-                      onStrokeCommitted: _saveCurrentAnnotation,
-                      onClearAll: () {
-                        setState(() {});
-                        _saveCurrentAnnotation();
-                      },
-                    ),
-                  ),
-                ] else
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: _buildFloatingControls(
-                        theme: theme,
-                        l10n: l10n,
-                        showNav: showNav,
-                        videoId: videoId,
-                        playerOpen: playerVideoId != null,
+                  if (playerVideoId != null) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: YoutubeMiniPlayer(
+                        key: ValueKey(playerVideoId),
+                        videoId: playerVideoId,
+                        fallbackTitle: metadata?['title'],
+                        onClose: _closeYoutubePlayer,
                       ),
                     ),
-                  ),
-                if (playerVideoId != null) ...[
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: YoutubeMiniPlayer(
-                      key: ValueKey(playerVideoId),
-                      videoId: playerVideoId,
-                      fallbackTitle: metadata?['title'],
-                      onClose: _closeYoutubePlayer,
-                    ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
         ],
       ),
     );
@@ -909,7 +913,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (videoId != null) ...[
+        if (videoId != null && widget.showYoutube) ...[
           _SongReaderFab(
             onPressed: () {
               if (playerOpen) {
@@ -974,9 +978,7 @@ class _SongReaderState extends ConsumerState<SongReader>
           ? theme.colorScheme.surface
           : theme.colorScheme.onPrimary,
       tooltip: l10n.annotationModeTitle,
-      child: Icon(
-        widget.isAnnotating ? Icons.draw : Icons.draw_outlined,
-      ),
+      child: Icon(widget.isAnnotating ? Icons.draw : Icons.draw_outlined),
     );
   }
 }
