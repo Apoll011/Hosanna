@@ -57,8 +57,10 @@ void main() {
       expect(ChordNotationConverter.formatChord('Gb', german), 'Ges');
       expect(ChordNotationConverter.formatChord('Bb', german), 'B');
       expect(ChordNotationConverter.formatChord('B', german), 'H');
-      expect(ChordNotationConverter.formatChord('C#', sargam), 'Sa#');
-      expect(ChordNotationConverter.formatChord('Db', sargam), 'Reb');
+      expect(ChordNotationConverter.formatChord('C#', sargam), 're');
+      expect(ChordNotationConverter.formatChord('Db', sargam), 're');
+      expect(ChordNotationConverter.formatChord('F#', sargam), 'Ma#');
+      expect(ChordNotationConverter.formatChord('Gb', sargam), 'Ma#');
     });
 
     test('maps every sharp and flat chromatic spelling in each system', () {
