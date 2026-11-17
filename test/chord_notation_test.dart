@@ -177,8 +177,8 @@ void main() {
       const sourceChord = 'Cmaj7/E';
       const source = '{key: C}\n[Cmaj7/E]test';
       final song = parseChordProDocument(source);
-      final canonicalChord = song.defaultVersion.body.single.lines.single
-          .segments!.single.chord;
+      final canonicalChord =
+          song.defaultVersion.body.single.lines.single.segments!.single.chord;
       final transposed = transposeChord(sourceChord, 2);
       expect(transposed, 'Dmaj7/F#');
       expect(
