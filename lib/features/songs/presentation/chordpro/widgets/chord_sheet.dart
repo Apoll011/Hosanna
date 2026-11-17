@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/chordpro/chord_dictionary.dart';
+import '../../../domain/chordpro/chord_notation.dart';
 import '../../../domain/chordpro/instruments/instruments.dart';
 import '../chord_diagrams.dart';
 import '../instrument_selector.dart';
@@ -18,6 +19,7 @@ Future<void> showChordSheet(
   required int capo,
   required InstrumentPreferences preferences,
   required ChordFingering? Function(String chord) fingeringFor,
+  required ChordNotationSystem chordNotation,
 }) {
   final list = chords.contains(chord) ? chords : [chord, ...chords];
   return showModalBottomSheet<void>(
@@ -35,6 +37,7 @@ Future<void> showChordSheet(
       capo: capo,
       preferences: preferences,
       fingeringFor: fingeringFor,
+      chordNotation: chordNotation,
     ),
   );
 }
@@ -48,6 +51,7 @@ class ChordSheet extends StatefulWidget {
     required this.capo,
     required this.preferences,
     required this.fingeringFor,
+    required this.chordNotation,
   });
 
   final List<String> chords;
@@ -56,6 +60,7 @@ class ChordSheet extends StatefulWidget {
   final int capo;
   final InstrumentPreferences preferences;
   final ChordFingering? Function(String chord) fingeringFor;
+  final ChordNotationSystem chordNotation;
 
   @override
   State<ChordSheet> createState() => _ChordSheetState();
@@ -79,6 +84,10 @@ class _ChordSheetState extends State<ChordSheet> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final chord = widget.chords[_index];
+    final displayChord = ChordNotationConverter.formatChord(
+      chord,
+      widget.chordNotation,
+    );
     final fingering = widget.fingeringFor(chord);
     final voicing = fingering?.forInstrument(_instrument);
     final supportsCapo = instrumentRegistry.resolve(_instrument).supportsCapo;
@@ -109,7 +118,7 @@ class _ChordSheetState extends State<ChordSheet> {
                     child: Column(
                       children: [
                         Text(
-                          l10n.songChordTitle(chord),
+                          l10n.songChordTitle(displayChord),
                           textAlign: TextAlign.center,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -171,7 +180,7 @@ class _ChordSheetState extends State<ChordSheet> {
                       : Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            l10n.songChordNotFound(chord),
+                            l10n.songChordNotFound(displayChord),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

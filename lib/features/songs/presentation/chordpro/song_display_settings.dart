@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../app/providers.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/resolve_chords.dart';
+import '../../domain/chordpro/chord_notation.dart';
 import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
@@ -32,6 +33,7 @@ class SongDisplaySettings {
     this.sectionColorBackground = false,
     this.autoScrollSpeed = 5,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
     this.instrumentPreferences = const InstrumentPreferences(),
   });
 
@@ -50,6 +52,8 @@ class SongDisplaySettings {
 
   /// Active variant id. Persisted only while scoped to a service song.
   final String variantId;
+
+  final String chordNotationId;
 
   /// Per-instrument voicing / diagram preferences.
   final InstrumentPreferences instrumentPreferences;
@@ -75,6 +79,7 @@ class SongDisplaySettings {
     bool? sectionColorBackground,
     double? autoScrollSpeed,
     String? variantId,
+    String? chordNotationId,
     InstrumentPreferences? instrumentPreferences,
   }) {
     return SongDisplaySettings(
@@ -89,6 +94,7 @@ class SongDisplaySettings {
           sectionColorBackground ?? this.sectionColorBackground,
       autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
       variantId: variantId ?? this.variantId,
+      chordNotationId: chordNotationId ?? this.chordNotationId,
       instrumentPreferences:
           instrumentPreferences ?? this.instrumentPreferences,
     );
@@ -112,6 +118,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _sectionColorBackgroundKey =
       'songDisplay.sectionColorBackground';
   static const _instrumentPreferencesKey = 'songDisplay.instrumentPreferences';
+  static const _chordNotationKey = 'songDisplay.chordNotation';
   static const _serviceTranspositionsKey = 'songDisplay.serviceTranspositions';
 
   /// Active service-song scope (`serviceId|songId`), or `null` when reading a
@@ -149,6 +156,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       sectionColorBackground:
           _prefs.getBool(_sectionColorBackgroundKey) ?? false,
       instrumentPreferences: instrumentPreferences,
+      chordNotationId: ChordNotationRegistry.resolve(
+        _prefs.getString(_chordNotationKey),
+      ).id,
     );
   }
 
@@ -325,6 +335,13 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       capo: capo ?? _directiveDefaults.capo,
     );
     _persistScopedTransposition();
+  }
+
+  void setChordNotation(String id) {
+    final notation = ChordNotationRegistry.resolve(id);
+    if (state.chordNotationId == notation.id) return;
+    _prefs.setString(_chordNotationKey, notation.id);
+    state = state.copyWith(chordNotationId: notation.id);
   }
 
   void toggleShowChords() {

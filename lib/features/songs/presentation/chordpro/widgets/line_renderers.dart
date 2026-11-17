@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../domain/chordpro/chord_notation.dart';
 import 'render_model.dart';
 
 /// Display options shared by every line in a song.
@@ -9,6 +10,7 @@ class LineRenderOptions {
     required this.showChords,
     required this.fontSize,
     required this.onChordTap,
+    required this.chordNotation,
   });
 
   final bool showChords;
@@ -17,6 +19,7 @@ class LineRenderOptions {
   final double fontSize;
 
   final void Function(String chord) onChordTap;
+  final ChordNotationSystem chordNotation;
 
   double get chordFontSize => fontSize * 0.85;
 }
@@ -217,12 +220,14 @@ class ChordLabel extends StatelessWidget {
     required this.chord,
     required this.style,
     required this.onTap,
+    required this.notation,
     this.trailingGap = 0,
   });
 
   final String chord;
   final TextStyle style;
   final void Function(String chord) onTap;
+  final ChordNotationSystem notation;
 
   /// Extra space after the symbol so adjacent chords like `[Em][C]` never
   /// render as `EmC`.
@@ -231,16 +236,17 @@ class ChordLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final displayChord = ChordNotationConverter.formatChord(chord, notation);
     return Semantics(
       button: true,
-      label: l10n.songChordSemantics(chord),
+      label: l10n.songChordSemantics(displayChord),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => onTap(chord),
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: EdgeInsets.only(right: trailingGap),
-          child: Text(chord, style: style),
+          child: Text(displayChord, style: style),
         ),
       ),
     );
@@ -285,6 +291,7 @@ class LyricsLine extends StatelessWidget {
                       chord: tokens[i].chord,
                       style: chordStyle,
                       onTap: options.onChordTap,
+                      notation: options.chordNotation,
                       trailingGap:
                           i + 1 < tokens.length &&
                               tokens[i + 1].chord.isNotEmpty
@@ -349,6 +356,7 @@ class ChordSectionLine extends StatelessWidget {
                   chord: chord,
                   style: chordStyle,
                   onTap: options.onChordTap,
+                  notation: options.chordNotation,
                 ),
               ),
             if (measure.endBarline.isNotEmpty)

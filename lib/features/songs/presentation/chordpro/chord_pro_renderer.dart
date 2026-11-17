@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/chordpro/chord_dictionary.dart';
+import '../../domain/chordpro/chord_notation.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/parser.dart';
 import '../../domain/chordpro/resolve_chords.dart';
@@ -36,6 +37,7 @@ class ChordProRenderer extends StatefulWidget {
     this.scrollController,
     this.notes,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
     this.instrumentPreferences = const InstrumentPreferences(),
     this.bottomInset = 0,
     this.capoLabel,
@@ -57,6 +59,7 @@ class ChordProRenderer extends StatefulWidget {
   /// Active variant id — delegates variant selection to the caller.
   /// Defaults to `'default'` (the main song body).
   final String variantId;
+  final String chordNotationId;
 
   /// Per-instrument voicing / diagram preferences.
   final InstrumentPreferences instrumentPreferences;
@@ -140,6 +143,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       capo: _effectiveCapo,
       preferences: widget.instrumentPreferences,
       fingeringFor: _fingeringFor,
+      chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
     );
   }
 
@@ -160,6 +164,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       showChords: widget.showChords,
       fontSize: fontSize,
       onChordTap: _openChord,
+      chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
     );
 
     final notes = widget.notes?.trim();
@@ -172,8 +177,14 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     final leading = <Widget>[
       MetadataHeader(
         metadata: metadata,
-        soundingKey: transposeChord(key, widget.transpose),
-        renderedKey: transposeChord(key, _effectiveTranspose),
+        soundingKey: ChordNotationConverter.formatNote(
+          transposeChord(key, widget.transpose),
+          ChordNotationRegistry.resolve(widget.chordNotationId),
+        ),
+        renderedKey: ChordNotationConverter.formatNote(
+          transposeChord(key, _effectiveTranspose),
+          ChordNotationRegistry.resolve(widget.chordNotationId),
+        ),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
         capoLabel: widget.capoLabel ??
@@ -191,6 +202,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       if (showRoll)
         ChordRoll(
           chords: _song.uniqueChords,
+          chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
           capo: _effectiveCapo,
           instrument: widget.instrument,
           preferences: widget.instrumentPreferences,
