@@ -173,6 +173,20 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         widget.showDiagrams &&
         widget.showChords &&
         _song.uniqueChords.isNotEmpty;
+    final notation = ChordNotationRegistry.resolve(widget.chordNotationId);
+    final chordResolution = resolveChords(
+      chords: _song.uniqueChords,
+      key: metadata['key'],
+      keyShift: widget.transpose,
+      capo: widget.capo,
+      instrument: widget.instrument,
+    );
+    final capoLabel =
+        widget.capoLabel ??
+        chordResolution.capoLabel?.replaceFirst(
+          chordResolution.shownKey,
+          ChordNotationConverter.formatNote(chordResolution.shownKey, notation),
+        );
 
     final leading = <Widget>[
       MetadataHeader(
@@ -187,16 +201,8 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         ),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
-        notation: ChordNotationRegistry.resolve(widget.chordNotationId),
-        capoLabel:
-            widget.capoLabel ??
-            resolveChords(
-              chords: _song.uniqueChords,
-              key: metadata['key'],
-              keyShift: widget.transpose,
-              capo: widget.capo,
-              instrument: widget.instrument,
-            ).capoLabel,
+        notation: notation,
+        capoLabel: capoLabel,
         onKeyTap: widget.onKeyTap,
         onYoutubeTap: widget.onYoutubeTap,
       ),
@@ -204,7 +210,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       if (showRoll)
         ChordRoll(
           chords: _song.uniqueChords,
-          chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
+          chordNotation: notation,
           capo: _effectiveCapo,
           instrument: widget.instrument,
           preferences: widget.instrumentPreferences,

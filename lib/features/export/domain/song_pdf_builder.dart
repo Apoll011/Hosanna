@@ -221,7 +221,10 @@ pw.Widget _metadataHeader({
         fonts,
       ),
     if (metadata['originalKey']?.isNotEmpty ?? false)
-      _pill('Tom Orig: ${metadata['originalKey']}', fonts),
+      _pill(
+        'Tom Orig: ${_displayNote(metadata['originalKey']!, chordNotationId)}',
+        fonts,
+      ),
     if (metadata['tempo']?.isNotEmpty ?? false)
       _pill('${metadata['tempo']} BPM', fonts),
     if (metadata['time']?.isNotEmpty ?? false) _pill(metadata['time']!, fonts),
