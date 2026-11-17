@@ -63,8 +63,23 @@ void main() {
 
     test('maps every sharp and flat chromatic spelling in each system', () {
       const roots = [
-        'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G',
-        'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
+        'C',
+        'C#',
+        'Db',
+        'D',
+        'D#',
+        'Eb',
+        'E',
+        'F',
+        'F#',
+        'Gb',
+        'G',
+        'G#',
+        'Ab',
+        'A',
+        'A#',
+        'Bb',
+        'B',
       ];
       for (final system in ChordNotationRegistry.systems) {
         for (final root in roots) {
@@ -131,6 +146,12 @@ void main() {
       );
     });
 
+    test('missing preference defaults to International', () {
+      final notation = ChordNotationRegistry.resolve(null);
+      expect(notation.id, 'international');
+      expect(ChordNotationConverter.formatChord('Bb7', notation), 'Bb7');
+    });
+
     test('transposition stays canonical and notation conversion does not mutate source', () {
       const sourceChord = 'Cmaj7/E';
       const source = '{key: C}\n[Cmaj7/E]test';
@@ -143,7 +164,10 @@ void main() {
         ),
         'Remaj7/Fa#',
       );
-      ChordNotationConverter.formatChord(sourceChord, ChordNotationRegistry.german);
+      ChordNotationConverter.formatChord(
+        sourceChord,
+        ChordNotationRegistry.german,
+      );
       expect(source, '{key: C}\n[Cmaj7/E]test');
     });
   });
