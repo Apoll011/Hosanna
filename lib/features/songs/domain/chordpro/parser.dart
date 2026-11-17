@@ -181,6 +181,7 @@ const Map<String, String> _aliasMap = {
   'key_notes': 'key_note',
   'key notes': 'key_note',
   'kn': 'key_note',
+  'tags': 'tags',
   'keyshift': 'key_shift',
   'key_shift': 'key_shift',
   'yt': 'youtube',
@@ -462,6 +463,18 @@ ChordProDocument parseChordProDocument(String content) {
             ctx.metadata['duration'] = '${parts[0] * 60 + parts[1]}';
           } else {
             ctx.metadata['duration'] = value;
+          }
+        case 'tags':
+          final tags = value
+              .split(',')
+              .map((tag) => tag.trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList();
+          if (tags.isNotEmpty) {
+            ctx.metadata['tags'] = [
+              ...tags,
+              ...?ctx.metadata['tags']?.split(',').map((tag) => tag.trim()),
+            ].join(',');
           }
         default:
           if (value.isNotEmpty) {
