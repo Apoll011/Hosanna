@@ -276,8 +276,8 @@ class _VersionContext {
 /// {end_of_version}
 /// ```
 ///
-/// Metadata is cumulative: each variant inherits the fully resolved metadata
-/// of the previous version.
+/// Other metadata is cumulative. Each variant resolves key from the main chart;
+/// keyshift and capo are handled as variant-specific defaults.
 ChordProDocument parseChordProDocument(String content) {
   final lines = content.split(_lineBreakRegex);
   final errors = <String>[];
@@ -344,7 +344,7 @@ ChordProDocument parseChordProDocument(String content) {
         defaultCtx.commitSection();
         seenIds.add(variantId);
 
-        // Cumulative metadata: inherit from the previous variant or default
+        // Carry other metadata forward; pitch directives resolve separately.
         final previousMeta = variants.isNotEmpty
             ? Map<String, String>.of(variants.last.metadata)
             : Map<String, String>.of(defaultCtx.metadata);
@@ -361,6 +361,9 @@ ChordProDocument parseChordProDocument(String content) {
         } else {
           activeVariant.metadata.remove('key');
         }
+        activeVariant.metadata
+          ..remove('capo')
+          ..remove('keyShift');
         continue;
       }
 
