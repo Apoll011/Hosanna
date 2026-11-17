@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../domain/chordpro/chord_notation.dart';
 
 class NotesCard extends StatelessWidget {
   const NotesCard({super.key, required this.notes});
@@ -52,6 +53,7 @@ class MetadataHeader extends StatelessWidget {
     required this.renderedKey,
     required this.effectiveCapo,
     required this.transposeVal,
+    required this.notation,
     this.capoLabel,
     this.onKeyTap,
     this.onYoutubeTap,
@@ -62,6 +64,7 @@ class MetadataHeader extends StatelessWidget {
   final String renderedKey;
   final int effectiveCapo;
   final int transposeVal;
+  final ChordNotationSystem notation;
   final String? capoLabel;
 
   /// Opens the transpose controls; makes the key pill tappable when set.
@@ -90,10 +93,7 @@ class MetadataHeader extends StatelessWidget {
     final arranger = _meta('arranger');
     final album = _meta('album');
     final year = _meta('year');
-    final albumLine = [
-      ?album,
-      ?year,
-    ].join(' · ');
+    final albumLine = [?album, ?year].join(' · ');
     final keyNote = _meta('keyNote') ?? _meta('key_note');
     final copyright = _meta('copyright');
     final songNumber = _meta('songNumber');
@@ -120,7 +120,11 @@ class MetadataHeader extends StatelessWidget {
         _Pill(text: l10n.songShapePill(renderedKey)),
       ],
       if (originalKey != null)
-        _Pill(text: l10n.songOriginalKeyPill(originalKey)),
+        _Pill(
+          text: l10n.songOriginalKeyPill(
+            ChordNotationConverter.formatNote(originalKey, notation),
+          ),
+        ),
       if (tempo != null) _Pill(text: '$tempo BPM'),
       if (time != null) _Pill(text: time),
       if (duration != null) _Pill(text: duration, icon: Icons.schedule_rounded),
@@ -318,10 +322,8 @@ class _Pill extends StatelessWidget {
               ],
               Text(
                 text,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: fg, fontWeight: FontWeight.w600),
               ),
             ],
           ),

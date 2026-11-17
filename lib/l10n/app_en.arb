@@ -427,7 +427,7 @@
   "songChordNotationInternational": "International (C, D, E)",
   "songChordNotationLatin": "Latin (Do, Re, Mi)",
   "songChordNotationGerman": "German (H instead of B)",
-  "songChordNotationSargam": "Indian / Sargam (Sa, Re, Ga)",
+  "songChordNotationSargam": "Indian / Sargam (Sa on C)",
   "songShowChords": "Show Chords",
   "songTwoColumn": "2-Column Layout",
   "songShowDiagrams": "Show Diagrams",

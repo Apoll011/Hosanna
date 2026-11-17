@@ -131,7 +131,12 @@ class _ChordRollItem extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    voicing.notes.join(' - '),
+                    voicing.notes
+                        .map(
+                          (note) =>
+                              ChordNotationConverter.formatNote(note, notation),
+                        )
+                        .join(' - '),
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontFamily: 'monospace',
                     ),

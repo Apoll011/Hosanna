@@ -187,7 +187,9 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         ),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
-        capoLabel: widget.capoLabel ??
+        notation: ChordNotationRegistry.resolve(widget.chordNotationId),
+        capoLabel:
+            widget.capoLabel ??
             resolveChords(
               chords: _song.uniqueChords,
               key: metadata['key'],

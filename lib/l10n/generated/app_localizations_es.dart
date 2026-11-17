@@ -1114,7 +1114,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songChordNotationGerman => 'Alemana (H en lugar de B)';
 
   @override
-  String get songChordNotationSargam => 'India / Sargam (Sa, Re, Ga)';
+  String get songChordNotationSargam => 'India / Sargam (Sa en C)';
 
   @override
   String get songShowChords => 'Mostrar Acordes';

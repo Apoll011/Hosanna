@@ -89,7 +89,11 @@ class _TabBar extends StatelessWidget {
       ),
       (SettingsTab.service, l10n.settingsTabService, Icons.event_note_outlined),
       (SettingsTab.song, l10n.settingsTabSong, Icons.music_note_outlined),
-      (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
+      (
+        SettingsTab.appearance,
+        l10n.settingsTabAppearance,
+        Icons.palette_outlined,
+      ),
     ];
 
     final tokens = HosannaTokens.of(context);
@@ -109,44 +113,47 @@ class _TabBar extends StatelessWidget {
               SizedBox(
                 width: 88,
                 child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onChanged(tab),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: selected == tab
-                        ? theme.colorScheme.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icon,
-                        size: 20,
-                        color: selected == tab
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => onChanged(tab),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected == tab
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 20,
                           color: selected == tab
                               ? theme.colorScheme.onPrimary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: selected == tab
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 ),
               ),
           ],
@@ -291,8 +298,7 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                 children: [
                   Builder(
                     builder: (context) {
-                      final hasImage =
-                          imageUrl != null && imageUrl.isNotEmpty;
+                      final hasImage = imageUrl != null && imageUrl.isNotEmpty;
                       return CircleAvatar(
                         radius: 30,
                         foregroundImage: hasImage
@@ -300,9 +306,7 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                             : null,
                         onForegroundImageError: hasImage
                             ? (exception, stackTrace) {
-                                debugPrint(
-                                  'Failed to load avatar: $exception',
-                                );
+                                debugPrint('Failed to load avatar: $exception');
                               }
                             : null,
                         child: Text(
@@ -703,9 +707,8 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                             color: theme.colorScheme.primary,
                           )
                         : const Icon(Icons.circle_outlined),
-                    enabled: !_switching &&
-                        !sync.isSyncing &&
-                        o.slug != org?.slug,
+                    enabled:
+                        !_switching && !sync.isSyncing && o.slug != org?.slug,
                     onTap: () => _switchOrg(o.slug),
                   ),
               ],
@@ -800,7 +803,6 @@ class _ServiceTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
     final displayController = ref.read(songDisplaySettingsProvider.notifier);
@@ -991,7 +993,9 @@ class _ServiceTab extends ConsumerWidget {
                       errorBuilder: (_, _, _) => Container(
                         width: 72,
                         height: 72,
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           color: theme.colorScheme.primary,
@@ -1044,7 +1048,6 @@ class _AppearanceTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
 
@@ -1149,7 +1152,7 @@ class _SongTab extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: notation.id,
+                initialValue: notation.id,
                 decoration: const InputDecoration(isDense: true),
                 items: [
                   for (final system in ChordNotationRegistry.systems)
@@ -1194,10 +1197,11 @@ class _SongTab extends ConsumerWidget {
                     .toDouble(),
                 min: SongDisplaySettings.minFontSize,
                 max: SongDisplaySettings.maxFontSize,
-                divisions: ((SongDisplaySettings.maxFontSize -
-                            SongDisplaySettings.minFontSize) /
-                        2)
-                    .round(),
+                divisions:
+                    ((SongDisplaySettings.maxFontSize -
+                                SongDisplaySettings.minFontSize) /
+                            2)
+                        .round(),
                 label: display.fontSize.toInt().toString(),
                 onChanged: controller.setFontSize,
               ),
@@ -1260,10 +1264,8 @@ class _SongTab extends ConsumerWidget {
         _InstrumentSettingsCard(
           instrumentId: display.instrument,
           preference: display.currentInstrumentPreference,
-          onChanged: (pref) => controller.updateInstrumentPreference(
-            display.instrument,
-            pref,
-          ),
+          onChanged: (pref) =>
+              controller.updateInstrumentPreference(display.instrument, pref),
         ),
       ],
     );
@@ -1347,8 +1349,7 @@ class _InstrumentSettingsCard extends StatelessWidget {
               FrettedTuningSelector(
                 tunings: fretted.tunings,
                 selectedId: preference.tuningId ?? fretted.defaultTuning.id,
-                onChanged: (id) =>
-                    onChanged(preference.copyWith(tuningId: id)),
+                onChanged: (id) => onChanged(preference.copyWith(tuningId: id)),
               ),
               const SizedBox(height: 8),
             ],
@@ -1360,8 +1361,9 @@ class _InstrumentSettingsCard extends StatelessWidget {
                 value: preference.bassVoicingStyle == BassVoicingStyle.roots,
                 onChanged: (v) => onChanged(
                   preference.copyWith(
-                    bassVoicingStyle:
-                        v ? BassVoicingStyle.roots : BassVoicingStyle.chords,
+                    bassVoicingStyle: v
+                        ? BassVoicingStyle.roots
+                        : BassVoicingStyle.chords,
                   ),
                 ),
               ),
@@ -1400,8 +1402,9 @@ class _InstrumentSettingsCard extends StatelessWidget {
               value: preference.pianoVoicingStyle == PianoVoicingStyle.compact,
               onChanged: (v) => onChanged(
                 preference.copyWith(
-                  pianoVoicingStyle:
-                      v ? PianoVoicingStyle.compact : PianoVoicingStyle.full,
+                  pianoVoicingStyle: v
+                      ? PianoVoicingStyle.compact
+                      : PianoVoicingStyle.full,
                 ),
               ),
             ),
@@ -1466,8 +1469,7 @@ class _NotificationsCardState extends ConsumerState<_NotificationsCard> {
     final theme = Theme.of(context);
     // Older sessions may not carry `notify`; the model defaults it to true,
     // matching Better Auth's `defaultValue`.
-    final notify =
-        ref.watch(authControllerProvider).session?.notify ?? true;
+    final notify = ref.watch(authControllerProvider).session?.notify ?? true;
 
     return _Card(
       child: _SwitchRow(

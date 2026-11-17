@@ -1,13 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/features/songs/domain/chordpro/chord_notation.dart';
+import 'package:hosanna/features/songs/domain/chordpro/transpose.dart';
 
 void main() {
   group('ChordNotationConverter', () {
     test('keeps all international spellings unchanged', () {
       const notation = ChordNotationRegistry.international;
       for (final chord in [
-        'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G',
-        'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
+        'C',
+        'C#',
+        'Db',
+        'D',
+        'D#',
+        'Eb',
+        'E',
+        'F',
+        'F#',
+        'Gb',
+        'G',
+        'G#',
+        'Ab',
+        'A',
+        'A#',
+        'Bb',
+        'B',
       ]) {
         expect(ChordNotationConverter.formatChord(chord, notation), chord);
       }
@@ -45,6 +61,23 @@ void main() {
       expect(ChordNotationConverter.formatChord('Db', sargam), 'Reb');
     });
 
+    test('maps every sharp and flat chromatic spelling in each system', () {
+      const roots = [
+        'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G',
+        'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
+      ];
+      for (final system in ChordNotationRegistry.systems) {
+        for (final root in roots) {
+          final formatted = ChordNotationConverter.formatChord(
+            '${root}m7(b9)',
+            system,
+          );
+          expect(formatted, isNotEmpty);
+          expect(formatted, endsWith('m7(b9)'));
+        }
+      }
+    });
+
     test('preserves chord quality, extensions, and alterations', () {
       const latin = ChordNotationRegistry.latin;
       const cases = {
@@ -79,14 +112,8 @@ void main() {
       const latin = ChordNotationRegistry.latin;
       expect(ChordNotationConverter.formatChord('C/E', latin), 'Do/Mi');
       expect(ChordNotationConverter.formatChord('Dm7/G', latin), 'Rem7/Sol');
-      expect(
-        ChordNotationConverter.formatChord('Cmaj7/E', latin),
-        'Domaj7/Mi',
-      );
-      expect(
-        ChordNotationConverter.formatChord('F#m7/C#', latin),
-        'Fa#m7/Do#',
-      );
+      expect(ChordNotationConverter.formatChord('Cmaj7/E', latin), 'Domaj7/Mi');
+      expect(ChordNotationConverter.formatChord('F#m7/C#', latin), 'Fa#m7/Do#');
       expect(
         ChordNotationConverter.formatChord('C7(b9)/Eb', latin),
         'Do7(b9)/Mib',
@@ -98,7 +125,26 @@ void main() {
     test('unknown notation ids fall back to International', () {
       final notation = ChordNotationRegistry.resolve('unsupported');
       expect(notation.id, 'international');
-      expect(ChordNotationConverter.formatChord('Cmaj7/E', notation), 'Cmaj7/E');
+      expect(
+        ChordNotationConverter.formatChord('Cmaj7/E', notation),
+        'Cmaj7/E',
+      );
+    });
+
+    test('transposition stays canonical and notation conversion does not mutate source', () {
+      const sourceChord = 'Cmaj7/E';
+      const source = '{key: C}\n[Cmaj7/E]test';
+      final transposed = transposeChord(sourceChord, 2);
+      expect(transposed, 'Dmaj7/F#');
+      expect(
+        ChordNotationConverter.formatChord(
+          transposed,
+          ChordNotationRegistry.latin,
+        ),
+        'Remaj7/Fa#',
+      );
+      ChordNotationConverter.formatChord(sourceChord, ChordNotationRegistry.german);
+      expect(source, '{key: C}\n[Cmaj7/E]test');
     });
   });
 }

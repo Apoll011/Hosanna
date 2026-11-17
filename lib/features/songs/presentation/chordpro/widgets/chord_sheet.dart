@@ -192,7 +192,16 @@ class _ChordSheetState extends State<ChordSheet> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    l10n.songChordNotes(voicing.notes.join(' - ')),
+                    l10n.songChordNotes(
+                      voicing.notes
+                          .map(
+                            (note) => ChordNotationConverter.formatNote(
+                              note,
+                              widget.chordNotation,
+                            ),
+                          )
+                          .join(' - '),
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontFamily: 'monospace',
                     ),
