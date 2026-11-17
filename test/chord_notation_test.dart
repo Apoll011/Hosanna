@@ -142,6 +142,7 @@ void main() {
           entry.value,
         );
       }
+      expect(ChordNotationConverter.formatChord('Cm', latin), 'Dom');
     });
 
     test('converts only roots and a valid slash bass note', () {

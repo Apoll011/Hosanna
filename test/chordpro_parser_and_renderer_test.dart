@@ -4,17 +4,19 @@ import 'package:hosanna/features/songs/domain/chordpro/parser.dart';
 import 'package:hosanna/features/songs/presentation/chordpro/chord_pro_renderer.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 
-Widget _host(String content) => MaterialApp(
-  locale: const Locale('pt'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
-  supportedLocales: AppLocalizations.supportedLocales,
-  home: Scaffold(
-    body: ChordProRenderer(
-      document: parseChordProDocument(content),
-      showChords: true,
-    ),
-  ),
-);
+Widget _host(String content, {String chordNotationId = 'international'}) =>
+    MaterialApp(
+      locale: const Locale('pt'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: ChordProRenderer(
+          document: parseChordProDocument(content),
+          showChords: true,
+          chordNotationId: chordNotationId,
+        ),
+      ),
+    );
 
 void main() {
   test('suite tags accumulate and comment styles parse', () {
@@ -28,6 +30,28 @@ void main() {
     expect(line.type, 'comment_box');
     expect(line.text, 'Atenção');
     expect(line.style, 'warning');
+  });
+
+  testWidgets('renders converted slash chords without changing parsed chords', (
+    tester,
+  ) async {
+    const source = '''
+{start_of_verse}
+[Cmaj7/E]test
+{end_of_verse}
+''';
+    await tester.pumpWidget(_host(source, chordNotationId: 'latin'));
+
+    expect(find.text('Domaj7/Mi'), findsOneWidget);
+    final chord = parseChordPro(source)
+        .sections
+        .single
+        .lines
+        .single
+        .segments!
+        .single
+        .chord;
+    expect(chord, 'Cmaj7/E');
   });
 
   test('grid barlines split measures and yt aliases youtube', () {

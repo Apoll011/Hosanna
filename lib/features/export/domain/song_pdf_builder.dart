@@ -211,18 +211,18 @@ pw.Widget _metadataHeader({
       _pill('Nº ${_numberOrNull(metadata['songNumber']) ?? songNumber}', fonts),
     if ((metadata['key']?.isNotEmpty ?? false) || transpose != 0)
       _pill(
-        'Tom: ${_displayNote(transposeChord(metadata['key'] ?? 'C', transpose), chordNotationId)}',
+        'Tom: ${_displayChord(transposeChord(metadata['key'] ?? 'C', transpose), chordNotationId)}',
         fonts,
       ),
     if (effectiveCapo > 0) _pill('Capo: $effectiveCapoª casa', fonts),
     if (effectiveCapo > 0)
       _pill(
-        'Formato: ${_displayNote(transposeChord(metadata['key'] ?? 'C', effectiveTranspose), chordNotationId)}',
+        'Formato: ${_displayChord(transposeChord(metadata['key'] ?? 'C', effectiveTranspose), chordNotationId)}',
         fonts,
       ),
     if (metadata['originalKey']?.isNotEmpty ?? false)
       _pill(
-        'Tom Orig: ${_displayNote(metadata['originalKey']!, chordNotationId)}',
+        'Tom Orig: ${_displayChord(metadata['originalKey']!, chordNotationId)}',
         fonts,
       ),
     if (metadata['tempo']?.isNotEmpty ?? false)

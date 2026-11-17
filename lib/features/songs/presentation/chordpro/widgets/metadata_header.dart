@@ -122,7 +122,7 @@ class MetadataHeader extends StatelessWidget {
       if (originalKey != null)
         _Pill(
           text: l10n.songOriginalKeyPill(
-            ChordNotationConverter.formatNote(originalKey, notation),
+            ChordNotationConverter.formatChord(originalKey, notation),
           ),
         ),
       if (tempo != null) _Pill(text: '$tempo BPM'),

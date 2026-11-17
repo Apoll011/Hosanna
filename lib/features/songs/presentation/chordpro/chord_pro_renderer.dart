@@ -185,19 +185,22 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         widget.capoLabel ??
         chordResolution.capoLabel?.replaceFirst(
           chordResolution.shownKey,
-          ChordNotationConverter.formatNote(chordResolution.shownKey, notation),
+          ChordNotationConverter.formatChord(
+            chordResolution.shownKey,
+            notation,
+          ),
         );
 
     final leading = <Widget>[
       MetadataHeader(
         metadata: metadata,
-        soundingKey: ChordNotationConverter.formatNote(
+        soundingKey: ChordNotationConverter.formatChord(
           transposeChord(key, widget.transpose),
-          ChordNotationRegistry.resolve(widget.chordNotationId),
+          notation,
         ),
-        renderedKey: ChordNotationConverter.formatNote(
+        renderedKey: ChordNotationConverter.formatChord(
           transposeChord(key, _effectiveTranspose),
-          ChordNotationRegistry.resolve(widget.chordNotationId),
+          notation,
         ),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
