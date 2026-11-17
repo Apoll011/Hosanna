@@ -44,6 +44,7 @@ SongPdfOptions pdfOptionsFrom(SongDisplaySettings settings) => SongPdfOptions(
   showDiagrams: settings.showDiagrams,
   sectionColorBackground: settings.sectionColorBackground,
   variantId: settings.variantId,
+  chordNotationId: settings.chordNotationId,
 );
 
 /// Turns a song title into a file name that is safe on every platform.

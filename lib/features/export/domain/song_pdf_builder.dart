@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../songs/domain/chordpro/chord_dictionary.dart';
+import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
 import '../../songs/domain/chordpro/parser.dart';
 import '../../songs/domain/chordpro/transpose.dart';
@@ -22,6 +23,7 @@ class SongPdfOptions {
     this.showDiagrams = false,
     this.sectionColorBackground = false,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
   });
 
   final int transpose;
@@ -33,6 +35,7 @@ class SongPdfOptions {
   final bool showDiagrams;
   final bool sectionColorBackground;
   final String variantId;
+  final String chordNotationId;
 
   /// Whether a capo changes the sounding pitch for the selected instrument.
   bool get instrumentSupportsCapo =>
@@ -100,6 +103,7 @@ Future<Uint8List> buildSongPdf({
       effectiveCapo: effectiveCapo,
       effectiveTranspose: effectiveTranspose,
       transpose: options.transpose,
+      chordNotationId: options.chordNotationId,
       fonts: fonts,
     ),
     if (options.showDiagrams && options.showChords && uniqueChords.isNotEmpty)
@@ -162,6 +166,18 @@ String _resolveTitle(Map<String, String> metadata, String? fallbackTitle) {
   return meta ?? 'Sem Título';
 }
 
+String _displayChord(String chord, String notationId) =>
+    ChordNotationConverter.formatChord(
+      chord,
+      ChordNotationRegistry.resolve(notationId),
+    );
+
+String _displayNote(String note, String notationId) =>
+    ChordNotationConverter.formatNote(
+      note,
+      ChordNotationRegistry.resolve(notationId),
+    );
+
 pw.Widget _metadataHeader({
   required Map<String, String> metadata,
   required String title,
@@ -170,6 +186,7 @@ pw.Widget _metadataHeader({
   required int effectiveCapo,
   required int effectiveTranspose,
   required int transpose,
+  required String chordNotationId,
   required _Fonts fonts,
 }) {
   final subtitle = metadata['subtitle'];
@@ -192,14 +209,14 @@ pw.Widget _metadataHeader({
       _pill('Nº ${_numberOrNull(metadata['songNumber']) ?? songNumber}', fonts),
     if ((metadata['key']?.isNotEmpty ?? false) || transpose != 0)
       _pill(
-        'Tom: ${transposeChord(metadata['key'] ?? 'C', transpose)}',
+        'Tom: ${_displayNote(transposeChord(metadata['key'] ?? 'C', transpose), chordNotationId)}',
         fonts,
       ),
     if (effectiveCapo > 0)
       _pill('Capo: $effectiveCapoª casa', fonts),
     if (effectiveCapo > 0)
       _pill(
-        'Formato: ${transposeChord(metadata['key'] ?? 'C', effectiveTranspose)}',
+        'Formato: ${_displayNote(transposeChord(metadata['key'] ?? 'C', effectiveTranspose), chordNotationId)}',
         fonts,
       ),
     if (metadata['originalKey']?.isNotEmpty ?? false)
@@ -379,6 +396,7 @@ pw.Widget _chordRoll({
                 chord: chord,
                 transposed: transposeChord(chord, effectiveTranspose),
                 instrument: options.instrument,
+                chordNotationId: options.chordNotationId,
                 fonts: fonts,
               ),
           ],
@@ -392,6 +410,7 @@ pw.Widget _chordRollItem({
   required String chord,
   required String transposed,
   required String instrument,
+  required String chordNotationId,
   required _Fonts fonts,
 }) {
   final voicing = chordDictionary
@@ -402,7 +421,7 @@ pw.Widget _chordRollItem({
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       pw.Text(
-        _sanitize(transposed),
+        _sanitize(_displayChord(transposed, chordNotationId)),
         style: pw.TextStyle(
           font: fonts.monoBold,
           fontSize: 10,
@@ -1024,7 +1043,12 @@ pw.Widget _chordSectionWidget(
             pw.Padding(
               padding: const pw.EdgeInsets.symmetric(horizontal: 2),
               child: pw.Text(
-                _sanitize(transposeChord(c.chord, transpose)),
+                _sanitize(
+                  _displayChord(
+                    transposeChord(c.chord, transpose),
+                    options.chordNotationId,
+                  ),
+                ),
                 style: pw.TextStyle(
                   font: fonts.monoBold,
                   fontSize: options.fontSize + 1,
@@ -1076,7 +1100,12 @@ pw.Widget _lyricsWidget(
               if (options.showChords)
                 if (item.chord.isNotEmpty)
                   pw.Text(
-                    _sanitize(transposeChord(item.chord, transpose)),
+                    _sanitize(
+                      _displayChord(
+                        transposeChord(item.chord, transpose),
+                        options.chordNotationId,
+                      ),
+                    ),
                     style: pw.TextStyle(
                       font: fonts.monoBold,
                       fontSize: chordSize,
