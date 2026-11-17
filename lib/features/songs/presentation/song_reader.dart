@@ -9,6 +9,7 @@ import 'package:hosanna/app/providers.dart';
 
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../metronome/data/metronome_click_player.dart';
 import '../../input/pedal_navigator.dart';
 import '../../services/data/service_annotation_repository.dart';
 import '../domain/chordpro/parser.dart';
@@ -87,6 +88,16 @@ class _SongReaderState extends ConsumerState<SongReader>
   final _scrollController = ScrollController();
   Timer? _scrollTimer;
   bool _isScrolling = false;
+  final MetronomeClickPlayer _metronomePlayer = MetronomeClickPlayer();
+  final ValueNotifier<_SongMetronomeState> _metronomeState = ValueNotifier(
+    const _SongMetronomeState(),
+  );
+  Timer? _metronomeTimer;
+  DateTime? _nextMetronomeBeat;
+  int _metronomeTempo = 100;
+  int _metronomeBeatsPerBar = 4;
+  String _metronomeTime = '4/4';
+  bool _metronomeInitialized = false;
 
   /// Video playing in the bottom mini player, or `null` when it is closed.
   String? _playerVideoId;
@@ -339,6 +350,9 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   void dispose() {
+    _metronomeTimer?.cancel();
+    unawaited(_metronomePlayer.dispose());
+    _metronomeState.dispose();
     _playerVideoId = null;
     _saveAnnotation(widget.serviceId, widget.songId);
     // Drop scope so the next song (service or library) never inherits this
@@ -699,6 +713,18 @@ class _SongReaderState extends ConsumerState<SongReader>
     final videoId = metadata == null
         ? null
         : youtubeVideoIdFromMetadata(metadata);
+    final tempo = int.tryParse(metadata?['tempo']?.trim() ?? '');
+    final timeSignature = _parseTimeSignature(metadata?['time'] ?? '');
+    final showSongMetronome =
+        tempo != null && tempo > 0 && timeSignature != null;
+    if (showSongMetronome &&
+        (!_metronomeInitialized || !_metronomeState.value.playing)) {
+      _metronomeInitialized = true;
+      _metronomeTempo = tempo;
+      _metronomeBeatsPerBar = timeSignature.$1;
+      _metronomeTime = '${timeSignature.$1}/${timeSignature.$2}';
+      unawaited(_metronomePlayer.init());
+    }
     final playerVideoId = _playerVideoId == videoId ? videoId : null;
 
     // Approximate height of the bottom overlay (floating buttons, nav pill,
@@ -867,18 +893,26 @@ class _SongReaderState extends ConsumerState<SongReader>
                       ),
                     ),
                   ] else
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: _buildFloatingControls(
-                          theme: theme,
-                          l10n: l10n,
-                          showNav: showNav,
-                          videoId: videoId,
-                          playerOpen: playerVideoId != null,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (showSongMetronome)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: _buildSongMetronomeFab(theme),
+                          ),
+                        const Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: _buildFloatingControls(
+                            theme: theme,
+                            l10n: l10n,
+                            showNav: showNav,
+                            videoId: videoId,
+                            playerOpen: playerVideoId != null,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   if (playerVideoId != null) ...[
                     const SizedBox(height: 12),
@@ -899,6 +933,136 @@ class _SongReaderState extends ConsumerState<SongReader>
         ],
       ),
     );
+  }
+
+  static (int, int)? _parseTimeSignature(String raw) {
+    final match = RegExp(r'^\s*(\d+)\s*/\s*(\d+)\s*$').firstMatch(raw);
+    if (match == null) return null;
+    final numerator = int.tryParse(match.group(1)!);
+    final denominator = int.tryParse(match.group(2)!);
+    if (numerator == null ||
+        numerator < 1 ||
+        numerator > 16 ||
+        denominator == null ||
+        ![2, 4, 8, 16].contains(denominator)) {
+      return null;
+    }
+    return (numerator, denominator);
+  }
+
+  Widget _buildSongMetronomeFab(ThemeData theme) {
+    return ValueListenableBuilder<_SongMetronomeState>(
+      valueListenable: _metronomeState,
+      builder: (context, state, _) => _SongReaderFab(
+        onPressed: _openSongMetronome,
+        backgroundColor: state.playing
+            ? theme.colorScheme.onSurface
+            : theme.colorScheme.surfaceContainerHighest,
+        foregroundColor: state.playing
+            ? theme.colorScheme.surface
+            : theme.colorScheme.primary,
+        tooltip: 'Metronome',
+        child: AnimatedScale(
+          scale: state.playing && state.beat == 0 ? 1.16 : 1,
+          duration: const Duration(milliseconds: 100),
+          child: const Icon(Icons.graphic_eq_rounded),
+        ),
+      ),
+    );
+  }
+
+  void _openSongMetronome() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+          child: ValueListenableBuilder<_SongMetronomeState>(
+            valueListenable: _metronomeState,
+            builder: (context, state, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$_metronomeTempo BPM · $_metronomeTime',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _metronomeBeatsPerBar,
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      width: state.playing && state.beat == i ? 18 : 12,
+                      height: state.playing && state.beat == i ? 18 : 12,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: state.playing && state.beat == i
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: state.playing ? null : _startSongMetronome,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text('Play'),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: state.playing ? _stopSongMetronome : null,
+                      icon: const Icon(Icons.stop_rounded),
+                      label: const Text('Stop'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startSongMetronome() {
+    _metronomeState.value = const _SongMetronomeState(playing: true, beat: -1);
+    _nextMetronomeBeat = DateTime.now();
+    _scheduleSongMetronomeBeat();
+  }
+
+  void _scheduleSongMetronomeBeat() {
+    _metronomeTimer?.cancel();
+    final delay = _nextMetronomeBeat!.difference(DateTime.now());
+    _metronomeTimer = Timer(delay.isNegative ? Duration.zero : delay, () {
+      final nextBeat = (_metronomeState.value.beat + 1) % _metronomeBeatsPerBar;
+      _metronomeState.value = _SongMetronomeState(
+        playing: true,
+        beat: nextBeat,
+      );
+      unawaited(_metronomePlayer.click(accent: nextBeat == 0));
+      final interval = Duration(
+        milliseconds: (60000 / _metronomeTempo).round(),
+      );
+      _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
+      while (_nextMetronomeBeat!.isBefore(DateTime.now())) {
+        _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
+      }
+      _scheduleSongMetronomeBeat();
+    });
+  }
+
+  void _stopSongMetronome() {
+    _metronomeTimer?.cancel();
+    _metronomeTimer = null;
+    _nextMetronomeBeat = null;
+    _metronomeState.value = const _SongMetronomeState();
   }
 
   /// Right-side controls: YouTube toggle, auto-scroll and prev/next.
@@ -1020,6 +1184,13 @@ class _SongReaderFab extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SongMetronomeState {
+  const _SongMetronomeState({this.playing = false, this.beat = 0});
+
+  final bool playing;
+  final int beat;
 }
 
 /// Custom sleek toolbar for annotations supporting all tools.

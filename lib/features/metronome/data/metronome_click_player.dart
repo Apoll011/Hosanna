@@ -71,7 +71,7 @@ class MetronomeClickPlayer {
         accentPlayer.setReleaseMode(ReleaseMode.stop),
         normalPlayer.setReleaseMode(ReleaseMode.stop),
         accentPlayer.setVolume(1.0),
-        normalPlayer.setVolume(0.72),
+        normalPlayer.setVolume(0.95),
       ]);
 
       if (_usesAndroidSoundPool) {
