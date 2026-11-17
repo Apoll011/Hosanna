@@ -803,6 +803,7 @@ class _ServiceTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
     final displayController = ref.read(songDisplaySettingsProvider.notifier);
