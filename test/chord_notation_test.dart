@@ -1,8 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hosanna/features/songs/domain/chordpro/chord_notation.dart';
+import 'package:hosanna/features/songs/domain/chordpro/parser.dart';
 import 'package:hosanna/features/songs/domain/chordpro/transpose.dart';
+import 'package:hosanna/features/songs/presentation/chordpro/song_display_settings.dart';
 
 void main() {
+  test('notation preference defaults to International and persists', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final controller = SongDisplaySettingsController(preferences);
+
+    expect(controller.state.chordNotationId, 'international');
+    controller.setChordNotation('german');
+    expect(controller.state.chordNotationId, 'german');
+    expect(preferences.getString('songDisplay.chordNotation'), 'german');
+    controller.dispose();
+  });
+
   group('ChordNotationConverter', () {
     test('keeps all international spellings unchanged', () {
       const notation = ChordNotationRegistry.international;
@@ -161,6 +176,9 @@ void main() {
     test('transposition stays canonical and notation conversion does not mutate source', () {
       const sourceChord = 'Cmaj7/E';
       const source = '{key: C}\n[Cmaj7/E]test';
+      final song = parseChordProDocument(source);
+      final canonicalChord = song.defaultVersion.body.single.lines.single
+          .segments!.single.chord;
       final transposed = transposeChord(sourceChord, 2);
       expect(transposed, 'Dmaj7/F#');
       expect(
@@ -171,8 +189,13 @@ void main() {
         'Remaj7/Fa#',
       );
       ChordNotationConverter.formatChord(
-        sourceChord,
+        canonicalChord,
         ChordNotationRegistry.german,
+      );
+      expect(canonicalChord, sourceChord);
+      expect(
+        song.defaultVersion.body.single.lines.single.segments!.single.chord,
+        sourceChord,
       );
       expect(source, '{key: C}\n[Cmaj7/E]test');
     });
