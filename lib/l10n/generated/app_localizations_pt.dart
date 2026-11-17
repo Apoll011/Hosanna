@@ -1097,6 +1097,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songFontSize => 'Tamanho da Letra';
 
   @override
+  String get songChordNotation => 'Notação de acordes';
+
+  @override
+  String get songChordNotationDescription =>
+      'Escolha como os nomes dos acordes são apresentados nas músicas. Isto não altera os dados originais da música.';
+
+  @override
+  String get songChordNotationInternational => 'Internacional (C, D, E)';
+
+  @override
+  String get songChordNotationLatin => 'Latina (Do, Re, Mi)';
+
+  @override
+  String get songChordNotationGerman => 'Alemã (H em vez de B)';
+
+  @override
+  String get songChordNotationSargam => 'Indiana / Sargam (Sa, Re, Ga)';
+
+  @override
   String get songShowChords => 'Mostrar Acordes';
 
   @override
@@ -2006,6 +2025,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTabAppearance => 'Aparência';
+
+  @override
+  String get settingsTabSong => 'Música';
 
   @override
   String get settingsSubscriptionInactive => 'Sem subscrição ativa';

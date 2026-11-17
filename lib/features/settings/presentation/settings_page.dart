@@ -21,11 +21,12 @@ import '../../setup/data/setup_controller.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
+import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
 
-enum SettingsTab { account, workspace, service, appearance }
+enum SettingsTab { account, workspace, service, song, appearance }
 
-/// Tabbed settings: Account / Organization / Service / Appearance.
+/// Tabbed settings: Account / Organization / Service / Song / Appearance.
 /// Tools (metronome, circle of fifths) live in the navigation drawer, not here.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key, this.initialTab = SettingsTab.account});
@@ -58,6 +59,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               SettingsTab.account => const _AccountTab(),
               SettingsTab.workspace => const _WorkspaceTab(),
               SettingsTab.service => const _ServiceTab(),
+              SettingsTab.song => const _SongTab(),
               SettingsTab.appearance => const _AppearanceTab(),
             },
           ),
@@ -86,6 +88,7 @@ class _TabBar extends StatelessWidget {
         Icons.business_outlined,
       ),
       (SettingsTab.service, l10n.settingsTabService, Icons.event_note_outlined),
+      (SettingsTab.song, l10n.settingsTabSong, Icons.music_note_outlined),
       (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
     ];
 
@@ -98,11 +101,14 @@ class _TabBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(HosannaRadii.md),
         border: Border.all(color: tokens.cardBorder),
       ),
-      child: Row(
-        children: [
-          for (final (tab, label, icon) in tabs)
-            Expanded(
-              child: InkWell(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final (tab, label, icon) in tabs)
+              SizedBox(
+                width: 88,
+                child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => onChanged(tab),
                 child: AnimatedContainer(
@@ -141,9 +147,10 @@ class _TabBar extends StatelessWidget {
                     ],
                   ),
                 ),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1040,8 +1047,6 @@ class _AppearanceTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
-    final display = ref.watch(songDisplaySettingsProvider);
-    final displayController = ref.read(songDisplaySettingsProvider.notifier);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1106,6 +1111,60 @@ class _AppearanceTab extends ConsumerWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _SongTab extends ConsumerWidget {
+  const _SongTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final display = ref.watch(songDisplaySettingsProvider);
+    final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final notation = ChordNotationRegistry.resolve(display.chordNotationId);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.songChordNotation,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.songChordNotationDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: notation.id,
+                decoration: const InputDecoration(isDense: true),
+                items: [
+                  for (final system in ChordNotationRegistry.systems)
+                    DropdownMenuItem(
+                      value: system.id,
+                      child: Text(_notationName(system.id, l10n)),
+                    ),
+                ],
+                onChanged: (id) {
+                  if (id != null) controller.setChordNotation(id);
+                },
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 12),
         _Card(
           child: Column(
@@ -1140,7 +1199,7 @@ class _AppearanceTab extends ConsumerWidget {
                         2)
                     .round(),
                 label: display.fontSize.toInt().toString(),
-                onChanged: displayController.setFontSize,
+                onChanged: controller.setFontSize,
               ),
             ],
           ),
@@ -1153,19 +1212,19 @@ class _AppearanceTab extends ConsumerWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songShowChords),
                 value: display.showChords,
-                onChanged: (_) => displayController.toggleShowChords(),
+                onChanged: (_) => controller.toggleShowChords(),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songShowDiagrams),
                 value: display.showDiagrams,
-                onChanged: (_) => displayController.toggleDiagrams(),
+                onChanged: (_) => controller.toggleDiagrams(),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songTwoColumn),
                 value: display.twoColumn,
-                onChanged: (_) => displayController.toggleTwoColumn(),
+                onChanged: (_) => controller.toggleTwoColumn(),
               ),
               const Divider(),
               Padding(
@@ -1189,7 +1248,7 @@ class _AppearanceTab extends ConsumerWidget {
                     const SizedBox(height: 8),
                     InstrumentSelector(
                       selected: display.instrument,
-                      onChanged: displayController.setInstrument,
+                      onChanged: controller.setInstrument,
                     ),
                   ],
                 ),
@@ -1201,7 +1260,7 @@ class _AppearanceTab extends ConsumerWidget {
         _InstrumentSettingsCard(
           instrumentId: display.instrument,
           preference: display.currentInstrumentPreference,
-          onChanged: (pref) => displayController.updateInstrumentPreference(
+          onChanged: (pref) => controller.updateInstrumentPreference(
             display.instrument,
             pref,
           ),
@@ -1209,6 +1268,13 @@ class _AppearanceTab extends ConsumerWidget {
       ],
     );
   }
+
+  String _notationName(String id, AppLocalizations l10n) => switch (id) {
+    'latin' => l10n.songChordNotationLatin,
+    'german' => l10n.songChordNotationGerman,
+    'sargam' => l10n.songChordNotationSargam,
+    _ => l10n.songChordNotationInternational,
+  };
 }
 
 /// Settings that apply only to the currently selected instrument.

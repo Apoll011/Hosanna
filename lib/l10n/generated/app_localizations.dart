@@ -2074,6 +2074,13 @@ abstract class AppLocalizations {
   /// **'Tamanho da Letra'**
   String get songFontSize;
 
+  String get songChordNotation;
+  String get songChordNotationDescription;
+  String get songChordNotationInternational;
+  String get songChordNotationLatin;
+  String get songChordNotationGerman;
+  String get songChordNotationSargam;
+
   /// No description provided for @songShowChords.
   ///
   /// In pt, this message translates to:
@@ -3741,6 +3748,8 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Aparência'**
   String get settingsTabAppearance;
+
+  String get settingsTabSong;
 
   /// No description provided for @settingsSubscriptionInactive.
   ///
