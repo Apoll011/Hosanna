@@ -40,7 +40,8 @@ class SongDisplaySettings {
   final bool showChords;
   final bool twoColumn;
   final double fontSize;
-  final String instrument; // any registered instrument id (see instrumentRegistry)
+  final String
+  instrument; // any registered instrument id (see instrumentRegistry)
   final bool showDiagrams;
   final bool sectionColorBackground;
 
@@ -95,7 +96,8 @@ class SongDisplaySettings {
 }
 
 class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
-  SongDisplaySettingsController(this._prefs) : super(const SongDisplaySettings()) {
+  SongDisplaySettingsController(this._prefs)
+    : super(const SongDisplaySettings()) {
     _restore();
   }
 
@@ -107,7 +109,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _instrumentKey = 'songDisplay.instrument';
   static const _defaultInstrument = 'guitar';
   static const _diagramsKey = 'songDisplay.showDiagrams';
-  static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
+  static const _sectionColorBackgroundKey =
+      'songDisplay.sectionColorBackground';
   static const _instrumentPreferencesKey = 'songDisplay.instrumentPreferences';
   static const _serviceTranspositionsKey = 'songDisplay.serviceTranspositions';
 
@@ -119,8 +122,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   ({int transpose, int capo}) _directiveDefaults = (transpose: 0, capo: 0);
 
   void _restore() {
-    InstrumentPreferences instrumentPreferences =
-        const InstrumentPreferences();
+    InstrumentPreferences instrumentPreferences = const InstrumentPreferences();
     final raw = _prefs.getString(_instrumentPreferencesKey);
     if (raw != null && raw.isNotEmpty) {
       try {
@@ -138,7 +140,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     state = SongDisplaySettings(
       showChords: _prefs.getBool(_showChordsKey) ?? true,
       twoColumn: _prefs.getBool(_twoColumnKey) ?? false,
-      fontSize: _prefs.getDouble(_fontSizeKey) ?? SongDisplaySettings.defaultFontSize,
+      fontSize:
+          _prefs.getDouble(_fontSizeKey) ?? SongDisplaySettings.defaultFontSize,
       instrument: instrumentRegistry
           .resolve(_prefs.getString(_instrumentKey) ?? _defaultInstrument)
           .id,
@@ -176,10 +179,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   /// Seeds transposition defaults from document directives ({keyshift}, {capo}).
-  void seedDirectiveDefaults({
-    required int keyShift,
-    required int capo,
-  }) {
+  void seedDirectiveDefaults({required int keyShift, required int capo}) {
     _directiveDefaults = (transpose: keyShift, capo: capo);
     if (_transpositionScopeKey != null) {
       final stored = _readScopedSongSettings(_transpositionScopeKey!);
@@ -204,8 +204,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     }
     final stored = _readScopedSongSettings(key);
     state = state.copyWith(
-      transpose:
-          stored.hasStored ? stored.transpose : _directiveDefaults.transpose,
+      transpose: stored.hasStored
+          ? stored.transpose
+          : _directiveDefaults.transpose,
       capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
       variantId: stored.variantId,
     );
@@ -229,8 +230,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     }
     final stored = _readScopedSongSettings(key);
     state = state.copyWith(
-      transpose:
-          stored.hasStored ? stored.transpose : _directiveDefaults.transpose,
+      transpose: stored.hasStored
+          ? stored.transpose
+          : _directiveDefaults.transpose,
       capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
       variantId: stored.variantId,
     );
@@ -311,9 +313,17 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     return {};
   }
 
-  void setVariantId(String id) {
+  void setVariantId(String id, {int? transpose, int? capo}) {
     if (state.variantId == id) return;
-    state = state.copyWith(variantId: id);
+    state = state.copyWith(
+      variantId: id,
+      transpose: transpose ?? _directiveDefaults.transpose,
+      capo: capo ?? _directiveDefaults.capo,
+    );
+    _directiveDefaults = (
+      transpose: transpose ?? _directiveDefaults.transpose,
+      capo: capo ?? _directiveDefaults.capo,
+    );
     _persistScopedTransposition();
   }
 
@@ -345,10 +355,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
 
   void setFontSize(double value) {
     final v = value
-        .clamp(
-          SongDisplaySettings.minFontSize,
-          SongDisplaySettings.maxFontSize,
-        )
+        .clamp(SongDisplaySettings.minFontSize, SongDisplaySettings.maxFontSize)
         .toDouble();
     _prefs.setDouble(_fontSizeKey, v);
     state = state.copyWith(fontSize: v);
@@ -388,15 +395,19 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 }
 
-final songDisplaySettingsProvider = StateNotifierProvider<
-    SongDisplaySettingsController, SongDisplaySettings>((ref) {
-  return SongDisplaySettingsController(
-    ref.watch(sharedPreferencesProvider),
-  );
-});
+final songDisplaySettingsProvider =
+    StateNotifierProvider<SongDisplaySettingsController, SongDisplaySettings>((
+      ref,
+    ) {
+      return SongDisplaySettingsController(
+        ref.watch(sharedPreferencesProvider),
+      );
+    });
 
 /// Holds the [ChordProDocument] for the song that is currently on-screen.
 ///
 /// Updated by [SongBodyRenderer] every time the content changes. The toolbar
 /// reads this to build the variant switcher directly on the toolbar without prop-drilling.
-final songCurrentDocumentProvider = StateProvider<ChordProDocument?>((ref) => null);
+final songCurrentDocumentProvider = StateProvider<ChordProDocument?>(
+  (ref) => null,
+);

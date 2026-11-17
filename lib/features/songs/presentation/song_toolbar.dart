@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/chordpro/parser.dart';
+import '../domain/chordpro/resolve_chords.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
 
@@ -13,10 +14,7 @@ import 'chordpro/song_display_settings.dart';
 /// Standalone song views show a compact variant dropdown beside the button.
 /// Service song views keep variants inside [SongControlsSheet] as chips.
 class SongToolbarButton extends ConsumerWidget {
-  const SongToolbarButton({
-    super.key,
-    this.variantAsChips = false,
-  });
+  const SongToolbarButton({super.key, this.variantAsChips = false});
 
   /// When true (service song reader), variants appear as chips inside the
   /// song controls sheet instead of a dropdown on the service top bar.
@@ -31,6 +29,18 @@ class SongToolbarButton extends ConsumerWidget {
     final versions = doc != null && doc.variants.isNotEmpty
         ? [doc.defaultVersion, ...doc.variants]
         : const <ChordProVersion>[];
+    void selectVariant(String id) {
+      if (doc == null) return;
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        id == 'default' ? null : selectVersion(doc, id),
+      );
+      controller.setVariantId(
+        id,
+        transpose: defaults.transpose,
+        capo: defaults.capo,
+      );
+    }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -39,15 +49,13 @@ class SongToolbarButton extends ConsumerWidget {
           _ToolbarVariantButton(
             versions: versions,
             selectedId: settings.variantId,
-            onSelected: controller.setVariantId,
+            onSelected: selectVariant,
           ),
         IconButton(
           icon: const Icon(Icons.tune),
           tooltip: l10n.songControlsTitle,
-          onPressed: () => showSongControlsSheet(
-            context,
-            variantAsChips: variantAsChips,
-          ),
+          onPressed: () =>
+              showSongControlsSheet(context, variantAsChips: variantAsChips),
         ),
       ],
     );
@@ -71,10 +79,7 @@ Future<void> showSongControlsSheet(
 
 /// Transpose / capo / font size / toggles, laid out like the React popover.
 class SongControlsSheet extends ConsumerStatefulWidget {
-  const SongControlsSheet({
-    super.key,
-    this.variantAsChips = false,
-  });
+  const SongControlsSheet({super.key, this.variantAsChips = false});
 
   /// When true, show a chip variant selector at the top of this sheet.
   final bool variantAsChips;
@@ -95,8 +100,20 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
     final doc = ref.watch(songCurrentDocumentProvider);
     final versions =
         widget.variantAsChips && doc != null && doc.variants.isNotEmpty
-            ? [doc.defaultVersion, ...doc.variants]
-            : const <ChordProVersion>[];
+        ? [doc.defaultVersion, ...doc.variants]
+        : const <ChordProVersion>[];
+    void selectVariant(String id) {
+      if (doc == null) return;
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        id == 'default' ? null : selectVersion(doc, id),
+      );
+      controller.setVariantId(
+        id,
+        transpose: defaults.transpose,
+        capo: defaults.capo,
+      );
+    }
 
     return SafeArea(
       top: false,
@@ -113,7 +130,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
               _ToolbarVariantChips(
                 versions: versions,
                 selectedId: settings.variantId,
-                onSelected: controller.setVariantId,
+                onSelected: selectVariant,
               ),
               const SizedBox(height: 16),
             ],
@@ -173,10 +190,11 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
                         .toDouble(),
                     min: SongDisplaySettings.minFontSize,
                     max: SongDisplaySettings.maxFontSize,
-                    divisions: ((SongDisplaySettings.maxFontSize -
-                                SongDisplaySettings.minFontSize) /
-                            2)
-                        .round(),
+                    divisions:
+                        ((SongDisplaySettings.maxFontSize -
+                                    SongDisplaySettings.minFontSize) /
+                                2)
+                            .round(),
                     label: settings.fontSize.toInt().toString(),
                     onChanged: controller.setFontSize,
                   ),
@@ -237,8 +255,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
               const SizedBox(height: 8),
               _CollapsibleInstrumentHeader(
                 label: l10n.songInstrument,
-                selectedLabel:
-                    settings.instrumentInfo.localizedLabel(l10n),
+                selectedLabel: settings.instrumentInfo.localizedLabel(l10n),
                 expanded: _instrumentExpanded,
                 onToggle: () {
                   setState(() => _instrumentExpanded = !_instrumentExpanded);

@@ -30,6 +30,7 @@ class LineAst {
     this.segments,
     this.measures,
     this.startBarline,
+    this.style,
   });
 
   final String type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
@@ -37,6 +38,7 @@ class LineAst {
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
   final String? startBarline;
+  final String? style;
 }
 
 class SectionAst {
@@ -61,6 +63,7 @@ class ChordProVersion {
     required this.name,
     required this.metadata,
     required this.body,
+    this.declaredDirectives = const {},
   });
 
   /// Stable slug identifier (e.g., "versao-de-estudio").
@@ -71,6 +74,7 @@ class ChordProVersion {
 
   /// Fully resolved (inherited + overridden) metadata map.
   final Map<String, String> metadata;
+  final Set<String> declaredDirectives;
 
   /// The song body sections for this version.
   final List<SectionAst> body;
@@ -201,6 +205,16 @@ String _camelCaseMetaKey(String name) {
       .replaceAll(RegExp(r'\s+'), '');
 }
 
+({String text, String? style}) _parseCommentValue(String value) {
+  final match = RegExp(r'\|\s*(?:style\s*=\s*)?([a-zA-Z_-]+)\s*$')
+      .firstMatch(value);
+  if (match == null) return (text: value, style: null);
+  return (
+    text: value.substring(0, match.start).trim(),
+    style: match.group(1)!.toLowerCase(),
+  );
+}
+
 /// Converts an accented/special-character variant name into a stable ASCII slug.
 ///
 /// Examples:
@@ -233,6 +247,7 @@ class _VersionContext {
   final String name;
   final Map<String, String> metadata;
   final int startLineNumber;
+  final Set<String> declaredDirectives = {};
 
   final List<SectionAst> sections = [];
   SectionAst? currentSection;
@@ -340,6 +355,12 @@ ChordProDocument parseChordProDocument(String content) {
           metadata: previousMeta,
           startLineNumber: lineNumber,
         );
+        final mainKey = defaultCtx.metadata['key'];
+        if (mainKey != null) {
+          activeVariant.metadata['key'] = mainKey;
+        } else {
+          activeVariant.metadata.remove('key');
+        }
         continue;
       }
 
@@ -364,6 +385,7 @@ ChordProDocument parseChordProDocument(String content) {
             name: activeVariant.name,
             metadata: Map.of(meta),
             body: List.of(activeVariant.sections),
+            declaredDirectives: Set.of(activeVariant.declaredDirectives),
           ),
         );
         activeVariant = null;
@@ -372,6 +394,7 @@ ChordProDocument parseChordProDocument(String content) {
 
       // ── Normal directive — dispatch to the active context ───────────────
       final ctx = activeVariant ?? defaultCtx;
+      ctx.declaredDirectives.add(name);
 
       switch (name) {
         case 'start_of_chorus':
@@ -420,14 +443,24 @@ ChordProDocument parseChordProDocument(String content) {
           ctx.currentSection = SectionAst(type: 'bridge', label: value);
         case 'comment':
         case 'comment_italic':
-          final commentLine = LineAst(type: name, text: value);
+          final comment = _parseCommentValue(value);
+          final commentLine = LineAst(
+            type: name,
+            text: comment.text,
+            style: comment.style,
+          );
           if (ctx.currentSection != null) {
             ctx.currentSection!.lines.add(commentLine);
           } else {
             ctx.sections.add(SectionAst(type: 'comment', lines: [commentLine]));
           }
         case 'comment_box':
-          final cbLine = LineAst(type: 'comment_box', text: value);
+          final comment = _parseCommentValue(value);
+          final cbLine = LineAst(
+            type: 'comment_box',
+            text: comment.text,
+            style: comment.style ?? 'info',
+          );
           if (ctx.currentSection != null) {
             ctx.currentSection!.lines.add(cbLine);
           } else {
@@ -582,6 +615,7 @@ ChordProDocument parseChordProDocument(String content) {
         name: activeVariant.name,
         metadata: Map.of(meta),
         body: List.of(activeVariant.sections),
+        declaredDirectives: Set.of(activeVariant.declaredDirectives),
       ),
     );
   }
@@ -597,6 +631,7 @@ ChordProDocument parseChordProDocument(String content) {
     name: 'Padrão',
     metadata: Map.of(defaultCtx.metadata),
     body: List.of(defaultCtx.sections),
+    declaredDirectives: Set.of(defaultCtx.declaredDirectives),
   );
 
   return ChordProDocument(

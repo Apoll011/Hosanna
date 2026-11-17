@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/features/songs/domain/chordpro/diagnostics.dart';
 import 'package:hosanna/features/songs/domain/chordpro/parser.dart';
@@ -123,6 +126,28 @@ void main() {
     });
   });
 
+  group('variant directive defaults — shared fixtures', () {
+    final fixtures = jsonDecode(
+      File('test/fixtures/variant-defaults.json').readAsStringSync(),
+    ) as List<dynamic>;
+    for (final raw in fixtures) {
+      final fixture = raw as Map<String, dynamic>;
+      test(fixture['id'] as String, () {
+        final document = parseChordProDocument(fixture['content'] as String);
+        final variant = document.variants.firstWhere(
+          (item) => item.id == fixture['variant'],
+        );
+        final defaults = resolveVariantDefaults(
+          document.defaultVersion,
+          variant,
+        );
+        final expected = fixture['expected'] as Map<String, dynamic>;
+        expect(defaults.transpose, expected['keyShift']);
+        expect(defaults.capo, expected['capo']);
+      });
+    }
+  });
+
   group('parseCapoValue', () {
     test('returns valid values in range 0–11', () {
       expect(parseCapoValue('4'), 4);
@@ -160,10 +185,14 @@ void main() {
 
   group('parser — keyshift directive', () {
     test('parses keyshift and key_shift into keyShift metadata', () {
-      final doc1 = parseChordProDocument('{title: Test}\n{keyshift: 2}\n[C]Hello');
+      final doc1 = parseChordProDocument(
+        '{title: Test}\n{keyshift: 2}\n[C]Hello',
+      );
       expect(doc1.defaultVersion.metadata['keyShift'], '2');
 
-      final doc2 = parseChordProDocument('{title: Test}\n{key_shift: -3}\n[C]Hello');
+      final doc2 = parseChordProDocument(
+        '{title: Test}\n{key_shift: -3}\n[C]Hello',
+      );
       expect(doc2.defaultVersion.metadata['keyShift'], '-3');
 
       final doc3 = parseChordProDocument('{title: Test}\n{capo: 4}\n[C]Hello');
@@ -174,25 +203,40 @@ void main() {
   group('diagnostics — capo and keyshift validation', () {
     test('warns on capo > 11', () {
       final diags = lintChordPro('{title: Test}', capo: '12');
-      expect(diags.any((d) => d.code == ChordProDiagnosticCode.invalidCapo), isTrue);
+      expect(
+        diags.any((d) => d.code == ChordProDiagnosticCode.invalidCapo),
+        isTrue,
+      );
     });
 
     test('accepts capo 0 and 11', () {
       final diags0 = lintChordPro('{title: Test}', capo: '0');
-      expect(diags0.any((d) => d.code == ChordProDiagnosticCode.invalidCapo), isFalse);
+      expect(
+        diags0.any((d) => d.code == ChordProDiagnosticCode.invalidCapo),
+        isFalse,
+      );
 
       final diags11 = lintChordPro('{title: Test}', capo: '11');
-      expect(diags11.any((d) => d.code == ChordProDiagnosticCode.invalidCapo), isFalse);
+      expect(
+        diags11.any((d) => d.code == ChordProDiagnosticCode.invalidCapo),
+        isFalse,
+      );
     });
 
     test('warns on non-numeric keyshift', () {
       final diags = lintChordPro('{title: Test}', keyShift: 'abc');
-      expect(diags.any((d) => d.code == ChordProDiagnosticCode.invalidKeyShift), isTrue);
+      expect(
+        diags.any((d) => d.code == ChordProDiagnosticCode.invalidKeyShift),
+        isTrue,
+      );
     });
 
     test('accepts valid negative keyshift', () {
       final diags = lintChordPro('{title: Test}', keyShift: '-3');
-      expect(diags.any((d) => d.code == ChordProDiagnosticCode.invalidKeyShift), isFalse);
+      expect(
+        diags.any((d) => d.code == ChordProDiagnosticCode.invalidKeyShift),
+        isFalse,
+      );
     });
   });
 }

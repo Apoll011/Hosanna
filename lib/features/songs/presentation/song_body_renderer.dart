@@ -71,11 +71,16 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
 
       final currentId = ref.read(songDisplaySettingsProvider).variantId;
       final ver = selectVersion(doc, currentId);
-      final keyShift = parseKeyShiftValue(ver.metadata['keyShift']);
-      final capo = parseCapoValue(ver.metadata['capo']);
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        currentId == 'default' ? null : ver,
+      );
       ref
           .read(songDisplaySettingsProvider.notifier)
-          .seedDirectiveDefaults(keyShift: keyShift, capo: capo);
+          .seedDirectiveDefaults(
+            keyShift: defaults.transpose,
+            capo: defaults.capo,
+          );
 
       final stillExists = doc.variants.any((v) => v.id == currentId);
       if (!stillExists && currentId != 'default') {

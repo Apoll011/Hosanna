@@ -17,6 +17,19 @@ Widget _host(String content) => MaterialApp(
 );
 
 void main() {
+  test('suite tags accumulate and comment styles parse', () {
+    final ast = parseChordPro('''
+{tags: adoração, lenta}
+{tags: ao vivo}
+{comment_box: Atenção|warning}
+''');
+    expect(ast.metadata['tags'], 'ao vivo,adoração,lenta');
+    final line = ast.sections.single.lines.single;
+    expect(line.type, 'comment_box');
+    expect(line.text, 'Atenção');
+    expect(line.style, 'warning');
+  });
+
   test('grid barlines split measures and yt aliases youtube', () {
     final ast = parseChordPro('''
 {yt: https://youtu.be/dQw4w9WgXcQ}
