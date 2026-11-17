@@ -2074,11 +2074,40 @@ abstract class AppLocalizations {
   /// **'Tamanho da Letra'**
   String get songFontSize;
 
+  /// No description provided for @songChordNotation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notação de acordes'**
   String get songChordNotation;
+
+  /// No description provided for @songChordNotationDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha como os nomes dos acordes são apresentados nas músicas. Isto não altera os dados originais da música.'**
   String get songChordNotationDescription;
+
+  /// No description provided for @songChordNotationInternational.
+  ///
+  /// In pt, this message translates to:
+  /// **'Internacional (C, D, E)'**
   String get songChordNotationInternational;
+
+  /// No description provided for @songChordNotationLatin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Latina (Do, Re, Mi)'**
   String get songChordNotationLatin;
+
+  /// No description provided for @songChordNotationGerman.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alemã (H em vez de B)'**
   String get songChordNotationGerman;
+
+  /// No description provided for @songChordNotationSargam.
+  ///
+  /// In pt, this message translates to:
+  /// **'Indiana / Sargam (Sa em C)'**
   String get songChordNotationSargam;
 
   /// No description provided for @songShowChords.
@@ -3749,6 +3778,10 @@ abstract class AppLocalizations {
   /// **'Aparência'**
   String get settingsTabAppearance;
 
+  /// No description provided for @settingsTabSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Música'**
   String get settingsTabSong;
 
   /// No description provided for @settingsSubscriptionInactive.
