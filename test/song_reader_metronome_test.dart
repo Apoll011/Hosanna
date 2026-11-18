@@ -1,10 +1,38 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/app/providers.dart';
+import 'package:hosanna/features/services/data/service_annotation_repository.dart';
 import 'package:hosanna/features/songs/presentation/song_reader.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _FakeServiceAnnotationRepository extends Fake
+    implements ServiceAnnotationRepository {
+  @override
+  Future<Uint8List?> loadLocalAnnotation({
+    required String serviceId,
+    required String songId,
+  }) async => null;
+
+  @override
+  Future<void> saveAnnotation({
+    required String serviceId,
+    required String songId,
+    required Uint8List bytes,
+  }) async {}
+
+  @override
+  AnnotationSyncHandle subscribeToAnnotationUpdates({
+    required String serviceId,
+    required String songId,
+    required void Function(RemoteAnnotation annotation) onRemoteUpdate,
+  }) {
+    return AnnotationSyncHandle(cancel: () async {});
+  }
+}
 
 void main() {
   late SharedPreferences prefs;
@@ -22,6 +50,9 @@ void main() {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        serviceAnnotationRepositoryProvider.overrideWithValue(
+          _FakeServiceAnnotationRepository(),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
