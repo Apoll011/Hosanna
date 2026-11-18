@@ -84,7 +84,7 @@ class SongReader extends ConsumerStatefulWidget {
 }
 
 class _SongReaderState extends ConsumerState<SongReader>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _scrollController = ScrollController();
   Timer? _scrollTimer;
   bool _isScrolling = false;
@@ -92,6 +92,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   final ValueNotifier<_SongMetronomeState> _metronomeState = ValueNotifier(
     const _SongMetronomeState(),
   );
+  late final AnimationController _metronomePulseController;
   Timer? _metronomeTimer;
   DateTime? _nextMetronomeBeat;
   int _metronomeTempo = 100;
@@ -147,10 +148,15 @@ class _SongReaderState extends ConsumerState<SongReader>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _annotationRepo = ref.read(serviceAnnotationRepositoryProvider);
     _displaySettings = ref.read(songDisplaySettingsProvider.notifier);
     _syncAnnotations = ref.read(settingsControllerProvider).syncAnnotations;
     _swipeController = AnimationController(vsync: this);
+    _metronomePulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
     _applyTranspositionScope();
@@ -320,7 +326,10 @@ class _SongReaderState extends ConsumerState<SongReader>
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.serviceId != widget.serviceId ||
-        oldWidget.songId != widget.songId) {
+        oldWidget.songId != widget.songId ||
+        oldWidget.content != widget.content) {
+      _stopSongMetronome();
+      _metronomeInitialized = false;
       _playerVideoId = null;
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
       _applyTranspositionScope();
@@ -349,8 +358,25 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   @override
+  void deactivate() {
+    _stopSongMetronome();
+    super.deactivate();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _stopSongMetronome();
+    }
+  }
+
+  @override
   void dispose() {
-    _metronomeTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopSongMetronome();
+    _metronomePulseController.dispose();
     unawaited(_metronomePlayer.dispose());
     _metronomeState.dispose();
     _playerVideoId = null;
@@ -448,6 +474,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _onHorizontalDragStart(DragStartDetails details) {
     if (_swipeController.isAnimating) return;
+    _stopSongMetronome();
     _dragTotalDx = 0;
     _hapticFired = false;
     _stopAutoScroll();
@@ -507,6 +534,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _goPrev() {
     if (!widget.canPrev || _swipeController.isAnimating) return;
+    _stopSongMetronome();
     _stopAutoScroll();
     _closeYoutubePlayer();
     _completeSwipe(1);
@@ -514,6 +542,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _goNext() {
     if (!widget.canNext || _swipeController.isAnimating) return;
+    _stopSongMetronome();
     _stopAutoScroll();
     _closeYoutubePlayer();
     _completeSwipe(-1);
@@ -523,6 +552,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   void _pedalScrollPrev() {
     if (_swipeController.isAnimating) return;
     if (!_scrollController.hasClients) {
+      _stopSongMetronome();
       _goPrev();
       return;
     }
@@ -537,6 +567,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       );
       return;
     }
+    _stopSongMetronome();
     _goPrev();
   }
 
@@ -544,6 +575,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   void _pedalScrollNext() {
     if (_swipeController.isAnimating) return;
     if (!_scrollController.hasClients) {
+      _stopSongMetronome();
       _goNext();
       return;
     }
@@ -558,10 +590,12 @@ class _SongReaderState extends ConsumerState<SongReader>
       );
       return;
     }
+    _stopSongMetronome();
     _goNext();
   }
 
   void _completeSwipe(int dir) {
+    _stopSongMetronome();
     // Stop YouTube as soon as navigation starts (buttons or swipe).
     _closeYoutubePlayer();
     final target = dir * _viewportWidth;
@@ -682,6 +716,12 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(shellBranchIndexProvider, (prev, next) {
+      if (prev != next) {
+        _stopSongMetronome();
+      }
+    });
+
     ref.listen<bool>(
       settingsControllerProvider.select((s) => s.syncAnnotations),
       (previous, next) {
@@ -893,26 +933,19 @@ class _SongReaderState extends ConsumerState<SongReader>
                       ),
                     ),
                   ] else
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (showSongMetronome)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16),
-                            child: _buildSongMetronomeFab(theme),
-                          ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: _buildFloatingControls(
-                            theme: theme,
-                            l10n: l10n,
-                            showNav: showNav,
-                            videoId: videoId,
-                            playerOpen: playerVideoId != null,
-                          ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: _buildFloatingControls(
+                          theme: theme,
+                          l10n: l10n,
+                          showNav: showNav,
+                          videoId: videoId,
+                          playerOpen: playerVideoId != null,
+                          showSongMetronome: showSongMetronome,
                         ),
-                      ],
+                      ),
                     ),
                   if (playerVideoId != null) ...[
                     const SizedBox(height: 12),
@@ -953,21 +986,44 @@ class _SongReaderState extends ConsumerState<SongReader>
   Widget _buildSongMetronomeFab(ThemeData theme) {
     return ValueListenableBuilder<_SongMetronomeState>(
       valueListenable: _metronomeState,
-      builder: (context, state, _) => _SongReaderFab(
-        onPressed: _openSongMetronome,
-        backgroundColor: state.playing
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.surfaceContainerHighest,
-        foregroundColor: state.playing
-            ? theme.colorScheme.surface
-            : theme.colorScheme.primary,
-        tooltip: 'Metronome',
-        child: AnimatedScale(
-          scale: state.playing && state.beat == 0 ? 1.16 : 1,
-          duration: const Duration(milliseconds: 100),
-          child: const Icon(Icons.graphic_eq_rounded),
-        ),
-      ),
+      builder: (context, state, _) {
+        final isPlaying = state.playing;
+        final isAccent = state.beat == 0;
+
+        final Color backgroundColor;
+        final Color foregroundColor;
+        if (!isPlaying) {
+          backgroundColor = theme.colorScheme.surfaceContainerHighest;
+          foregroundColor = theme.colorScheme.onSurfaceVariant;
+        } else if (isAccent) {
+          backgroundColor = theme.colorScheme.primary;
+          foregroundColor = theme.colorScheme.onPrimary;
+        } else {
+          backgroundColor = theme.colorScheme.onSurface;
+          foregroundColor = theme.colorScheme.surface;
+        }
+
+        return AnimatedBuilder(
+          animation: _metronomePulseController,
+          builder: (context, _) {
+            final progress = _metronomePulseController.value;
+            final pulseAmount = isPlaying ? math.sin(progress * math.pi) : 0.0;
+            final maxBoost = isAccent ? 0.22 : 0.12;
+            final scale = 1.0 + (maxBoost * pulseAmount);
+
+            return Transform.scale(
+              scale: scale,
+              child: _SongReaderFab(
+                onPressed: _openSongMetronome,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                tooltip: 'Metronome',
+                child: const Icon(Icons.graphic_eq_rounded),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1000,7 +1056,9 @@ class _SongReaderState extends ConsumerState<SongReader>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: state.playing && state.beat == i
-                            ? Theme.of(context).colorScheme.primary
+                            ? (i == 0
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.secondary)
                             : Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
@@ -1039,13 +1097,16 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _scheduleSongMetronomeBeat() {
     _metronomeTimer?.cancel();
+    if (_nextMetronomeBeat == null || !_metronomeState.value.playing) return;
     final delay = _nextMetronomeBeat!.difference(DateTime.now());
     _metronomeTimer = Timer(delay.isNegative ? Duration.zero : delay, () {
+      if (!mounted || !_metronomeState.value.playing) return;
       final nextBeat = (_metronomeState.value.beat + 1) % _metronomeBeatsPerBar;
       _metronomeState.value = _SongMetronomeState(
         playing: true,
         beat: nextBeat,
       );
+      _metronomePulseController.forward(from: 0);
       unawaited(_metronomePlayer.click(accent: nextBeat == 0));
       final interval = Duration(
         milliseconds: (60000 / _metronomeTempo).round(),
@@ -1062,17 +1123,42 @@ class _SongReaderState extends ConsumerState<SongReader>
     _metronomeTimer?.cancel();
     _metronomeTimer = null;
     _nextMetronomeBeat = null;
-    _metronomeState.value = const _SongMetronomeState();
+    if (_metronomePulseController.isAnimating) {
+      _metronomePulseController.reset();
+    }
+    unawaited(_metronomePlayer.stop());
+    if (_metronomeState.value.playing) {
+      _metronomeState.value = const _SongMetronomeState();
+    }
   }
 
-  /// Right-side controls: YouTube toggle, auto-scroll and prev/next.
+  /// Right-side controls: YouTube toggle, auto-scroll, annotation, metronome and prev/next.
   Widget _buildFloatingControls({
     required ThemeData theme,
     required AppLocalizations l10n,
     required bool showNav,
     required String? videoId,
     required bool playerOpen,
+    required bool showSongMetronome,
   }) {
+    final autoScrollFab = _SongReaderFab(
+      onPressed: _toggleAutoScroll,
+      backgroundColor: _isScrolling
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.surfaceContainerHighest,
+      foregroundColor: _isScrolling
+          ? theme.colorScheme.surface
+          : theme.colorScheme.onSurfaceVariant,
+      tooltip: _isScrolling
+          ? l10n.songAutoScrollPause
+          : l10n.songAutoScrollStart,
+      child: Icon(
+        _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+      ),
+    );
+
+    final bool hasAnnotation = widget.onToggleAnnotation != null;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1097,24 +1183,30 @@ class _SongReaderState extends ConsumerState<SongReader>
           ),
           const SizedBox(height: 12),
         ],
-        _SongReaderFab(
-          onPressed: _toggleAutoScroll,
-          backgroundColor: _isScrolling
-              ? theme.colorScheme.onSurface
-              : theme.colorScheme.primary,
-          foregroundColor: _isScrolling
-              ? theme.colorScheme.surface
-              : theme.colorScheme.onPrimary,
-          tooltip: _isScrolling
-              ? l10n.songAutoScrollPause
-              : l10n.songAutoScrollStart,
-          child: Icon(
-            _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
-          ),
-        ),
-        if (widget.onToggleAnnotation != null) ...[
+        if (hasAnnotation) ...[
+          autoScrollFab,
           const SizedBox(height: 12),
-          _buildAnnotationFab(theme: theme, l10n: l10n),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSongMetronome) ...[
+                _buildSongMetronomeFab(theme),
+                const SizedBox(width: 12),
+              ],
+              _buildAnnotationFab(theme: theme, l10n: l10n),
+            ],
+          ),
+        ] else ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSongMetronome) ...[
+                _buildSongMetronomeFab(theme),
+                const SizedBox(width: 12),
+              ],
+              autoScrollFab,
+            ],
+          ),
         ],
         if (showNav) const SizedBox(height: 12),
         if (showNav)
@@ -1137,10 +1229,10 @@ class _SongReaderState extends ConsumerState<SongReader>
       onPressed: widget.onToggleAnnotation!,
       backgroundColor: widget.isAnnotating
           ? theme.colorScheme.onSurface
-          : theme.colorScheme.primary,
+          : theme.colorScheme.surfaceContainerHighest,
       foregroundColor: widget.isAnnotating
           ? theme.colorScheme.surface
-          : theme.colorScheme.onPrimary,
+          : theme.colorScheme.onSurfaceVariant,
       tooltip: l10n.annotationModeTitle,
       child: Icon(widget.isAnnotating ? Icons.draw : Icons.draw_outlined),
     );
