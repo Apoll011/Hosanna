@@ -25,6 +25,18 @@ class AnalyticsService {
 
   bool _initialized = false;
 
+  /// Converts a [Map<String, dynamic>] to [Map<String, Object>] as required
+  /// by the PostHog Flutter API (removes null values).
+  static Map<String, Object>? _toPostHogMap(Map<String, dynamic>? map) {
+    if (map == null || map.isEmpty) return null;
+    final result = <String, Object>{};
+    for (final entry in map.entries) {
+      final value = entry.value;
+      if (value != null) result[entry.key] = value as Object;
+    }
+    return result.isEmpty ? null : result;
+  }
+
   /// Initialises PostHog with [apiKey] and [host].
   ///
   /// Safe to call multiple times; subsequent calls are no-ops.
@@ -81,7 +93,7 @@ class AnalyticsService {
     try {
       await Posthog().capture(
         eventName: event.name,
-        properties: event.properties.isEmpty ? null : event.properties,
+        properties: _toPostHogMap(event.properties),
       );
     } catch (e) {
       debugPrint('[Analytics] track error (${event.name}): $e');
@@ -96,7 +108,7 @@ class AnalyticsService {
     try {
       await Posthog().screen(
         screenName: screenName,
-        properties: properties,
+        properties: _toPostHogMap(properties),
       );
     } catch (e) {
       debugPrint('[Analytics] screen error ($screenName): $e');
@@ -106,7 +118,7 @@ class AnalyticsService {
   /// Returns whether the given feature flag is enabled for the current user.
   Future<bool> isFeatureEnabled(String flagKey) async {
     try {
-      return await Posthog().isFeatureEnabled(flagKey) ?? false;
+      return await Posthog().isFeatureEnabled(flagKey);
     } catch (e) {
       debugPrint('[Analytics] isFeatureEnabled error ($flagKey): $e');
       return false;

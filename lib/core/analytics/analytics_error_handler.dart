@@ -1,8 +1,6 @@
 /// Flutter error handler helpers that forward uncaught errors to PostHog.
 library;
 
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 
 import 'analytics_service.dart';
