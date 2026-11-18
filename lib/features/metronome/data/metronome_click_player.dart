@@ -30,8 +30,8 @@ class MetronomeClickPlayer {
       await AudioPlayer.global.setAudioContext(
         AudioContext(
           android: const AudioContextAndroid(
-            contentType: AndroidContentType.sonification,
-            usageType: AndroidUsageType.assistanceSonification,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.media,
             audioFocus: AndroidAudioFocus.gainTransientMayDuck,
           ),
           iOS: AudioContextIOS(
@@ -71,7 +71,7 @@ class MetronomeClickPlayer {
         accentPlayer.setReleaseMode(ReleaseMode.stop),
         normalPlayer.setReleaseMode(ReleaseMode.stop),
         accentPlayer.setVolume(1.0),
-        normalPlayer.setVolume(0.72),
+        normalPlayer.setVolume(1.0),
       ]);
 
       if (_usesAndroidSoundPool) {
@@ -138,6 +138,17 @@ class MetronomeClickPlayer {
     }
   }
 
+  Future<void> stop() async {
+    try {
+      await Future.wait([
+        if (_accentPlayer != null) _accentPlayer!.stop(),
+        if (_normalPlayer != null) _normalPlayer!.stop(),
+      ]);
+    } catch (e) {
+      debugPrint('MetronomeClickPlayer stop failed: $e');
+    }
+  }
+
   Future<void> dispose() async {
     final accent = _accentPlayer;
     final normal = _normalPlayer;
@@ -147,8 +158,8 @@ class MetronomeClickPlayer {
     _normalSource = null;
     _ready = false;
     await Future.wait([
-      if (accent != null) accent.dispose(),
-      if (normal != null) normal.dispose(),
+      if (accent != null) ...[accent.stop(), accent.dispose()],
+      if (normal != null) ...[normal.stop(), normal.dispose()],
     ]);
   }
 }

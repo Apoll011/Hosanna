@@ -63,17 +63,24 @@ class _NoopSyncController extends SyncController {
       );
 
   @override
-  Future<void> syncAll() async {}
+  Future<void> syncAll({String? organizationId}) async {}
 
   @override
-  Future<void> resetForOrganizationSwitch() async {}
+  Future<void> resetForOrganizationSwitch({String? organizationId}) async {}
+
+  @override
+  Future<void> prepareOrganizationSwitch() async {}
+
+  @override
+  Future<void> clearLocalTenantState() async {}
 }
 
 void main() {
   late AppDatabase db;
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // Skip the post-login setup wizard so the shell lands on /songs.
+    SharedPreferences.setMockInitialValues({'setup.completed': true});
     db = AppDatabase(NativeDatabase.memory());
   });
 

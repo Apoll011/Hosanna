@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../songs/domain/chordpro/chord_dictionary.dart';
+import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
 import '../../songs/domain/chordpro/parser.dart';
 import '../../songs/domain/chordpro/transpose.dart';
@@ -22,6 +23,7 @@ class SongPdfOptions {
     this.showDiagrams = false,
     this.sectionColorBackground = false,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
   });
 
   final int transpose;
@@ -33,6 +35,7 @@ class SongPdfOptions {
   final bool showDiagrams;
   final bool sectionColorBackground;
   final String variantId;
+  final String chordNotationId;
 
   /// Whether a capo changes the sounding pitch for the selected instrument.
   bool get instrumentSupportsCapo =>
@@ -100,6 +103,7 @@ Future<Uint8List> buildSongPdf({
       effectiveCapo: effectiveCapo,
       effectiveTranspose: effectiveTranspose,
       transpose: options.transpose,
+      chordNotationId: options.chordNotationId,
       fonts: fonts,
     ),
     if (options.showDiagrams && options.showChords && uniqueChords.isNotEmpty)
@@ -162,6 +166,18 @@ String _resolveTitle(Map<String, String> metadata, String? fallbackTitle) {
   return meta ?? 'Sem Título';
 }
 
+String _displayChord(String chord, String notationId) =>
+    ChordNotationConverter.formatChord(
+      chord,
+      ChordNotationRegistry.resolve(notationId),
+    );
+
+String _displayNote(String note, String notationId) =>
+    ChordNotationConverter.formatNote(
+      note,
+      ChordNotationRegistry.resolve(notationId),
+    );
+
 pw.Widget _metadataHeader({
   required Map<String, String> metadata,
   required String title,
@@ -170,13 +186,16 @@ pw.Widget _metadataHeader({
   required int effectiveCapo,
   required int effectiveTranspose,
   required int transpose,
+  required String chordNotationId,
   required _Fonts fonts,
 }) {
   final subtitle = metadata['subtitle'];
   final artist = _firstNonEmpty([metadata['artist'], fallbackArtist]);
   final composer = metadata['composer'];
-  final byLine =
-      [artist, composer].where((e) => e != null && e.isNotEmpty).join(' / ');
+  final byLine = [
+    artist,
+    composer,
+  ].where((e) => e != null && e.isNotEmpty).join(' / ');
   final lyricist = metadata['lyricist'];
   final translator = metadata['translator'];
   final arranger = metadata['arranger'];
@@ -192,22 +211,23 @@ pw.Widget _metadataHeader({
       _pill('Nº ${_numberOrNull(metadata['songNumber']) ?? songNumber}', fonts),
     if ((metadata['key']?.isNotEmpty ?? false) || transpose != 0)
       _pill(
-        'Tom: ${transposeChord(metadata['key'] ?? 'C', transpose)}',
+        'Tom: ${_displayChord(transposeChord(metadata['key'] ?? 'C', transpose), chordNotationId)}',
         fonts,
       ),
-    if (effectiveCapo > 0)
-      _pill('Capo: $effectiveCapoª casa', fonts),
+    if (effectiveCapo > 0) _pill('Capo: $effectiveCapoª casa', fonts),
     if (effectiveCapo > 0)
       _pill(
-        'Formato: ${transposeChord(metadata['key'] ?? 'C', effectiveTranspose)}',
+        'Formato: ${_displayChord(transposeChord(metadata['key'] ?? 'C', effectiveTranspose), chordNotationId)}',
         fonts,
       ),
     if (metadata['originalKey']?.isNotEmpty ?? false)
-      _pill('Tom Orig: ${metadata['originalKey']}', fonts),
+      _pill(
+        'Tom Orig: ${_displayChord(metadata['originalKey']!, chordNotationId)}',
+        fonts,
+      ),
     if (metadata['tempo']?.isNotEmpty ?? false)
       _pill('${metadata['tempo']} BPM', fonts),
-    if (metadata['time']?.isNotEmpty ?? false)
-      _pill(metadata['time']!, fonts),
+    if (metadata['time']?.isNotEmpty ?? false) _pill(metadata['time']!, fonts),
     if (metadata['ccli']?.isNotEmpty ?? false)
       _pill('CCLI: ${metadata['ccli']}', fonts),
   ];
@@ -285,8 +305,10 @@ pw.Widget _metadataHeader({
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 8),
             child: pw.Container(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
               decoration: const pw.BoxDecoration(
                 color: _surfaceContainer,
                 borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
@@ -379,6 +401,7 @@ pw.Widget _chordRoll({
                 chord: chord,
                 transposed: transposeChord(chord, effectiveTranspose),
                 instrument: options.instrument,
+                chordNotationId: options.chordNotationId,
                 fonts: fonts,
               ),
           ],
@@ -392,6 +415,7 @@ pw.Widget _chordRollItem({
   required String chord,
   required String transposed,
   required String instrument,
+  required String chordNotationId,
   required _Fonts fonts,
 }) {
   final voicing = chordDictionary
@@ -402,7 +426,7 @@ pw.Widget _chordRollItem({
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       pw.Text(
-        _sanitize(transposed),
+        _sanitize(_displayChord(transposed, chordNotationId)),
         style: pw.TextStyle(
           font: fonts.monoBold,
           fontSize: 10,
@@ -418,7 +442,11 @@ pw.Widget _chordRollItem({
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 4),
           child: pw.Text(
-            _sanitize(voicing.notes.join(' - ')),
+            _sanitize(
+              voicing.notes
+                  .map((note) => _displayNote(note, chordNotationId))
+                  .join(' - '),
+            ),
             style: pw.TextStyle(
               font: fonts.mono,
               fontSize: 7,
@@ -590,8 +618,7 @@ pw.Widget _frettedDiagram(FrettedFingering voicing, _Fonts fonts) {
             canvas.drawEllipse(cx, cy, 5, 5);
             canvas.fillPath();
           }
-          final finger =
-              fingers != null && i < fingers.length ? fingers[i] : 0;
+          final finger = fingers != null && i < fingers.length ? fingers[i] : 0;
           if (finger > 0) {
             _paintText(
               canvas,
@@ -662,12 +689,7 @@ pw.Widget _keyboardDiagram(KeyboardFingering keyboard) {
 
         if (highlighted) {
           canvas.setFillColor(PdfColors.white);
-          canvas.drawEllipse(
-            x + (keyWidth - 1) / 2,
-            ty(keyHeight - 8),
-            2,
-            2,
-          );
+          canvas.drawEllipse(x + (keyWidth - 1) / 2, ty(keyHeight - 8), 2, 2);
           canvas.fillPath();
         }
       }
@@ -732,15 +754,11 @@ pw.Widget _standardSection(
 ) {
   final isChorus = section.type == 'chorus';
   final isBridge = section.type == 'bridge';
-  final accent = isChorus
-      ? _primary
-      : (isBridge ? _amber : _outlineVariant);
+  final accent = isChorus ? _primary : (isBridge ? _amber : _outlineVariant);
   final showBackground = options.sectionColorBackground;
   final background = !showBackground
       ? null
-      : (isChorus
-            ? _chorusBg
-            : (isBridge ? _bridgeBg : _neutralBg));
+      : (isChorus ? _chorusBg : (isBridge ? _bridgeBg : _neutralBg));
   final label = _sectionLabel(section);
 
   return pw.Container(
@@ -962,9 +980,7 @@ pw.Widget _commentBoxWidget(LineAst line, _Fonts fonts) {
     padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: pw.BoxDecoration(
       color: _commentBg,
-      border: pw.Border(
-        left: pw.BorderSide(color: _commentAccent, width: 4),
-      ),
+      border: pw.Border(left: pw.BorderSide(color: _commentAccent, width: 4)),
       borderRadius: const pw.BorderRadius.only(
         topRight: pw.Radius.circular(8),
         bottomRight: pw.Radius.circular(8),
@@ -1024,7 +1040,12 @@ pw.Widget _chordSectionWidget(
             pw.Padding(
               padding: const pw.EdgeInsets.symmetric(horizontal: 2),
               child: pw.Text(
-                _sanitize(transposeChord(c.chord, transpose)),
+                _sanitize(
+                  _displayChord(
+                    transposeChord(c.chord, transpose),
+                    options.chordNotationId,
+                  ),
+                ),
                 style: pw.TextStyle(
                   font: fonts.monoBold,
                   fontSize: options.fontSize + 1,
@@ -1076,7 +1097,12 @@ pw.Widget _lyricsWidget(
               if (options.showChords)
                 if (item.chord.isNotEmpty)
                   pw.Text(
-                    _sanitize(transposeChord(item.chord, transpose)),
+                    _sanitize(
+                      _displayChord(
+                        transposeChord(item.chord, transpose),
+                        options.chordNotationId,
+                      ),
+                    ),
                     style: pw.TextStyle(
                       font: fonts.monoBold,
                       fontSize: chordSize,
@@ -1142,9 +1168,7 @@ List<pw.Widget> _twoColumnRows(
   _Fonts fonts,
 ) {
   if (sections.length <= 1) {
-    return [
-      _twoColumnRow(sections, const [], options, transpose, fonts),
-    ];
+    return [_twoColumnRow(sections, const [], options, transpose, fonts)];
   }
 
   // Usable A4 height minus margins, expressed in "section weight" units.
@@ -1170,9 +1194,7 @@ List<pw.Widget> _twoColumnRows(
       index++;
     }
 
-    rows.add(
-      _twoColumnRow(column1, column2, options, transpose, fonts),
-    );
+    rows.add(_twoColumnRow(column1, column2, options, transpose, fonts));
   }
   return rows;
 }

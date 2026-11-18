@@ -4,14 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/chordpro/parser.dart';
+import '../domain/chordpro/resolve_chords.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
 /// React `SongView` "Ajustes de Leitura" popover.
-/// Also displays a variant switcher directly on the toolbar when variants exist.
+///
+/// Standalone song views show a compact variant dropdown beside the button.
+/// Service song views keep variants inside [SongControlsSheet] as chips.
 class SongToolbarButton extends ConsumerWidget {
-  const SongToolbarButton({super.key});
+  const SongToolbarButton({super.key, this.variantAsChips = false});
+
+  /// When true (service song reader), variants appear as chips inside the
+  /// song controls sheet instead of a dropdown on the service top bar.
+  final bool variantAsChips;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,20 +26,36 @@ class SongToolbarButton extends ConsumerWidget {
     final doc = ref.watch(songCurrentDocumentProvider);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final versions = doc != null && doc.variants.isNotEmpty
+        ? [doc.defaultVersion, ...doc.variants]
+        : const <ChordProVersion>[];
+    void selectVariant(String id) {
+      if (doc == null) return;
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        id == 'default' ? null : selectVersion(doc, id),
+      );
+      controller.setVariantId(
+        id,
+        transpose: defaults.transpose,
+        capo: defaults.capo,
+      );
+    }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (doc != null && doc.variants.isNotEmpty)
+        if (!variantAsChips && versions.isNotEmpty)
           _ToolbarVariantButton(
-            versions: [doc.defaultVersion, ...doc.variants],
+            versions: versions,
             selectedId: settings.variantId,
-            onSelected: controller.setVariantId,
+            onSelected: selectVariant,
           ),
         IconButton(
           icon: const Icon(Icons.tune),
           tooltip: l10n.songControlsTitle,
-          onPressed: () => showSongControlsSheet(context),
+          onPressed: () =>
+              showSongControlsSheet(context, variantAsChips: variantAsChips),
         ),
       ],
     );
@@ -40,26 +63,57 @@ class SongToolbarButton extends ConsumerWidget {
 }
 
 /// Opens the reading-settings popup as a rounded bottom sheet.
-Future<void> showSongControlsSheet(BuildContext context) {
+Future<void> showSongControlsSheet(
+  BuildContext context, {
+  bool variantAsChips = false,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(borderRadius: HosannaRadii.sheet),
-    builder: (_) => const SongControlsSheet(),
+    builder: (_) => SongControlsSheet(variantAsChips: variantAsChips),
   );
 }
 
 /// Transpose / capo / font size / toggles, laid out like the React popover.
-class SongControlsSheet extends ConsumerWidget {
-  const SongControlsSheet({super.key});
+class SongControlsSheet extends ConsumerStatefulWidget {
+  const SongControlsSheet({super.key, this.variantAsChips = false});
+
+  /// When true, show a chip variant selector at the top of this sheet.
+  final bool variantAsChips;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SongControlsSheet> createState() => _SongControlsSheetState();
+}
+
+class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
+  /// Instrument picker starts collapsed so the sheet opens compact.
+  bool _instrumentExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(songDisplaySettingsProvider);
     final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final doc = ref.watch(songCurrentDocumentProvider);
+    final versions =
+        widget.variantAsChips && doc != null && doc.variants.isNotEmpty
+        ? [doc.defaultVersion, ...doc.variants]
+        : const <ChordProVersion>[];
+    void selectVariant(String id) {
+      if (doc == null) return;
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        id == 'default' ? null : selectVersion(doc, id),
+      );
+      controller.setVariantId(
+        id,
+        transpose: defaults.transpose,
+        capo: defaults.capo,
+      );
+    }
 
     return SafeArea(
       top: false,
@@ -70,6 +124,16 @@ class SongControlsSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 4),
+
+            if (versions.isNotEmpty) ...[
+              _SectionTitle(label: l10n.songVariant, value: ''),
+              _ToolbarVariantChips(
+                versions: versions,
+                selectedId: settings.variantId,
+                onSelected: selectVariant,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Transpose / capo only matter when chords are visible.
             if (settings.showChords) ...[
@@ -84,6 +148,7 @@ class SongControlsSheet extends ConsumerWidget {
                 onInc: () => controller.setTranspose(settings.transpose + 1),
                 onReset: () => controller.setTranspose(0),
                 resetLabel: l10n.songOriginal,
+                resetSelected: settings.transpose == 0,
               ),
               const SizedBox(height: 16),
 
@@ -125,10 +190,11 @@ class SongControlsSheet extends ConsumerWidget {
                         .toDouble(),
                     min: SongDisplaySettings.minFontSize,
                     max: SongDisplaySettings.maxFontSize,
-                    divisions: ((SongDisplaySettings.maxFontSize -
-                                SongDisplaySettings.minFontSize) /
-                            2)
-                        .round(),
+                    divisions:
+                        ((SongDisplaySettings.maxFontSize -
+                                    SongDisplaySettings.minFontSize) /
+                                2)
+                            .round(),
                     label: settings.fontSize.toInt().toString(),
                     onChanged: controller.setFontSize,
                   ),
@@ -187,36 +253,91 @@ class SongControlsSheet extends ConsumerWidget {
 
             if (settings.showChords) ...[
               const SizedBox(height: 8),
-              _SectionTitle(label: l10n.songInstrument, value: ''),
-              InstrumentSelector(
-                selected: settings.instrument,
-                onChanged: controller.setInstrument,
+              _CollapsibleInstrumentHeader(
+                label: l10n.songInstrument,
+                selectedLabel: settings.instrumentInfo.localizedLabel(l10n),
+                expanded: _instrumentExpanded,
+                onToggle: () {
+                  setState(() => _instrumentExpanded = !_instrumentExpanded);
+                },
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: _instrumentExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: InstrumentSelector(
+                          selected: settings.instrument,
+                          onChanged: controller.setInstrument,
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
               ),
             ],
-
-            // Variant switcher — shown inside the sheet as well.
-            Builder(
-              builder: (context) {
-                final doc = ref.watch(songCurrentDocumentProvider);
-                if (doc == null || doc.variants.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                final all = [doc.defaultVersion, ...doc.variants];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Divider(height: 24),
-                    _SectionTitle(label: l10n.songVariant, value: ''),
-                    _VariantSelector(
-                      versions: all,
-                      selectedId: settings.variantId,
-                      onSelected: controller.setVariantId,
-                    ),
-                  ],
-                );
-              },
-            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable instrument row: shows the current choice and a rotating chevron.
+class _CollapsibleInstrumentHeader extends StatelessWidget {
+  const _CollapsibleInstrumentHeader({
+    required this.label,
+    required this.selectedLabel,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  final String label;
+  final String selectedLabel;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                selectedLabel,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 4),
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: Icon(
+                  Icons.expand_more_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -264,12 +385,16 @@ class _StepperRow extends StatelessWidget {
     required this.onInc,
     required this.onReset,
     required this.resetLabel,
+    this.resetSelected = false,
   });
 
   final VoidCallback onDec;
   final VoidCallback onInc;
   final VoidCallback onReset;
   final String resetLabel;
+
+  /// True when transpose is at the song's written key (0 semitones).
+  final bool resetSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +403,17 @@ class _StepperRow extends StatelessWidget {
       color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: theme.colorScheme.outlineVariant),
+    );
+    final resetDecoration = BoxDecoration(
+      color: resetSelected
+          ? theme.colorScheme.primary
+          : theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: resetSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outlineVariant,
+      ),
     );
     return Row(
       children: [
@@ -294,13 +430,16 @@ class _StepperRow extends StatelessWidget {
             onTap: onReset,
             borderRadius: BorderRadius.circular(16),
             child: Container(
-              decoration: base,
+              decoration: resetDecoration,
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 resetLabel,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: resetSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -349,20 +488,41 @@ class _CapoSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
+    return Column(
       children: [
-        for (final fret in [0, 1, 2, 3, 4, 5])
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: _CapoChip(
-                label: fret == 0 ? '-' : '$fret',
-                selected: value == fret,
-                onTap: () => onChanged(fret),
-                theme: theme,
+        Row(
+          children: [
+            for (final fret in [0, 1, 2, 3, 4, 5])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _CapoChip(
+                    label: fret == 0 ? '-' : '$fret',
+                    selected: value == fret,
+                    onTap: () => onChanged(fret),
+                    theme: theme,
+                  ),
+                ),
               ),
-            ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            for (final fret in [6, 7, 8, 9, 10, 11])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _CapoChip(
+                    label: '$fret',
+                    selected: value == fret,
+                    onTap: () => onChanged(fret),
+                    theme: theme,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -410,62 +570,6 @@ class _CapoChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ── Variant selector ─────────────────────────────────────────────────────────
-
-/// Chip-based (or dropdown) selector for ChordPro song variants.
-/// Shown inside [SongControlsSheet] when the current document has variants.
-class _VariantSelector extends StatelessWidget {
-  const _VariantSelector({
-    required this.versions,
-    required this.selectedId,
-    required this.onSelected,
-  });
-
-  final List<ChordProVersion> versions;
-  final String selectedId;
-  final void Function(String id) onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Use chips for ≤6 versions, dropdown for larger sets
-    if (versions.length <= 6) {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final version in versions)
-            _CapoChip(
-              label: version.name,
-              selected: selectedId == version.id,
-              onTap: () => onSelected(version.id),
-              theme: theme,
-            ),
-        ],
-      );
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: selectedId,
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
-        ),
-      ),
-      items: [
-        for (final version in versions)
-          DropdownMenuItem(value: version.id, child: Text(version.name)),
-      ],
-      onChanged: (id) {
-        if (id != null) onSelected(id);
-      },
     );
   }
 }
@@ -563,6 +667,42 @@ class _ToolbarVariantButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Chip selector used inside [SongControlsSheet] for service song variants.
+class _ToolbarVariantChips extends StatelessWidget {
+  const _ToolbarVariantChips({
+    required this.versions,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<ChordProVersion> versions;
+  final String selectedId;
+  final void Function(String id) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final version in versions)
+          ChoiceChip(
+            label: Text(version.name),
+            selected: version.id == selectedId,
+            onSelected: (_) => onSelected(version.id),
+            labelStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: version.id == selectedId
+                  ? FontWeight.w700
+                  : FontWeight.w600,
+            ),
+          ),
+      ],
     );
   }
 }

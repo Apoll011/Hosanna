@@ -5,28 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
-import '../../../l10n/generated/app_localizations.dart';
+import '../data/local_notification_service.dart';
 import '../domain/notification_route.dart';
 
-/// Subscribes to foreground FCM messages and presents them in-app.
+/// Subscribes to foreground FCM messages and re-posts them as proper OS
+/// notifications.
 ///
-/// The OS does not display notifications for messages received while the app
-/// is in the foreground, so this widget surfaces them itself. It is mounted
-/// from `MaterialApp.builder` (above the Navigator), so it shows an in-app
-/// banner through the app's [ScaffoldMessengerState] rather than a route.
+/// On Android, FCM suppresses the system notification while the app is in the
+/// foreground.  This widget intercepts those messages and dispatches them via
+/// [LocalNotificationService] so they appear as a standard heads-up banner at
+/// the top of the screen — exactly the same as when the app is in the
+/// background — instead of the previous in-app SnackBar popup at the bottom.
+///
+/// The widget is mounted from `MaterialApp.builder` (above the Navigator) so
+/// it is always active regardless of which route is showing.
 class ForegroundNotificationListener extends ConsumerStatefulWidget {
   const ForegroundNotificationListener({
     super.key,
-    required this.messengerKey,
     required this.child,
-    this.onOpen,
   });
-
-  /// The app's root `ScaffoldMessenger` key, used to show the banner.
-  final GlobalKey<ScaffoldMessengerState> messengerKey;
-
-  /// Called with the go_router location when the banner's action is tapped.
-  final void Function(String location)? onOpen;
 
   final Widget child;
 
@@ -38,11 +35,11 @@ class ForegroundNotificationListener extends ConsumerStatefulWidget {
 class _ForegroundNotificationListenerState
     extends ConsumerState<ForegroundNotificationListener> {
   StreamSubscription<RemoteMessage>? _subscription;
+  int _nextId = 0;
 
   @override
   void initState() {
     super.initState();
-    // Wired on app start; the stream is empty when Firebase is unconfigured.
     _subscription = ref.read(fcmServiceProvider).onMessage.listen(_present);
   }
 
@@ -52,40 +49,25 @@ class _ForegroundNotificationListenerState
     super.dispose();
   }
 
-  void _present(RemoteMessage message) {
-    if (!mounted) return;
+  Future<void> _present(RemoteMessage message) async {
     final notification = message.notification;
     final title = notification?.title ?? message.data['title'] as String?;
     final body = notification?.body ?? message.data['body'] as String?;
+
     if ((title == null || title.isEmpty) && (body == null || body.isEmpty)) {
       return;
     }
 
-    final text = [
-      if (title != null && title.isNotEmpty) title,
-      if (body != null && body.isNotEmpty) body,
-    ].join('\n');
-
+    // Build a payload so that tapping the notification can open the right
+    // screen (handled by the existing onNotificationTap stream in FcmService).
     final location = notificationTapLocation(message.data);
-    final onOpen = widget.onOpen;
 
-    final messenger = widget.messengerKey.currentState;
-    if (messenger == null) return;
-    messenger
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(text),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-          action: (location != null && onOpen != null)
-              ? SnackBarAction(
-                  label: AppLocalizations.of(context).notificationOpenAction,
-                  onPressed: () => onOpen(location),
-                )
-              : null,
-        ),
-      );
+    await LocalNotificationService.instance.show(
+      id: _nextId++,
+      title: title,
+      body: body,
+      payload: location,
+    );
   }
 
   @override

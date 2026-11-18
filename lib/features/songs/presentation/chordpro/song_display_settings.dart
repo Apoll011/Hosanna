@@ -5,15 +5,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/providers.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
+import '../../domain/chordpro/resolve_chords.dart';
+import '../../domain/chordpro/chord_notation.dart';
 import '../../../songs/domain/chordpro/parser.dart';
 
 /// Renderer display settings, mirroring `@hosanna/shared`'s ChordProRenderer
 /// props (transpose, capo, show chords, two-column, font size, instrument,
 /// diagrams).
 ///
-/// Appearance settings are persisted globally. Transpose/capo are transient for
-/// standalone song views, and persisted per `(serviceId, songId)` while reading
-/// inside a service.
+/// Appearance settings are persisted globally. Transpose/capo/variant are
+/// transient for standalone song views, and persisted per `(serviceId, songId)`
+/// while reading inside a service.
 class SongDisplaySettings {
   /// Shared font-size range for the song reader toolbar and Settings.
   static const double minFontSize = 12;
@@ -31,6 +33,7 @@ class SongDisplaySettings {
     this.sectionColorBackground = false,
     this.autoScrollSpeed = 5,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
     this.instrumentPreferences = const InstrumentPreferences(),
   });
 
@@ -39,15 +42,18 @@ class SongDisplaySettings {
   final bool showChords;
   final bool twoColumn;
   final double fontSize;
-  final String instrument; // any registered instrument id (see instrumentRegistry)
+  final String
+  instrument; // any registered instrument id (see instrumentRegistry)
   final bool showDiagrams;
   final bool sectionColorBackground;
 
   /// Auto-scroll speed, 1..10 (transient).
   final double autoScrollSpeed;
 
-  /// Active variant id (transient — not persisted).
+  /// Active variant id. Persisted only while scoped to a service song.
   final String variantId;
+
+  final String chordNotationId;
 
   /// Per-instrument voicing / diagram preferences.
   final InstrumentPreferences instrumentPreferences;
@@ -73,6 +79,7 @@ class SongDisplaySettings {
     bool? sectionColorBackground,
     double? autoScrollSpeed,
     String? variantId,
+    String? chordNotationId,
     InstrumentPreferences? instrumentPreferences,
   }) {
     return SongDisplaySettings(
@@ -87,6 +94,7 @@ class SongDisplaySettings {
           sectionColorBackground ?? this.sectionColorBackground,
       autoScrollSpeed: autoScrollSpeed ?? this.autoScrollSpeed,
       variantId: variantId ?? this.variantId,
+      chordNotationId: chordNotationId ?? this.chordNotationId,
       instrumentPreferences:
           instrumentPreferences ?? this.instrumentPreferences,
     );
@@ -94,7 +102,8 @@ class SongDisplaySettings {
 }
 
 class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
-  SongDisplaySettingsController(this._prefs) : super(const SongDisplaySettings()) {
+  SongDisplaySettingsController(this._prefs)
+    : super(const SongDisplaySettings()) {
     _restore();
   }
 
@@ -106,17 +115,21 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   static const _instrumentKey = 'songDisplay.instrument';
   static const _defaultInstrument = 'guitar';
   static const _diagramsKey = 'songDisplay.showDiagrams';
-  static const _sectionColorBackgroundKey = 'songDisplay.sectionColorBackground';
+  static const _sectionColorBackgroundKey =
+      'songDisplay.sectionColorBackground';
   static const _instrumentPreferencesKey = 'songDisplay.instrumentPreferences';
+  static const _chordNotationKey = 'songDisplay.chordNotation';
   static const _serviceTranspositionsKey = 'songDisplay.serviceTranspositions';
 
   /// Active service-song scope (`serviceId|songId`), or `null` when reading a
   /// standalone song / nothing. Changes under a scope are written to prefs.
   String? _transpositionScopeKey;
 
+  /// Directive defaults for the current song ({keyshift}, {capo}).
+  ({int transpose, int capo}) _directiveDefaults = (transpose: 0, capo: 0);
+
   void _restore() {
-    InstrumentPreferences instrumentPreferences =
-        const InstrumentPreferences();
+    InstrumentPreferences instrumentPreferences = const InstrumentPreferences();
     final raw = _prefs.getString(_instrumentPreferencesKey);
     if (raw != null && raw.isNotEmpty) {
       try {
@@ -134,7 +147,8 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     state = SongDisplaySettings(
       showChords: _prefs.getBool(_showChordsKey) ?? true,
       twoColumn: _prefs.getBool(_twoColumnKey) ?? false,
-      fontSize: _prefs.getDouble(_fontSizeKey) ?? SongDisplaySettings.defaultFontSize,
+      fontSize:
+          _prefs.getDouble(_fontSizeKey) ?? SongDisplaySettings.defaultFontSize,
       instrument: instrumentRegistry
           .resolve(_prefs.getString(_instrumentKey) ?? _defaultInstrument)
           .id,
@@ -142,6 +156,9 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
       sectionColorBackground:
           _prefs.getBool(_sectionColorBackgroundKey) ?? false,
       instrumentPreferences: instrumentPreferences,
+      chordNotationId: ChordNotationRegistry.resolve(
+        _prefs.getString(_chordNotationKey),
+      ).id,
     );
   }
 
@@ -152,50 +169,127 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 
   void setCapo(int value) {
-    if (state.capo == value) return;
-    state = state.copyWith(capo: value);
+    final clamped = value.clamp(0, 11);
+    if (state.capo == clamped) return;
+    state = state.copyWith(capo: clamped);
     _persistScopedTransposition();
   }
 
   void resetTransposition() {
-    if (state.transpose == 0 && state.capo == 0) {
+    if (state.transpose == _directiveDefaults.transpose &&
+        state.capo == _directiveDefaults.capo) {
       _persistScopedTransposition();
       return;
     }
-    state = state.copyWith(transpose: 0, capo: 0);
+    state = state.copyWith(
+      transpose: _directiveDefaults.transpose,
+      capo: _directiveDefaults.capo,
+    );
     _persistScopedTransposition();
   }
 
-  /// Loads the saved transpose/capo for this service song (or 0/0) and makes
-  /// later changes persist under that pair.
-  void enterServiceSong({required String serviceId, required String songId}) {
+  /// Seeds transposition defaults from document directives ({keyshift}, {capo}).
+  void seedDirectiveDefaults({required int keyShift, required int capo}) {
+    _directiveDefaults = (transpose: keyShift, capo: capo);
+    if (_transpositionScopeKey != null) {
+      final stored = _readScopedSongSettings(_transpositionScopeKey!);
+      if (!stored.hasStored) {
+        state = state.copyWith(transpose: keyShift, capo: capo);
+      }
+    } else {
+      state = state.copyWith(transpose: keyShift, capo: capo);
+    }
+  }
+
+  /// Enters a standalone song view.
+  void enterSongStandalone({required String songId, SongAst? song}) {
+    final key = 'standalone|$songId';
+    if (_transpositionScopeKey == key) return;
+    _transpositionScopeKey = key;
+    if (song != null) {
+      _directiveDefaults = (
+        transpose: parseKeyShiftValue(song.metadata['keyShift']),
+        capo: parseCapoValue(song.metadata['capo']),
+      );
+    }
+    final stored = _readScopedSongSettings(key);
+    state = state.copyWith(
+      transpose: stored.hasStored
+          ? stored.transpose
+          : _directiveDefaults.transpose,
+      capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
+      variantId: stored.variantId,
+    );
+  }
+
+  /// Loads the saved transpose/capo/variant for this service song (or defaults)
+  /// and makes later changes persist under that pair.
+  void enterServiceSong({
+    required String serviceId,
+    required String songId,
+    SongAst? song,
+  }) {
     final key = _scopeKey(serviceId, songId);
     if (_transpositionScopeKey == key) return;
     _transpositionScopeKey = key;
-    final stored = _readScopedTransposition(key);
-    state = state.copyWith(transpose: stored.transpose, capo: stored.capo);
+    if (song != null) {
+      _directiveDefaults = (
+        transpose: parseKeyShiftValue(song.metadata['keyShift']),
+        capo: parseCapoValue(song.metadata['capo']),
+      );
+    }
+    final stored = _readScopedSongSettings(key);
+    state = state.copyWith(
+      transpose: stored.hasStored
+          ? stored.transpose
+          : _directiveDefaults.transpose,
+      capo: stored.hasStored ? stored.capo : _directiveDefaults.capo,
+      variantId: stored.variantId,
+    );
   }
 
-  /// Clears the service-song scope and resets transpose/capo to 0.
+  /// Clears the service-song scope and resets transpose/capo/variant.
   ///
   /// Call when leaving a [SongReader] (service or standalone) so the next song
-  /// never inherits the previous one's transposition.
+  /// never inherits the previous one's transposition or variant.
   void leaveTranspositionScope() {
     _transpositionScopeKey = null;
-    if (state.transpose == 0 && state.capo == 0) return;
-    state = state.copyWith(transpose: 0, capo: 0);
+    _directiveDefaults = (transpose: 0, capo: 0);
+    if (state.transpose == 0 &&
+        state.capo == 0 &&
+        state.variantId == 'default') {
+      return;
+    }
+    state = state.copyWith(transpose: 0, capo: 0, variantId: 'default');
   }
 
   static String _scopeKey(String serviceId, String songId) =>
       '$serviceId|$songId';
 
-  ({int transpose, int capo}) _readScopedTransposition(String key) {
+  ({bool hasStored, int transpose, int capo, String variantId})
+  _readScopedSongSettings(String key) {
     final map = _loadTranspositionMap();
     final entry = map[key];
-    if (entry is! Map) return (transpose: 0, capo: 0);
+    if (entry is! Map) {
+      return (
+        hasStored: false,
+        transpose: _directiveDefaults.transpose,
+        capo: _directiveDefaults.capo,
+        variantId: 'default',
+      );
+    }
     final transpose = (entry['t'] as num?)?.toInt() ?? 0;
     final capo = (entry['c'] as num?)?.toInt() ?? 0;
-    return (transpose: transpose, capo: capo);
+    final variantRaw = entry['v'];
+    final variantId = variantRaw is String && variantRaw.isNotEmpty
+        ? variantRaw
+        : 'default';
+    return (
+      hasStored: true,
+      transpose: transpose,
+      capo: capo,
+      variantId: variantId,
+    );
   }
 
   void _persistScopedTransposition() {
@@ -203,10 +297,16 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     if (key == null) return;
 
     final map = _loadTranspositionMap();
-    if (state.transpose == 0 && state.capo == 0) {
+    if (state.transpose == _directiveDefaults.transpose &&
+        state.capo == _directiveDefaults.capo &&
+        state.variantId == 'default') {
       map.remove(key);
     } else {
-      map[key] = {'t': state.transpose, 'c': state.capo};
+      map[key] = {
+        't': state.transpose,
+        'c': state.capo,
+        if (state.variantId != 'default') 'v': state.variantId,
+      };
     }
     _prefs.setString(_serviceTranspositionsKey, jsonEncode(map));
   }
@@ -223,9 +323,25 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
     return {};
   }
 
-  void setVariantId(String id) {
+  void setVariantId(String id, {int? transpose, int? capo}) {
     if (state.variantId == id) return;
-    state = state.copyWith(variantId: id);
+    state = state.copyWith(
+      variantId: id,
+      transpose: transpose ?? _directiveDefaults.transpose,
+      capo: capo ?? _directiveDefaults.capo,
+    );
+    _directiveDefaults = (
+      transpose: transpose ?? _directiveDefaults.transpose,
+      capo: capo ?? _directiveDefaults.capo,
+    );
+    _persistScopedTransposition();
+  }
+
+  void setChordNotation(String id) {
+    final notation = ChordNotationRegistry.resolve(id);
+    if (state.chordNotationId == notation.id) return;
+    _prefs.setString(_chordNotationKey, notation.id);
+    state = state.copyWith(chordNotationId: notation.id);
   }
 
   void toggleShowChords() {
@@ -256,10 +372,7 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
 
   void setFontSize(double value) {
     final v = value
-        .clamp(
-          SongDisplaySettings.minFontSize,
-          SongDisplaySettings.maxFontSize,
-        )
+        .clamp(SongDisplaySettings.minFontSize, SongDisplaySettings.maxFontSize)
         .toDouble();
     _prefs.setDouble(_fontSizeKey, v);
     state = state.copyWith(fontSize: v);
@@ -299,15 +412,19 @@ class SongDisplaySettingsController extends StateNotifier<SongDisplaySettings> {
   }
 }
 
-final songDisplaySettingsProvider = StateNotifierProvider<
-    SongDisplaySettingsController, SongDisplaySettings>((ref) {
-  return SongDisplaySettingsController(
-    ref.watch(sharedPreferencesProvider),
-  );
-});
+final songDisplaySettingsProvider =
+    StateNotifierProvider<SongDisplaySettingsController, SongDisplaySettings>((
+      ref,
+    ) {
+      return SongDisplaySettingsController(
+        ref.watch(sharedPreferencesProvider),
+      );
+    });
 
 /// Holds the [ChordProDocument] for the song that is currently on-screen.
 ///
 /// Updated by [SongBodyRenderer] every time the content changes. The toolbar
 /// reads this to build the variant switcher directly on the toolbar without prop-drilling.
-final songCurrentDocumentProvider = StateProvider<ChordProDocument?>((ref) => null);
+final songCurrentDocumentProvider = StateProvider<ChordProDocument?>(
+  (ref) => null,
+);

@@ -48,6 +48,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          HOSANNA_POSTHOG_KEY: ${{ secrets.HOSANNA_POSTHOG_KEY }}
         run: |
           flutter build apk --release \
             --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
@@ -61,6 +62,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          HOSANNA_POSTHOG_KEY: ${{ secrets.HOSANNA_POSTHOG_KEY }}
         run: |
           flutter build appbundle --release \
             --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}

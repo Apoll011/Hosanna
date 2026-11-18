@@ -29,3 +29,8 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 final collectionsStreamProvider = StreamProvider<List<CollectionRow>>((ref) {
   return ref.watch(collectionRepositoryProvider).watchCollections();
 });
+
+final collectionStreamProvider =
+    StreamProvider.family<CollectionRow?, String>((ref, id) {
+  return ref.watch(collectionRepositoryProvider).watchCollection(id);
+});

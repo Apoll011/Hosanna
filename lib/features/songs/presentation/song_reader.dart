@@ -9,6 +9,8 @@ import 'package:hosanna/app/providers.dart';
 
 import '../../../app/settings_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../metronome/data/metronome_click_player.dart';
+import '../../input/pedal_navigator.dart';
 import '../../services/data/service_annotation_repository.dart';
 import '../domain/chordpro/parser.dart';
 import '../domain/youtube.dart';
@@ -42,11 +44,13 @@ class SongReader extends ConsumerStatefulWidget {
     this.serviceId,
     this.songId,
     this.isAnnotating = false,
+    this.onToggleAnnotation,
     this.onPrev,
     this.onNext,
     this.canPrev = false,
     this.canNext = false,
     this.positionLabel,
+    this.showYoutube = true,
   });
 
   final String content;
@@ -61,6 +65,12 @@ class SongReader extends ConsumerStatefulWidget {
   /// Whether annotation mode is currently active.
   final bool isAnnotating;
 
+  ///If set to true even with videoURL does not show the video button
+  final bool showYoutube;
+
+  /// When set (service song reader), shows a floating annotation toggle.
+  final VoidCallback? onToggleAnnotation;
+
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
   final bool canPrev;
@@ -74,10 +84,21 @@ class SongReader extends ConsumerStatefulWidget {
 }
 
 class _SongReaderState extends ConsumerState<SongReader>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _scrollController = ScrollController();
   Timer? _scrollTimer;
   bool _isScrolling = false;
+  final MetronomeClickPlayer _metronomePlayer = MetronomeClickPlayer();
+  final ValueNotifier<_SongMetronomeState> _metronomeState = ValueNotifier(
+    const _SongMetronomeState(),
+  );
+  late final AnimationController _metronomePulseController;
+  Timer? _metronomeTimer;
+  DateTime? _nextMetronomeBeat;
+  int _metronomeTempo = 100;
+  int _metronomeBeatsPerBar = 4;
+  String _metronomeTime = '4/4';
+  bool _metronomeInitialized = false;
 
   /// Video playing in the bottom mini player, or `null` when it is closed.
   String? _playerVideoId;
@@ -127,22 +148,29 @@ class _SongReaderState extends ConsumerState<SongReader>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _annotationRepo = ref.read(serviceAnnotationRepositoryProvider);
     _displaySettings = ref.read(songDisplaySettingsProvider.notifier);
     _syncAnnotations = ref.read(settingsControllerProvider).syncAnnotations;
     _swipeController = AnimationController(vsync: this);
+    _metronomePulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
     _canvasController = InfiniteCanvasController();
     _scrollController.addListener(_onScrollUpdated);
     _applyTranspositionScope();
     _loadAnnotationForCurrentSong();
   }
 
-  /// Service songs restore their own transpose/capo; standalone songs start at 0.
+  /// Service songs restore their own transpose/capo; standalone songs seed from directives.
   void _applyTranspositionScope() {
     final serviceId = widget.serviceId;
     final songId = widget.songId;
     if (serviceId != null && songId != null) {
       _displaySettings.enterServiceSong(serviceId: serviceId, songId: songId);
+    } else if (songId != null) {
+      _displaySettings.enterSongStandalone(songId: songId);
     } else {
       _displaySettings.leaveTranspositionScope();
     }
@@ -298,7 +326,10 @@ class _SongReaderState extends ConsumerState<SongReader>
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.serviceId != widget.serviceId ||
-        oldWidget.songId != widget.songId) {
+        oldWidget.songId != widget.songId ||
+        oldWidget.content != widget.content) {
+      _stopSongMetronome();
+      _metronomeInitialized = false;
       _playerVideoId = null;
       _saveAnnotation(oldWidget.serviceId, oldWidget.songId);
       _applyTranspositionScope();
@@ -327,7 +358,27 @@ class _SongReaderState extends ConsumerState<SongReader>
   }
 
   @override
+  void deactivate() {
+    _stopSongMetronome();
+    super.deactivate();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _stopSongMetronome();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopSongMetronome();
+    _metronomePulseController.dispose();
+    unawaited(_metronomePlayer.dispose());
+    _metronomeState.dispose();
     _playerVideoId = null;
     _saveAnnotation(widget.serviceId, widget.songId);
     // Drop scope so the next song (service or library) never inherits this
@@ -423,6 +474,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _onHorizontalDragStart(DragStartDetails details) {
     if (_swipeController.isAnimating) return;
+    _stopSongMetronome();
     _dragTotalDx = 0;
     _hapticFired = false;
     _stopAutoScroll();
@@ -482,6 +534,7 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _goPrev() {
     if (!widget.canPrev || _swipeController.isAnimating) return;
+    _stopSongMetronome();
     _stopAutoScroll();
     _closeYoutubePlayer();
     _completeSwipe(1);
@@ -489,12 +542,60 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   void _goNext() {
     if (!widget.canNext || _swipeController.isAnimating) return;
+    _stopSongMetronome();
     _stopAutoScroll();
     _closeYoutubePlayer();
     _completeSwipe(-1);
   }
 
+  /// Scroll ~one viewport up; at the top edge, fall through to previous song.
+  void _pedalScrollPrev() {
+    if (_swipeController.isAnimating) return;
+    if (!_scrollController.hasClients) {
+      _stopSongMetronome();
+      _goPrev();
+      return;
+    }
+    final pos = _scrollController.position;
+    if (pos.pixels > pos.minScrollExtent + 4) {
+      _stopAutoScroll();
+      final page = pos.viewportDimension * 0.9;
+      _scrollController.animateTo(
+        math.max(pos.minScrollExtent, pos.pixels - page),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+    _stopSongMetronome();
+    _goPrev();
+  }
+
+  /// Scroll ~one viewport down; at the bottom edge, fall through to next song.
+  void _pedalScrollNext() {
+    if (_swipeController.isAnimating) return;
+    if (!_scrollController.hasClients) {
+      _stopSongMetronome();
+      _goNext();
+      return;
+    }
+    final pos = _scrollController.position;
+    if (pos.pixels < pos.maxScrollExtent - 4) {
+      _stopAutoScroll();
+      final page = pos.viewportDimension * 0.9;
+      _scrollController.animateTo(
+        math.min(pos.maxScrollExtent, pos.pixels + page),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+    _stopSongMetronome();
+    _goNext();
+  }
+
   void _completeSwipe(int dir) {
+    _stopSongMetronome();
     // Stop YouTube as soon as navigation starts (buttons or swipe).
     _closeYoutubePlayer();
     final target = dir * _viewportWidth;
@@ -615,6 +716,12 @@ class _SongReaderState extends ConsumerState<SongReader>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(shellBranchIndexProvider, (prev, next) {
+      if (prev != next) {
+        _stopSongMetronome();
+      }
+    });
+
     ref.listen<bool>(
       settingsControllerProvider.select((s) => s.syncAnnotations),
       (previous, next) {
@@ -646,6 +753,18 @@ class _SongReaderState extends ConsumerState<SongReader>
     final videoId = metadata == null
         ? null
         : youtubeVideoIdFromMetadata(metadata);
+    final tempo = int.tryParse(metadata?['tempo']?.trim() ?? '');
+    final timeSignature = _parseTimeSignature(metadata?['time'] ?? '');
+    final showSongMetronome =
+        tempo != null && tempo > 0 && timeSignature != null;
+    if (showSongMetronome &&
+        (!_metronomeInitialized || !_metronomeState.value.playing)) {
+      _metronomeInitialized = true;
+      _metronomeTempo = tempo;
+      _metronomeBeatsPerBar = timeSignature.$1;
+      _metronomeTime = '${timeSignature.$1}/${timeSignature.$2}';
+      unawaited(_metronomePlayer.init());
+    }
     final playerVideoId = _playerVideoId == videoId ? videoId : null;
 
     // Approximate height of the bottom overlay (floating buttons, nav pill,
@@ -656,200 +775,396 @@ class _SongReaderState extends ConsumerState<SongReader>
         (!widget.isAnnotating && showNav ? 60 : 0) +
         (playerVideoId != null ? 124 : 0);
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: _swipeEnabled
-                ? _onHorizontalDragStart
-                : null,
-            onHorizontalDragUpdate: _swipeEnabled
-                ? _onHorizontalDragUpdate
-                : null,
-            onHorizontalDragEnd: _swipeEnabled ? _onHorizontalDragEnd : null,
-            onHorizontalDragCancel: _swipeEnabled
-                ? _onHorizontalDragCancel
-                : null,
-            child: Stack(
-              children: [
-                Transform.translate(
-                  offset: Offset(_offset, 0),
-                  child: Stack(
-                    children: [
-                      NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          _onScrollUpdated();
-                          return false;
-                        },
-                        child: SongBodyRenderer(
-                          content: widget.content,
-                          notes: widget.notes,
-                          scrollController: _scrollController,
-                          bottomInset: bottomInset,
-                          onYoutubeTap: videoId == null
-                              ? null
-                              : () => setState(() => _playerVideoId = videoId),
-                        ),
-                      ),
-                      if (hasServiceSong)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            ignoring: !widget.isAnnotating,
-                            child: _buildCanvasOverlay(),
+    return PedalNavigator(
+      onPrev: widget.canPrev ? _goPrev : null,
+      onNext: widget.canNext ? _goNext : null,
+      onScrollPrev: _pedalScrollPrev,
+      onScrollNext: _pedalScrollNext,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: _swipeEnabled
+                  ? _onHorizontalDragStart
+                  : null,
+              onHorizontalDragUpdate: _swipeEnabled
+                  ? _onHorizontalDragUpdate
+                  : null,
+              onHorizontalDragEnd: _swipeEnabled ? _onHorizontalDragEnd : null,
+              onHorizontalDragCancel: _swipeEnabled
+                  ? _onHorizontalDragCancel
+                  : null,
+              child: Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(_offset, 0),
+                    child: Stack(
+                      children: [
+                        NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            _onScrollUpdated();
+                            return false;
+                          },
+                          child: SongBodyRenderer(
+                            content: widget.content,
+                            notes: widget.notes,
+                            scrollController: _scrollController,
+                            bottomInset: bottomInset,
+                            onYoutubeTap: videoId == null
+                                ? null
+                                : () =>
+                                      setState(() => _playerVideoId = videoId),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
-              ],
-            ),
-          ),
-        ),
-
-        if (widget.isAnnotating && _hasPendingRemoteUpdate)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 12,
-            child: SafeArea(
-              bottom: false,
-              child: Material(
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.sync_rounded,
-                            size: 18,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onTertiaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.annotationRemoteChanges,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                        if (hasServiceSong)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              ignoring: !widget.isAnnotating,
+                              child: _buildCanvasOverlay(),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          TextButton(
-                            onPressed: _dismissPendingRemoteUpdate,
-                            child: Text(l10n.annotationKeepMine),
-                          ),
-                          FilledButton(
-                            onPressed: _acceptPendingRemoteUpdate,
-                            child: Text(l10n.annotationReload),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  if (_dragActive) _buildSwipeEdgeIndicator(theme, l10n),
+                ],
               ),
             ),
           ),
 
-        // Bottom overlay: annotation toolbar or floating controls, stacked
-        // above the YouTube mini player when it is open.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 20,
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (widget.isAnnotating)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: _HosannaAnnotationToolbar(
-                      canvasKey: _canvasKey,
-                      tool: _canvasTool,
-                      onToolChanged: (t) => setState(() => _canvasTool = t),
-                      color: _canvasColor,
-                      onColorChanged: (c) => setState(() => _canvasColor = c),
-                      strokeWidth: _canvasStrokeWidth,
-                      onStrokeWidthChanged: (w) =>
-                          setState(() => _canvasStrokeWidth = w),
-                      onStrokeCommitted: _saveCurrentAnnotation,
-                      onClearAll: () {
-                        setState(() {});
-                        _saveCurrentAnnotation();
-                      },
+          if (widget.isAnnotating && _hasPendingRemoteUpdate)
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 12,
+              child: SafeArea(
+                bottom: false,
+                child: Material(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                  )
-                else
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: _buildFloatingControls(
-                        theme: theme,
-                        l10n: l10n,
-                        showNav: showNav,
-                        videoId: videoId,
-                        playerOpen: playerVideoId != null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sync_rounded,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onTertiaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.annotationRemoteChanges,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            TextButton(
+                              onPressed: _dismissPendingRemoteUpdate,
+                              child: Text(l10n.annotationKeepMine),
+                            ),
+                            FilledButton(
+                              onPressed: _acceptPendingRemoteUpdate,
+                              child: Text(l10n.annotationReload),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Bottom overlay: annotation toolbar or floating controls, stacked
+          // above the YouTube mini player when it is open.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.isAnnotating) ...[
+                    if (widget.onToggleAnnotation != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16, bottom: 12),
+                          child: _buildAnnotationFab(theme: theme, l10n: l10n),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _HosannaAnnotationToolbar(
+                        canvasKey: _canvasKey,
+                        tool: _canvasTool,
+                        onToolChanged: (t) => setState(() => _canvasTool = t),
+                        color: _canvasColor,
+                        onColorChanged: (c) => setState(() => _canvasColor = c),
+                        strokeWidth: _canvasStrokeWidth,
+                        onStrokeWidthChanged: (w) =>
+                            setState(() => _canvasStrokeWidth = w),
+                        onStrokeCommitted: _saveCurrentAnnotation,
+                        onClearAll: () {
+                          setState(() {});
+                          _saveCurrentAnnotation();
+                        },
+                      ),
+                    ),
+                  ] else
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: _buildFloatingControls(
+                          theme: theme,
+                          l10n: l10n,
+                          showNav: showNav,
+                          videoId: videoId,
+                          playerOpen: playerVideoId != null,
+                          showSongMetronome: showSongMetronome,
+                        ),
+                      ),
+                    ),
+                  if (playerVideoId != null) ...[
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: YoutubeMiniPlayer(
+                        key: ValueKey(playerVideoId),
+                        videoId: playerVideoId,
+                        fallbackTitle: metadata?['title'],
+                        onClose: _closeYoutubePlayer,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static (int, int)? _parseTimeSignature(String raw) {
+    final match = RegExp(r'^\s*(\d+)\s*/\s*(\d+)\s*$').firstMatch(raw);
+    if (match == null) return null;
+    final numerator = int.tryParse(match.group(1)!);
+    final denominator = int.tryParse(match.group(2)!);
+    if (numerator == null ||
+        numerator < 1 ||
+        numerator > 16 ||
+        denominator == null ||
+        ![2, 4, 8, 16].contains(denominator)) {
+      return null;
+    }
+    return (numerator, denominator);
+  }
+
+  Widget _buildSongMetronomeFab(ThemeData theme) {
+    return ValueListenableBuilder<_SongMetronomeState>(
+      valueListenable: _metronomeState,
+      builder: (context, state, _) {
+        final isPlaying = state.playing;
+        final isAccent = state.beat == 0;
+
+        final Color backgroundColor;
+        final Color foregroundColor;
+        if (!isPlaying) {
+          backgroundColor = theme.colorScheme.surfaceContainerHighest;
+          foregroundColor = theme.colorScheme.onSurfaceVariant;
+        } else if (isAccent) {
+          backgroundColor = theme.colorScheme.primary;
+          foregroundColor = theme.colorScheme.onPrimary;
+        } else {
+          backgroundColor = theme.colorScheme.onSurface;
+          foregroundColor = theme.colorScheme.surface;
+        }
+
+        return AnimatedBuilder(
+          animation: _metronomePulseController,
+          builder: (context, _) {
+            final progress = _metronomePulseController.value;
+            final pulseAmount = isPlaying ? math.sin(progress * math.pi) : 0.0;
+            final maxBoost = isAccent ? 0.22 : 0.12;
+            final scale = 1.0 + (maxBoost * pulseAmount);
+
+            return Transform.scale(
+              scale: scale,
+              child: _SongReaderFab(
+                onPressed: _openSongMetronome,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                tooltip: 'Metronome',
+                child: const Icon(Icons.graphic_eq_rounded),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openSongMetronome() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+          child: ValueListenableBuilder<_SongMetronomeState>(
+            valueListenable: _metronomeState,
+            builder: (context, state, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$_metronomeTempo BPM · $_metronomeTime',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _metronomeBeatsPerBar,
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      width: state.playing && state.beat == i ? 18 : 12,
+                      height: state.playing && state.beat == i ? 18 : 12,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: state.playing && state.beat == i
+                            ? (i == 0
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.secondary)
+                            : Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                   ),
-                if (playerVideoId != null) ...[
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: YoutubeMiniPlayer(
-                      key: ValueKey(playerVideoId),
-                      videoId: playerVideoId,
-                      fallbackTitle: metadata?['title'],
-                      onClose: _closeYoutubePlayer,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: state.playing ? null : _startSongMetronome,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text('Play'),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: state.playing ? _stopSongMetronome : null,
+                      icon: const Icon(Icons.stop_rounded),
+                      label: const Text('Stop'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
-  /// Right-side controls: YouTube toggle, auto-scroll and prev/next.
+  void _startSongMetronome() {
+    _metronomeState.value = const _SongMetronomeState(playing: true, beat: -1);
+    _nextMetronomeBeat = DateTime.now();
+    _scheduleSongMetronomeBeat();
+  }
+
+  void _scheduleSongMetronomeBeat() {
+    _metronomeTimer?.cancel();
+    if (_nextMetronomeBeat == null || !_metronomeState.value.playing) return;
+    final delay = _nextMetronomeBeat!.difference(DateTime.now());
+    _metronomeTimer = Timer(delay.isNegative ? Duration.zero : delay, () {
+      if (!mounted || !_metronomeState.value.playing) return;
+      final nextBeat = (_metronomeState.value.beat + 1) % _metronomeBeatsPerBar;
+      _metronomeState.value = _SongMetronomeState(
+        playing: true,
+        beat: nextBeat,
+      );
+      _metronomePulseController.forward(from: 0);
+      unawaited(_metronomePlayer.click(accent: nextBeat == 0));
+      final interval = Duration(
+        milliseconds: (60000 / _metronomeTempo).round(),
+      );
+      _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
+      while (_nextMetronomeBeat!.isBefore(DateTime.now())) {
+        _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
+      }
+      _scheduleSongMetronomeBeat();
+    });
+  }
+
+  void _stopSongMetronome() {
+    _metronomeTimer?.cancel();
+    _metronomeTimer = null;
+    _nextMetronomeBeat = null;
+    if (_metronomePulseController.isAnimating) {
+      _metronomePulseController.reset();
+    }
+    unawaited(_metronomePlayer.stop());
+    if (_metronomeState.value.playing) {
+      _metronomeState.value = const _SongMetronomeState();
+    }
+  }
+
+  /// Right-side controls: YouTube toggle, auto-scroll, annotation, metronome and prev/next.
   Widget _buildFloatingControls({
     required ThemeData theme,
     required AppLocalizations l10n,
     required bool showNav,
     required String? videoId,
     required bool playerOpen,
+    required bool showSongMetronome,
   }) {
+    final autoScrollFab = _SongReaderFab(
+      onPressed: _toggleAutoScroll,
+      backgroundColor: _isScrolling
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.surfaceContainerHighest,
+      foregroundColor: _isScrolling
+          ? theme.colorScheme.surface
+          : theme.colorScheme.onSurfaceVariant,
+      tooltip: _isScrolling
+          ? l10n.songAutoScrollPause
+          : l10n.songAutoScrollStart,
+      child: Icon(
+        _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+      ),
+    );
+
+    final bool hasAnnotation = widget.onToggleAnnotation != null;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (videoId != null) ...[
-          FloatingActionButton.small(
-            heroTag: null,
-            elevation: 1,
-            highlightElevation: 2,
+        if (videoId != null && widget.showYoutube) ...[
+          _SongReaderFab(
             onPressed: () {
               if (playerOpen) {
                 _closeYoutubePlayer();
@@ -857,8 +1172,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                 setState(() => _playerVideoId = videoId);
               }
             },
-            backgroundColor: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.8),
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             foregroundColor: playerOpen
                 ? theme.colorScheme.primary
                 : theme.colorScheme.onSurfaceVariant,
@@ -869,22 +1183,31 @@ class _SongReaderState extends ConsumerState<SongReader>
           ),
           const SizedBox(height: 12),
         ],
-        FloatingActionButton.small(
-          heroTag: null,
-          onPressed: _toggleAutoScroll,
-          backgroundColor: _isScrolling
-              ? theme.colorScheme.onSurface
-              : theme.colorScheme.primary,
-          foregroundColor: _isScrolling
-              ? theme.colorScheme.surface
-              : theme.colorScheme.onPrimary,
-          tooltip: _isScrolling
-              ? l10n.songAutoScrollPause
-              : l10n.songAutoScrollStart,
-          child: Icon(
-            _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+        if (hasAnnotation) ...[
+          autoScrollFab,
+          const SizedBox(height: 12),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSongMetronome) ...[
+                _buildSongMetronomeFab(theme),
+                const SizedBox(width: 12),
+              ],
+              _buildAnnotationFab(theme: theme, l10n: l10n),
+            ],
           ),
-        ),
+        ] else ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSongMetronome) ...[
+                _buildSongMetronomeFab(theme),
+                const SizedBox(width: 12),
+              ],
+              autoScrollFab,
+            ],
+          ),
+        ],
         if (showNav) const SizedBox(height: 12),
         if (showNav)
           _ReaderNav(
@@ -897,6 +1220,69 @@ class _SongReaderState extends ConsumerState<SongReader>
       ],
     );
   }
+
+  Widget _buildAnnotationFab({
+    required ThemeData theme,
+    required AppLocalizations l10n,
+  }) {
+    return _SongReaderFab(
+      onPressed: widget.onToggleAnnotation!,
+      backgroundColor: widget.isAnnotating
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.surfaceContainerHighest,
+      foregroundColor: widget.isAnnotating
+          ? theme.colorScheme.surface
+          : theme.colorScheme.onSurfaceVariant,
+      tooltip: l10n.annotationModeTitle,
+      child: Icon(widget.isAnnotating ? Icons.draw : Icons.draw_outlined),
+    );
+  }
+}
+
+/// Circular, semi-transparent song-reader floating action button.
+class _SongReaderFab extends StatelessWidget {
+  const _SongReaderFab({
+    required this.onPressed,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.tooltip,
+    required this.child,
+  });
+
+  static const double _size = 52;
+  static const double _opacity = 0.5;
+
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final String tooltip;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _size,
+      height: _size,
+      child: FloatingActionButton(
+        heroTag: null,
+        elevation: 1,
+        highlightElevation: 2,
+        shape: const CircleBorder(),
+        backgroundColor: backgroundColor.withValues(alpha: _opacity),
+        foregroundColor: foregroundColor,
+        tooltip: tooltip,
+        onPressed: onPressed,
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SongMetronomeState {
+  const _SongMetronomeState({this.playing = false, this.beat = 0});
+
+  final bool playing;
+  final int beat;
 }
 
 /// Custom sleek toolbar for annotations supporting all tools.

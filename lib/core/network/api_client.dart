@@ -44,10 +44,9 @@ Dio buildDio({
 }) {
   final dio = Dio(
     BaseOptions(
-      // Origin only (no `/api` suffix). Better Auth keeps absolute `/api/auth/…`
-      // paths; the OpenAPI client ([HosannaApi]) uses a Dio clone whose baseUrl
-      // is [AppConfig.apiRoot] so generated paths like `/replication/…` resolve.
-      baseUrl: config.apiBaseUrl,
+      // Auth Dio origin: Better Auth keeps absolute `/api/auth/…` paths.
+      // Domain REST uses [HosannaApi] with [AppConfig.apiRoot].
+      baseUrl: config.authBaseUrl,
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 30),
       responseType: ResponseType.json,

@@ -11,29 +11,29 @@ class ClickSynth {
   static Uint8List generate({
     required double frequency,
     int sampleRate = 44100,
-    double durationMs = 42,
-    double amplitude = 0.95,
+    double durationMs = 55,
+    double amplitude = 0.98,
     bool accent = false,
   }) {
     final sampleCount = (sampleRate * durationMs / 1000).round();
-    final samples = Int16List(sampleCount);
+    final rawSamples = Float64List(sampleCount);
     // Deterministic noise so identical frequencies produce identical WAVs
     // (important for temp-file caching and tests).
     var noiseState = (frequency * 97).round() & 0x7fffffff;
     if (noiseState == 0) noiseState = 1;
 
-    final decay = accent ? 78.0 : 95.0;
-    final noiseMix = accent ? 0.42 : 0.28;
+    final decay = accent ? 46.0 : 58.0;
+    final noiseMix = accent ? 0.35 : 0.22;
     final toneMix = 1.0 - noiseMix;
-    final peak = accent ? amplitude : amplitude * 0.78;
 
+    var maxAbs = 0.0;
     for (var i = 0; i < sampleCount; i++) {
       final t = i / sampleRate;
-      // Fast attack, exponential decay → sharp "tick".
-      final envelope = math.exp(-t * decay) * (1 - math.exp(-t * 1800));
+      // Fast attack, exponential decay → sharp percussive tap.
+      final envelope = math.exp(-t * decay) * (1 - math.exp(-t * 2200));
 
       final fundamental = math.sin(2 * math.pi * frequency * t);
-      final partial = 0.35 * math.sin(2 * math.pi * frequency * 2.15 * t);
+      final partial = 0.4 * math.sin(2 * math.pi * frequency * 2.0 * t);
       final tone = fundamental + partial;
 
       // xorshift-ish noise for wood character
@@ -42,8 +42,21 @@ class ClickSynth {
       noiseState ^= noiseState << 5;
       final noise = ((noiseState & 0xffff) / 0x8000) - 1.0;
 
-      final sample = (tone * toneMix + noise * noiseMix) * envelope * peak;
-      samples[i] = (sample * 32767).round().clamp(-32768, 32767);
+      final val = (tone * toneMix + noise * noiseMix) * envelope;
+      rawSamples[i] = val;
+      final absVal = val.abs();
+      if (absVal > maxAbs) {
+        maxAbs = absVal;
+      }
+    }
+
+    final targetPeak = accent ? 32000.0 : 26000.0;
+    final scale = maxAbs > 0.0001 ? (targetPeak / maxAbs) : 1.0;
+
+    final samples = Int16List(sampleCount);
+    for (var i = 0; i < sampleCount; i++) {
+      final scaled = (rawSamples[i] * scale).round();
+      samples[i] = scaled.clamp(-32768, 32767);
     }
 
     return _wrapAsWav(samples, sampleRate);

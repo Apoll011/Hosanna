@@ -349,6 +349,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get setupFocusGuitar => 'Guitarra';
 
   @override
+  String get setupFocusBass => 'Baixo';
+
+  @override
   String get setupFocusUkulele => 'Ukulele';
 
   @override
@@ -443,6 +446,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get syncNow => 'Sincronizar agora';
+
+  @override
+  String get songsSavedOffline =>
+      'Guardado neste dispositivo. As alterações sincronizam quando voltares a ter ligação.';
 
   @override
   String get syncPullToRefresh => 'Puxe para sincronizar';
@@ -853,6 +860,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songsLintInvalidCapo => 'O capo deve ser um traste de 0 a 12.';
 
   @override
+  String get songsLintInvalidKeyShift =>
+      'A mudança de tonalidade deve ser um número positivo.';
+
+  @override
   String get songsLintInvalidTime => 'O compasso deve parecer 4/4 ou 6/8.';
 
   @override
@@ -1086,6 +1097,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songFontSize => 'Tamanho da Letra';
 
   @override
+  String get songChordNotation => 'Notação de acordes';
+
+  @override
+  String get songChordNotationDescription =>
+      'Escolha como os nomes dos acordes são apresentados nas músicas. Isto não altera os dados originais da música.';
+
+  @override
+  String get songChordNotationInternational => 'Internacional (C, D, E)';
+
+  @override
+  String get songChordNotationLatin => 'Latina (Do, Re, Mi)';
+
+  @override
+  String get songChordNotationGerman => 'Alemã (H em vez de B)';
+
+  @override
+  String get songChordNotationSargam => 'Indiana / Sargam (Sa em C)';
+
+  @override
   String get songShowChords => 'Mostrar Acordes';
 
   @override
@@ -1101,10 +1131,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songGuitar => 'Guitarra';
 
   @override
+  String get songBass => 'Baixo';
+
+  @override
   String get songUkulele => 'Ukelele';
 
   @override
   String get songPiano => 'Piano';
+
+  @override
+  String get instrumentFamilyFretted => 'Com trastes';
+
+  @override
+  String get instrumentFamilyKeyboard => 'Teclado';
 
   @override
   String get settingsInstrumentConfig => 'Definições do instrumento';
@@ -1112,6 +1151,13 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsInstrumentConfigDesc =>
       'Opções do instrumento selecionado — usadas ao desenhar os diagramas de acordes.';
+
+  @override
+  String get settingsTuning => 'Afinação';
+
+  @override
+  String get settingsTuningDesc =>
+      'Configuração das cordas abertas para os diagramas.';
 
   @override
   String get settingsShowFingerNumbers => 'Mostrar números dos dedos';
@@ -1128,6 +1174,20 @@ class AppLocalizationsPt extends AppLocalizations {
       'Desenha o capo no pestana quando está ativo (estilo CifraClub).';
 
   @override
+  String get settingsShowStringLabels => 'Mostrar nomes das cordas';
+
+  @override
+  String get settingsShowStringLabelsDesc =>
+      'Etiqueta cada corda por baixo do diagrama (E A D G B e, etc.).';
+
+  @override
+  String get settingsBassRootNotes => 'Só notas fundamentais';
+
+  @override
+  String get settingsBassRootNotesDesc =>
+      'Mostra uma única nota (tónica ou baixo do acorde com barra) em vez de formas completas.';
+
+  @override
   String get settingsPianoCompactVoicing => 'Voicings compactos';
 
   @override
@@ -1141,6 +1201,27 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsPianoSlashSplitDesc =>
       'Toca o baixo do acorde com barra na mão esquerda e o acorde na direita (ex.: A/C#).';
+
+  @override
+  String get tuningGuitarStandard => 'Padrão';
+
+  @override
+  String get tuningGuitarDropD => 'Drop D';
+
+  @override
+  String get tuningGuitarSevenString => '7 cordas';
+
+  @override
+  String get tuningBassFiveString => '5 cordas';
+
+  @override
+  String get tuningUkuleleHighG => 'Sol agudo';
+
+  @override
+  String get tuningUkuleleLowG => 'Sol grave';
+
+  @override
+  String get tuningUkuleleBaritone => 'Barítono';
 
   @override
   String get songAutoScrollStart => 'Iniciar scroll automático';
@@ -1278,6 +1359,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'As pastas organizam a biblioteca de cânticos da sua igreja.';
 
   @override
+  String get folderContentsEmpty => 'Esta pasta está vazia';
+
+  @override
+  String get folderContentsEmptyDesc =>
+      'Ainda não há cânticos nem subpastas aqui. Adicione um cântico, importe com a Logos AI, ou mova cânticos para esta pasta no Studio.';
+
+  @override
+  String get folderContentsEmptyReadonlyDesc =>
+      'Ainda não há cânticos nem subpastas aqui. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.';
+
+  @override
   String get foldersNoResultsDesc =>
       'Experimente outra pesquisa ou limpe os filtros.';
 
@@ -1287,6 +1379,20 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get collectionsEmptyDesc =>
       'As coleções aparecem aqui quando a sua igreja as criar.';
+
+  @override
+  String get collectionsSearchHint => 'Pesquisar coleções…';
+
+  @override
+  String get collectionContentsEmpty => 'Esta coleção está vazia';
+
+  @override
+  String get collectionContentsEmptyDesc =>
+      'Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.';
+
+  @override
+  String get collectionContentsEmptyReadonlyDesc =>
+      'Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.';
 
   @override
   String get foldersSubfolders => 'Subpastas';
@@ -1329,6 +1435,67 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get servicesNoResultsDesc => 'Experimente outra pesquisa.';
+
+  @override
+  String get servicesNoResultsFiltersDesc =>
+      'Nada corresponde a estes filtros. Experimenta limpá-los.';
+
+  @override
+  String get servicesFilter => 'Filtrar cultos';
+
+  @override
+  String get servicesSortDate => 'Data';
+
+  @override
+  String get servicesSortName => 'Nome';
+
+  @override
+  String get servicesFilterWhen => 'Quando';
+
+  @override
+  String get servicesFilterDateAll => 'Todas as datas';
+
+  @override
+  String get servicesFilterUpcoming => 'Próximos';
+
+  @override
+  String get servicesFilterPast => 'Passados';
+
+  @override
+  String get servicesFilterToday => 'Hoje';
+
+  @override
+  String get servicesFilterThisWeek => 'Esta semana';
+
+  @override
+  String get servicesFilterThisMonth => 'Este mês';
+
+  @override
+  String get servicesFilterStatus => 'Estado';
+
+  @override
+  String get servicesFilterActive => 'Ativos';
+
+  @override
+  String get servicesFilterArchivedOnly => 'Arquivados';
+
+  @override
+  String get servicesFilterIncludeArchived => 'Ativos + arquivados';
+
+  @override
+  String get servicesFilterContent => 'Plano';
+
+  @override
+  String get servicesFilterContentAny => 'Qualquer';
+
+  @override
+  String get servicesFilterWithSongs => 'Com músicas';
+
+  @override
+  String get servicesFilterWithNotes => 'Com notas';
+
+  @override
+  String get servicesFilterEmptyPlan => 'Plano vazio';
 
   @override
   String get servicesNextService => 'Próximo culto';
@@ -1860,6 +2027,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTabAppearance => 'Aparência';
 
   @override
+  String get settingsTabSong => 'Música';
+
+  @override
   String get settingsSubscriptionInactive => 'Sem subscrição ativa';
 
   @override
@@ -1959,6 +2129,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.';
 
   @override
+  String get servicesCollapseOrderPanel => 'Recolher painel da ordem';
+
+  @override
+  String get servicesExpandOrderPanel => 'Expandir painel da ordem';
+
+  @override
   String get settingsKeepAwake => 'Manter Ecrã Ligado';
 
   @override
@@ -1971,6 +2147,59 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsSyncAnnotationsDesc =>
       'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores';
+
+  @override
+  String get settingsPedalEnabled => 'Pedais page-turner';
+
+  @override
+  String get settingsPedalEnabledDesc =>
+      'Usa um pedal Bluetooth emparelhado nas definições do sistema. A maioria dos pedais aparece como teclado.';
+
+  @override
+  String get settingsPedalActionMode => 'Ação do pedal';
+
+  @override
+  String get settingsPedalActionNavigate => 'Cântico seguinte / anterior';
+
+  @override
+  String get settingsPedalActionScroll => 'Deslizar página';
+
+  @override
+  String get settingsPedalPreset => 'Disposição do pedal';
+
+  @override
+  String get settingsPedalPresetUniversal => 'Universal';
+
+  @override
+  String get settingsPedalPresetAirTurn => 'AirTurn';
+
+  @override
+  String get settingsPedalPresetBlueTurn => 'iRig BlueTurn';
+
+  @override
+  String get settingsPedalPresetDonner => 'Donner / genérico';
+
+  @override
+  String get settingsPedalPresetCustom => 'Personalizado';
+
+  @override
+  String get settingsPedalCustomNext => 'Tecla seguinte';
+
+  @override
+  String get settingsPedalCustomPrev => 'Tecla anterior';
+
+  @override
+  String get settingsPedalCustomUnset => 'Não definida';
+
+  @override
+  String get settingsPedalCustomCaptureTitle => 'Prima uma tecla do pedal';
+
+  @override
+  String get settingsPedalCustomCaptureMessage =>
+      'Prima o botão do pedal que pretende atribuir. Emparelhe o pedal primeiro nas definições Bluetooth do sistema.';
+
+  @override
+  String get settingsPedalCustomCaptureCancel => 'Cancelar';
 
   @override
   String get settingsNotifications => 'Permitir notificações neste dispositivo';

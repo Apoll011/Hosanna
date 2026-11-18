@@ -6,6 +6,7 @@ import 'chordpro/song_display_settings.dart';
 import 'song_toolbar.dart';
 
 import '../domain/chordpro/parser.dart';
+import '../domain/chordpro/resolve_chords.dart';
 
 /// The single seam for rendering a song's ChordPro content.
 ///
@@ -68,10 +69,19 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
       if (!mounted) return;
       ref.read(songCurrentDocumentProvider.notifier).state = doc;
 
-      // If the currently-selected variant no longer exists in the new document,
-      // fall back to the default. Defer the settings write so we don't notify
-      // [songDisplaySettingsProvider] listeners mid-frame (e.g. SongToolbar).
       final currentId = ref.read(songDisplaySettingsProvider).variantId;
+      final ver = selectVersion(doc, currentId);
+      final defaults = resolveVariantDefaults(
+        doc.defaultVersion,
+        currentId == 'default' ? null : ver,
+      );
+      ref
+          .read(songDisplaySettingsProvider.notifier)
+          .seedDirectiveDefaults(
+            keyShift: defaults.transpose,
+            capo: defaults.capo,
+          );
+
       final stillExists = doc.variants.any((v) => v.id == currentId);
       if (!stillExists && currentId != 'default') {
         Future<void>(() {
@@ -105,6 +115,7 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
           showDiagrams: s.showDiagrams,
           sectionColorBackground: s.sectionColorBackground,
           variantId: s.variantId,
+          chordNotationId: s.chordNotationId,
           instrumentPreferences: s.instrumentPreferences,
         ),
       ),
@@ -122,6 +133,7 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
       sectionColorBackground: s.sectionColorBackground,
       scrollController: widget.scrollController,
       variantId: s.variantId,
+      chordNotationId: s.chordNotationId,
       instrumentPreferences: s.instrumentPreferences,
       bottomInset: widget.bottomInset,
       onKeyTap: () => showSongControlsSheet(context),

@@ -5,8 +5,8 @@ import '../config/app_config.dart';
 /// Typed REST facade aligned with `openapi/openapi.yaml` (operationIds).
 ///
 /// Uses the shared [Dio] interceptors (cookies, bearer, captcha, User-Agent,
-/// Origin) with [baseUrl] at [AppConfig.apiRoot]. Better Auth stays on the
-/// origin-scoped shared Dio with absolute `/api/auth/...` paths.
+/// Origin) with [baseUrl] at [AppConfig.apiRoot]. Better Auth uses the shared
+/// Dio pointed at [AppConfig.authBaseUrl] with absolute `/api/auth/...` paths.
 ///
 /// Full `dart-dio` codegen lives under `tool/generate_openapi_client.sh` for
 /// experimentation; the app compiles against this hand-maintained facade so

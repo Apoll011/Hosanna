@@ -13,6 +13,15 @@ enum PianoVoicingStyle {
   compact,
 }
 
+/// How bass diagrams present a chord symbol.
+enum BassVoicingStyle {
+  /// Full fretted chord shapes (adapted from the low four guitar strings).
+  chords,
+
+  /// Single-note diagrams: just the chord root (or slash bass).
+  roots,
+}
+
 /// Per-instrument preferences that affect voicing and diagram rendering.
 ///
 /// Each instrument id has its own bag of settings so guitar, ukulele and piano
@@ -21,8 +30,11 @@ class InstrumentPreference {
   const InstrumentPreference({
     this.showFingerNumbers = true,
     this.showCapoMarker = true,
+    this.showStringLabels = true,
+    this.tuningId,
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
+    this.bassVoicingStyle = BassVoicingStyle.chords,
   });
 
   /// Fretted: paint 1–4 inside the fretting dots.
@@ -31,6 +43,12 @@ class InstrumentPreference {
   /// Fretted: draw the capo clamp on the nut when a capo is active.
   final bool showCapoMarker;
 
+  /// Fretted: label open-string names under the diagram.
+  final bool showStringLabels;
+
+  /// Fretted: selected [FrettedTuning.id] (null → instrument default).
+  final String? tuningId;
+
   /// Piano: full vs compact (rootless) voicings.
   final PianoVoicingStyle pianoVoicingStyle;
 
@@ -38,27 +56,40 @@ class InstrumentPreference {
   /// the right hand (upper octave). Fixes crowded A/C#-style diagrams.
   final bool pianoSlashSplitHands;
 
+  /// Bass: full chord shapes vs single-note root diagrams.
+  final BassVoicingStyle bassVoicingStyle;
+
   static const defaults = InstrumentPreference();
 
   InstrumentPreference copyWith({
     bool? showFingerNumbers,
     bool? showCapoMarker,
+    bool? showStringLabels,
+    String? tuningId,
+    bool clearTuningId = false,
     PianoVoicingStyle? pianoVoicingStyle,
     bool? pianoSlashSplitHands,
+    BassVoicingStyle? bassVoicingStyle,
   }) {
     return InstrumentPreference(
       showFingerNumbers: showFingerNumbers ?? this.showFingerNumbers,
       showCapoMarker: showCapoMarker ?? this.showCapoMarker,
+      showStringLabels: showStringLabels ?? this.showStringLabels,
+      tuningId: clearTuningId ? null : (tuningId ?? this.tuningId),
       pianoVoicingStyle: pianoVoicingStyle ?? this.pianoVoicingStyle,
       pianoSlashSplitHands: pianoSlashSplitHands ?? this.pianoSlashSplitHands,
+      bassVoicingStyle: bassVoicingStyle ?? this.bassVoicingStyle,
     );
   }
 
   Map<String, Object?> toJson() => {
         'showFingerNumbers': showFingerNumbers,
         'showCapoMarker': showCapoMarker,
+        'showStringLabels': showStringLabels,
+        if (tuningId != null) 'tuningId': tuningId,
         'pianoVoicingStyle': pianoVoicingStyle.name,
         'pianoSlashSplitHands': pianoSlashSplitHands,
+        'bassVoicingStyle': bassVoicingStyle.name,
       };
 
   factory InstrumentPreference.fromJson(Map<String, dynamic>? json) {
@@ -68,11 +99,20 @@ class InstrumentPreference {
       (s) => s.name == styleName,
       orElse: () => PianoVoicingStyle.full,
     );
+    final bassStyleName = json['bassVoicingStyle'] as String?;
+    final bassStyle = BassVoicingStyle.values.firstWhere(
+      (s) => s.name == bassStyleName,
+      orElse: () => BassVoicingStyle.chords,
+    );
+    final tuning = json['tuningId'];
     return InstrumentPreference(
       showFingerNumbers: json['showFingerNumbers'] as bool? ?? true,
       showCapoMarker: json['showCapoMarker'] as bool? ?? true,
+      showStringLabels: json['showStringLabels'] as bool? ?? true,
+      tuningId: tuning is String && tuning.isNotEmpty ? tuning : null,
       pianoVoicingStyle: style,
       pianoSlashSplitHands: json['pianoSlashSplitHands'] as bool? ?? true,
+      bassVoicingStyle: bassStyle,
     );
   }
 }
@@ -115,15 +155,25 @@ class InstrumentFingeringOptions {
   const InstrumentFingeringOptions({
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
+    this.tuningId,
+    this.bassVoicingStyle = BassVoicingStyle.chords,
   });
 
   final PianoVoicingStyle pianoVoicingStyle;
   final bool pianoSlashSplitHands;
 
+  /// Fretted tuning id; null uses the instrument default.
+  final String? tuningId;
+
+  /// Bass: full chords vs single-note roots.
+  final BassVoicingStyle bassVoicingStyle;
+
   factory InstrumentFingeringOptions.fromPreference(InstrumentPreference p) {
     return InstrumentFingeringOptions(
       pianoVoicingStyle: p.pianoVoicingStyle,
       pianoSlashSplitHands: p.pianoSlashSplitHands,
+      tuningId: p.tuningId,
+      bassVoicingStyle: p.bassVoicingStyle,
     );
   }
 

@@ -47,6 +47,7 @@ class SetupController extends StateNotifier<bool> {
 
   static SetupPrimaryFocus focusFromInstrument(String instrumentId) {
     return switch (instrumentId) {
+      'bass' => SetupPrimaryFocus.bass,
       'ukulele' => SetupPrimaryFocus.ukulele,
       'piano' => SetupPrimaryFocus.piano,
       _ => SetupPrimaryFocus.guitar,

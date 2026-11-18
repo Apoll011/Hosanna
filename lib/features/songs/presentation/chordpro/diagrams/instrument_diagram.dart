@@ -1,46 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../domain/chordpro/instruments/instruments.dart';
+import 'diagram_colors.dart';
 import 'fretted_diagram.dart';
 import 'keyboard_diagram.dart';
 
-/// Theme-derived colors shared by every chord diagram.
-class DiagramColors {
-  const DiagramColors({
-    required this.primary,
-    required this.line,
-    required this.text,
-    required this.white,
-    required this.black,
-    required this.open,
-    required this.mute,
-    required this.capo,
-  });
-
-  final Color primary;
-  final Color line;
-  final Color text;
-  final Color white;
-  final Color black;
-  final Color open;
-  final Color mute;
-  final Color capo;
-
-  static DiagramColors of(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return DiagramColors(
-      primary: theme.colorScheme.primary,
-      line: isDark ? const Color(0xFF52525B) : const Color(0xFFA1A1AA),
-      text: theme.colorScheme.onSurface,
-      white: isDark ? const Color(0xFF27272A) : Colors.white,
-      black: isDark ? const Color(0xFF09090B) : const Color(0xFF27272A),
-      open: const Color(0xFF10B981),
-      mute: theme.colorScheme.error,
-      capo: const Color(0xFFB45309),
-    );
-  }
-}
+export 'diagram_colors.dart';
+export 'fretted_diagram.dart';
+export 'fretted_diagram_layout.dart';
+export 'keyboard_diagram.dart';
 
 /// Renders a chord fingering with the diagram that matches its type.
 ///
@@ -55,6 +23,7 @@ class InstrumentDiagram extends StatelessWidget {
     this.capo = 0,
     this.showFingerNumbers = true,
     this.showCapoMarker = true,
+    this.showStringLabels = true,
   });
 
   final InstrumentFingering? fingering;
@@ -72,6 +41,9 @@ class InstrumentDiagram extends StatelessWidget {
   /// Whether to paint the capo clamp on fretted diagrams when [capo] > 0.
   final bool showCapoMarker;
 
+  /// Whether fretted diagrams label open-string names.
+  final bool showStringLabels;
+
   @override
   Widget build(BuildContext context) {
     final fingering = this.fingering;
@@ -87,27 +59,29 @@ class InstrumentDiagram extends StatelessWidget {
     final colors = DiagramColors.of(context);
     return switch (fingering) {
       FrettedFingering fretted => FrettedDiagram(
-        frets: fretted.frets,
-        fingers: fretted.fingers,
-        barre: fretted.barre,
-        capo: showCapoMarker ? capo : 0,
-        maxFrets: maxFrets,
-        showFingerNumbers: showFingerNumbers,
-        dotColor: colors.primary,
-        lineColor: colors.line,
-        textColor: colors.text,
-        muteColor: colors.mute,
-        openColor: colors.open,
-        capoColor: colors.capo,
-      ),
+          frets: fretted.frets,
+          fingers: fretted.fingers,
+          barre: fretted.barre,
+          capo: showCapoMarker ? capo : 0,
+          maxFrets: maxFrets,
+          showFingerNumbers: showFingerNumbers,
+          stringNames: fretted.stringNames,
+          showStringLabels: showStringLabels,
+          dotColor: colors.primary,
+          lineColor: colors.line,
+          textColor: colors.text,
+          muteColor: colors.mute,
+          openColor: colors.open,
+          capoColor: colors.capo,
+        ),
       KeyboardFingering keyboard => KeyboardDiagram(
-        highlightKeys: keyboard.highlightKeys,
-        highlightColor: colors.primary,
-        whiteColor: colors.white,
-        blackColor: colors.black,
-        keyLineColor: colors.line,
-        dotColor: colors.primary,
-      ),
+          highlightKeys: keyboard.highlightKeys,
+          highlightColor: colors.primary,
+          whiteColor: colors.white,
+          blackColor: colors.black,
+          keyLineColor: colors.line,
+          dotColor: colors.primary,
+        ),
     };
   }
 }

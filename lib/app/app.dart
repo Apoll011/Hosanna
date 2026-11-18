@@ -3,11 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/analytics/analytics.dart';
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
+import '../features/folders/domain/folder_explorer_controller.dart';
+import '../features/notifications/data/local_notification_service.dart';
 import '../features/notifications/presentation/foreground_notification_listener.dart';
 import '../features/notifications/presentation/notification_consent_gate.dart';
 import '../features/setup/data/setup_controller.dart';
+import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launcher_links.dart';
 import 'providers.dart';
@@ -29,9 +33,6 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   StreamSubscription<Uri>? _launcherLinks;
   StreamSubscription<String>? _notificationTaps;
   ProviderContainer? _container;
-
-  /// Root messenger used to surface foreground FCM messages in-app.
-  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Launcher shortcut target waiting for the session/organization to resolve.
   String? _pendingLocation;
@@ -77,6 +78,9 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       ref.read(authControllerProvider.notifier).checkSession();
       ref.read(syncControllerProvider.notifier).restore();
       _ensureNotificationPermission();
+      // Initialise the local notification plugin so foreground FCM messages
+      // are shown as proper OS banners instead of in-app SnackBars.
+      LocalNotificationService.instance.init();
     });
 
     // Launcher shortcuts (`hosanna://songs`, `hosanna://services/next`, …).
@@ -152,8 +156,23 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       Future.microtask(_openPendingLocation);
     }
 
+    final wasAuthenticated = previous?.isAuthenticated ?? false;
     final prevOrg = previous?.organization?.id;
     final nextOrg = next.organization?.id;
+
+    // Sign-out: drop tenant rows/checkpoints so the next sign-in cannot
+    // incremental-sync from a half-written or foreign-org cursor.
+    if (wasAuthenticated && !next.isAuthenticated) {
+      Future.microtask(() async {
+        final container = _container;
+        if (container == null) return;
+        container.read(libraryControllerProvider.notifier).bindOrganization(null);
+        container.read(folderExplorerProvider.notifier).open(null);
+        await container.read(syncControllerProvider.notifier).clearLocalTenantState();
+      });
+      return;
+    }
+
     if (!next.isAuthenticated || nextOrg == null || nextOrg == prevOrg) return;
 
     // Defer so sync (which mutates SyncController state) never runs
@@ -161,15 +180,20 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
     // widgets while the tree is mid-build. Read via the captured container so
     // this stays valid even if the element has since been deactivated.
     //
-    // When switching orgs, wipe local rows + checkpoints first so the previous
-    // church's data cannot linger or be pushed to the new tenant.
-    Future.microtask(() {
-      final sync = _container?.read(syncControllerProvider.notifier);
-      if (sync == null) return;
-      if (prevOrg != null) {
-        sync.resetForOrganizationSwitch();
+    // Wipe+pull whenever the local DB is not already bound to this org
+    // (org switch, first bind after sign-in, or recovery after a failed
+    // reset). Rapid switches are coalesced via SyncController's org epoch.
+    Future.microtask(() async {
+      final container = _container;
+      if (container == null) return;
+      final sync = container.read(syncControllerProvider.notifier);
+      // Drop browse context / favorites that belonged to the previous tenant.
+      container.read(folderExplorerProvider.notifier).open(null);
+      container.read(libraryControllerProvider.notifier).bindOrganization(nextOrg);
+      if (prevOrg != null || sync.needsResetFor(nextOrg)) {
+        await sync.resetForOrganizationSwitch(organizationId: nextOrg);
       } else {
-        sync.syncAll();
+        await sync.syncAll(organizationId: nextOrg);
       }
     });
   }
@@ -177,6 +201,9 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(
+        AnalyticsService.instance.track(const AppOpenedFromBackground()),
+      );
       _maybeSyncOnResume();
     }
   }
@@ -214,13 +241,10 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      // Lets the app present foreground FCM messages from above the Navigator.
-      scaffoldMessengerKey: _messengerKey,
-      // Both sit above the Navigator: the listener surfaces foreground pushes,
-      // and the gate overlays the first-run notification consent prompt.
+      // Both sit above the Navigator: the listener re-posts foreground FCM
+      // messages as proper OS banners, and the gate overlays the first-run
+      // notification consent prompt.
       builder: (context, child) => ForegroundNotificationListener(
-        messengerKey: _messengerKey,
-        onOpen: _openLocation,
         child: NotificationConsentGate(
           child: child ?? const SizedBox.shrink(),
         ),

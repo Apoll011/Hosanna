@@ -25,6 +25,7 @@ enum ChordProDiagnosticCode {
   invalidKey,
   invalidTempo,
   invalidCapo,
+  invalidKeyShift,
   invalidTimeSignature,
   invalidDuration,
 }
@@ -87,6 +88,8 @@ const Set<String> kKnownChordProDirectives = {
   'time signature',
   'duration',
   'capo',
+  'keyshift',
+  'key_shift',
   'copyright',
   'ccli',
   'song_number',
@@ -161,7 +164,6 @@ const Set<String> _noChordTokens = {
 
 final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 final RegExp _chordTokenRegex = RegExp(r'\[([^\]]*)\]');
-final RegExp _timingSuffixRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _parserLineRegex = RegExp(r'^Line (\d+):\s*(.*)$');
 final RegExp _unclosedVariantRegex = RegExp(
   r'variant "([^"]+)".*started at line (\d+)',
@@ -200,6 +202,7 @@ List<ChordProDiagnostic> lintChordPro(
   String? key,
   String? tempo,
   String? capo,
+  String? keyShift,
   String? timeSignature,
   String? duration,
 }) {
@@ -214,6 +217,7 @@ List<ChordProDiagnostic> lintChordPro(
     key: key,
     tempo: tempo,
     capo: capo,
+    keyShift: keyShift,
     timeSignature: timeSignature,
     duration: duration,
   );
@@ -397,9 +401,7 @@ void _scanLines(
           continue;
         }
 
-        final timingMatch = _timingSuffixRegex.firstMatch(rawChord.trim());
-        final symbol =
-            (timingMatch?.group(1) ?? rawChord).trim().replaceAll('()', '');
+        final symbol = rawChord.trim().replaceAll('()', '');
         final normalized = symbol.toLowerCase();
         if (_noChordTokens.contains(normalized)) continue;
 
@@ -616,6 +618,7 @@ void _lintMetadataFields(
   String? key,
   String? tempo,
   String? capo,
+  String? keyShift,
   String? timeSignature,
   String? duration,
 }) {
@@ -672,17 +675,36 @@ void _lintMetadataFields(
   final c = capo?.trim();
   if (c != null && c.isNotEmpty) {
     final fret = int.tryParse(c);
-    if (fret == null || fret < 0 || fret > 12) {
+    if (fret == null || fret < 0 || fret > 11) {
       out.add(
         ChordProDiagnostic(
           code: ChordProDiagnosticCode.invalidCapo,
           severity: ChordProSeverity.warning,
-          message: 'Capo should be a fret number from 0 to 12.',
+          message: 'Capo should be a fret number from 0 to 11.',
           line: 0,
           column: 0,
           offset: 0,
           length: 0,
           args: {'value': c},
+        ),
+      );
+    }
+  }
+
+  final ks = keyShift?.trim();
+  if (ks != null && ks.isNotEmpty) {
+    final shift = int.tryParse(ks);
+    if (shift == null) {
+      out.add(
+        ChordProDiagnostic(
+          code: ChordProDiagnosticCode.invalidKeyShift,
+          severity: ChordProSeverity.warning,
+          message: 'Key shift should be a signed integer semitone offset.',
+          line: 0,
+          column: 0,
+          offset: 0,
+          length: 0,
+          args: {'value': ks},
         ),
       );
     }

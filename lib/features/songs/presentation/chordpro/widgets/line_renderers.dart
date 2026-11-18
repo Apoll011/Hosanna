@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../domain/chordpro/chord_notation.dart';
 import 'render_model.dart';
 
 /// Display options shared by every line in a song.
@@ -9,6 +10,7 @@ class LineRenderOptions {
     required this.showChords,
     required this.fontSize,
     required this.onChordTap,
+    required this.chordNotation,
   });
 
   final bool showChords;
@@ -17,6 +19,7 @@ class LineRenderOptions {
   final double fontSize;
 
   final void Function(String chord) onChordTap;
+  final ChordNotationSystem chordNotation;
 
   double get chordFontSize => fontSize * 0.85;
 }
@@ -34,7 +37,7 @@ class LineRenderer extends StatelessWidget {
       'empty' => SizedBox(height: options.fontSize * 0.6),
       'comment' => CommentLine(text: text),
       'comment_italic' => CommentItalicLine(text: text),
-      'comment_box' => CommentBoxLine(text: text),
+      'comment_box' => CommentBoxLine(text: text, style: line.line.style),
       'key_note' => KeyNoteLine(text: text),
       'chord-section' => ChordSectionLine(line: line, options: options),
       _ => LyricsLine(line: line, options: options),
@@ -109,31 +112,54 @@ class CommentItalicLine extends StatelessWidget {
 }
 
 class CommentBoxLine extends StatelessWidget {
-  const CommentBoxLine({super.key, required this.text});
+  const CommentBoxLine({super.key, required this.text, this.style = 'info'});
 
   final String text;
+  final String? style;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final palette = switch (style) {
+      'warning' => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+        scheme.error,
+      ),
+      'success' => (
+        scheme.primaryContainer,
+        scheme.onPrimaryContainer,
+        scheme.primary,
+      ),
+      'tip' => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+        scheme.secondary,
+      ),
+      _ => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+        scheme.tertiary,
+      ),
+    };
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: scheme.tertiaryContainer,
-        border: Border(left: BorderSide(color: scheme.tertiary, width: 4)),
+        color: palette.$1,
+        border: Border(left: BorderSide(color: palette.$3, width: 4)),
         borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 16, color: scheme.onTertiaryContainer),
+          Icon(Icons.info_outline, size: 16, color: palette.$2),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               text,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onTertiaryContainer,
+                color: palette.$2,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -194,12 +220,14 @@ class ChordLabel extends StatelessWidget {
     required this.chord,
     required this.style,
     required this.onTap,
+    required this.notation,
     this.trailingGap = 0,
   });
 
   final String chord;
   final TextStyle style;
   final void Function(String chord) onTap;
+  final ChordNotationSystem notation;
 
   /// Extra space after the symbol so adjacent chords like `[Em][C]` never
   /// render as `EmC`.
@@ -208,16 +236,17 @@ class ChordLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final displayChord = ChordNotationConverter.formatChord(chord, notation);
     return Semantics(
       button: true,
-      label: l10n.songChordSemantics(chord),
+      label: l10n.songChordSemantics(displayChord),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => onTap(chord),
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: EdgeInsets.only(right: trailingGap),
-          child: Text(chord, style: style),
+          child: Text(displayChord, style: style),
         ),
       ),
     );
@@ -262,6 +291,7 @@ class LyricsLine extends StatelessWidget {
                       chord: tokens[i].chord,
                       style: chordStyle,
                       onTap: options.onChordTap,
+                      notation: options.chordNotation,
                       trailingGap:
                           i + 1 < tokens.length &&
                               tokens[i + 1].chord.isNotEmpty
@@ -326,6 +356,7 @@ class ChordSectionLine extends StatelessWidget {
                   chord: chord,
                   style: chordStyle,
                   onTap: options.onChordTap,
+                  notation: options.chordNotation,
                 ),
               ),
             if (measure.endBarline.isNotEmpty)

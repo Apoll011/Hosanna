@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/domain/auth_controller.dart';
+import '../features/songs/domain/library_controller.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/shell_insets.dart';
 import 'design/tokens.dart';
@@ -16,14 +17,14 @@ const double kTabletBreakpoint = 750;
 
 /// Branches that hide the floating bottom nav bar.
 ///
-/// The bar only ever links to the Songs and Services branches, so on the tools
-/// (metronome, circle of fifths) and Settings it would just cover content
-/// without showing a selected destination. Those branches are reached through
-/// the drawer/sidebar instead.
+/// The bar only ever links to Songs and Services. Folders and Collections
+/// keep it visible so musicians can jump back to those hubs; tools
+/// (metronome, circle of fifths), Settings, and Agenda hide it so it does not
+/// cover content without a selected destination. Those branches are reached
+/// through the drawer/sidebar instead.
 const Set<int> kBranchesWithoutNavBar = {
   kMetronomeBranch,
   kCircleOfFifthsBranch,
-  kFoldersBranch,
   kSettingsBranch,
   kAgendaBranch,
 };
@@ -48,6 +49,12 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final shell = widget.navigationShell;
     if (index < 0 || index >= shell.route.branches.length) return;
     shell.goBranch(index, initialLocation: index == shell.currentIndex);
+  }
+
+  /// Bottom-bar Songs tap: always land on the full library.
+  void _goSongsHub() {
+    ref.read(libraryControllerProvider.notifier).selectAll();
+    _goBranch(kSongsBranch);
   }
 
   void _syncBranchIndex() {
@@ -174,8 +181,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
                             alignment: Alignment.bottomCenter,
                             child: _FloatingNavBar(
                               selectedIndex: selectedDestination,
-                              onSelected: (index) =>
-                                  _goBranch(destinations[index].branch),
+                              onSelected: (index) {
+                                final branch = destinations[index].branch;
+                                if (branch == kSongsBranch) {
+                                  _goSongsHub();
+                                } else {
+                                  _goBranch(branch);
+                                }
+                              },
                               destinations: destinations,
                             ),
                           ),
@@ -199,8 +212,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
           bottomNavigationBar: showNavBar
               ? _FloatingNavBar(
                   selectedIndex: selectedDestination,
-                  onSelected: (index) =>
-                      _goBranch(destinations[index].branch),
+                  onSelected: (index) {
+                    final branch = destinations[index].branch;
+                    if (branch == kSongsBranch) {
+                      _goSongsHub();
+                    } else {
+                      _goBranch(branch);
+                    }
+                  },
                   destinations: destinations,
                 )
               : null,
@@ -249,6 +268,9 @@ class _FloatingNavBar extends StatelessWidget {
     required this.destinations,
   });
 
+  static const Duration _indicatorDuration = Duration(milliseconds: 280);
+  static const Curve _indicatorCurve = Curves.easeOutCubic;
+
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final List<_NavItem> destinations;
@@ -269,17 +291,47 @@ class _FloatingNavBar extends StatelessWidget {
           border: Border.all(color: tokens.cardBorder),
           boxShadow: HosannaElevation.floating(theme.brightness),
         ),
-        child: Row(
-          children: [
-            for (var i = 0; i < destinations.length; i++)
-              Expanded(
-                child: _NavButton(
-                  item: destinations[i],
-                  selected: i == selectedIndex,
-                  onTap: () => onSelected(i),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final count = destinations.length;
+            final slotWidth =
+                count == 0 ? 0.0 : constraints.maxWidth / count;
+            final showIndicator =
+                selectedIndex >= 0 && selectedIndex < count;
+
+            return Stack(
+              children: [
+                if (showIndicator)
+                  AnimatedPositioned(
+                    duration: _indicatorDuration,
+                    curve: _indicatorCurve,
+                    left: selectedIndex * slotWidth + 4,
+                    width: slotWidth - 8,
+                    top: 6,
+                    bottom: 6,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: tokens.selectedNav,
+                        borderRadius:
+                            BorderRadius.circular(HosannaRadii.pill),
+                      ),
+                    ),
+                  ),
+                Row(
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      Expanded(
+                        child: _NavButton(
+                          item: destinations[i],
+                          selected: i == selectedIndex,
+                          onTap: () => onSelected(i),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -300,35 +352,32 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = HosannaTokens.of(context);
     final color = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
+    // No Material ink splash — it sits still while the sliding indicator moves
+    // and reads as a second highlight until it fades.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      child: Material(
-        color: selected ? tokens.selectedNav : Colors.transparent,
-        borderRadius: BorderRadius.circular(HosannaRadii.pill),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(HosannaRadii.pill),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(selected ? item.selectedIcon : item.icon, color: color),
-              const SizedBox(height: 2),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(selected ? item.selectedIcon : item.icon, color: color),
+            const SizedBox(height: 2),
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

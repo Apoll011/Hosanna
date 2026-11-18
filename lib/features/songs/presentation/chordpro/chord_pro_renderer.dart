@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/chordpro/chord_dictionary.dart';
+import '../../domain/chordpro/chord_notation.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
 import '../../domain/chordpro/parser.dart';
+import '../../domain/chordpro/resolve_chords.dart';
 import '../../domain/chordpro/transpose.dart';
 import 'widgets/chord_roll.dart';
 import 'widgets/chord_sheet.dart';
@@ -34,8 +37,10 @@ class ChordProRenderer extends StatefulWidget {
     this.scrollController,
     this.notes,
     this.variantId = 'default',
+    this.chordNotationId = 'international',
     this.instrumentPreferences = const InstrumentPreferences(),
     this.bottomInset = 0,
+    this.capoLabel,
     this.onKeyTap,
     this.onYoutubeTap,
   });
@@ -49,10 +54,12 @@ class ChordProRenderer extends StatefulWidget {
   final String instrument;
   final bool showDiagrams;
   final bool sectionColorBackground;
+  final String? capoLabel;
 
   /// Active variant id — delegates variant selection to the caller.
   /// Defaults to `'default'` (the main song body).
   final String variantId;
+  final String chordNotationId;
 
   /// Per-instrument voicing / diagram preferences.
   final InstrumentPreferences instrumentPreferences;
@@ -136,6 +143,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       capo: _effectiveCapo,
       preferences: widget.instrumentPreferences,
       fingeringFor: _fingeringFor,
+      chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
     );
   }
 
@@ -145,7 +153,10 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     final metadata = _version.metadata;
     final fontSize =
         widget.fontSize ?? theme.textTheme.bodyMedium?.fontSize ?? 14;
-    final lyricStyle = theme.textTheme.bodyMedium!.copyWith(
+    // Match suite chord sheets: Source Serif 4 for lyric text only
+    // (`.hosanna-sheet .font-sans` → `--font-lyric`).
+    final lyricStyle = GoogleFonts.sourceSerif4(
+      textStyle: theme.textTheme.bodyMedium,
       fontSize: fontSize,
       height: 1.5,
     );
@@ -153,6 +164,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       showChords: widget.showChords,
       fontSize: fontSize,
       onChordTap: _openChord,
+      chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
     );
 
     final notes = widget.notes?.trim();
@@ -161,14 +173,39 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         widget.showDiagrams &&
         widget.showChords &&
         _song.uniqueChords.isNotEmpty;
+    final notation = ChordNotationRegistry.resolve(widget.chordNotationId);
+    final chordResolution = resolveChords(
+      chords: _song.uniqueChords,
+      key: metadata['key'],
+      keyShift: widget.transpose,
+      capo: widget.capo,
+      instrument: widget.instrument,
+    );
+    final capoLabel =
+        widget.capoLabel ??
+        chordResolution.capoLabel?.replaceFirst(
+          chordResolution.shownKey,
+          ChordNotationConverter.formatChord(
+            chordResolution.shownKey,
+            notation,
+          ),
+        );
 
     final leading = <Widget>[
       MetadataHeader(
         metadata: metadata,
-        soundingKey: transposeChord(key, widget.transpose),
-        renderedKey: transposeChord(key, _effectiveTranspose),
+        soundingKey: ChordNotationConverter.formatChord(
+          transposeChord(key, widget.transpose),
+          notation,
+        ),
+        renderedKey: ChordNotationConverter.formatChord(
+          transposeChord(key, _effectiveTranspose),
+          notation,
+        ),
         effectiveCapo: _effectiveCapo,
         transposeVal: widget.transpose,
+        notation: notation,
+        capoLabel: capoLabel,
         onKeyTap: widget.onKeyTap,
         onYoutubeTap: widget.onYoutubeTap,
       ),
@@ -176,6 +213,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       if (showRoll)
         ChordRoll(
           chords: _song.uniqueChords,
+          chordNotation: notation,
           capo: _effectiveCapo,
           instrument: widget.instrument,
           preferences: widget.instrumentPreferences,

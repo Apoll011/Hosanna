@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -14,16 +15,18 @@ import '../../../core/auth/auth_session.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
+import '../../input/pedal_bindings.dart';
 import '../../services/data/service_repository.dart';
 import '../../setup/data/setup_controller.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
+import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
 
-enum SettingsTab { account, workspace, service, appearance }
+enum SettingsTab { account, workspace, service, song, appearance }
 
-/// Tabbed settings: Account / Organization / Service / Appearance.
+/// Tabbed settings: Account / Organization / Service / Song / Appearance.
 /// Tools (metronome, circle of fifths) live in the navigation drawer, not here.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key, this.initialTab = SettingsTab.account});
@@ -56,6 +59,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               SettingsTab.account => const _AccountTab(),
               SettingsTab.workspace => const _WorkspaceTab(),
               SettingsTab.service => const _ServiceTab(),
+              SettingsTab.song => const _SongTab(),
               SettingsTab.appearance => const _AppearanceTab(),
             },
           ),
@@ -84,7 +88,12 @@ class _TabBar extends StatelessWidget {
         Icons.business_outlined,
       ),
       (SettingsTab.service, l10n.settingsTabService, Icons.event_note_outlined),
-      (SettingsTab.appearance, l10n.settingsTabAppearance, Icons.palette_outlined),
+      (SettingsTab.song, l10n.settingsTabSong, Icons.music_note_outlined),
+      (
+        SettingsTab.appearance,
+        l10n.settingsTabAppearance,
+        Icons.palette_outlined,
+      ),
     ];
 
     final tokens = HosannaTokens.of(context);
@@ -96,52 +105,59 @@ class _TabBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(HosannaRadii.md),
         border: Border.all(color: tokens.cardBorder),
       ),
-      child: Row(
-        children: [
-          for (final (tab, label, icon) in tabs)
-            Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onChanged(tab),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: selected == tab
-                        ? theme.colorScheme.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icon,
-                        size: 20,
-                        color: selected == tab
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final (tab, label, icon) in tabs)
+              SizedBox(
+                width: 88,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => onChanged(tab),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected == tab
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 20,
                           color: selected == tab
                               ? theme.colorScheme.onPrimary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: selected == tab
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -282,8 +298,7 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                 children: [
                   Builder(
                     builder: (context) {
-                      final hasImage =
-                          imageUrl != null && imageUrl.isNotEmpty;
+                      final hasImage = imageUrl != null && imageUrl.isNotEmpty;
                       return CircleAvatar(
                         radius: 30,
                         foregroundImage: hasImage
@@ -291,9 +306,7 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
                             : null,
                         onForegroundImageError: hasImage
                             ? (exception, stackTrace) {
-                                debugPrint(
-                                  'Failed to load avatar: $exception',
-                                );
+                                debugPrint('Failed to load avatar: $exception');
                               }
                             : null,
                         child: Text(
@@ -544,7 +557,18 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
   Future<void> _switchOrg(String slug) async {
     setState(() => _switching = true);
     try {
+      final sync = ref.read(syncControllerProvider.notifier);
+      // Abort any in-flight push/pull *before* set-active changes the tenant
+      // cookie, otherwise a late batch can write the previous church's cursor
+      // (or rows) against the new org.
+      await sync.prepareOrganizationSwitch();
+      if (!mounted) return;
       await ref.read(authControllerProvider.notifier).switchOrganization(slug);
+      // Auth listener schedules the wipe+pull on a microtask; flush it, then
+      // wait so rapid taps cannot start another switch on half-migrated data.
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      await sync.waitUntilIdle();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -683,7 +707,8 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                             color: theme.colorScheme.primary,
                           )
                         : const Icon(Icons.circle_outlined),
-                    enabled: !_switching && o.slug != org?.slug,
+                    enabled:
+                        !_switching && !sync.isSyncing && o.slug != org?.slug,
                     onTap: () => _switchOrg(o.slug),
                   ),
               ],
@@ -834,6 +859,112 @@ class _ServiceTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SwitchRow(
+                icon: Icons.keyboard_alt_outlined,
+                iconColor: theme.colorScheme.secondary,
+                title: l10n.settingsPedalEnabled,
+                subtitle: l10n.settingsPedalEnabledDesc,
+                value: settings.pedalEnabled,
+                onChanged: settingsController.setPedalEnabled,
+              ),
+              if (settings.pedalEnabled) ...[
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.settingsPedalActionMode,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                RadioGroup<PedalActionMode>(
+                  groupValue: settings.pedalActionMode,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    settingsController.setPedalActionMode(value);
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<PedalActionMode>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(l10n.settingsPedalActionNavigate),
+                        value: PedalActionMode.navigateSongs,
+                      ),
+                      RadioListTile<PedalActionMode>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(l10n.settingsPedalActionScroll),
+                        value: PedalActionMode.scrollPage,
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsPedalPreset),
+                  trailing: DropdownButton<PedalPreset>(
+                    value: settings.pedalPreset,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      DropdownMenuItem(
+                        value: PedalPreset.universal,
+                        child: Text(l10n.settingsPedalPresetUniversal),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.airTurn,
+                        child: Text(l10n.settingsPedalPresetAirTurn),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.blueTurn,
+                        child: Text(l10n.settingsPedalPresetBlueTurn),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.donner,
+                        child: Text(l10n.settingsPedalPresetDonner),
+                      ),
+                      DropdownMenuItem(
+                        value: PedalPreset.custom,
+                        child: Text(l10n.settingsPedalPresetCustom),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      settingsController.setPedalPreset(value);
+                    },
+                  ),
+                ),
+                if (settings.pedalPreset == PedalPreset.custom) ...[
+                  _PedalCustomKeyRow(
+                    label: l10n.settingsPedalCustomPrev,
+                    keyId: settings.pedalCustomPrevKeyId,
+                    onCapture: () async {
+                      final keyId = await _capturePedalKey(context);
+                      if (keyId != null) {
+                        settingsController.setPedalCustomPrevKeyId(keyId);
+                      }
+                    },
+                  ),
+                  _PedalCustomKeyRow(
+                    label: l10n.settingsPedalCustomNext,
+                    keyId: settings.pedalCustomNextKeyId,
+                    onCapture: () async {
+                      final keyId = await _capturePedalKey(context);
+                      if (keyId != null) {
+                        settingsController.setPedalCustomNextKeyId(keyId);
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Material(
           color: theme.colorScheme.surface,
           shape: RoundedRectangleBorder(
@@ -863,7 +994,9 @@ class _ServiceTab extends ConsumerWidget {
                       errorBuilder: (_, _, _) => Container(
                         width: 72,
                         height: 72,
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           color: theme.colorScheme.primary,
@@ -916,11 +1049,8 @@ class _AppearanceTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final settings = ref.watch(settingsControllerProvider);
     final settingsController = ref.read(settingsControllerProvider.notifier);
-    final display = ref.watch(songDisplaySettingsProvider);
-    final displayController = ref.read(songDisplaySettingsProvider.notifier);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -985,6 +1115,60 @@ class _AppearanceTab extends ConsumerWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _SongTab extends ConsumerWidget {
+  const _SongTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final display = ref.watch(songDisplaySettingsProvider);
+    final controller = ref.read(songDisplaySettingsProvider.notifier);
+    final notation = ChordNotationRegistry.resolve(display.chordNotationId);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.songChordNotation,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.songChordNotationDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: notation.id,
+                decoration: const InputDecoration(isDense: true),
+                items: [
+                  for (final system in ChordNotationRegistry.systems)
+                    DropdownMenuItem(
+                      value: system.id,
+                      child: Text(_notationName(system.id, l10n)),
+                    ),
+                ],
+                onChanged: (id) {
+                  if (id != null) controller.setChordNotation(id);
+                },
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 12),
         _Card(
           child: Column(
@@ -1014,12 +1198,13 @@ class _AppearanceTab extends ConsumerWidget {
                     .toDouble(),
                 min: SongDisplaySettings.minFontSize,
                 max: SongDisplaySettings.maxFontSize,
-                divisions: ((SongDisplaySettings.maxFontSize -
-                            SongDisplaySettings.minFontSize) /
-                        2)
-                    .round(),
+                divisions:
+                    ((SongDisplaySettings.maxFontSize -
+                                SongDisplaySettings.minFontSize) /
+                            2)
+                        .round(),
                 label: display.fontSize.toInt().toString(),
-                onChanged: displayController.setFontSize,
+                onChanged: controller.setFontSize,
               ),
             ],
           ),
@@ -1032,19 +1217,19 @@ class _AppearanceTab extends ConsumerWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songShowChords),
                 value: display.showChords,
-                onChanged: (_) => displayController.toggleShowChords(),
+                onChanged: (_) => controller.toggleShowChords(),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songShowDiagrams),
                 value: display.showDiagrams,
-                onChanged: (_) => displayController.toggleDiagrams(),
+                onChanged: (_) => controller.toggleDiagrams(),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.songTwoColumn),
                 value: display.twoColumn,
-                onChanged: (_) => displayController.toggleTwoColumn(),
+                onChanged: (_) => controller.toggleTwoColumn(),
               ),
               const Divider(),
               Padding(
@@ -1068,7 +1253,7 @@ class _AppearanceTab extends ConsumerWidget {
                     const SizedBox(height: 8),
                     InstrumentSelector(
                       selected: display.instrument,
-                      onChanged: displayController.setInstrument,
+                      onChanged: controller.setInstrument,
                     ),
                   ],
                 ),
@@ -1080,14 +1265,19 @@ class _AppearanceTab extends ConsumerWidget {
         _InstrumentSettingsCard(
           instrumentId: display.instrument,
           preference: display.currentInstrumentPreference,
-          onChanged: (pref) => displayController.updateInstrumentPreference(
-            display.instrument,
-            pref,
-          ),
+          onChanged: (pref) =>
+              controller.updateInstrumentPreference(display.instrument, pref),
         ),
       ],
     );
   }
+
+  String _notationName(String id, AppLocalizations l10n) => switch (id) {
+    'latin' => l10n.songChordNotationLatin,
+    'german' => l10n.songChordNotationGerman,
+    'sargam' => l10n.songChordNotationSargam,
+    _ => l10n.songChordNotationInternational,
+  };
 }
 
 /// Settings that apply only to the currently selected instrument.
@@ -1107,8 +1297,8 @@ class _InstrumentSettingsCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final instrument = instrumentRegistry.resolve(instrumentId);
-    final isPiano = instrumentId == 'piano';
-    final isFretted = instrument.supportsCapo;
+    final isPiano = instrument.family == InstrumentFamily.keyboard;
+    final fretted = instrument is FrettedInstrument ? instrument : null;
 
     return _Card(
       child: Column(
@@ -1141,7 +1331,44 @@ class _InstrumentSettingsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          if (isFretted) ...[
+          if (fretted != null) ...[
+            if (fretted.tunings.length > 1) ...[
+              Text(
+                l10n.settingsTuning,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.settingsTuningDesc,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              FrettedTuningSelector(
+                tunings: fretted.tunings,
+                selectedId: preference.tuningId ?? fretted.defaultTuning.id,
+                onChanged: (id) => onChanged(preference.copyWith(tuningId: id)),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (instrumentId == 'bass') ...[
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsBassRootNotes),
+                subtitle: Text(l10n.settingsBassRootNotesDesc),
+                value: preference.bassVoicingStyle == BassVoicingStyle.roots,
+                onChanged: (v) => onChanged(
+                  preference.copyWith(
+                    bassVoicingStyle: v
+                        ? BassVoicingStyle.roots
+                        : BassVoicingStyle.chords,
+                  ),
+                ),
+              ),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.settingsShowFingerNumbers),
@@ -1150,13 +1377,22 @@ class _InstrumentSettingsCard extends StatelessWidget {
               onChanged: (v) =>
                   onChanged(preference.copyWith(showFingerNumbers: v)),
             ),
+            if (instrument.supportsCapo)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settingsShowCapoMarker),
+                subtitle: Text(l10n.settingsShowCapoMarkerDesc),
+                value: preference.showCapoMarker,
+                onChanged: (v) =>
+                    onChanged(preference.copyWith(showCapoMarker: v)),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(l10n.settingsShowCapoMarker),
-              subtitle: Text(l10n.settingsShowCapoMarkerDesc),
-              value: preference.showCapoMarker,
+              title: Text(l10n.settingsShowStringLabels),
+              subtitle: Text(l10n.settingsShowStringLabelsDesc),
+              value: preference.showStringLabels,
               onChanged: (v) =>
-                  onChanged(preference.copyWith(showCapoMarker: v)),
+                  onChanged(preference.copyWith(showStringLabels: v)),
             ),
           ],
           if (isPiano) ...[
@@ -1167,8 +1403,9 @@ class _InstrumentSettingsCard extends StatelessWidget {
               value: preference.pianoVoicingStyle == PianoVoicingStyle.compact,
               onChanged: (v) => onChanged(
                 preference.copyWith(
-                  pianoVoicingStyle:
-                      v ? PianoVoicingStyle.compact : PianoVoicingStyle.full,
+                  pianoVoicingStyle: v
+                      ? PianoVoicingStyle.compact
+                      : PianoVoicingStyle.full,
                 ),
               ),
             ),
@@ -1233,8 +1470,7 @@ class _NotificationsCardState extends ConsumerState<_NotificationsCard> {
     final theme = Theme.of(context);
     // Older sessions may not carry `notify`; the model defaults it to true,
     // matching Better Auth's `defaultValue`.
-    final notify =
-        ref.watch(authControllerProvider).session?.notify ?? true;
+    final notify = ref.watch(authControllerProvider).session?.notify ?? true;
 
     return _Card(
       child: _SwitchRow(
@@ -1467,6 +1703,109 @@ class _SwitchRow extends StatelessWidget {
           ),
         ),
         Switch(value: value, onChanged: enabled ? onChanged : null),
+      ],
+    );
+  }
+}
+
+class _PedalCustomKeyRow extends StatelessWidget {
+  const _PedalCustomKeyRow({
+    required this.label,
+    required this.keyId,
+    required this.onCapture,
+  });
+
+  final String label;
+  final int? keyId;
+  final VoidCallback onCapture;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final value = keyId == null
+        ? l10n.settingsPedalCustomUnset
+        : describeLogicalKey(LogicalKeyboardKey(keyId!));
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      subtitle: Text(
+        value,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: TextButton(
+        onPressed: onCapture,
+        child: Text(l10n.settingsEdit),
+      ),
+    );
+  }
+}
+
+Future<int?> _capturePedalKey(BuildContext context) {
+  return showDialog<int>(
+    context: context,
+    builder: (context) => const _PedalKeyCaptureDialog(),
+  );
+}
+
+class _PedalKeyCaptureDialog extends StatefulWidget {
+  const _PedalKeyCaptureDialog();
+
+  @override
+  State<_PedalKeyCaptureDialog> createState() => _PedalKeyCaptureDialogState();
+}
+
+class _PedalKeyCaptureDialogState extends State<_PedalKeyCaptureDialog> {
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    super.dispose();
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is! KeyDownEvent) return false;
+    final key = event.logicalKey;
+    // Ignore pure modifiers so the user can still cancel with the dialog button.
+    if (key == LogicalKeyboardKey.shift ||
+        key == LogicalKeyboardKey.shiftLeft ||
+        key == LogicalKeyboardKey.shiftRight ||
+        key == LogicalKeyboardKey.control ||
+        key == LogicalKeyboardKey.controlLeft ||
+        key == LogicalKeyboardKey.controlRight ||
+        key == LogicalKeyboardKey.alt ||
+        key == LogicalKeyboardKey.altLeft ||
+        key == LogicalKeyboardKey.altRight ||
+        key == LogicalKeyboardKey.meta ||
+        key == LogicalKeyboardKey.metaLeft ||
+        key == LogicalKeyboardKey.metaRight ||
+        key == LogicalKeyboardKey.escape) {
+      return false;
+    }
+    if (!mounted) return false;
+    Navigator.of(context).pop(key.keyId);
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.settingsPedalCustomCaptureTitle),
+      content: Text(l10n.settingsPedalCustomCaptureMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.settingsPedalCustomCaptureCancel),
+        ),
       ],
     );
   }

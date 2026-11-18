@@ -706,6 +706,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get setupFocusGuitar;
 
+  /// No description provided for @setupFocusBass.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixo'**
+  String get setupFocusBass;
+
   /// No description provided for @setupFocusUkulele.
   ///
   /// In pt, this message translates to:
@@ -879,6 +885,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sincronizar agora'**
   String get syncNow;
+
+  /// No description provided for @songsSavedOffline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardado neste dispositivo. As alterações sincronizam quando voltares a ter ligação.'**
+  String get songsSavedOffline;
 
   /// No description provided for @syncPullToRefresh.
   ///
@@ -1636,6 +1648,12 @@ abstract class AppLocalizations {
   /// **'O capo deve ser um traste de 0 a 12.'**
   String get songsLintInvalidCapo;
 
+  /// No description provided for @songsLintInvalidKeyShift.
+  ///
+  /// In pt, this message translates to:
+  /// **'A mudança de tonalidade deve ser um número positivo.'**
+  String get songsLintInvalidKeyShift;
+
   /// No description provided for @songsLintInvalidTime.
   ///
   /// In pt, this message translates to:
@@ -2056,6 +2074,42 @@ abstract class AppLocalizations {
   /// **'Tamanho da Letra'**
   String get songFontSize;
 
+  /// No description provided for @songChordNotation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notação de acordes'**
+  String get songChordNotation;
+
+  /// No description provided for @songChordNotationDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha como os nomes dos acordes são apresentados nas músicas. Isto não altera os dados originais da música.'**
+  String get songChordNotationDescription;
+
+  /// No description provided for @songChordNotationInternational.
+  ///
+  /// In pt, this message translates to:
+  /// **'Internacional (C, D, E)'**
+  String get songChordNotationInternational;
+
+  /// No description provided for @songChordNotationLatin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Latina (Do, Re, Mi)'**
+  String get songChordNotationLatin;
+
+  /// No description provided for @songChordNotationGerman.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alemã (H em vez de B)'**
+  String get songChordNotationGerman;
+
+  /// No description provided for @songChordNotationSargam.
+  ///
+  /// In pt, this message translates to:
+  /// **'Indiana / Sargam (Sa em C)'**
+  String get songChordNotationSargam;
+
   /// No description provided for @songShowChords.
   ///
   /// In pt, this message translates to:
@@ -2086,6 +2140,12 @@ abstract class AppLocalizations {
   /// **'Guitarra'**
   String get songGuitar;
 
+  /// No description provided for @songBass.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixo'**
+  String get songBass;
+
   /// No description provided for @songUkulele.
   ///
   /// In pt, this message translates to:
@@ -2098,6 +2158,18 @@ abstract class AppLocalizations {
   /// **'Piano'**
   String get songPiano;
 
+  /// No description provided for @instrumentFamilyFretted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com trastes'**
+  String get instrumentFamilyFretted;
+
+  /// No description provided for @instrumentFamilyKeyboard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Teclado'**
+  String get instrumentFamilyKeyboard;
+
   /// No description provided for @settingsInstrumentConfig.
   ///
   /// In pt, this message translates to:
@@ -2109,6 +2181,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Opções do instrumento selecionado — usadas ao desenhar os diagramas de acordes.'**
   String get settingsInstrumentConfigDesc;
+
+  /// No description provided for @settingsTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinação'**
+  String get settingsTuning;
+
+  /// No description provided for @settingsTuningDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configuração das cordas abertas para os diagramas.'**
+  String get settingsTuningDesc;
 
   /// No description provided for @settingsShowFingerNumbers.
   ///
@@ -2134,6 +2218,30 @@ abstract class AppLocalizations {
   /// **'Desenha o capo no pestana quando está ativo (estilo CifraClub).'**
   String get settingsShowCapoMarkerDesc;
 
+  /// No description provided for @settingsShowStringLabels.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar nomes das cordas'**
+  String get settingsShowStringLabels;
+
+  /// No description provided for @settingsShowStringLabelsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiqueta cada corda por baixo do diagrama (E A D G B e, etc.).'**
+  String get settingsShowStringLabelsDesc;
+
+  /// No description provided for @settingsBassRootNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só notas fundamentais'**
+  String get settingsBassRootNotes;
+
+  /// No description provided for @settingsBassRootNotesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostra uma única nota (tónica ou baixo do acorde com barra) em vez de formas completas.'**
+  String get settingsBassRootNotesDesc;
+
   /// No description provided for @settingsPianoCompactVoicing.
   ///
   /// In pt, this message translates to:
@@ -2157,6 +2265,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Toca o baixo do acorde com barra na mão esquerda e o acorde na direita (ex.: A/C#).'**
   String get settingsPianoSlashSplitDesc;
+
+  /// No description provided for @tuningGuitarStandard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão'**
+  String get tuningGuitarStandard;
+
+  /// No description provided for @tuningGuitarDropD.
+  ///
+  /// In pt, this message translates to:
+  /// **'Drop D'**
+  String get tuningGuitarDropD;
+
+  /// No description provided for @tuningGuitarSevenString.
+  ///
+  /// In pt, this message translates to:
+  /// **'7 cordas'**
+  String get tuningGuitarSevenString;
+
+  /// No description provided for @tuningBassFiveString.
+  ///
+  /// In pt, this message translates to:
+  /// **'5 cordas'**
+  String get tuningBassFiveString;
+
+  /// No description provided for @tuningUkuleleHighG.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sol agudo'**
+  String get tuningUkuleleHighG;
+
+  /// No description provided for @tuningUkuleleLowG.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sol grave'**
+  String get tuningUkuleleLowG;
+
+  /// No description provided for @tuningUkuleleBaritone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Barítono'**
+  String get tuningUkuleleBaritone;
 
   /// No description provided for @songAutoScrollStart.
   ///
@@ -2374,6 +2524,24 @@ abstract class AppLocalizations {
   /// **'As pastas organizam a biblioteca de cânticos da sua igreja.'**
   String get foldersEmptyDesc;
 
+  /// No description provided for @folderContentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta pasta está vazia'**
+  String get folderContentsEmpty;
+
+  /// No description provided for @folderContentsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nem subpastas aqui. Adicione um cântico, importe com a Logos AI, ou mova cânticos para esta pasta no Studio.'**
+  String get folderContentsEmptyDesc;
+
+  /// No description provided for @folderContentsEmptyReadonlyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nem subpastas aqui. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.'**
+  String get folderContentsEmptyReadonlyDesc;
+
   /// No description provided for @foldersNoResultsDesc.
   ///
   /// In pt, this message translates to:
@@ -2391,6 +2559,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'As coleções aparecem aqui quando a sua igreja as criar.'**
   String get collectionsEmptyDesc;
+
+  /// No description provided for @collectionsSearchHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pesquisar coleções…'**
+  String get collectionsSearchHint;
+
+  /// No description provided for @collectionContentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta coleção está vazia'**
+  String get collectionContentsEmpty;
+
+  /// No description provided for @collectionContentsEmptyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.'**
+  String get collectionContentsEmptyDesc;
+
+  /// No description provided for @collectionContentsEmptyReadonlyDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.'**
+  String get collectionContentsEmptyReadonlyDesc;
 
   /// No description provided for @foldersSubfolders.
   ///
@@ -2457,6 +2649,126 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Experimente outra pesquisa.'**
   String get servicesNoResultsDesc;
+
+  /// No description provided for @servicesNoResultsFiltersDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada corresponde a estes filtros. Experimenta limpá-los.'**
+  String get servicesNoResultsFiltersDesc;
+
+  /// No description provided for @servicesFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar cultos'**
+  String get servicesFilter;
+
+  /// No description provided for @servicesSortDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data'**
+  String get servicesSortDate;
+
+  /// No description provided for @servicesSortName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get servicesSortName;
+
+  /// No description provided for @servicesFilterWhen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando'**
+  String get servicesFilterWhen;
+
+  /// No description provided for @servicesFilterDateAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as datas'**
+  String get servicesFilterDateAll;
+
+  /// No description provided for @servicesFilterUpcoming.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximos'**
+  String get servicesFilterUpcoming;
+
+  /// No description provided for @servicesFilterPast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passados'**
+  String get servicesFilterPast;
+
+  /// No description provided for @servicesFilterToday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje'**
+  String get servicesFilterToday;
+
+  /// No description provided for @servicesFilterThisWeek.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta semana'**
+  String get servicesFilterThisWeek;
+
+  /// No description provided for @servicesFilterThisMonth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este mês'**
+  String get servicesFilterThisMonth;
+
+  /// No description provided for @servicesFilterStatus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estado'**
+  String get servicesFilterStatus;
+
+  /// No description provided for @servicesFilterActive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativos'**
+  String get servicesFilterActive;
+
+  /// No description provided for @servicesFilterArchivedOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivados'**
+  String get servicesFilterArchivedOnly;
+
+  /// No description provided for @servicesFilterIncludeArchived.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativos + arquivados'**
+  String get servicesFilterIncludeArchived;
+
+  /// No description provided for @servicesFilterContent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Plano'**
+  String get servicesFilterContent;
+
+  /// No description provided for @servicesFilterContentAny.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qualquer'**
+  String get servicesFilterContentAny;
+
+  /// No description provided for @servicesFilterWithSongs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com músicas'**
+  String get servicesFilterWithSongs;
+
+  /// No description provided for @servicesFilterWithNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com notas'**
+  String get servicesFilterWithNotes;
+
+  /// No description provided for @servicesFilterEmptyPlan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Plano vazio'**
+  String get servicesFilterEmptyPlan;
 
   /// No description provided for @servicesNextService.
   ///
@@ -3466,6 +3778,12 @@ abstract class AppLocalizations {
   /// **'Aparência'**
   String get settingsTabAppearance;
 
+  /// No description provided for @settingsTabSong.
+  ///
+  /// In pt, this message translates to:
+  /// **'Música'**
+  String get settingsTabSong;
+
   /// No description provided for @settingsSubscriptionInactive.
   ///
   /// In pt, this message translates to:
@@ -3652,6 +3970,18 @@ abstract class AppLocalizations {
   /// **'Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.'**
   String get settingsServiceOrderSidePanelDesc;
 
+  /// No description provided for @servicesCollapseOrderPanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recolher painel da ordem'**
+  String get servicesCollapseOrderPanel;
+
+  /// No description provided for @servicesExpandOrderPanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expandir painel da ordem'**
+  String get servicesExpandOrderPanel;
+
   /// No description provided for @settingsKeepAwake.
   ///
   /// In pt, this message translates to:
@@ -3675,6 +4005,108 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores'**
   String get settingsSyncAnnotationsDesc;
+
+  /// No description provided for @settingsPedalEnabled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pedais page-turner'**
+  String get settingsPedalEnabled;
+
+  /// No description provided for @settingsPedalEnabledDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usa um pedal Bluetooth emparelhado nas definições do sistema. A maioria dos pedais aparece como teclado.'**
+  String get settingsPedalEnabledDesc;
+
+  /// No description provided for @settingsPedalActionMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ação do pedal'**
+  String get settingsPedalActionMode;
+
+  /// No description provided for @settingsPedalActionNavigate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cântico seguinte / anterior'**
+  String get settingsPedalActionNavigate;
+
+  /// No description provided for @settingsPedalActionScroll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deslizar página'**
+  String get settingsPedalActionScroll;
+
+  /// No description provided for @settingsPedalPreset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disposição do pedal'**
+  String get settingsPedalPreset;
+
+  /// No description provided for @settingsPedalPresetUniversal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Universal'**
+  String get settingsPedalPresetUniversal;
+
+  /// No description provided for @settingsPedalPresetAirTurn.
+  ///
+  /// In pt, this message translates to:
+  /// **'AirTurn'**
+  String get settingsPedalPresetAirTurn;
+
+  /// No description provided for @settingsPedalPresetBlueTurn.
+  ///
+  /// In pt, this message translates to:
+  /// **'iRig BlueTurn'**
+  String get settingsPedalPresetBlueTurn;
+
+  /// No description provided for @settingsPedalPresetDonner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Donner / genérico'**
+  String get settingsPedalPresetDonner;
+
+  /// No description provided for @settingsPedalPresetCustom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personalizado'**
+  String get settingsPedalPresetCustom;
+
+  /// No description provided for @settingsPedalCustomNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tecla seguinte'**
+  String get settingsPedalCustomNext;
+
+  /// No description provided for @settingsPedalCustomPrev.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tecla anterior'**
+  String get settingsPedalCustomPrev;
+
+  /// No description provided for @settingsPedalCustomUnset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não definida'**
+  String get settingsPedalCustomUnset;
+
+  /// No description provided for @settingsPedalCustomCaptureTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prima uma tecla do pedal'**
+  String get settingsPedalCustomCaptureTitle;
+
+  /// No description provided for @settingsPedalCustomCaptureMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prima o botão do pedal que pretende atribuir. Emparelhe o pedal primeiro nas definições Bluetooth do sistema.'**
+  String get settingsPedalCustomCaptureMessage;
+
+  /// No description provided for @settingsPedalCustomCaptureCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get settingsPedalCustomCaptureCancel;
 
   /// No description provided for @settingsNotifications.
   ///

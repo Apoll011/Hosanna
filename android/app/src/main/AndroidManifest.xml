@@ -4,6 +4,8 @@
     <!-- Logos AI import: camera + gallery (image_picker). -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Push notifications (Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="Hosanna"
@@ -53,6 +55,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- FCM: use our monochrome icon for notifications so the icon is
+             visible on any theme / accent colour (Android 5+). Without this,
+             the launcher icon (a full-colour PNG) is used and shows as a solid
+             colour square on Android 12+ "material you" themes. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <!-- Default notification channel for FCM data-only messages when the
+             app is in the background (Android 8+). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="hosanna_default" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

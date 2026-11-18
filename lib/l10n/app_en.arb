@@ -101,6 +101,7 @@
   "setupFocusTitle": "What do you play?",
   "setupFocusSubtitle": "This sets your default instrument for chord diagrams.",
   "setupFocusGuitar": "Guitar",
+  "setupFocusBass": "Bass Guitar",
   "setupFocusUkulele": "Ukulele",
   "setupFocusPiano": "Piano / keys",
   "setupFocusVocals": "Vocals",
@@ -123,8 +124,12 @@
   "setupStepOf": "Step {current} of {total}",
   "@setupStepOf": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "settingsRedoSetup": "Run setup again",
@@ -136,6 +141,7 @@
   "syncLastSynced": "Last synced: {time}",
   "syncNever": "Never synced",
   "syncNow": "Sync now",
+  "songsSavedOffline": "Saved on this device. Changes will sync when you're back online.",
   "syncPullToRefresh": "Pull to sync",
   "navSongs": "Songs",
   "navServices": "Services",
@@ -165,19 +171,25 @@
   "agendaMinutes": "{count} min",
   "@agendaMinutes": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "agendaResponsibilityCount": "{count} assigned",
   "@agendaResponsibilityCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "agendaAssigneeCount": "{count} people",
   "@agendaAssigneeCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "navAllSongs": "All songs",
@@ -266,15 +278,23 @@
   "songsLintSummary": "{errors} errors · {warnings} warnings · {infos} hints",
   "@songsLintSummary": {
     "placeholders": {
-      "errors": { "type": "int" },
-      "warnings": { "type": "int" },
-      "infos": { "type": "int" }
+      "errors": {
+        "type": "int"
+      },
+      "warnings": {
+        "type": "int"
+      },
+      "infos": {
+        "type": "int"
+      }
     }
   },
   "songsLintLine": "L{line}",
   "@songsLintLine": {
     "placeholders": {
-      "line": { "type": "int" }
+      "line": {
+        "type": "int"
+      }
     }
   },
   "songsLintDetails": "Details",
@@ -284,37 +304,48 @@
   "songsLintUnknownChord": "Unrecognized chord \"{chord}\".",
   "@songsLintUnknownChord": {
     "placeholders": {
-      "chord": { "type": "String" }
+      "chord": {
+        "type": "String"
+      }
     }
   },
   "songsLintMalformedDirective": "Malformed directive — check braces and name.",
   "songsLintUnknownDirective": "Unrecognized directive \"{name}\".",
   "@songsLintUnknownDirective": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songsLintUnclosedSection": "Unclosed {section} — missing end_of_{section}.",
   "@songsLintUnclosedSection": {
     "placeholders": {
-      "section": { "type": "String" }
+      "section": {
+        "type": "String"
+      }
     }
   },
   "songsLintUnexpectedEndSection": "Unexpected end_of_{section} with no matching start.",
   "@songsLintUnexpectedEndSection": {
     "placeholders": {
-      "section": { "type": "String" }
+      "section": {
+        "type": "String"
+      }
     }
   },
   "songsLintInvalidYoutube": "YouTube value is not a recognized video URL or ID.",
   "songsLintInvalidKey": "Unusual key \"{value}\". Expected G, Am, F#m, …",
   "@songsLintInvalidKey": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "songsLintInvalidTempo": "Tempo should be a BPM number between 20 and 400.",
-  "songsLintInvalidCapo": "Capo should be a fret number from 0 to 12.",
+  "songsLintInvalidCapo": "Capo should be a fret number from 0 to 11.",
+  "songsLintInvalidKeyShift": "Key Shift should be a positive number.",
   "songsLintInvalidTime": "Time signature should look like 4/4 or 6/8.",
   "songsLintInvalidDuration": "Duration should be seconds or m:ss (e.g. 3:45).",
   "songsNewSong": "New song",
@@ -356,7 +387,9 @@
   "songsAiConfidence": "AI confidence: {percent}%",
   "@songsAiConfidence": {
     "placeholders": {
-      "percent": { "type": "String" }
+      "percent": {
+        "type": "String"
+      }
     }
   },
   "songsAiLowConfidence": "Low confidence — please review lyrics and chords carefully before saving.",
@@ -389,23 +422,45 @@
   "songCapoNone": "None",
   "songCapoFret": "Fret {fret}",
   "songFontSize": "Font Size",
+  "songChordNotation": "Chord Notation",
+  "songChordNotationDescription": "Choose how chord names are displayed throughout your songs. This does not change the original song data.",
+  "songChordNotationInternational": "International (C, D, E)",
+  "songChordNotationLatin": "Latin (Do, Re, Mi)",
+  "songChordNotationGerman": "German (H instead of B)",
+  "songChordNotationSargam": "Indian / Sargam (Sa on C)",
   "songShowChords": "Show Chords",
   "songTwoColumn": "2-Column Layout",
   "songShowDiagrams": "Show Diagrams",
   "songSectionBackground": "Tint Section Backgrounds",
   "songGuitar": "Guitar",
+  "songBass": "Bass",
   "songUkulele": "Ukulele",
   "songPiano": "Piano",
+  "instrumentFamilyFretted": "Fretted",
+  "instrumentFamilyKeyboard": "Keyboard",
   "settingsInstrumentConfig": "Instrument settings",
   "settingsInstrumentConfigDesc": "Options for the selected instrument — used when rendering chord diagrams.",
+  "settingsTuning": "Tuning",
+  "settingsTuningDesc": "Open-string configuration for chord diagrams.",
   "settingsShowFingerNumbers": "Show finger numbers",
   "settingsShowFingerNumbersDesc": "Paint 1–4 inside fretting dots on chord diagrams.",
   "settingsShowCapoMarker": "Show capo on diagrams",
   "settingsShowCapoMarkerDesc": "Draw a capo clamp on the nut when a capo is active (CifraClub-style).",
+  "settingsShowStringLabels": "Show string names",
+  "settingsShowStringLabelsDesc": "Label each string under the chord diagram (E A D G B e, etc.).",
+  "settingsBassRootNotes": "Root notes only",
+  "settingsBassRootNotesDesc": "Show a single fretted root (or slash bass) instead of full chord shapes.",
   "settingsPianoCompactVoicing": "Compact voicings",
   "settingsPianoCompactVoicingDesc": "For 7th chords and extensions, omit the root from the right hand (e.g. C7 → Bb-E-G).",
   "settingsPianoSlashSplit": "Slash chords: bass in left hand",
   "settingsPianoSlashSplitDesc": "Play the slash bass with the left hand and the chord with the right (e.g. A/C#).",
+  "tuningGuitarStandard": "Standard",
+  "tuningGuitarDropD": "Drop D",
+  "tuningGuitarSevenString": "7-string",
+  "tuningBassFiveString": "5-string",
+  "tuningUkuleleHighG": "High G",
+  "tuningUkuleleLowG": "Low G",
+  "tuningUkuleleBaritone": "Baritone",
   "songAutoScrollStart": "Start auto-scroll",
   "songAutoScrollPause": "Pause scroll",
   "songAutoScrollSpeed": "Scroll speed",
@@ -428,19 +483,25 @@
   "songTranslatorCredit": "Translation: {name}",
   "@songTranslatorCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songLyricistCredit": "Lyrics: {name}",
   "@songLyricistCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songArrangerCredit": "Arrangement: {name}",
   "@songArrangerCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songNumberPill": "No. {number}",
@@ -457,9 +518,16 @@
   "foldersTitle": "Folders",
   "foldersEmpty": "No folders yet",
   "foldersEmptyDesc": "Folders help organize your church’s song library.",
+  "folderContentsEmpty": "This folder is empty",
+  "folderContentsEmptyDesc": "No songs or subfolders here yet. Add a song, import with Logos AI, or move songs into this folder from Studio.",
+  "folderContentsEmptyReadonlyDesc": "No songs or subfolders here yet. Ask a leader to add songs in Studio, or check back after the next sync.",
   "foldersNoResultsDesc": "Try a different search or clear your filters.",
   "collectionsEmpty": "No collections yet",
   "collectionsEmptyDesc": "Collections appear here when your church creates them.",
+  "collectionsSearchHint": "Search collections…",
+  "collectionContentsEmpty": "This collection is empty",
+  "collectionContentsEmptyDesc": "No songs in this collection yet. Add songs to it from Studio — a song can belong to several collections at once.",
+  "collectionContentsEmptyReadonlyDesc": "No songs in this collection yet. Ask a leader to add some in Studio, or check back after the next sync.",
   "foldersSubfolders": "Subfolders",
   "foldersSongsCount": "{count, plural, =1{1 song} other{{count} songs}}",
   "foldersRoot": "Root",
@@ -471,6 +539,26 @@
   "servicesSearchHint": "Search services…",
   "servicesNoResults": "No matching services",
   "servicesNoResultsDesc": "Try a different search.",
+  "servicesNoResultsFiltersDesc": "Nothing matches these filters. Try clearing them.",
+  "servicesFilter": "Filter services",
+  "servicesSortDate": "Date",
+  "servicesSortName": "Name",
+  "servicesFilterWhen": "When",
+  "servicesFilterDateAll": "All dates",
+  "servicesFilterUpcoming": "Upcoming",
+  "servicesFilterPast": "Past",
+  "servicesFilterToday": "Today",
+  "servicesFilterThisWeek": "This week",
+  "servicesFilterThisMonth": "This month",
+  "servicesFilterStatus": "Status",
+  "servicesFilterActive": "Active",
+  "servicesFilterArchivedOnly": "Archived",
+  "servicesFilterIncludeArchived": "Active + archived",
+  "servicesFilterContent": "Plan",
+  "servicesFilterContentAny": "Any",
+  "servicesFilterWithSongs": "Has songs",
+  "servicesFilterWithNotes": "Has notes",
+  "servicesFilterEmptyPlan": "Empty plan",
   "servicesNextService": "Next service",
   "servicesNoUpcoming": "No upcoming services",
   "servicesNoUpcomingDesc": "There are no scheduled services right now.",
@@ -533,13 +621,17 @@
   "servicesScheduledWindow": "Scheduled {window}",
   "@servicesScheduledWindow": {
     "placeholders": {
-      "window": { "type": "String" }
+      "window": {
+        "type": "String"
+      }
     }
   },
   "servicesItemRunning": "This item · {elapsed}",
   "@servicesItemRunning": {
     "placeholders": {
-      "elapsed": { "type": "String" }
+      "elapsed": {
+        "type": "String"
+      }
     }
   },
   "servicesNotStarted": "Not started",
@@ -649,6 +741,7 @@
   "settingsTabPreferences": "Preferences",
   "settingsTabService": "Service",
   "settingsTabAppearance": "Appearance",
+  "settingsTabSong": "Song",
   "settingsSubscriptionInactive": "No active subscription",
   "settingsSubscriptionInactiveDesc": "This organization is read-only until a subscription or trial is active. You can still browse synced content.",
   "settingsOrgSwitching": "Switching organization…",
@@ -680,10 +773,29 @@
   "settingsMusicianModeDesc": "Open services on the first song with chords and annotation tools. Turn off for a run-of-show view with lyrics and timing.",
   "settingsServiceOrderSidePanel": "Service order side panel",
   "settingsServiceOrderSidePanelDesc": "On tablets, keep the service order visible beside the current item in both musician and non-musician modes.",
+  "servicesCollapseOrderPanel": "Collapse order panel",
+  "servicesExpandOrderPanel": "Expand order panel",
   "settingsKeepAwake": "Keep Screen Awake",
   "settingsKeepAwakeDesc": "Prevents the screen from sleeping while viewing songs.",
   "settingsSyncAnnotations": "Sync annotations",
   "settingsSyncAnnotationsDesc": "Shares annotations live between all users",
+  "settingsPedalEnabled": "Page-turner pedals",
+  "settingsPedalEnabledDesc": "Use a Bluetooth pedal paired in system settings. Most pedals appear as a keyboard.",
+  "settingsPedalActionMode": "Pedal action",
+  "settingsPedalActionNavigate": "Next / previous song",
+  "settingsPedalActionScroll": "Scroll page",
+  "settingsPedalPreset": "Pedal layout",
+  "settingsPedalPresetUniversal": "Universal",
+  "settingsPedalPresetAirTurn": "AirTurn",
+  "settingsPedalPresetBlueTurn": "iRig BlueTurn",
+  "settingsPedalPresetDonner": "Donner / generic",
+  "settingsPedalPresetCustom": "Custom",
+  "settingsPedalCustomNext": "Next key",
+  "settingsPedalCustomPrev": "Previous key",
+  "settingsPedalCustomUnset": "Not set",
+  "settingsPedalCustomCaptureTitle": "Press a pedal key",
+  "settingsPedalCustomCaptureMessage": "Press the pedal button you want to assign. Pair the pedal in system Bluetooth first.",
+  "settingsPedalCustomCaptureCancel": "Cancel",
   "settingsNotifications": "Allow notifications on this device",
   "settingsNotificationsDesc": "Lets the server send notifications to this session. Separate from the system notification permission.",
   "notificationConsentTitle": "Allow notifications on this device?",
@@ -692,7 +804,6 @@
   "notificationConsentNotNow": "Not now",
   "notificationOpenAction": "Open",
   "settingsSessionsOnly": "Only this device's current session is active.",
-
   "metronomeTitle": "Metronome",
   "metronomeDescription": "Tempo and time signature for rehearsals.",
   "metronomeTapTempo": "Tap Tempo",
@@ -701,7 +812,6 @@
   "metronomePlay": "Play",
   "metronomePause": "Pause",
   "metronomeAudioUnavailable": "Metronome sound is unavailable on this device.",
-
   "circleOfFifthsTitle": "Circle of Fifths",
   "circleOfFifthsDescription": "Key and relative-key reference.",
   "circleOfFifthsHarmonicField": "Harmonic Field",
@@ -716,7 +826,6 @@
   "@circleOfFifthsRelativeMinor": {
     "description": "Label for the vi degree (relative minor) chord card"
   },
-
   "exportPdfTitle": "Export PDF",
   "comingSoon": "Coming soon",
   "comingSoonDescription": "This feature will be available in a future release.",
@@ -744,7 +853,9 @@
   "songVariantTooltip": "Version: {name}",
   "@songVariantTooltip": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsLanguageSystem": "System",

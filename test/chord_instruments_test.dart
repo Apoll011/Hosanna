@@ -41,10 +41,10 @@ void main() {
       .toList();
 
   group('instrument registry', () {
-    test('exposes guitar, ukulele and piano', () {
+    test('exposes guitar, bass, ukulele and piano', () {
       expect(
         instrumentRegistry.instruments.map((i) => i.id),
-        containsAll(<String>['guitar', 'ukulele', 'piano']),
+        containsAll(<String>['guitar', 'bass', 'ukulele', 'piano']),
       );
     });
 
@@ -53,10 +53,63 @@ void main() {
       expect(instrumentRegistry.defaultId, 'guitar');
     });
 
-    test('only fretted instruments support a capo', () {
+    test('only fretted instruments that use a capo support one', () {
       expect(instrumentRegistry.resolve('guitar').supportsCapo, isTrue);
       expect(instrumentRegistry.resolve('ukulele').supportsCapo, isTrue);
+      expect(instrumentRegistry.resolve('bass').supportsCapo, isFalse);
       expect(instrumentRegistry.resolve('piano').supportsCapo, isFalse);
+    });
+
+    test('fretted instruments expose multiple tunings', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final bass = instrumentRegistry.resolve('bass') as FrettedInstrument;
+      final uke = instrumentRegistry.resolve('ukulele') as FrettedInstrument;
+      expect(guitar.tunings.map((t) => t.id), containsAll(['standard', 'drop_d', 'seven_string']));
+      expect(bass.tunings.map((t) => t.id), containsAll(['standard', 'drop_d', 'five_string']));
+      expect(uke.tunings.map((t) => t.id), containsAll(['high_g', 'low_g', 'baritone']));
+    });
+  });
+
+  group('bass voicings', () {
+    final bass = instrumentRegistry.resolve('bass') as BassInstrument;
+
+    test('chord mode returns multi-string shapes', () {
+      final fingering = bass.fingering(parseChordSymbol('C')!) as FrettedFingering;
+      expect(fingering.stringCount, 4);
+      expect(fingering.frets.where((f) => f >= 0).length, greaterThan(1));
+      expect(fingering.notes, contains('C'));
+    });
+
+    test('roots mode frets a single root note', () {
+      final fingering = bass.fingering(
+        parseChordSymbol('Am')!,
+        options: const InstrumentFingeringOptions(
+          bassVoicingStyle: BassVoicingStyle.roots,
+        ),
+      ) as FrettedFingering;
+      expect(fingering.frets.where((f) => f >= 0).length, 1);
+      expect(fingering.notes, ['A']);
+    });
+
+    test('roots mode uses slash bass when present', () {
+      final fingering = bass.fingering(
+        parseChordSymbol('C/E')!,
+        options: const InstrumentFingeringOptions(
+          bassVoicingStyle: BassVoicingStyle.roots,
+        ),
+      ) as FrettedFingering;
+      expect(fingering.frets.where((f) => f >= 0).length, 1);
+      expect(fingering.notes, ['E']);
+    });
+
+    test('five-string tuning pads a muted low B', () {
+      final fingering = bass.fingering(
+        parseChordSymbol('G')!,
+        options: const InstrumentFingeringOptions(tuningId: 'five_string'),
+      ) as FrettedFingering;
+      expect(fingering.stringCount, 5);
+      expect(fingering.frets.first, -1);
+      expect(fingering.stringNames, ['B', 'E', 'A', 'D', 'G']);
     });
   });
 
@@ -64,6 +117,7 @@ void main() {
     for (final instrument in frettedInstruments) {
       test('${instrument.id}: tuning matches its string count', () async {
         expect(instrument.tuning, isNotEmpty);
+        expect(instrument.tuning.length, instrument.defaultTuning.stringCount);
       });
 
       test('${instrument.id}: every chord resolves to a valid shape', () {
@@ -117,7 +171,113 @@ void main() {
           );
         }
       });
+
+      for (final tuning in instrument.tunings) {
+        test('${instrument.id}/${tuning.id}: adapts string count', () {
+          final fingering = instrument.fingering(
+            parseChordSymbol('Am')!,
+            options: InstrumentFingeringOptions(tuningId: tuning.id),
+          ) as FrettedFingering;
+          expect(fingering.stringCount, tuning.stringCount);
+          expect(fingering.stringNames, tuning.stringNames);
+          expect(fingering.tuningId, tuning.id);
+        });
+
+        test('${instrument.id}/${tuning.id}: sounding notes stay in-chord', () {
+          for (final symbol in _chords) {
+            final parsed = parseChordSymbol(symbol)!;
+            final fingering = instrument.fingering(
+              parsed,
+              options: InstrumentFingeringOptions(tuningId: tuning.id),
+            );
+            expect(
+              fingering,
+              isA<FrettedFingering>(),
+              reason: '${instrument.id}/${tuning.id} missing $symbol',
+            );
+            final fretted = fingering! as FrettedFingering;
+            final expected = _expectedPitchClasses(parsed);
+            final sounded = _soundedPitchClasses(fretted, tuning.openPitches);
+            expect(
+              sounded.difference(expected),
+              isEmpty,
+              reason:
+                  '$symbol on ${instrument.id}/${tuning.id} sounds foreign '
+                  '${sounded.difference(expected)} frets=${fretted.frets}',
+            );
+            expect(
+              sounded.contains(pitchClass(parsed.rootSemitone)),
+              isTrue,
+              reason: '$symbol on ${instrument.id}/${tuning.id} omits root',
+            );
+          }
+        });
+      }
     }
+  });
+
+  group('tuning retarget math', () {
+    test('Drop D Em frets the low string at 2 to keep E', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('Em')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets, [2, 2, 2, 0, 0, 0]);
+      expect(
+        _soundedPitchClasses(fingering, FrettedTunings.guitarDropD.openPitches),
+        containsAll(<int>{4, 7, 11}), // E G B
+      );
+    });
+
+    test('Drop D D5 becomes an open power chord', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('D5')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets.take(3), [0, 0, 0]);
+      expect(
+        _soundedPitchClasses(fingering, FrettedTunings.guitarDropD.openPitches),
+        containsAll(<int>{2, 9}), // D A
+      );
+    });
+
+    test('Drop D promotes open D on a D major shape', () {
+      final guitar = instrumentRegistry.resolve('guitar') as FrettedInstrument;
+      final fingering = guitar.fingering(
+        parseChordSymbol('D')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(fingering.frets.first, 0);
+      expect(fingering.notes, contains('D'));
+    });
+
+    test('bass Drop D retunes Em root string', () {
+      final bass = instrumentRegistry.resolve('bass') as FrettedInstrument;
+      final standard = bass.fingering(parseChordSymbol('Em')!) as FrettedFingering;
+      final drop = bass.fingering(
+        parseChordSymbol('Em')!,
+        options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+      ) as FrettedFingering;
+      expect(standard.frets.first, 0);
+      expect(drop.frets.first, 2);
+      expect(
+        _soundedPitchClasses(drop, FrettedTunings.bassDropD.openPitches),
+        contains(4), // E
+      );
+    });
+
+    test('retuneFrets preserves pitch classes across Drop D', () {
+      // Standard Em open shape.
+      final frets = [0, 2, 2, 0, 0, 0];
+      final retuned = FrettedInstrument.retuneFrets(
+        frets,
+        FrettedTunings.guitarStandard.openPitches,
+        FrettedTunings.guitarDropD.openPitches,
+      );
+      expect(retuned, [2, 2, 2, 0, 0, 0]);
+    });
   });
 
   group('keyboard voicings', () {
@@ -174,7 +334,10 @@ void main() {
     test('returns a voicing per registered instrument', () {
       final fingering = chordDictionary.getFingering('Am7')!;
       expect(fingering.qualityId, 'm7');
-      expect(fingering.fingerings.keys, containsAll(<String>['guitar', 'ukulele', 'piano']));
+      expect(
+        fingering.fingerings.keys,
+        containsAll(<String>['guitar', 'bass', 'ukulele', 'piano']),
+      );
       expect(fingering.forInstrument('banjo'), isNull);
     });
 

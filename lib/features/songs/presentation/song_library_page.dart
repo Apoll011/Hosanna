@@ -9,6 +9,7 @@ import '../../../core/db/database.dart';
 import '../../../core/permissions/permissions.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../auth/domain/auth_controller.dart';
 import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
@@ -45,8 +46,12 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     super.dispose();
   }
 
-  Future<void> _refresh() =>
-      ref.read(syncControllerProvider.notifier).syncAll();
+  Future<void> _refresh() {
+    final orgId = ref.read(authControllerProvider).organization?.id;
+    return ref
+        .read(syncControllerProvider.notifier)
+        .syncAll(organizationId: orgId);
+  }
 
   void _openAiImport() {
     final library = ref.read(libraryControllerProvider);
@@ -507,7 +512,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               IconButton(
                 icon: Icon(
                   isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? theme.colorScheme.primary : null,
+                  color: isFav ? Colors.red : null,
                 ),
                 tooltip: l10n.navFavorites,
                 onPressed: () => onToggleFavorite(song.id),
@@ -556,12 +561,25 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           description: l10n.songsRecentsEmptyDesc,
           scrollable: true,
         ),
-      LibrarySection.folder ||
-      LibrarySection.collection =>
-        EmptyState(
+      LibrarySection.folder => EmptyState(
           illustrationAsset: HosannaIllustrations.emptyFolders,
-          title: l10n.songsEmpty,
-          description: l10n.songsEmptyDesc,
+          title: l10n.folderContentsEmpty,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.folderContentsEmptyDesc
+              : l10n.folderContentsEmptyReadonlyDesc,
+          primaryLabel: canCreateSong ? l10n.songsAddSong : null,
+          primaryIcon: Icons.add_rounded,
+          onPrimary: canCreateSong ? _showNewSongSheet : null,
+          secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
+          onSecondary: canImportWithAi ? _openAiImport : null,
+          scrollable: true,
+        ),
+      LibrarySection.collection => EmptyState(
+          illustrationAsset: HosannaIllustrations.emptyFolders,
+          title: l10n.collectionContentsEmpty,
+          description: (canCreateSong || canImportWithAi)
+              ? l10n.collectionContentsEmptyDesc
+              : l10n.collectionContentsEmptyReadonlyDesc,
           scrollable: true,
         ),
       LibrarySection.all => EmptyState(

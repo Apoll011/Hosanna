@@ -170,6 +170,7 @@ const _sessionBonus = {
 AppConfig _config({String clientId = 'web-client.apps.googleusercontent.com', bool nonce = false}) =>
     AppConfig(
       apiBaseUrl: 'https://api.example.com',
+      authBaseUrl: 'https://auth.example.com',
       turnstileUrl: '',
       origin: 'http://localhost',
       googleServerClientId: clientId,

@@ -3,6 +3,7 @@ enum SetupRole { musician, leader }
 
 enum SetupPrimaryFocus {
   guitar,
+  bass,
   ukulele,
   piano,
   vocals,
@@ -29,6 +30,7 @@ class SetupDraft {
 
   /// Instrument id persisted for chord diagrams / capo behaviour.
   String get instrumentId => switch (focus) {
+        SetupPrimaryFocus.bass => 'bass',
         SetupPrimaryFocus.ukulele => 'ukulele',
         SetupPrimaryFocus.piano => 'piano',
         SetupPrimaryFocus.guitar || SetupPrimaryFocus.vocals || null => 'guitar',

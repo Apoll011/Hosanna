@@ -441,6 +441,12 @@ class _FocusStep extends StatelessWidget {
         Icons.music_note_rounded,
       ),
       (
+        SetupPrimaryFocus.bass,
+        l10n.setupFocusBass,
+        HosannaIllustrations.setupInstrumentBass,
+        Icons.queue_music_rounded,
+      ),
+      (
         SetupPrimaryFocus.piano,
         l10n.setupFocusPiano,
         HosannaIllustrations.setupInstrumentPiano,
@@ -454,23 +460,27 @@ class _FocusStep extends StatelessWidget {
       ),
     ];
 
-    Widget row(int start) {
+    Widget tile((SetupPrimaryFocus, String, String, IconData) option) {
+      return _ChoiceTile(
+        asset: option.$3,
+        fallbackIcon: option.$4,
+        title: option.$2,
+        selected: selected == option.$1,
+        onTap: () => onSelect(option.$1),
+      );
+    }
+
+    Widget pair(
+      (SetupPrimaryFocus, String, String, IconData) left,
+      (SetupPrimaryFocus, String, String, IconData) right,
+    ) {
       return SizedBox(
-        height: 240,
+        height: 200,
         child: Row(
           children: [
-            for (var i = 0; i < 2; i++) ...[
-              if (i > 0) const SizedBox(width: 12),
-              Expanded(
-                child: _ChoiceTile(
-                  asset: options[start + i].$3,
-                  fallbackIcon: options[start + i].$4,
-                  title: options[start + i].$2,
-                  selected: selected == options[start + i].$1,
-                  onTap: () => onSelect(options[start + i].$1),
-                ),
-              ),
-            ],
+            Expanded(child: tile(left)),
+            const SizedBox(width: 12),
+            Expanded(child: tile(right)),
           ],
         ),
       );
@@ -481,9 +491,20 @@ class _FocusStep extends StatelessWidget {
       subtitle: l10n.setupFocusSubtitle,
       child: Column(
         children: [
-          row(0),
+          pair(options[0], options[1]),
           const SizedBox(height: 12),
-          row(2),
+          pair(options[2], options[3]),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 200,
+            child: Row(
+              children: [
+                Expanded(child: tile(options[4])),
+                const SizedBox(width: 12),
+                const Expanded(child: SizedBox.shrink()),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -590,6 +611,7 @@ class _DoneStep extends StatelessWidget {
         isMusician ? l10n.setupRoleMusician : l10n.setupRoleLeader;
     final focusLabel = switch (draft.focus) {
       SetupPrimaryFocus.guitar => l10n.setupFocusGuitar,
+      SetupPrimaryFocus.bass => l10n.setupFocusBass,
       SetupPrimaryFocus.ukulele => l10n.setupFocusUkulele,
       SetupPrimaryFocus.piano => l10n.setupFocusPiano,
       SetupPrimaryFocus.vocals => l10n.setupFocusVocals,

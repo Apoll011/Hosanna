@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/chordpro/chord_dictionary.dart';
+import '../../../domain/chordpro/chord_notation.dart';
 import '../../../domain/chordpro/instruments/instruments.dart';
 import '../chord_diagrams.dart';
 
@@ -15,6 +16,7 @@ class ChordRoll extends StatelessWidget {
     required this.preferences,
     required this.fingeringFor,
     required this.onChordTap,
+    required this.chordNotation,
   });
 
   /// Transposed chords in order of appearance.
@@ -24,6 +26,7 @@ class ChordRoll extends StatelessWidget {
   final InstrumentPreferences preferences;
   final ChordFingering? Function(String chord) fingeringFor;
   final void Function(String chord) onChordTap;
+  final ChordNotationSystem chordNotation;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +62,7 @@ class ChordRoll extends StatelessWidget {
                     capo: capo,
                     preference: pref,
                     onTap: onChordTap,
+                    notation: chordNotation,
                   ),
               ],
             ),
@@ -76,6 +80,7 @@ class _ChordRollItem extends StatelessWidget {
     required this.capo,
     required this.preference,
     required this.onTap,
+    required this.notation,
   });
 
   final String chord;
@@ -83,15 +88,17 @@ class _ChordRollItem extends StatelessWidget {
   final int capo;
   final InstrumentPreference preference;
   final void Function(String chord) onTap;
+  final ChordNotationSystem notation;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final voicing = this.voicing;
+    final displayChord = ChordNotationConverter.formatChord(chord, notation);
     return Semantics(
       button: true,
-      label: l10n.songChordSemantics(chord),
+      label: l10n.songChordSemantics(displayChord),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => onTap(chord),
@@ -101,7 +108,7 @@ class _ChordRollItem extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                chord,
+                displayChord,
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontFamily: 'monospace',
@@ -117,13 +124,19 @@ class _ChordRollItem extends StatelessWidget {
                   capo: capo,
                   showFingerNumbers: preference.showFingerNumbers,
                   showCapoMarker: preference.showCapoMarker,
+                  showStringLabels: preference.showStringLabels,
                 ),
               ),
               if (voicing != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    voicing.notes.join(' - '),
+                    voicing.notes
+                        .map(
+                          (note) =>
+                              ChordNotationConverter.formatNote(note, notation),
+                        )
+                        .join(' - '),
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontFamily: 'monospace',
                     ),

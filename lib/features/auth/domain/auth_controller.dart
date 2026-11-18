@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/analytics/analytics.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/auth/captcha_required_exception.dart';
 import '../../../core/auth/session_store.dart';
@@ -94,18 +95,30 @@ class AuthController extends StateNotifier<AuthState> {
 
   StreamSubscription<String>? _fcmSubscription;
 
+  /// Bumped on every [switchOrganization] so a slow resolve from switch A
+  /// cannot overwrite state after the user already moved to org B.
+  int _orgSwitchEpoch = 0;
+
   /// Restores a persisted session on launch, then verifies it against the
   /// server (falling back to the cached session on network errors).
   Future<void> checkSession() async {
     final cached = await _store.readSession();
     final cachedToken = await _store.readToken();
+    final cachedRole = await _store.readMemberRole();
 
     if (cached != null) {
       _tokenStore.update(cachedToken);
+      // Restore RBAC offline: song edit/create gates use [memberRole], and
+      // song writes already persist locally as dirty until sync resumes.
+      final roleForOrg = cachedRole != null &&
+              cachedRole.orgId == cached.organization?.id
+          ? cachedRole.role
+          : null;
       state = AuthState(
         status: AuthStatus.authenticated,
         session: cached,
         organization: cached.organization,
+        memberRole: roleForOrg,
       );
     }
 
@@ -125,7 +138,7 @@ class AuthController extends StateNotifier<AuthState> {
       if (_isAuthRejection(e)) {
         await _clearSession();
       } else if (cached != null) {
-        // Keep the cached (offline) session.
+        // Keep the cached (offline) session + role.
       } else {
         await _clearSession();
       }
@@ -140,6 +153,9 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    unawaited(
+      AnalyticsService.instance.track(const SignInStarted(method: 'email')),
+    );
     // Resolve this device's token up front so it lands on the session being
     // created (it belongs to *this* device, not the account).
     final fcm = await _fcm.getToken();
@@ -156,6 +172,18 @@ class AuthController extends StateNotifier<AuthState> {
     await _resolveOrganization(session);
     await _applyNotificationConsent();
     await syncFcmToken();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignInSucceeded(method: 'email', userId: session.user.id),
+      ),
+    );
+    unawaited(
+      AnalyticsService.instance.identify(
+        session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      ),
+    );
   }
 
   Future<void> signUp({
@@ -165,6 +193,9 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    unawaited(
+      AnalyticsService.instance.track(const SignUpStarted(method: 'email')),
+    );
     final fcm = await _fcm.getToken();
     final consented = await _consent.read();
     final session = await _repository.signUp(
@@ -180,6 +211,18 @@ class AuthController extends StateNotifier<AuthState> {
     await _resolveOrganization(session);
     await _applyNotificationConsent();
     await syncFcmToken();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignUpSucceeded(method: 'email', userId: session.user.id),
+      ),
+    );
+    unawaited(
+      AnalyticsService.instance.identify(
+        session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      ),
+    );
   }
 
   /// Signs in — or signs up — with a native social provider.
@@ -190,6 +233,11 @@ class AuthController extends StateNotifier<AuthState> {
   /// the resulting session is applied through the same path as email sign-in.
   Future<void> signInWithSocial(SocialAuthProvider provider) async {
     final credential = await provider.authenticate();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignInStarted(method: provider.id),
+      ),
+    );
     try {
       final session = await _repository.signInWithSocial(
         providerId: provider.id,
@@ -201,43 +249,92 @@ class AuthController extends StateNotifier<AuthState> {
       // on this device too.
       await _applyNotificationConsent();
       await syncFcmToken();
+      unawaited(
+        AnalyticsService.instance.track(
+          SignInSucceeded(method: provider.id, userId: session.user.id),
+        ),
+      );
+      unawaited(
+        AnalyticsService.instance.identify(
+          session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+        ),
+      );
     } on ApiException catch (e) {
+      unawaited(
+        AnalyticsService.instance.track(
+          SignInFailed(method: provider.id, error: e.message ?? e.toString()),
+        ),
+      );
       throw _socialFailure(e);
     }
   }
 
   Future<void> signOut() async {
-    // The session naturally stops being valid server-side; the FCM token is
-    // intentionally left on the (now dead) session rather than deleted first.
+    // Track before resetting so the event is still attributed to the user.
+    await AnalyticsService.instance.track(const SignOutRequested());
+    // Disable the PushDevice before revoking the session so the server does
+    // not keep delivering to a token that no longer belongs to an active login.
+    final token = state.session?.fcm;
+    if (token != null && token.isNotEmpty) {
+      try {
+        await _repository.disablePushDevice(token: token);
+      } catch (_) {
+        // Best-effort — session revoke hooks also detach devices by sessionId.
+      }
+    }
     await _repository.signOut();
+    await AnalyticsService.instance.reset();
     await _clearSession();
   }
 
   // ── FCM / per-session notifications ──────────────────────────────────────
 
-  /// Pushes this device's current FCM token onto the authenticated session.
+  /// Registers this device's FCM token with the PushDevice registry (and keeps
+  /// session.fcm in sync for backwards compatibility).
   ///
   /// Centralised so sign-in, sign-up, startup and token refresh all funnel
-  /// through one place. No request is made when the token is missing or the
-  /// session already carries the same token. Does nothing when signed out.
+  /// through one place. No request is made when the token is missing. Does
+  /// nothing when signed out.
   Future<void> syncFcmToken() async {
     final session = state.session;
     if (session == null) return;
     final token = await _fcm.getToken();
     if (token == null || token.isEmpty) return;
-    if (session.fcm == token) return;
     try {
-      await updateCurrentSession(fcm: token);
+      final consented = await _consent.read();
+      await _repository.registerPushDevice(
+        token: token,
+        enabled: consented == true,
+      );
+      // Mirror onto the session model so local UI stays consistent.
+      if (session.fcm != token || session.notify != (consented == true)) {
+        await updateCurrentSession(fcm: token, notify: consented == true);
+      }
     } catch (_) {
       // Best-effort backstop — retried on the next startup/token refresh, so a
       // failed sync never turns a successful sign-in into a failure.
     }
   }
 
-  /// Enables/disables server notifications for **this** session only
-  /// (`session.notify`), flipping it between true and false. Independent of the
-  /// OS notification permission.
-  Future<void> setNotify(bool value) => updateCurrentSession(notify: value);
+  /// Enables/disables server notifications for **this** device.
+  /// Updates PushDevice.enabled and session.notify together.
+  Future<void> setNotify(bool value) async {
+    final token = await _fcm.getToken() ?? state.session?.fcm;
+    if (token != null && token.isNotEmpty) {
+      try {
+        if (value) {
+          await _repository.registerPushDevice(token: token, enabled: true);
+        } else {
+          await _repository.disablePushDevice(token: token);
+        }
+      } catch (_) {
+        // Fall through to session update.
+      }
+    }
+    await updateCurrentSession(notify: value, fcm: token);
+  }
 
   /// Records the user's consent decision for this device.
   Future<void> recordNotificationConsent(bool consented) =>
@@ -286,9 +383,14 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> _onFcmTokenRefresh(String token) async {
     final session = state.session;
-    if (session == null || token.isEmpty || session.fcm == token) return;
+    if (session == null || token.isEmpty) return;
     try {
-      await updateCurrentSession(fcm: token);
+      final consented = await _consent.read();
+      await _repository.registerPushDevice(
+        token: token,
+        enabled: consented == true,
+      );
+      await updateCurrentSession(fcm: token, notify: consented == true);
     } catch (_) {
       // A failed sync is retried on the next refresh/startup.
     }
@@ -363,12 +465,20 @@ class AuthController extends StateNotifier<AuthState> {
       _repository.listOrganizations();
 
   /// Switches the active organization and re-resolves it locally.
+  ///
+  /// Rapid successive calls are serialized by [_orgSwitchEpoch]: only the
+  /// latest switch applies [AuthState.organization] / member role.
   Future<void> switchOrganization(String slug) async {
+    final epoch = ++_orgSwitchEpoch;
+    state = state.copyWith(resolvingOrganization: true);
     await _repository.setActiveOrganization(slug);
+    if (epoch != _orgSwitchEpoch) return;
     final session = state.session;
-    if (session != null) {
-      await _resolveOrganization(session);
+    if (session == null) {
+      state = state.copyWith(resolvingOrganization: false);
+      return;
     }
+    await _resolveOrganization(session, switchEpoch: epoch);
   }
 
   Future<void> _refreshEntitlement() async {
@@ -403,24 +513,38 @@ class AuthController extends StateNotifier<AuthState> {
     await _store.writeToken(merged.sessionToken);
     await _store.writeSession(merged);
     final org = merged.organization ?? state.organization;
+    final sameOrg = org?.id != null && org!.id == state.organization?.id;
     state = AuthState(
       status: AuthStatus.authenticated,
       session: merged,
       organization: org,
+      // Keep the last known role until `_resolveOrganization` refreshes it so
+      // a mid-session network blip does not hide edit actions.
+      memberRole: sameOrg ? state.memberRole : null,
       // If we don't know the org yet, the router shows a loading screen until
       // `_resolveOrganization` finishes instead of flashing onboarding.
       resolvingOrganization: org == null,
     );
   }
 
-  Future<void> _resolveOrganization(AuthSession session) async {
+  Future<void> _resolveOrganization(
+    AuthSession session, {
+    int? switchEpoch,
+  }) async {
+    bool isStale() =>
+        switchEpoch != null && switchEpoch != _orgSwitchEpoch;
+
     try {
       var org = await _repository.getFullOrganization();
+      if (isStale()) return;
       if (org == null) {
         final orgs = await _repository.listOrganizations();
+        if (isStale()) return;
         if (orgs.isNotEmpty) {
           await _repository.setActiveOrganization(orgs.first.slug);
+          if (isStale()) return;
           org = await _repository.getFullOrganization();
+          if (isStale()) return;
         }
       }
       if (org != null) {
@@ -436,22 +560,34 @@ class AuthController extends StateNotifier<AuthState> {
         final role = await _repository.resolveMemberRole(
           userId: session.user.id,
         );
+        if (isStale()) return;
         await _store.writeSession(merged);
+        if (role != null && role.isNotEmpty) {
+          await _store.writeMemberRole(orgId: org.id, role: role);
+        } else {
+          await _store.clearMemberRole();
+        }
+        if (isStale()) return;
         state = state.copyWith(
           session: merged,
           organization: org,
           memberRole: role,
           resolvingOrganization: false,
+          clearMemberRole: role == null || role.isEmpty,
         );
         await _refreshEntitlement();
       } else {
+        if (isStale()) return;
+        await _store.clearMemberRole();
         state = state.copyWith(
           resolvingOrganization: false,
           clearMemberRole: true,
         );
       }
     } catch (_) {
+      if (isStale()) return;
       // Non-fatal: sync will surface any missing active-org as a 403.
+      // Keep any previously cached memberRole so offline editing stays available.
       state = state.copyWith(resolvingOrganization: false);
     }
   }

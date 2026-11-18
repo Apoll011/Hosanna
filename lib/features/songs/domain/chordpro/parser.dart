@@ -10,11 +10,10 @@
 library;
 
 class SegmentAst {
-  const SegmentAst({required this.chord, required this.text, this.timing});
+  const SegmentAst({required this.chord, required this.text});
 
   final String chord;
   final String text;
-  final double? timing;
 }
 
 class MeasureAst {
@@ -31,14 +30,15 @@ class LineAst {
     this.segments,
     this.measures,
     this.startBarline,
+    this.style,
   });
 
-  final String
-  type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
+  final String type; // lyrics | comment | comment_italic | comment_box | tab | empty | chord-section | key_note
   final String? text;
   final List<SegmentAst>? segments;
   final List<MeasureAst>? measures;
   final String? startBarline;
+  final String? style;
 }
 
 class SectionAst {
@@ -63,6 +63,7 @@ class ChordProVersion {
     required this.name,
     required this.metadata,
     required this.body,
+    this.declaredDirectives = const {},
   });
 
   /// Stable slug identifier (e.g., "versao-de-estudio").
@@ -73,6 +74,7 @@ class ChordProVersion {
 
   /// Fully resolved (inherited + overridden) metadata map.
   final Map<String, String> metadata;
+  final Set<String> declaredDirectives;
 
   /// The song body sections for this version.
   final List<SectionAst> body;
@@ -120,54 +122,31 @@ class SongAst {
   final List<String>? errors;
 }
 
-final RegExp _timingRegex = RegExp(r'^(.+?)@([0-9]*\.?[0-9]+)x$');
 final RegExp _chordRegex = RegExp(r'\[([^\]]+)\]');
 final RegExp _barlineRegex = RegExp(r'\|\||\|:|:\||\|\]|\|');
 final RegExp _onlyBarsAndSpacesRegex = RegExp(r'^[\s|:\-.%]*$');
 final RegExp _lineBreakRegex = RegExp(r'\r?\n');
 
-({String chord, double? timing}) _parseChordTiming(String rawChord) {
-  final match = _timingRegex.firstMatch(rawChord);
-  if (match != null) {
-    return (chord: match.group(1)!, timing: double.tryParse(match.group(2)!));
-  }
-  return (chord: rawChord, timing: null);
-}
-
 List<SegmentAst> parseLineSegments(String lineText) {
   final segments = <SegmentAst>[];
   var lastIndex = 0;
   var currentChord = '';
-  double? currentTiming;
 
   for (final match in _chordRegex.allMatches(lineText)) {
-    final rawChord = match.group(1)!;
-    final parsed = _parseChordTiming(rawChord);
-    final chord = parsed.chord;
-    final timing = parsed.timing;
+    final chord = match.group(1)!;
     final textBefore = lineText.substring(lastIndex, match.start);
 
     if (lastIndex == 0 && textBefore.isEmpty) {
       currentChord = chord;
-      currentTiming = timing;
     } else {
-      segments.add(
-        SegmentAst(
-          chord: currentChord,
-          text: textBefore,
-          timing: currentTiming,
-        ),
-      );
+      segments.add(SegmentAst(chord: currentChord, text: textBefore));
       currentChord = chord;
-      currentTiming = timing;
     }
     lastIndex = match.end;
   }
 
   final remainingText = lineText.substring(lastIndex);
-  segments.add(
-    SegmentAst(chord: currentChord, text: remainingText, timing: currentTiming),
-  );
+  segments.add(SegmentAst(chord: currentChord, text: remainingText));
 
   return segments;
 }
@@ -206,6 +185,9 @@ const Map<String, String> _aliasMap = {
   'key_notes': 'key_note',
   'key notes': 'key_note',
   'kn': 'key_note',
+  'tags': 'tags',
+  'keyshift': 'key_shift',
+  'key_shift': 'key_shift',
   'yt': 'youtube',
   // variant directives
   'start_of_version': 'start_of_version',
@@ -221,6 +203,16 @@ String _camelCaseMetaKey(String name) {
         (m) => m.group(1)!.toUpperCase(),
       )
       .replaceAll(RegExp(r'\s+'), '');
+}
+
+({String text, String? style}) _parseCommentValue(String value) {
+  final match = RegExp(r'\|\s*(?:style\s*=\s*)?([a-zA-Z_-]+)\s*$')
+      .firstMatch(value);
+  if (match == null) return (text: value, style: null);
+  return (
+    text: value.substring(0, match.start).trim(),
+    style: match.group(1)!.toLowerCase(),
+  );
 }
 
 /// Converts an accented/special-character variant name into a stable ASCII slug.
@@ -255,6 +247,7 @@ class _VersionContext {
   final String name;
   final Map<String, String> metadata;
   final int startLineNumber;
+  final Set<String> declaredDirectives = {};
 
   final List<SectionAst> sections = [];
   SectionAst? currentSection;
@@ -283,8 +276,8 @@ class _VersionContext {
 /// {end_of_version}
 /// ```
 ///
-/// Metadata is cumulative: each variant inherits the fully resolved metadata
-/// of the previous version.
+/// Other metadata is cumulative. Each variant resolves key from the main chart;
+/// keyshift and capo are handled as variant-specific defaults.
 ChordProDocument parseChordProDocument(String content) {
   final lines = content.split(_lineBreakRegex);
   final errors = <String>[];
@@ -351,7 +344,7 @@ ChordProDocument parseChordProDocument(String content) {
         defaultCtx.commitSection();
         seenIds.add(variantId);
 
-        // Cumulative metadata: inherit from the previous variant or default
+        // Carry other metadata forward; pitch directives resolve separately.
         final previousMeta = variants.isNotEmpty
             ? Map<String, String>.of(variants.last.metadata)
             : Map<String, String>.of(defaultCtx.metadata);
@@ -362,6 +355,15 @@ ChordProDocument parseChordProDocument(String content) {
           metadata: previousMeta,
           startLineNumber: lineNumber,
         );
+        final mainKey = defaultCtx.metadata['key'];
+        if (mainKey != null) {
+          activeVariant.metadata['key'] = mainKey;
+        } else {
+          activeVariant.metadata.remove('key');
+        }
+        activeVariant.metadata
+          ..remove('capo')
+          ..remove('keyShift');
         continue;
       }
 
@@ -386,6 +388,7 @@ ChordProDocument parseChordProDocument(String content) {
             name: activeVariant.name,
             metadata: Map.of(meta),
             body: List.of(activeVariant.sections),
+            declaredDirectives: Set.of(activeVariant.declaredDirectives),
           ),
         );
         activeVariant = null;
@@ -394,6 +397,7 @@ ChordProDocument parseChordProDocument(String content) {
 
       // ── Normal directive — dispatch to the active context ───────────────
       final ctx = activeVariant ?? defaultCtx;
+      ctx.declaredDirectives.add(name);
 
       switch (name) {
         case 'start_of_chorus':
@@ -442,14 +446,24 @@ ChordProDocument parseChordProDocument(String content) {
           ctx.currentSection = SectionAst(type: 'bridge', label: value);
         case 'comment':
         case 'comment_italic':
-          final commentLine = LineAst(type: name, text: value);
+          final comment = _parseCommentValue(value);
+          final commentLine = LineAst(
+            type: name,
+            text: comment.text,
+            style: comment.style,
+          );
           if (ctx.currentSection != null) {
             ctx.currentSection!.lines.add(commentLine);
           } else {
             ctx.sections.add(SectionAst(type: 'comment', lines: [commentLine]));
           }
         case 'comment_box':
-          final cbLine = LineAst(type: 'comment_box', text: value);
+          final comment = _parseCommentValue(value);
+          final cbLine = LineAst(
+            type: 'comment_box',
+            text: comment.text,
+            style: comment.style ?? 'info',
+          );
           if (ctx.currentSection != null) {
             ctx.currentSection!.lines.add(cbLine);
           } else {
@@ -485,6 +499,18 @@ ChordProDocument parseChordProDocument(String content) {
             ctx.metadata['duration'] = '${parts[0] * 60 + parts[1]}';
           } else {
             ctx.metadata['duration'] = value;
+          }
+        case 'tags':
+          final tags = value
+              .split(',')
+              .map((tag) => tag.trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList();
+          if (tags.isNotEmpty) {
+            ctx.metadata['tags'] = [
+              ...tags,
+              ...?ctx.metadata['tags']?.split(',').map((tag) => tag.trim()),
+            ].join(',');
           }
         default:
           if (value.isNotEmpty) {
@@ -542,9 +568,7 @@ ChordProDocument parseChordProDocument(String content) {
 
       for (final seg in parsedSegments) {
         if (seg.chord.isNotEmpty) {
-          currentChords.add(
-            SegmentAst(chord: seg.chord, text: '', timing: seg.timing),
-          );
+          currentChords.add(SegmentAst(chord: seg.chord, text: ''));
           hasSeenChord = true;
         }
 
@@ -594,6 +618,7 @@ ChordProDocument parseChordProDocument(String content) {
         name: activeVariant.name,
         metadata: Map.of(meta),
         body: List.of(activeVariant.sections),
+        declaredDirectives: Set.of(activeVariant.declaredDirectives),
       ),
     );
   }
@@ -609,6 +634,7 @@ ChordProDocument parseChordProDocument(String content) {
     name: 'Padrão',
     metadata: Map.of(defaultCtx.metadata),
     body: List.of(defaultCtx.sections),
+    declaredDirectives: Set.of(defaultCtx.declaredDirectives),
   );
 
   return ChordProDocument(

@@ -109,6 +109,7 @@
   "setupFocusTitle": "O que toca?",
   "setupFocusSubtitle": "Isto define o instrumento predefinido para os diagramas de acordes.",
   "setupFocusGuitar": "Guitarra",
+  "setupFocusBass": "Baixo",
   "setupFocusUkulele": "Ukulele",
   "setupFocusPiano": "Piano / teclas",
   "setupFocusVocals": "Voz",
@@ -131,8 +132,12 @@
   "setupStepOf": "Passo {current} de {total}",
   "@setupStepOf": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "settingsRedoSetup": "Repetir configuração",
@@ -144,6 +149,7 @@
   "syncLastSynced": "Última sincronização: {time}",
   "syncNever": "Nunca sincronizado",
   "syncNow": "Sincronizar agora",
+  "songsSavedOffline": "Guardado neste dispositivo. As alterações sincronizam quando voltares a ter ligação.",
   "syncPullToRefresh": "Puxe para sincronizar",
   "navSongs": "Cânticos",
   "navServices": "Cultos",
@@ -279,15 +285,23 @@
   "songsLintSummary": "{errors} erros · {warnings} avisos · {infos} dicas",
   "@songsLintSummary": {
     "placeholders": {
-      "errors": { "type": "int" },
-      "warnings": { "type": "int" },
-      "infos": { "type": "int" }
+      "errors": {
+        "type": "int"
+      },
+      "warnings": {
+        "type": "int"
+      },
+      "infos": {
+        "type": "int"
+      }
     }
   },
   "songsLintLine": "L{line}",
   "@songsLintLine": {
     "placeholders": {
-      "line": { "type": "int" }
+      "line": {
+        "type": "int"
+      }
     }
   },
   "songsLintDetails": "Detalhes",
@@ -297,37 +311,48 @@
   "songsLintUnknownChord": "Acorde não reconhecido \"{chord}\".",
   "@songsLintUnknownChord": {
     "placeholders": {
-      "chord": { "type": "String" }
+      "chord": {
+        "type": "String"
+      }
     }
   },
   "songsLintMalformedDirective": "Diretiva malformada — verifique chavetas e nome.",
   "songsLintUnknownDirective": "Diretiva não reconhecida \"{name}\".",
   "@songsLintUnknownDirective": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songsLintUnclosedSection": "Secção {section} por fechar — falta end_of_{section}.",
   "@songsLintUnclosedSection": {
     "placeholders": {
-      "section": { "type": "String" }
+      "section": {
+        "type": "String"
+      }
     }
   },
   "songsLintUnexpectedEndSection": "end_of_{section} inesperado sem início correspondente.",
   "@songsLintUnexpectedEndSection": {
     "placeholders": {
-      "section": { "type": "String" }
+      "section": {
+        "type": "String"
+      }
     }
   },
   "songsLintInvalidYoutube": "O valor do YouTube não é um URL ou ID válido.",
   "songsLintInvalidKey": "Tom invulgar \"{value}\". Esperado G, Am, F#m, …",
   "@songsLintInvalidKey": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "songsLintInvalidTempo": "O tempo deve ser um BPM entre 20 e 400.",
   "songsLintInvalidCapo": "O capo deve ser um traste de 0 a 12.",
+  "songsLintInvalidKeyShift": "A mudança de tonalidade deve ser um número positivo.",
   "songsLintInvalidTime": "O compasso deve parecer 4/4 ou 6/8.",
   "songsLintInvalidDuration": "A duração deve ser segundos ou m:ss (ex. 3:45).",
   "songsNewSong": "Nova canção",
@@ -369,7 +394,9 @@
   "songsAiConfidence": "Confiança da IA: {percent}%",
   "@songsAiConfidence": {
     "placeholders": {
-      "percent": { "type": "String" }
+      "percent": {
+        "type": "String"
+      }
     }
   },
   "songsAiLowConfidence": "Baixa confiança — reveja bem a letra e os acordes antes de guardar.",
@@ -403,23 +430,45 @@
   "songCapoNone": "Nenhum",
   "songCapoFret": "Traste {fret}",
   "songFontSize": "Tamanho da Letra",
+  "songChordNotation": "Notação de acordes",
+  "songChordNotationDescription": "Escolha como os nomes dos acordes são apresentados nas músicas. Isto não altera os dados originais da música.",
+  "songChordNotationInternational": "Internacional (C, D, E)",
+  "songChordNotationLatin": "Latina (Do, Re, Mi)",
+  "songChordNotationGerman": "Alemã (H em vez de B)",
+  "songChordNotationSargam": "Indiana / Sargam (Sa em C)",
   "songShowChords": "Mostrar Acordes",
   "songTwoColumn": "Layout em 2 Colunas",
   "songShowDiagrams": "Mostrar Diagramas",
   "songSectionBackground": "Destacar Seções com Cor",
   "songGuitar": "Guitarra",
+  "songBass": "Baixo",
   "songUkulele": "Ukelele",
   "songPiano": "Piano",
+  "instrumentFamilyFretted": "Com trastes",
+  "instrumentFamilyKeyboard": "Teclado",
   "settingsInstrumentConfig": "Definições do instrumento",
   "settingsInstrumentConfigDesc": "Opções do instrumento selecionado — usadas ao desenhar os diagramas de acordes.",
+  "settingsTuning": "Afinação",
+  "settingsTuningDesc": "Configuração das cordas abertas para os diagramas.",
   "settingsShowFingerNumbers": "Mostrar números dos dedos",
   "settingsShowFingerNumbersDesc": "Desenha 1–4 dentro dos pontos no diagrama.",
   "settingsShowCapoMarker": "Mostrar capo nos diagramas",
   "settingsShowCapoMarkerDesc": "Desenha o capo no pestana quando está ativo (estilo CifraClub).",
+  "settingsShowStringLabels": "Mostrar nomes das cordas",
+  "settingsShowStringLabelsDesc": "Etiqueta cada corda por baixo do diagrama (E A D G B e, etc.).",
+  "settingsBassRootNotes": "Só notas fundamentais",
+  "settingsBassRootNotesDesc": "Mostra uma única nota (tónica ou baixo do acorde com barra) em vez de formas completas.",
   "settingsPianoCompactVoicing": "Voicings compactos",
   "settingsPianoCompactVoicingDesc": "Em acordes de 7ª e extensões, omite a tónica na mão direita (ex.: C7 → Bb-E-G).",
   "settingsPianoSlashSplit": "Acordes com baixo: baixo na mão esquerda",
   "settingsPianoSlashSplitDesc": "Toca o baixo do acorde com barra na mão esquerda e o acorde na direita (ex.: A/C#).",
+  "tuningGuitarStandard": "Padrão",
+  "tuningGuitarDropD": "Drop D",
+  "tuningGuitarSevenString": "7 cordas",
+  "tuningBassFiveString": "5 cordas",
+  "tuningUkuleleHighG": "Sol agudo",
+  "tuningUkuleleLowG": "Sol grave",
+  "tuningUkuleleBaritone": "Barítono",
   "songAutoScrollStart": "Iniciar scroll automático",
   "songAutoScrollPause": "Pausar scroll",
   "songAutoScrollSpeed": "Velocidade do scroll",
@@ -442,19 +491,25 @@
   "songTranslatorCredit": "Tradução: {name}",
   "@songTranslatorCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songLyricistCredit": "Letra: {name}",
   "@songLyricistCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songArrangerCredit": "Arranjo: {name}",
   "@songArrangerCredit": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "songNumberPill": "Nº {number}",
@@ -471,9 +526,16 @@
   "foldersTitle": "Pastas",
   "foldersEmpty": "Ainda sem pastas",
   "foldersEmptyDesc": "As pastas organizam a biblioteca de cânticos da sua igreja.",
+  "folderContentsEmpty": "Esta pasta está vazia",
+  "folderContentsEmptyDesc": "Ainda não há cânticos nem subpastas aqui. Adicione um cântico, importe com a Logos AI, ou mova cânticos para esta pasta no Studio.",
+  "folderContentsEmptyReadonlyDesc": "Ainda não há cânticos nem subpastas aqui. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.",
   "foldersNoResultsDesc": "Experimente outra pesquisa ou limpe os filtros.",
   "collectionsEmpty": "Ainda sem coleções",
   "collectionsEmptyDesc": "As coleções aparecem aqui quando a sua igreja as criar.",
+  "collectionsSearchHint": "Pesquisar coleções…",
+  "collectionContentsEmpty": "Esta coleção está vazia",
+  "collectionContentsEmptyDesc": "Ainda não há cânticos nesta coleção. Adicione-os no Studio — um cântico pode pertencer a várias coleções ao mesmo tempo.",
+  "collectionContentsEmptyReadonlyDesc": "Ainda não há cânticos nesta coleção. Peça a um líder para os adicionar no Studio, ou volte após a próxima sincronização.",
   "foldersSubfolders": "Subpastas",
   "foldersSongsCount": "{count, plural, =1{1 cântico} other{{count} cânticos}}",
   "foldersRoot": "Raiz",
@@ -485,6 +547,26 @@
   "servicesSearchHint": "Pesquisar cultos…",
   "servicesNoResults": "Nenhum culto correspondente",
   "servicesNoResultsDesc": "Experimente outra pesquisa.",
+  "servicesNoResultsFiltersDesc": "Nada corresponde a estes filtros. Experimenta limpá-los.",
+  "servicesFilter": "Filtrar cultos",
+  "servicesSortDate": "Data",
+  "servicesSortName": "Nome",
+  "servicesFilterWhen": "Quando",
+  "servicesFilterDateAll": "Todas as datas",
+  "servicesFilterUpcoming": "Próximos",
+  "servicesFilterPast": "Passados",
+  "servicesFilterToday": "Hoje",
+  "servicesFilterThisWeek": "Esta semana",
+  "servicesFilterThisMonth": "Este mês",
+  "servicesFilterStatus": "Estado",
+  "servicesFilterActive": "Ativos",
+  "servicesFilterArchivedOnly": "Arquivados",
+  "servicesFilterIncludeArchived": "Ativos + arquivados",
+  "servicesFilterContent": "Plano",
+  "servicesFilterContentAny": "Qualquer",
+  "servicesFilterWithSongs": "Com músicas",
+  "servicesFilterWithNotes": "Com notas",
+  "servicesFilterEmptyPlan": "Plano vazio",
   "servicesNextService": "Próximo culto",
   "servicesNoUpcoming": "Sem cultos futuros",
   "servicesNoUpcomingDesc": "Não há cultos agendados de momento.",
@@ -667,6 +749,7 @@
   "settingsTabPreferences": "Preferências",
   "settingsTabService": "Culto",
   "settingsTabAppearance": "Aparência",
+  "settingsTabSong": "Música",
   "settingsSubscriptionInactive": "Sem subscrição ativa",
   "settingsSubscriptionInactiveDesc": "Esta organização está só de leitura até haver uma subscrição ou período de avaliação ativo. Ainda pode consultar o conteúdo sincronizado.",
   "settingsOrgSwitching": "A mudar de organização…",
@@ -698,10 +781,29 @@
   "settingsMusicianModeDesc": "Abre os cultos no primeiro cântico com acordes e anotações. Desative para a vista de ordem do culto com letras e tempos.",
   "settingsServiceOrderSidePanel": "Painel lateral da ordem do culto",
   "settingsServiceOrderSidePanelDesc": "Em tablets, mantém a ordem do culto visível ao lado do item atual nos modos músico e não músico.",
+  "servicesCollapseOrderPanel": "Recolher painel da ordem",
+  "servicesExpandOrderPanel": "Expandir painel da ordem",
   "settingsKeepAwake": "Manter Ecrã Ligado",
   "settingsKeepAwakeDesc": "Impede o ecrã de suspender durante a visualização de cânticos.",
   "settingsSyncAnnotations": "Sincronizar anotações",
   "settingsSyncAnnotationsDesc": "Faz com que as anotações sejam partilhadas ao vivo entre todos os utilizadores",
+  "settingsPedalEnabled": "Pedais page-turner",
+  "settingsPedalEnabledDesc": "Usa um pedal Bluetooth emparelhado nas definições do sistema. A maioria dos pedais aparece como teclado.",
+  "settingsPedalActionMode": "Ação do pedal",
+  "settingsPedalActionNavigate": "Cântico seguinte / anterior",
+  "settingsPedalActionScroll": "Deslizar página",
+  "settingsPedalPreset": "Disposição do pedal",
+  "settingsPedalPresetUniversal": "Universal",
+  "settingsPedalPresetAirTurn": "AirTurn",
+  "settingsPedalPresetBlueTurn": "iRig BlueTurn",
+  "settingsPedalPresetDonner": "Donner / genérico",
+  "settingsPedalPresetCustom": "Personalizado",
+  "settingsPedalCustomNext": "Tecla seguinte",
+  "settingsPedalCustomPrev": "Tecla anterior",
+  "settingsPedalCustomUnset": "Não definida",
+  "settingsPedalCustomCaptureTitle": "Prima uma tecla do pedal",
+  "settingsPedalCustomCaptureMessage": "Prima o botão do pedal que pretende atribuir. Emparelhe o pedal primeiro nas definições Bluetooth do sistema.",
+  "settingsPedalCustomCaptureCancel": "Cancelar",
   "settingsNotifications": "Permitir notificações neste dispositivo",
   "settingsNotificationsDesc": "Permite que o servidor envie notificações para esta sessão. É independente da permissão de notificações do sistema.",
   "notificationConsentTitle": "Permitir notificações neste dispositivo?",

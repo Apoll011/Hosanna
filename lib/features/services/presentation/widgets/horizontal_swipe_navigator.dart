@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../input/pedal_navigator.dart';
 
 /// Horizontal drag navigation used for service elements (songs and non-songs).
 class HorizontalSwipeNavigator extends StatefulWidget {
@@ -168,63 +169,70 @@ class _HorizontalSwipeNavigatorState extends State<HorizontalSwipeNavigator>
     final theme = Theme.of(context);
     final showNav = widget.showFloatingNav && _enabled;
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: _enabled ? _onDragStart : null,
-            onHorizontalDragUpdate: _enabled ? _onDragUpdate : null,
-            onHorizontalDragEnd: _enabled ? _onDragEnd : null,
-            onHorizontalDragCancel: _enabled ? _onDragCancel : null,
-            child: Transform.translate(
-              offset: Offset(_offset, 0),
-              child: widget.child,
+    return PedalNavigator(
+      onPrev: widget.canPrev ? widget.onPrev : null,
+      onNext: widget.canNext ? widget.onNext : null,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: _enabled ? _onDragStart : null,
+              onHorizontalDragUpdate: _enabled ? _onDragUpdate : null,
+              onHorizontalDragEnd: _enabled ? _onDragEnd : null,
+              onHorizontalDragCancel: _enabled ? _onDragCancel : null,
+              child: Transform.translate(
+                offset: Offset(_offset, 0),
+                child: widget.child,
+              ),
             ),
           ),
-        ),
-        if (showNav)
-          Positioned(
-            right: 16,
-            bottom: 20,
-            child: SafeArea(
-              top: false,
-              child: Material(
-                elevation: 2,
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: widget.canPrev ? widget.onPrev : null,
-                        icon: const Icon(Icons.chevron_left),
-                        tooltip: l10n.commonBack,
-                      ),
-                      if (widget.positionLabel != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            widget.positionLabel!,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+          if (showNav)
+            Positioned(
+              right: 16,
+              bottom: 20,
+              child: SafeArea(
+                top: false,
+                child: Material(
+                  elevation: 2,
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: widget.canPrev ? widget.onPrev : null,
+                          icon: const Icon(Icons.chevron_left),
+                          tooltip: l10n.commonBack,
+                        ),
+                        if (widget.positionLabel != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              widget.positionLabel!,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
+                        IconButton(
+                          onPressed: widget.canNext ? widget.onNext : null,
+                          icon: const Icon(Icons.chevron_right),
+                          tooltip: l10n.commonNext,
                         ),
-                      IconButton(
-                        onPressed: widget.canNext ? widget.onNext : null,
-                        icon: const Icon(Icons.chevron_right),
-                        tooltip: l10n.commonNext,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
