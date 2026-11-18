@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/analytics/analytics.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/auth/captcha_required_exception.dart';
 import '../../../core/auth/session_store.dart';
@@ -152,6 +153,9 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    unawaited(
+      AnalyticsService.instance.track(const SignInStarted(method: 'email')),
+    );
     // Resolve this device's token up front so it lands on the session being
     // created (it belongs to *this* device, not the account).
     final fcm = await _fcm.getToken();
@@ -168,6 +172,18 @@ class AuthController extends StateNotifier<AuthState> {
     await _resolveOrganization(session);
     await _applyNotificationConsent();
     await syncFcmToken();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignInSucceeded(method: 'email', userId: session.user.id),
+      ),
+    );
+    unawaited(
+      AnalyticsService.instance.identify(
+        session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      ),
+    );
   }
 
   Future<void> signUp({
@@ -177,6 +193,9 @@ class AuthController extends StateNotifier<AuthState> {
     String? captchaToken,
   }) async {
     _requireCaptchaIfNeeded(captchaToken);
+    unawaited(
+      AnalyticsService.instance.track(const SignUpStarted(method: 'email')),
+    );
     final fcm = await _fcm.getToken();
     final consented = await _consent.read();
     final session = await _repository.signUp(
@@ -192,6 +211,18 @@ class AuthController extends StateNotifier<AuthState> {
     await _resolveOrganization(session);
     await _applyNotificationConsent();
     await syncFcmToken();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignUpSucceeded(method: 'email', userId: session.user.id),
+      ),
+    );
+    unawaited(
+      AnalyticsService.instance.identify(
+        session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      ),
+    );
   }
 
   /// Signs in — or signs up — with a native social provider.
@@ -202,6 +233,11 @@ class AuthController extends StateNotifier<AuthState> {
   /// the resulting session is applied through the same path as email sign-in.
   Future<void> signInWithSocial(SocialAuthProvider provider) async {
     final credential = await provider.authenticate();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignInStarted(method: provider.id),
+      ),
+    );
     try {
       final session = await _repository.signInWithSocial(
         providerId: provider.id,
@@ -213,12 +249,31 @@ class AuthController extends StateNotifier<AuthState> {
       // on this device too.
       await _applyNotificationConsent();
       await syncFcmToken();
+      unawaited(
+        AnalyticsService.instance.track(
+          SignInSucceeded(method: provider.id, userId: session.user.id),
+        ),
+      );
+      unawaited(
+        AnalyticsService.instance.identify(
+          session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+        ),
+      );
     } on ApiException catch (e) {
+      unawaited(
+        AnalyticsService.instance.track(
+          SignInFailed(method: provider.id, error: e.message ?? e.toString()),
+        ),
+      );
       throw _socialFailure(e);
     }
   }
 
   Future<void> signOut() async {
+    // Track before resetting so the event is still attributed to the user.
+    await AnalyticsService.instance.track(const SignOutRequested());
     // Disable the PushDevice before revoking the session so the server does
     // not keep delivering to a token that no longer belongs to an active login.
     final token = state.session?.fcm;
@@ -230,6 +285,7 @@ class AuthController extends StateNotifier<AuthState> {
       }
     }
     await _repository.signOut();
+    await AnalyticsService.instance.reset();
     await _clearSession();
   }
 

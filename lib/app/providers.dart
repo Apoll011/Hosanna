@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosanna/features/services/data/service_annotation_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/analytics/analytics.dart';
 import '../core/auth/session_store.dart';
 import '../core/auth/social_auth_provider.dart';
 import '../core/config/app_config.dart';
@@ -21,6 +22,12 @@ import '../features/notifications/data/notification_consent_store.dart';
 
 /// Compile-time configuration (API URL, hosted Turnstile page URL).
 final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.instance);
+
+/// Singleton analytics service — exposes [AnalyticsService.instance] via
+/// Riverpod so widgets can depend on it without importing the service directly.
+final analyticsServiceProvider = Provider<AnalyticsService>(
+  (ref) => AnalyticsService.instance,
+);
 
 /// In-memory bearer token read by the Dio auth interceptor.
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());

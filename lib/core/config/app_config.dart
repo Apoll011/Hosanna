@@ -19,6 +19,8 @@ class AppConfig {
     required this.origin,
     this.googleServerClientId = '',
     this.googleNonceEnabled = false,
+    this.postHogApiKey = '',
+    this.postHogHost = 'https://t.hosanna.live',
   });
 
   /// Base URL of the Hosanna backend (no trailing slash, no `/api`).
@@ -63,6 +65,19 @@ class AppConfig {
   /// the server-side flow is confirmed to expect a nonce.
   final bool googleNonceEnabled;
 
+  /// PostHog project API key (injected via `--dart-define=HOSANNA_POSTHOG_KEY=phc_xxx`).
+  ///
+  /// Analytics is disabled when this is empty (the default for local/debug
+  /// builds that do not pass the define).
+  final String postHogApiKey;
+
+  /// PostHog ingestion host.
+  ///
+  /// Defaults to the Hosanna-managed PostHog proxy so events never go directly
+  /// to `app.posthog.com`. Override with
+  /// `--dart-define=HOSANNA_POSTHOG_HOST=https://...`.
+  final String postHogHost;
+
   /// Full API root, e.g. `https://host/api`.
   String get apiRoot => '${apiBaseUrl.replaceFirst(RegExp(r'/$'), '')}/api';
 
@@ -93,5 +108,10 @@ class AppConfig {
       'HOSANNA_GOOGLE_SERVER_CLIENT_ID',
     ),
     googleNonceEnabled: bool.fromEnvironment('HOSANNA_GOOGLE_NONCE'),
+    postHogApiKey: String.fromEnvironment('HOSANNA_POSTHOG_KEY'),
+    postHogHost: String.fromEnvironment(
+      'HOSANNA_POSTHOG_HOST',
+      defaultValue: 'https://t.hosanna.live',
+    ),
   );
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/analytics/analytics.dart';
 import '../core/sync/sync_controller.dart';
 import '../features/auth/domain/auth_controller.dart';
 import '../features/folders/domain/folder_explorer_controller.dart';
@@ -200,6 +201,9 @@ class _HosannaAppState extends ConsumerState<HosannaApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(
+        AnalyticsService.instance.track(const AppOpenedFromBackground()),
+      );
       _maybeSyncOnResume();
     }
   }

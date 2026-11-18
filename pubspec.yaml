@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.3.2
   google_fonts: ^9.0.0
   flutter_local_notifications: ^23.0.1
+  posthog_flutter: ^5.1.0
 
 dev_dependencies:
   flutter_test:

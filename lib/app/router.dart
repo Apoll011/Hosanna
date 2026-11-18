@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/analytics/analytics.dart';
 import '../features/agenda/presentation/agenda_event_page.dart';
 import '../features/agenda/presentation/agenda_page.dart';
 import '../features/auth/domain/auth_controller.dart';
@@ -49,6 +50,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
+    observers: [AnalyticsRouteObserver()],
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final setupComplete = ref.read(setupControllerProvider);
