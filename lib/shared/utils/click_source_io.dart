@@ -19,7 +19,7 @@ Future<Source> createClickSource({
   final dir = await getTemporaryDirectory();
   final tag = accent ? 'accent' : 'normal';
   final file = File(
-    '${dir.path}/metronome_click_${tag}_${frequency.round()}_v2.wav',
+    '${dir.path}/metronome_click_${tag}_${frequency.round()}_v3.wav',
   );
   await file.writeAsBytes(
     ClickSynth.generate(frequency: frequency, accent: accent),
