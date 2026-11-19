@@ -4,7 +4,7 @@
 
 Website: [hosanna.live](https://hosanna.live) · Studio: [studio.hosanna.live](https://studio.hosanna.live)
 
-This repository is the **Flutter mobile app** (Android / iOS). Version `2.4.x`. Application id: `com.hosanna.music`.
+This repository is the **Flutter mobile app** (Android / iOS). Version `2.4.x`. Application id: `live.hosanna.music`.
 
 ---
 
@@ -155,7 +155,7 @@ SocialSignInButton → SocialAuthProvider → native Google (Credential Manager)
 Required configuration:
 
 1. `--dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=<web client id>`
-2. Android OAuth client with package `com.hosanna.music` and the SHA-1/SHA-256 of each signing key
+2. Android OAuth client with package `live.hosanna.music` and the SHA-1/SHA-256 of each signing key
 3. Backend `socialProviders.google.clientId` must accept that web client ID
 
 `HOSANNA_GOOGLE_NONCE=true` mints the ID token with a nonce and sends it to Better Auth. Off by default.

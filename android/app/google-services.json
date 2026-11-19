@@ -26,9 +26,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1028680689073:android:1d0ac605c25271374e4990",
+        "mobilesdk_app_id": "1:1028680689073:android:3e142414acb2242a4e4990",
         "android_client_info": {
-          "package_name": "com.hosanna.music"
+          "package_name": "live.hosanna.music"
         }
       },
       "oauth_client": [],
