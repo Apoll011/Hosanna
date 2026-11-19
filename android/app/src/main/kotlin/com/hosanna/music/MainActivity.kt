@@ -1,4 +1,4 @@
-package com.embrace.hosanna
+package com.hosanna.music
 
 import io.flutter.embedding.android.FlutterActivity
 

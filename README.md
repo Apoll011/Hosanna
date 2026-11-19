@@ -4,7 +4,7 @@
 
 Website: [hosanna.live](https://hosanna.live) · Studio: [studio.hosanna.live](https://studio.hosanna.live)
 
-This repository is the **Flutter mobile app** (Android / iOS). Version `2.4.x`. Application id: `com.embrace.hosanna`.
+This repository is the **Flutter mobile app** (Android / iOS). Version `2.4.x`. Application id: `com.hosanna.music`.
 
 ---
 
@@ -12,17 +12,17 @@ This repository is the **Flutter mobile app** (Android / iOS). Version `2.4.x`. 
 
 Hosanna is not “just a lyrics viewer.” It is built for rehearsal and live worship:
 
-| Area | What you get |
-| --- | --- |
-| **Songbook** | ChordPro library with folders, collections, favorites, and search by title, artist, lyrics, key, tags, or song number |
-| **Live reading** | Per-musician transpose, capo, show/hide chords, font size, instrument chord diagrams (guitar / piano), keep-awake screen |
-| **Stage tools** | Built-in **metronome** (tap tempo, 30–240 BPM), **auto-scroll** with speed control, **circle of fifths** |
-| **Services** | Full service order (songs, notes, announcements, scripture cues), next-service view, personal + team notes |
-| **Export** | Print-ready **song PDF** matching the reader (transpose, capo, chords, diagrams). Full **service / songbook print** is in Studio |
-| **Import** | ChordPro files, plus **AI import** from photo, gallery, or PDF → reviewable ChordPro draft |
-| **Offline** | Local SQLite (Drift) cache; sync when back online. Optional live annotation sync for service songs |
-| **Rehearsal** | YouTube mini-player from `{youtube: …}` metadata; arrangement variants in ChordPro |
-| **Languages** | Portuguese (default), English, Spanish |
+| Area             | What you get                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Songbook**     | ChordPro library with folders, collections, favorites, and search by title, artist, lyrics, key, tags, or song number            |
+| **Live reading** | Per-musician transpose, capo, show/hide chords, font size, instrument chord diagrams (guitar / piano), keep-awake screen         |
+| **Stage tools**  | Built-in **metronome** (tap tempo, 30–240 BPM), **auto-scroll** with speed control, **circle of fifths**                         |
+| **Services**     | Full service order (songs, notes, announcements, scripture cues), next-service view, personal + team notes                       |
+| **Export**       | Print-ready **song PDF** matching the reader (transpose, capo, chords, diagrams). Full **service / songbook print** is in Studio |
+| **Import**       | ChordPro files, plus **AI import** from photo, gallery, or PDF → reviewable ChordPro draft                                       |
+| **Offline**      | Local SQLite (Drift) cache; sync when back online. Optional live annotation sync for service songs                               |
+| **Rehearsal**    | YouTube mini-player from `{youtube: …}` metadata; arrangement variants in ChordPro                                               |
+| **Languages**    | Portuguese (default), English, Spanish                                                                                           |
 
 Studio (web) handles library admin, team roles, agendas, and planning. This app is what musicians open on stage.
 
@@ -44,24 +44,29 @@ Open ChordPro storage means you can migrate in or out; the library is not locked
 ## Features in more detail
 
 ### ChordPro reader & editor
+
 - Syntax-aware ChordPro editing and rendering (verses, chorus, bridge, grids, tabs, comments, capo, tempo, time, CCLI, song number, …)
 - Independent transpose / capo per musician without changing the church’s stored song
 - Chord diagrams and instrument preferences
 - Display settings that stay on the device
 
 ### Services & setlists
+
 - Open the planned service, walk the order, stay on the current song with wakelock
 - Service-level and song-level notes
 - Agenda integration for upcoming gatherings
 
 ### Metronome & practice
+
 - Full-screen metronome with tempo markings and tap-to-set BPM
 - Circle of fifths for key relationships while preparing
 
 ### AI import
+
 - Capture a paper chart or PDF; the pipeline returns a ChordPro draft you can review before saving (org AI settings + permissions required)
 
 ### Sync & auth
+
 - Email + Google sign-in against the Hosanna API (Better Auth)
 - Role-aware permissions (who can edit songs, export PDF, use AI, …)
 - Replication engine keeps dirty local rows in sync with the server
@@ -70,12 +75,12 @@ Open ChordPro storage means you can migrate in or out; the library is not locked
 
 ## Related projects
 
-| Project | Role |
-| --- | --- |
-| [hosanna.live](https://hosanna.live) | Marketing site |
-| [Hosanna Studio](https://github.com/Apoll011/hosanna-studio) | Web dashboard (library, services, teams) |
-| [Hosanna API](https://github.com/Apoll011/Hosanna-server) | Backend |
-| [hosanna-chordpro](https://github.com/Apoll011/hosanna-chordpro) | Shared ChordPro tooling |
+| Project                                                          | Role                                     |
+| ---------------------------------------------------------------- | ---------------------------------------- |
+| [hosanna.live](https://hosanna.live)                             | Marketing site                           |
+| [Hosanna Studio](https://github.com/Apoll011/hosanna-studio)     | Web dashboard (library, services, teams) |
+| [Hosanna API](https://github.com/Apoll011/Hosanna-server)        | Backend                                  |
+| [hosanna-chordpro](https://github.com/Apoll011/hosanna-chordpro) | Shared ChordPro tooling                  |
 
 ---
 
@@ -93,14 +98,14 @@ flutter run
 
 Compile-time config via `--dart-define`:
 
-| Key | Purpose | Default |
-| --- | --- | --- |
-| `HOSANNA_API_URL` | Backend origin (no trailing slash) | `https://api.hosanna.live` |
-| `HOSANNA_AUTH_URL` | Better Auth origin (no trailing slash) | `https://auth.hosanna.live` |
-| `HOSANNA_TURNSTILE_URL` | Hosted Turnstile captcha page | `https://auth.hosanna.live/captcha` |
-| `HOSANNA_ORIGIN` | `Origin` header on state-changing requests | `http://localhost` |
-| `HOSANNA_GOOGLE_SERVER_CLIENT_ID` | Google web/server OAuth client ID for native sign-in | *(unset)* |
-| `HOSANNA_GOOGLE_NONCE` | Send a nonce with the Google ID token | `false` |
+| Key                               | Purpose                                              | Default                             |
+| --------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| `HOSANNA_API_URL`                 | Backend origin (no trailing slash)                   | `https://api.hosanna.live`          |
+| `HOSANNA_AUTH_URL`                | Better Auth origin (no trailing slash)               | `https://auth.hosanna.live`         |
+| `HOSANNA_TURNSTILE_URL`           | Hosted Turnstile captcha page                        | `https://auth.hosanna.live/captcha` |
+| `HOSANNA_ORIGIN`                  | `Origin` header on state-changing requests           | `http://localhost`                  |
+| `HOSANNA_GOOGLE_SERVER_CLIENT_ID` | Google web/server OAuth client ID for native sign-in | _(unset)_                           |
+| `HOSANNA_GOOGLE_NONCE`            | Send a nonce with the Google ID token                | `false`                             |
 
 ```bash
 flutter run \
@@ -150,7 +155,7 @@ SocialSignInButton → SocialAuthProvider → native Google (Credential Manager)
 Required configuration:
 
 1. `--dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=<web client id>`
-2. Android OAuth client with package `com.embrace.hosanna` and the SHA-1/SHA-256 of each signing key
+2. Android OAuth client with package `com.hosanna.music` and the SHA-1/SHA-256 of each signing key
 3. Backend `socialProviders.google.clientId` must accept that web client ID
 
 `HOSANNA_GOOGLE_NONCE=true` mints the ID token with a nonce and sends it to Better Auth. Off by default.

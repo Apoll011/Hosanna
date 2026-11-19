@@ -13,7 +13,7 @@ if (file("google-services.json").exists()) {
 }
 
 android {
-    namespace = "com.embrace.hosanna"
+    namespace = "com.hosanna.music"
     // flutter_local_notifications 23 + androidx.core 1.19 require API 37;
     // Flutter 3.50 still defaults compileSdk to 36.
     compileSdk = 37
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.embrace.hosanna"
+        applicationId = "com.hosanna.music"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

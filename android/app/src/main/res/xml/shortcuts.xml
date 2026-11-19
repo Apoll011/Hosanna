@@ -12,8 +12,8 @@
         android:shortcutLongLabel="@string/shortcut_library_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.embrace.hosanna"
-            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:targetPackage="com.hosanna.music"
+            android:targetClass="com.hosanna.music.MainActivity"
             android:data="hosanna://songs" />
     </shortcut>
 
@@ -26,8 +26,8 @@
         android:shortcutLongLabel="@string/shortcut_services_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.embrace.hosanna"
-            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:targetPackage="com.hosanna.music"
+            android:targetClass="com.hosanna.music.MainActivity"
             android:data="hosanna://services" />
     </shortcut>
 
@@ -40,8 +40,8 @@
         android:shortcutLongLabel="@string/shortcut_next_service_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.embrace.hosanna"
-            android:targetClass="com.embrace.hosanna.MainActivity"
+            android:targetPackage="com.hosanna.music"
+            android:targetClass="com.hosanna.music.MainActivity"
             android:data="hosanna://services/next" />
     </shortcut>
 </shortcuts>
