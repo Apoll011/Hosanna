@@ -427,6 +427,7 @@
   "songTranspose": "Transposição",
   "songSemitones": "semitons",
   "songOriginal": "Original",
+  "songKeySelected": "Selecionado",
   "songCapoNone": "Nenhum",
   "songCapoFret": "Traste {fret}",
   "songFontSize": "Tamanho da Letra",

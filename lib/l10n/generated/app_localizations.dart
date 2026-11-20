@@ -2056,6 +2056,12 @@ abstract class AppLocalizations {
   /// **'Original'**
   String get songOriginal;
 
+  /// No description provided for @songKeySelected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionado'**
+  String get songKeySelected;
+
   /// No description provided for @songCapoNone.
   ///
   /// In pt, this message translates to:

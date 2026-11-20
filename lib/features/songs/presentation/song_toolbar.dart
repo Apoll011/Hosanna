@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/design/tokens.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../domain/chordpro/chord_notation.dart';
 import '../domain/chordpro/parser.dart';
 import '../domain/chordpro/resolve_chords.dart';
+import '../domain/chordpro/transpose.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
 
@@ -115,6 +117,19 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
       );
     }
 
+    final version = doc == null ? null : selectVersion(doc, settings.variantId);
+    final originalKey = version?.metadata['key'];
+    final keyNames = _keyNamesFor(originalKey);
+    final originalPitch = _keyPitch(originalKey);
+    final notation = ChordNotationRegistry.resolve(settings.chordNotationId);
+    final selectedKeyName = ChordNotationConverter.formatChord(
+      keyNames[_keyPitchAfter(originalPitch, settings.transpose)],
+      notation,
+    );
+    final transposeValue = settings.transpose > 0
+        ? '+${settings.transpose} ${l10n.songSemitones}'
+        : '${settings.transpose} ${l10n.songSemitones}';
+
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
@@ -139,17 +154,17 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
             if (settings.showChords) ...[
               _SectionTitle(
                 label: l10n.songTranspose,
-                value: settings.transpose > 0
-                    ? '+${settings.transpose} ${l10n.songSemitones}'
-                    : '${settings.transpose} ${l10n.songSemitones}',
+                value: '$selectedKeyName · $transposeValue',
               ),
-              _StepperRow(
-                onDec: () => controller.setTranspose(settings.transpose - 1),
-                onInc: () => controller.setTranspose(settings.transpose + 1),
-                onReset: () => controller.setTranspose(0),
-                resetLabel: l10n.songOriginal,
-                resetSelected: settings.transpose == 0,
+              _KeyPickerChart(
+                keyNames: keyNames,
+                originalPitch: originalPitch,
+                transpose: settings.transpose,
+                notation: notation,
+                onSelected: controller.setTranspose,
               ),
+              const SizedBox(height: 8),
+              const _KeyChartLegend(),
               const SizedBox(height: 16),
 
               // Capo (only for instruments where it changes the pitch).
@@ -379,102 +394,267 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _StepperRow extends StatelessWidget {
-  const _StepperRow({
-    required this.onDec,
-    required this.onInc,
-    required this.onReset,
-    required this.resetLabel,
-    this.resetSelected = false,
+/// The twelve chromatic keys, spelled with sharps or flats to match the
+/// song's written key.
+const List<String> _sharpKeyNames = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+];
+const List<String> _flatKeyNames = [
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'Gb',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+];
+
+bool _usesFlatKeyNames(String? key) {
+  final match = RegExp(r'^[A-Ga-g][#b]?').firstMatch(key?.trim() ?? '');
+  return match?.group(0)?.endsWith('b') ?? false;
+}
+
+List<String> _keyNamesFor(String? key) =>
+    _usesFlatKeyNames(key) ? _flatKeyNames : _sharpKeyNames;
+
+int _keyPitch(String? key) => getNoteValue(key ?? '') ?? 0;
+
+int _keyPitchAfter(int originalPitch, int transpose) =>
+    (originalPitch + transpose % 12 + 24) % 12;
+
+/// Semitone shift for a tapped key, kept within one octave of the original.
+///
+/// Keys to the left of the original lower the pitch, so musicians get the
+/// expected `-1` rather than `+11` when tapping the key below the original.
+int _shiftForKey(int originalPitch, int keyPitch) {
+  final shift = (keyPitch - originalPitch + 12) % 12;
+  return shift > 6 ? shift - 12 : shift;
+}
+
+/// Inline, Cifra Club-style chart of the twelve keys.
+///
+/// The selected key is filled; the song's original key carries a small dot so
+/// both can be identified at a glance, even when they are the same key.
+class _KeyPickerChart extends StatelessWidget {
+  const _KeyPickerChart({
+    required this.keyNames,
+    required this.originalPitch,
+    required this.transpose,
+    required this.notation,
+    required this.onSelected,
   });
 
-  final VoidCallback onDec;
-  final VoidCallback onInc;
-  final VoidCallback onReset;
-  final String resetLabel;
+  final List<String> keyNames;
+  final int originalPitch;
+  final int transpose;
+  final ChordNotationSystem notation;
+  final ValueChanged<int> onSelected;
 
-  /// True when transpose is at the song's written key (0 semitones).
-  final bool resetSelected;
+  static const int _columns = 4;
+  static const double _spacing = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final selectedPitch = _keyPitchAfter(originalPitch, transpose);
+    final rows = <Widget>[];
+
+    for (var start = 0; start < keyNames.length; start += _columns) {
+      final cells = <Widget>[];
+      for (var index = start; index < start + _columns; index++) {
+        if (index > start) {
+          cells.add(const SizedBox(width: _spacing));
+        }
+        final label = keyNames[index];
+        final displayLabel = ChordNotationConverter.formatChord(
+          label,
+          notation,
+        );
+        final isSelected = index == selectedPitch;
+        final isOriginal = index == originalPitch;
+        cells.add(
+          Expanded(
+            child: _KeyButton(
+              key: ValueKey('song-key-$label'),
+              label: displayLabel,
+              selected: isSelected,
+              original: isOriginal,
+              semanticsLabel: l10n.songKeyPill(displayLabel),
+              originalHint: isOriginal
+                  ? l10n.songOriginalKeyPill(displayLabel)
+                  : null,
+              onTap: () => onSelected(_shiftForKey(originalPitch, index)),
+            ),
+          ),
+        );
+      }
+      if (rows.isNotEmpty) {
+        rows.add(const SizedBox(height: _spacing));
+      }
+      rows.add(Row(children: cells));
+    }
+
+    return Column(children: rows);
+  }
+}
+
+class _KeyButton extends StatelessWidget {
+  const _KeyButton({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.original,
+    required this.semanticsLabel,
+    required this.onTap,
+    this.originalHint,
+  });
+
+  final String label;
+  final bool selected;
+  final bool original;
+  final String semanticsLabel;
+  final String? originalHint;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final base = BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: theme.colorScheme.outlineVariant),
-    );
-    final resetDecoration = BoxDecoration(
-      color: resetSelected
-          ? theme.colorScheme.primary
-          : theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: resetSelected
-            ? theme.colorScheme.primary
-            : theme.colorScheme.outlineVariant,
-      ),
-    );
-    return Row(
-      children: [
-        Expanded(
-          child: _StepButton(
-            icon: Icons.remove,
-            onTap: onDec,
-            decoration: base,
+    final scheme = theme.colorScheme;
+    final foreground = selected ? scheme.onPrimary : scheme.onSurface;
+    final markerColor = selected ? scheme.onPrimary : scheme.primary;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: semanticsLabel,
+      hint: originalHint,
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? scheme.primary : scheme.surfaceContainerHighest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(HosannaRadii.sm),
+          side: BorderSide(
+            color: selected ? scheme.primary : scheme.outlineVariant,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: InkWell(
-            onTap: onReset,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: resetDecoration,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                resetLabel,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: resetSelected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurfaceVariant,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(HosannaRadii.sm),
+          child: SizedBox(
+            height: 48,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: foreground,
+                  ),
                 ),
-              ),
+                if (original)
+                  Positioned(
+                    bottom: 7,
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: markerColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _StepButton(icon: Icons.add, onTap: onInc, decoration: base),
+      ),
+    );
+  }
+}
+
+/// Small legend explaining the chart's two states.
+class _KeyChartLegend extends StatelessWidget {
+  const _KeyChartLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 6,
+      children: [
+        _LegendItem(
+          marker: Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          label: l10n.songOriginal,
+          style: style,
+        ),
+        _LegendItem(
+          marker: Container(
+            width: 13,
+            height: 13,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          label: l10n.songKeySelected,
+          style: style,
         ),
       ],
     );
   }
 }
 
-class _StepButton extends StatelessWidget {
-  const _StepButton({
-    required this.icon,
-    required this.onTap,
-    required this.decoration,
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.marker,
+    required this.label,
+    required this.style,
   });
 
-  final IconData icon;
-  final VoidCallback onTap;
-  final BoxDecoration decoration;
+  final Widget marker;
+  final String label;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: decoration,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Icon(icon, size: 20),
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        marker,
+        const SizedBox(width: 6),
+        Text(label, style: style),
+      ],
     );
   }
 }

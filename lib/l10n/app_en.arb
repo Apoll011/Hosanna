@@ -419,6 +419,7 @@
   "songTranspose": "Transpose",
   "songSemitones": "semitones",
   "songOriginal": "Original",
+  "songKeySelected": "Selected",
   "songCapoNone": "None",
   "songCapoFret": "Fret {fret}",
   "songFontSize": "Font Size",

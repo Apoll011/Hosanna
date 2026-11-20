@@ -1087,6 +1087,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songOriginal => 'Original';
 
   @override
+  String get songKeySelected => 'Seleccionado';
+
+  @override
   String get songCapoNone => 'Ninguna';
 
   @override

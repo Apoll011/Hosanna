@@ -1086,6 +1086,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songOriginal => 'Original';
 
   @override
+  String get songKeySelected => 'Selecionado';
+
+  @override
   String get songCapoNone => 'Nenhum';
 
   @override
