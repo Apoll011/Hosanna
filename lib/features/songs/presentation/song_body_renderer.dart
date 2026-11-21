@@ -95,9 +95,9 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
   }
 
   @override
-  void dispose() {
+  void deactivate() {
     ref.read(songCurrentDocumentProvider.notifier).state = null;
-    super.dispose();
+    super.deactivate();
   }
 
   @override
