@@ -6,6 +6,7 @@ import '../../../domain/chordpro/chord_notation.dart';
 import '../../../domain/chordpro/instruments/instruments.dart';
 import '../chord_diagrams.dart';
 import '../instrument_selector.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Opens the chord dictionary for [chord] as a modal bottom sheet.
 ///
@@ -111,7 +112,7 @@ class _ChordSheetState extends State<ChordSheet> {
                 children: [
                   IconButton(
                     onPressed: _canPrev ? () => _step(-1) : null,
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(LucideIcons.chevronLeft),
                     tooltip: l10n.songPreviousChord,
                   ),
                   Expanded(
@@ -143,7 +144,7 @@ class _ChordSheetState extends State<ChordSheet> {
                   ),
                   IconButton(
                     onPressed: _canNext ? () => _step(1) : null,
-                    icon: const Icon(Icons.chevron_right_rounded),
+                    icon: const Icon(LucideIcons.chevronRight),
                     tooltip: l10n.songNextChord,
                   ),
                 ],

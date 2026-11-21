@@ -7,6 +7,7 @@ import '../domain/auth_controller.dart';
 import 'auth_scaffold.dart';
 import 'auth_ui_utils.dart';
 import 'social_sign_in_button.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -88,7 +89,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       title: l10n.authSignUpTitle,
       subtitle: l10n.authSignUpSubtitle,
       heroAsset: AuthHeroes.signUp,
-      heroFallbackIcon: Icons.person_add_alt_1_rounded,
+      heroFallbackIcon: LucideIcons.userPlus,
       footer: Wrap(
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -133,7 +134,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               helperText: l10n.authPasswordMinLength,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                  _obscure ? LucideIcons.eye : LucideIcons.eyeOff,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),

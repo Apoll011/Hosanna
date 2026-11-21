@@ -19,6 +19,7 @@ import 'package:hosanna/features/auth/domain/auth_controller.dart';
 import 'package:hosanna/features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'test_pump.dart';
 
@@ -138,11 +139,11 @@ void main() {
     expect(find.byType(SongLibraryPage), findsOneWidget);
 
     // Open the drawer via the hamburger.
-    await tester.tap(find.byIcon(Icons.menu));
+    await tester.tap(find.byIcon(LucideIcons.menu));
     await pumpFrames(tester, const Duration(seconds: 1));
 
     // Prefer icon — labels may be mid-animation / truncated in the drawer.
-    final tool = find.byIcon(Icons.donut_large);
+    final tool = find.byIcon(LucideIcons.disc);
     expect(tool, findsWidgets);
     await tester.ensureVisible(tool.first);
     await tester.tap(tool.first);
@@ -158,7 +159,7 @@ void main() {
     await pumpApp(tester, logicalSize: const Size(1280, 800));
     expect(find.byType(SongLibraryPage), findsOneWidget);
 
-    final tool = find.byIcon(Icons.donut_large);
+    final tool = find.byIcon(LucideIcons.disc);
     expect(tool, findsWidgets);
     await tester.ensureVisible(tool.first);
     await tester.tap(tool.first);

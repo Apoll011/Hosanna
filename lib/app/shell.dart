@@ -10,6 +10,7 @@ import 'design/tokens.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
 import 'providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Breakpoint (logical pixels) at which the app switches to the tablet layout
 /// (persistent sidebar instead of a drawer + floating bottom bar).
@@ -76,7 +77,9 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.navigationShell.currentIndex !=
         widget.navigationShell.currentIndex) {
-      _syncBranchIndex();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncBranchIndex();
+      });
     }
   }
 
@@ -91,14 +94,14 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final destinations = [
       _NavItem(
         branch: kSongsBranch,
-        icon: Icons.music_note_outlined,
-        selectedIcon: Icons.music_note,
+        icon: LucideIcons.music,
+        selectedIcon: LucideIcons.music,
         label: l10n.navSongs,
       ),
       _NavItem(
         branch: kServicesBranch,
-        icon: Icons.calendar_month_outlined,
-        selectedIcon: Icons.calendar_month,
+        icon: LucideIcons.calendar,
+        selectedIcon: LucideIcons.calendar,
         label: l10n.navServices,
       ),
     ];
@@ -132,7 +135,7 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.warning_amber_rounded,
+                      LucideIcons.alertTriangle,
                       size: 18,
                       color: theme.colorScheme.onErrorContainer,
                     ),

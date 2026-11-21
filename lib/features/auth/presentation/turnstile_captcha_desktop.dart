@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Resolves a Turnstile token on Linux/Windows by opening the hosted captcha
 /// page in a native webview window.
@@ -169,7 +170,7 @@ window.TurnstileCallback = {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(LucideIcons.x),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -183,7 +184,7 @@ window.TurnstileCallback = {
                   if (_status == _CaptchaStatus.opening)
                     const CircularProgressIndicator()
                   else
-                    const Icon(Icons.verified_user_outlined, size: 48),
+                    const Icon(LucideIcons.shieldCheck, size: 48),
                   const SizedBox(height: 16),
                   Text(
                     l10n.authCaptchaWaitingMessage,
@@ -194,7 +195,7 @@ window.TurnstileCallback = {
             _CaptchaStatus.error => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, size: 48),
+                  const Icon(LucideIcons.alertCircle, size: 48),
                   const SizedBox(height: 16),
                   Text(
                     l10n.authCaptchaOpenFailed,

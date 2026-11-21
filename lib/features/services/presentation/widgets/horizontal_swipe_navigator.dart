@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../input/pedal_navigator.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Horizontal drag navigation used for service elements (songs and non-songs).
 class HorizontalSwipeNavigator extends StatefulWidget {
@@ -207,7 +208,7 @@ class _HorizontalSwipeNavigatorState extends State<HorizontalSwipeNavigator>
                       children: [
                         IconButton(
                           onPressed: widget.canPrev ? widget.onPrev : null,
-                          icon: const Icon(Icons.chevron_left),
+                          icon: const Icon(LucideIcons.chevronLeft),
                           tooltip: l10n.commonBack,
                         ),
                         if (widget.positionLabel != null)
@@ -222,7 +223,7 @@ class _HorizontalSwipeNavigatorState extends State<HorizontalSwipeNavigator>
                           ),
                         IconButton(
                           onPressed: widget.canNext ? widget.onNext : null,
-                          icon: const Icon(Icons.chevron_right),
+                          icon: const Icon(LucideIcons.chevronRight),
                           tooltip: l10n.commonNext,
                         ),
                       ],

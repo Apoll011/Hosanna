@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ServiceElementMeta {
   const ServiceElementMeta(this.label, this.icon, this.color);
@@ -18,32 +19,32 @@ ServiceElementMeta serviceElementMeta(
   return switch (type) {
     'song' => ServiceElementMeta(
       l10n.servicesElementSong,
-      Icons.music_note,
+      LucideIcons.music,
       colors.primary,
     ),
     'welcome' => ServiceElementMeta(
       l10n.servicesElementWelcome,
-      Icons.waving_hand_outlined,
+      LucideIcons.hand,
       colors.secondary,
     ),
     'scripture' => ServiceElementMeta(
       l10n.servicesElementScripture,
-      Icons.menu_book_outlined,
+      LucideIcons.bookOpen,
       colors.tertiary,
     ),
     'message' => ServiceElementMeta(
       l10n.servicesElementMessage,
-      Icons.chat_bubble_outline,
+      LucideIcons.messageSquare,
       colors.error,
     ),
     'announcement' => ServiceElementMeta(
       l10n.servicesElementAnnouncement,
-      Icons.campaign_outlined,
+      LucideIcons.megaphone,
       colors.primary,
     ),
     _ => ServiceElementMeta(
       l10n.servicesElementDefault,
-      Icons.label_outline,
+      LucideIcons.tag,
       colors.onSurfaceVariant,
     ),
   };

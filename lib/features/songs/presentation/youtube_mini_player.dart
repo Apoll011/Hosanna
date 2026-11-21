@@ -8,6 +8,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Origin the embed page is served from. YouTube refuses to play embeds that
 /// carry no referrer, so the HTML must be loaded with a real https base URL.
@@ -272,20 +273,20 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                   ),
                   IconButton(
                     onPressed: _ready ? () => _skip(-10) : null,
-                    icon: const Icon(Icons.replay_10_rounded),
+                    icon: const Icon(LucideIcons.rotateCcw),
                     tooltip: l10n.songYoutubeRewind,
                   ),
                   _buildPlayButton(scheme, l10n),
                   IconButton(
                     onPressed: _ready ? () => _skip(30) : null,
-                    icon: const Icon(Icons.forward_30_rounded),
+                    icon: const Icon(LucideIcons.rotateCw),
                     tooltip: l10n.songYoutubeForward,
                   ),
                   if (widget.onClose != null)
                     IconButton(
                       visualDensity: VisualDensity.compact,
                       onPressed: widget.onClose,
-                      icon: const Icon(Icons.close_rounded, size: 20),
+                      icon: const Icon(LucideIcons.x, size: 20),
                       tooltip: l10n.songYoutubeClosePlayer,
                     ),
                 ],
@@ -325,7 +326,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
               errorWidget: (_, _, _) => ColoredBox(
                 color: scheme.surfaceContainerHigh,
                 child: Icon(
-                  Icons.music_note_rounded,
+                  LucideIcons.music,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -357,7 +358,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     ),
                   )
                 : Icon(
-                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    _isPlaying ? LucideIcons.pause : LucideIcons.play,
                     color: scheme.onPrimary,
                     size: 28,
                   ),

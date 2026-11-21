@@ -7,6 +7,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/google_g_logo.dart';
 import '../domain/auth_controller.dart';
 import 'auth_ui_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// The "or" divider plus one button per registered [SocialAuthProvider].
 ///
@@ -161,7 +162,7 @@ class SocialSignInButton extends StatelessWidget {
   /// Branding per provider id, with a neutral fallback for new providers.
   Widget _brandIcon(String providerId) => switch (providerId) {
         'google' => const GoogleGLogo(size: 18),
-        _ => const Icon(Icons.login, size: 18),
+        _ => const Icon(LucideIcons.logIn, size: 18),
       };
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/config/app_config.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'turnstile_captcha_desktop_stub.dart'
     if (dart.library.io) 'turnstile_captcha_desktop.dart' as desktop_captcha;
 
@@ -56,7 +57,7 @@ class _TurnstileCaptchaPageState extends State<TurnstileCaptchaPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(LucideIcons.x),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

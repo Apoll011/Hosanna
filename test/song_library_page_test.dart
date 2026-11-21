@@ -1,3 +1,4 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:hosanna/app/providers.dart';
 import 'package:hosanna/core/db/database.dart';
 import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'test_pump.dart';
 
@@ -67,6 +69,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
           sharedPreferencesProvider.overrideWithValue(prefs),
+          cookieJarProvider.overrideWithValue(CookieJar()),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -80,7 +83,7 @@ void main() {
   }
 
   Future<void> openFilters(WidgetTester tester) async {
-    await tester.tap(find.byIcon(Icons.filter_list));
+    await tester.tap(find.byIcon(LucideIcons.filter));
     await pumpFrames(tester);
   }
 
@@ -256,7 +259,7 @@ void main() {
       await seedSong(id: 'b', title: 'Song B');
       await pumpLibrary(tester);
 
-      expect(find.byIcon(Icons.filter_alt_off), findsNothing);
+      expect(find.byIcon(LucideIcons.filterX), findsNothing);
 
       await openFilters(tester);
       await tapChip(tester, 'worship');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/shell_modal.dart';
 import 'song_filters.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 String songSortLabel(AppLocalizations l10n, SongSort sort) {
   return switch (sort) {
@@ -42,7 +43,7 @@ class SongBadge extends StatelessWidget {
               ),
             )
           : Icon(
-              Icons.music_note_rounded,
+              LucideIcons.music,
               size: 18,
               color: colorScheme.secondary,
             ),
@@ -69,7 +70,7 @@ class SongFilterButton extends StatelessWidget {
       isLabelVisible: activeCount > 0,
       label: Text('$activeCount'),
       child: IconButton(
-        icon: const Icon(Icons.filter_list),
+        icon: const Icon(LucideIcons.filter),
         tooltip: l10n.songsFilter,
         onPressed: onPressed,
       ),
@@ -352,7 +353,7 @@ class _SongFilterSheetState extends State<SongFilterSheet> {
               children: [
                 TextButton.icon(
                   onPressed: () => _apply(const FilterSettings()),
-                  icon: const Icon(Icons.restart_alt),
+                  icon: const Icon(LucideIcons.rotateCcw),
                   label: Text(l10n.songsResetFilters),
                 ),
                 const Spacer(),
@@ -432,7 +433,7 @@ class ActiveFilterChips extends StatelessWidget {
     if (settings.sort != SongSort.title || !settings.sortAscending) {
       chips.add(
         InputChip(
-          avatar: const Icon(Icons.sort, size: 18),
+          avatar: const Icon(LucideIcons.arrowUpDown, size: 18),
           label: Text(
             '${songSortLabel(l10n, settings.sort)} '
             '${settings.sortAscending ? '↑' : '↓'}',
@@ -510,7 +511,7 @@ class ActiveFilterChips extends StatelessWidget {
     }
     chips.add(
       ActionChip(
-        avatar: const Icon(Icons.restart_alt, size: 18),
+        avatar: const Icon(LucideIcons.rotateCcw, size: 18),
         label: Text(l10n.songsResetFilters),
         onPressed: onReset,
       ),

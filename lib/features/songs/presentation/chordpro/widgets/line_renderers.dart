@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/chordpro/chord_notation.dart';
 import 'render_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Display options shared by every line in a song.
 class LineRenderOptions {
@@ -62,7 +63,7 @@ class CommentLine extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 1),
             child: Icon(
-              Icons.notes,
+              LucideIcons.alignLeft,
               size: 13,
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -153,7 +154,7 @@ class CommentBoxLine extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 16, color: palette.$2),
+          Icon(LucideIcons.info, size: 16, color: palette.$2),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -195,7 +196,7 @@ class KeyNoteLine extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.music_note, size: 14, color: theme.colorScheme.primary),
+            Icon(LucideIcons.music, size: 14, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             Flexible(
               child: Text(

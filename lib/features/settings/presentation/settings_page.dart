@@ -23,6 +23,7 @@ import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 enum SettingsTab { account, workspace, service, song, appearance }
 
@@ -81,18 +82,18 @@ class _TabBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     final tabs = [
-      (SettingsTab.account, l10n.settingsTabAccount, Icons.person_outline),
+      (SettingsTab.account, l10n.settingsTabAccount, LucideIcons.user),
       (
         SettingsTab.workspace,
         l10n.settingsTabWorkspace,
-        Icons.business_outlined,
+        LucideIcons.building,
       ),
-      (SettingsTab.service, l10n.settingsTabService, Icons.event_note_outlined),
-      (SettingsTab.song, l10n.settingsTabSong, Icons.music_note_outlined),
+      (SettingsTab.service, l10n.settingsTabService, LucideIcons.calendarDays),
+      (SettingsTab.song, l10n.settingsTabSong, LucideIcons.music),
       (
         SettingsTab.appearance,
         l10n.settingsTabAppearance,
-        Icons.palette_outlined,
+        LucideIcons.palette,
       ),
     ];
 
@@ -511,7 +512,7 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
   Widget _signOutButton(ThemeData theme, AppLocalizations l10n) {
     return OutlinedButton.icon(
       style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
-      icon: const Icon(Icons.logout, size: 16),
+      icon: const Icon(LucideIcons.logOut, size: 16),
       label: Text(l10n.authSignOut),
       onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
     );
@@ -606,7 +607,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.warning_amber_rounded,
+                  LucideIcons.alertTriangle,
                   color: theme.colorScheme.error,
                 ),
                 const SizedBox(width: 12),
@@ -643,7 +644,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.business, color: theme.colorScheme.primary),
+                  Icon(LucideIcons.building, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -703,10 +704,10 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                     subtitle: Text(o.slug),
                     trailing: o.slug == org?.slug
                         ? Icon(
-                            Icons.check_circle,
+                            LucideIcons.checkCircle2,
                             color: theme.colorScheme.primary,
                           )
-                        : const Icon(Icons.circle_outlined),
+                        : const Icon(LucideIcons.circle),
                     enabled:
                         !_switching && !sync.isSyncing && o.slug != org?.slug,
                     onTap: () => _switchOrg(o.slug),
@@ -724,7 +725,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.storage, color: theme.colorScheme.primary),
+                  Icon(LucideIcons.database, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -760,7 +761,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
                           width: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.refresh),
+                      : const Icon(LucideIcons.refreshCw),
                   label: Text(l10n.settingsSyncNow),
                 ),
               ),
@@ -813,7 +814,7 @@ class _ServiceTab extends ConsumerWidget {
       children: [
         _Card(
           child: _SwitchRow(
-            icon: Icons.music_note,
+            icon: LucideIcons.music,
             iconColor: theme.colorScheme.primary,
             title: l10n.settingsMusicianMode,
             subtitle: l10n.settingsMusicianModeDesc,
@@ -828,7 +829,7 @@ class _ServiceTab extends ConsumerWidget {
         const SizedBox(height: 12),
         _Card(
           child: _SwitchRow(
-            icon: Icons.view_sidebar_outlined,
+            icon: LucideIcons.panelLeft,
             iconColor: theme.colorScheme.secondary,
             title: l10n.settingsServiceOrderSidePanel,
             subtitle: l10n.settingsServiceOrderSidePanelDesc,
@@ -839,7 +840,7 @@ class _ServiceTab extends ConsumerWidget {
         const SizedBox(height: 12),
         _Card(
           child: _SwitchRow(
-            icon: Icons.screen_lock_portrait_outlined,
+            icon: LucideIcons.smartphone,
             iconColor: theme.colorScheme.tertiary,
             title: l10n.settingsKeepAwake,
             subtitle: l10n.settingsKeepAwakeDesc,
@@ -850,7 +851,7 @@ class _ServiceTab extends ConsumerWidget {
         const SizedBox(height: 12),
         _Card(
           child: _SwitchRow(
-            icon: Icons.draw_outlined,
+            icon: LucideIcons.pencil,
             iconColor: theme.colorScheme.primary,
             title: l10n.settingsSyncAnnotations,
             subtitle: l10n.settingsSyncAnnotationsDesc,
@@ -864,7 +865,7 @@ class _ServiceTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SwitchRow(
-                icon: Icons.keyboard_alt_outlined,
+                icon: LucideIcons.keyboard,
                 iconColor: theme.colorScheme.secondary,
                 title: l10n.settingsPedalEnabled,
                 subtitle: l10n.settingsPedalEnabledDesc,
@@ -998,7 +999,7 @@ class _ServiceTab extends ConsumerWidget {
                           alpha: 0.12,
                         ),
                         child: Icon(
-                          Icons.auto_awesome_rounded,
+                          LucideIcons.sparkles,
                           color: theme.colorScheme.primary,
                         ),
                       ),
@@ -1028,7 +1029,7 @@ class _ServiceTab extends ConsumerWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ],
@@ -1066,17 +1067,17 @@ class _AppearanceTab extends ConsumerWidget {
                   ButtonSegment(
                     value: AppThemeMode.system,
                     label: Text(l10n.settingsThemeSystem),
-                    icon: const Icon(Icons.brightness_auto),
+                    icon: const Icon(LucideIcons.sunMedium),
                   ),
                   ButtonSegment(
                     value: AppThemeMode.light,
                     label: Text(l10n.settingsThemeLight),
-                    icon: const Icon(Icons.light_mode),
+                    icon: const Icon(LucideIcons.sun),
                   ),
                   ButtonSegment(
                     value: AppThemeMode.dark,
                     label: Text(l10n.settingsThemeDark),
-                    icon: const Icon(Icons.dark_mode),
+                    icon: const Icon(LucideIcons.moon),
                   ),
                 ],
                 selected: {settings.themeMode},
@@ -1097,7 +1098,7 @@ class _AppearanceTab extends ConsumerWidget {
         _Card(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.language),
+            leading: const Icon(LucideIcons.globe),
             title: Text(l10n.settingsLanguageLabel),
             trailing: DropdownButton<String?>(
               value: settings.localeCode,
@@ -1239,7 +1240,7 @@ class _SongTab extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.music_note, size: 20),
+                        const Icon(LucideIcons.music, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           l10n.songInstrument,
@@ -1474,7 +1475,7 @@ class _NotificationsCardState extends ConsumerState<_NotificationsCard> {
 
     return _Card(
       child: _SwitchRow(
-        icon: Icons.notifications_active_outlined,
+        icon: LucideIcons.bellRing,
         iconColor: theme.colorScheme.primary,
         title: l10n.settingsNotifications,
         subtitle: l10n.settingsNotificationsDesc,
@@ -1593,7 +1594,7 @@ class _ReadonlyRow extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined, size: 16),
+          icon: const Icon(LucideIcons.pencil, size: 16),
           label: Text(l10n.settingsEdit),
         ),
       ],

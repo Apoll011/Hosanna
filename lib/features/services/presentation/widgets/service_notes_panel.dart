@@ -11,6 +11,7 @@ import '../../../../shared/widgets/empty_state.dart';
 import '../../data/service_notes_watch.dart';
 import '../../domain/service_note.dart';
 import '../../domain/service_note_suggestions.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Team notes feed for a service (optionally filtered to one element).
 ///
@@ -247,7 +248,7 @@ class ServiceNotesPanel extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.cloud_off_outlined,
+                      LucideIcons.cloudOff,
                       size: 18,
                       color: theme.colorScheme.onErrorContainer,
                     ),
@@ -457,7 +458,7 @@ class _NotesSectionHeader extends StatelessWidget {
           IconButton(
             tooltip: addTooltip,
             onPressed: onAdd,
-            icon: const Icon(Icons.add_comment_outlined),
+            icon: const Icon(LucideIcons.messageSquarePlus),
           ),
         ],
       ),
@@ -506,7 +507,7 @@ class ServiceNotesFab extends ConsumerWidget {
     return FloatingActionButton(
       tooltip: l10n.servicesNotesAdd,
       onPressed: () => _compose(context, ref),
-      child: const Icon(Icons.edit_outlined),
+      child: const Icon(LucideIcons.pencil),
     );
   }
 
@@ -946,7 +947,7 @@ class _NoteCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    Icons.schedule,
+                    LucideIcons.clock,
                     size: 14,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -961,7 +962,7 @@ class _NoteCard extends StatelessWidget {
                   if (note.isPrivate) ...[
                     const SizedBox(width: 8),
                     Icon(
-                      Icons.lock_outline,
+                      LucideIcons.lock,
                       size: 14,
                       color: theme.colorScheme.primary,
                     ),
@@ -995,7 +996,7 @@ class _NoteCard extends StatelessWidget {
                   ],
                   if (isMine)
                     Icon(
-                      Icons.more_horiz,
+                      LucideIcons.moreHorizontal,
                       size: 18,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1031,7 +1032,7 @@ class _NoteCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined),
+              leading: const Icon(LucideIcons.pencil),
               title: Text(l10n.servicesNotesEdit),
               onTap: () {
                 Navigator.pop(context);
@@ -1040,7 +1041,7 @@ class _NoteCard extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(
-                Icons.delete_outline,
+                LucideIcons.trash2,
                 color: Theme.of(context).colorScheme.error,
               ),
               title: Text(l10n.servicesNotesDelete),
@@ -1070,7 +1071,7 @@ class _NotesError extends StatelessWidget {
       title: l10n.commonError,
       description: _friendlyError(l10n, error),
       primaryLabel: l10n.commonRetry,
-      primaryIcon: Icons.refresh,
+      primaryIcon: LucideIcons.refreshCw,
       onPrimary: onRetry,
     );
   }

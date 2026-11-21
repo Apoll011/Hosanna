@@ -9,6 +9,7 @@ import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/metronome_click_player.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MetronomePage extends ConsumerStatefulWidget {
   const MetronomePage({super.key});
@@ -361,7 +362,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
     return Row(
       children: [
         _StepperButton(
-          icon: Icons.remove_rounded,
+          icon: LucideIcons.minus,
           tooltip: 'Decrease tempo',
           colors: colors,
           onTapDown: () => _startHold(-1),
@@ -391,7 +392,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
           ),
         ),
         _StepperButton(
-          icon: Icons.add_rounded,
+          icon: LucideIcons.plus,
           tooltip: 'Increase tempo',
           colors: colors,
           onTapDown: () => _startHold(1),
@@ -465,7 +466,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
         Expanded(
           child: OutlinedButton.icon(
             onPressed: _handleTapTempo,
-            icon: const Icon(Icons.touch_app_rounded, size: 18),
+            icon: const Icon(LucideIcons.mousePointer, size: 18),
             label: Text(l10n.metronomeTapTempo),
             style: OutlinedButton.styleFrom(
               foregroundColor: colors.onSurface,
@@ -497,7 +498,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
                   transitionBuilder: (child, anim) =>
                       ScaleTransition(scale: anim, child: child),
                   child: Icon(
-                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    _isPlaying ? LucideIcons.pause : LucideIcons.play,
                     key: ValueKey(_isPlaying),
                     color: colors.onPrimary,
                     size: 38,

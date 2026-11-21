@@ -22,6 +22,7 @@ import '../data/song_repository.dart';
 import '../domain/library_controller.dart';
 import 'song_filter_widgets.dart';
 import 'song_filters.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SongLibraryPage extends ConsumerStatefulWidget {
   const SongLibraryPage({super.key});
@@ -110,7 +111,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         leading: const ShellLeadingButton(),
         actions: [
           IconButton(
-            icon: Icon(_searchOpen ? Icons.close : Icons.search),
+            icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search),
             tooltip: l10n.commonSearch,
             onPressed: () {
               setState(() {
@@ -125,7 +126,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           ),
           if (canAddSongs)
             IconButton(
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(LucideIcons.plus),
               tooltip: l10n.songsNewSong,
               onPressed: _showNewSongSheet,
             ),
@@ -363,7 +364,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                   },
                   child: Row(
                     children: [
-                      HosannaLeadingBadge(icon: Icons.edit_outlined),
+                      HosannaLeadingBadge(icon: LucideIcons.pencil),
                       const SizedBox(width: HosannaSpacing.sm),
                       Expanded(
                         child: Column(
@@ -399,7 +400,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                   child: Row(
                     children: [
                       HosannaLeadingBadge(
-                        icon: Icons.auto_awesome_rounded,
+                        icon: LucideIcons.sparkles,
                       ),
                       const SizedBox(width: HosannaSpacing.sm),
                       Expanded(
@@ -511,7 +512,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               ),
               IconButton(
                 icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
+                  isFav ? LucideIcons.heart : LucideIcons.heart,
                   color: isFav ? Colors.red : null,
                 ),
                 tooltip: l10n.navFavorites,
@@ -538,7 +539,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         title: l10n.songsNoResults,
         description: l10n.songsNoResultsDesc,
         primaryLabel: l10n.songsClearFilters,
-        primaryIcon: Icons.filter_alt_off_outlined,
+        primaryIcon: LucideIcons.filterX,
         onPrimary: () {
           _search.clear();
           _resetFilters();
@@ -568,7 +569,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               ? l10n.folderContentsEmptyDesc
               : l10n.folderContentsEmptyReadonlyDesc,
           primaryLabel: canCreateSong ? l10n.songsAddSong : null,
-          primaryIcon: Icons.add_rounded,
+          primaryIcon: LucideIcons.plus,
           onPrimary: canCreateSong ? _showNewSongSheet : null,
           secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
           onSecondary: canImportWithAi ? _openAiImport : null,
@@ -589,7 +590,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
               ? l10n.songsEmptyAddHint
               : l10n.songsEmptyDesc,
           primaryLabel: canCreateSong ? l10n.songsAddSong : null,
-          primaryIcon: Icons.add_rounded,
+          primaryIcon: LucideIcons.plus,
           onPrimary: canCreateSong ? _showNewSongSheet : null,
           secondaryLabel: canImportWithAi ? l10n.songsImportWithAi : null,
           onSecondary: canImportWithAi ? _openAiImport : null,

@@ -9,6 +9,7 @@ import '../domain/chordpro/resolve_chords.dart';
 import '../domain/chordpro/transpose.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
 /// React `SongView` "Ajustes de Leitura" popover.
@@ -54,7 +55,7 @@ class SongToolbarButton extends ConsumerWidget {
             onSelected: selectVariant,
           ),
         IconButton(
-          icon: const Icon(Icons.tune),
+          icon: const Icon(LucideIcons.slidersHorizontal),
           tooltip: l10n.songControlsTitle,
           onPressed: () =>
               showSongControlsSheet(context, variantAsChips: variantAsChips),
@@ -191,7 +192,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove),
+                  icon: const Icon(LucideIcons.minus),
                   onPressed: () =>
                       controller.setFontSize(settings.fontSize - 2),
                 ),
@@ -215,7 +216,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                   onPressed: () =>
                       controller.setFontSize(settings.fontSize + 2),
                 ),
@@ -347,7 +348,7 @@ class _CollapsibleInstrumentHeader extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
                 child: Icon(
-                  Icons.expand_more_rounded,
+                  LucideIcons.chevronDown,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -785,7 +786,7 @@ class _ToolbarVariantButton extends StatelessWidget {
             child: Row(
               children: [
                 if (version.id == selectedId)
-                  Icon(Icons.check, size: 18, color: theme.colorScheme.primary)
+                  Icon(LucideIcons.check, size: 18, color: theme.colorScheme.primary)
                 else
                   const SizedBox(width: 18),
                 const SizedBox(width: 8),
@@ -821,7 +822,7 @@ class _ToolbarVariantButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.alt_route_rounded,
+                LucideIcons.gitFork,
                 size: 16,
                 color: theme.colorScheme.primary,
               ),
@@ -839,7 +840,7 @@ class _ToolbarVariantButton extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Icon(
-                Icons.arrow_drop_down,
+                LucideIcons.chevronDown,
                 size: 18,
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -7,12 +7,13 @@ import 'package:hosanna/app/providers.dart';
 import 'package:hosanna/features/services/data/service_annotation_repository.dart';
 import 'package:hosanna/features/songs/presentation/song_reader.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeServiceAnnotationRepository extends Fake
     implements ServiceAnnotationRepository {
   @override
-  Future<Uint8List?> loadLocalAnnotation({
+  Future<Uint8List?> loadAnnotation({
     required String serviceId,
     required String songId,
   }) async => null;
@@ -81,7 +82,7 @@ void main() {
     final metronomeFinder = find.byTooltip('Metronome');
     expect(metronomeFinder, findsOneWidget);
 
-    final autoScrollFinder = find.byIcon(Icons.keyboard_double_arrow_down);
+    final autoScrollFinder = find.byIcon(LucideIcons.chevronsDown);
     expect(autoScrollFinder, findsOneWidget);
 
     final metronomeCenter = tester.getCenter(metronomeFinder);
@@ -109,7 +110,7 @@ void main() {
     final metronomeFinder = find.byTooltip('Metronome');
     expect(metronomeFinder, findsOneWidget);
 
-    final annotationFinder = find.byIcon(Icons.draw_outlined);
+    final annotationFinder = find.byIcon(LucideIcons.pencil);
     expect(annotationFinder, findsOneWidget);
 
     final metronomeCenter = tester.getCenter(metronomeFinder);

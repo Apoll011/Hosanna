@@ -1,3 +1,4 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -7,10 +8,25 @@ import 'package:go_router/go_router.dart';
 import 'package:hosanna/app/providers.dart';
 import 'package:hosanna/core/db/database.dart';
 import 'package:hosanna/core/db/tables.dart';
+import 'package:hosanna/features/services/data/service_notes_watch.dart';
 import 'package:hosanna/features/services/presentation/service_detail_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'test_pump.dart';
+
+class _FakeServiceNotesWatchController
+    extends StateNotifier<ServiceNotesWatchState>
+    with Fake
+    implements ServiceNotesWatchController {
+  _FakeServiceNotesWatchController() : super(const ServiceNotesWatchState());
+
+  @override
+  void consumeIncoming() {}
+
+  @override
+  void markAllRead() {}
+}
 
 void main() {
   late AppDatabase db;
@@ -74,6 +90,10 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
           sharedPreferencesProvider.overrideWithValue(prefs),
+          cookieJarProvider.overrideWithValue(CookieJar()),
+          serviceNotesWatchProvider.overrideWith(
+            (ref, serviceId) => _FakeServiceNotesWatchController(),
+          ),
         ],
         child: MaterialApp.router(
           routerConfig: router,
@@ -83,6 +103,14 @@ void main() {
       ),
     );
     await pumpFrames(tester);
+  }
+
+  Future<void> disposeApp(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.idle();
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(Duration.zero);
+    }
   }
 
   testWidgets(
@@ -97,7 +125,7 @@ void main() {
       expect(find.byType(ServiceDetailPage), findsOneWidget);
 
       // Open the order drawer.
-      await tester.tap(find.byIcon(Icons.menu));
+      await tester.tap(find.byIcon(LucideIcons.menu));
       await pumpFrames(tester);
       expect(find.text('Leave Service Mode'), findsOneWidget);
 
@@ -108,6 +136,7 @@ void main() {
       // The whole service page must be popped, not just the drawer closed.
       expect(find.byType(ServiceDetailPage), findsNothing);
       expect(find.text('home'), findsOneWidget);
+      await disposeApp(tester);
     },
   );
 }

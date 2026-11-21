@@ -18,6 +18,7 @@ import '../../songs/presentation/song_filters.dart';
 import '../data/folder_repository.dart';
 import '../domain/folder_customization.dart';
 import '../domain/folder_explorer_controller.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// File-explorer style browser for the song library's folders.
 ///
@@ -166,7 +167,7 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                 ),
           actions: [
             IconButton(
-              icon: Icon(_searchOpen ? Icons.close : Icons.search),
+              icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search),
               tooltip: l10n.commonSearch,
               onPressed: () {
                 setState(() {
@@ -182,7 +183,7 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
             // Long-press-free toggle between the compact list and the card
             // grid built for tablet/desktop folders.
             IconButton(
-              icon: Icon(_gridView ? Icons.view_list : Icons.grid_view),
+              icon: Icon(_gridView ? LucideIcons.list : LucideIcons.layoutGrid),
               tooltip: _gridView ? l10n.foldersViewList : l10n.foldersViewGrid,
               onPressed: _toggleViewMode,
             ),
@@ -214,8 +215,8 @@ class _FolderBrowserPageState extends ConsumerState<FolderBrowserPage> {
                                 ? l10n.songsClearSearch
                                 : l10n.songsClearFilters,
                             primaryIcon: hasQuery
-                                ? Icons.search_off_outlined
-                                : Icons.filter_alt_off_outlined,
+                                ? LucideIcons.searchX
+                                : LucideIcons.filterX,
                             onPrimary: hasQuery
                                 ? _clearSearch
                                 : _resetFilters,
@@ -614,7 +615,7 @@ class _SongCard extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           _ExplorerIcon(
-            icon: Icons.description_rounded,
+            icon: LucideIcons.fileText,
             color: theme.colorScheme.onSurfaceVariant,
             size: 58,
             iconScale: 0.55,
@@ -657,7 +658,7 @@ class _Breadcrumbs extends ConsumerWidget {
             _Crumb(label: l10n.foldersRoot, onTap: () => explorer.open(null)),
             for (final folder in path) ...[
               Icon(
-                Icons.chevron_right,
+                LucideIcons.chevronRight,
                 size: 16,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -714,7 +715,7 @@ class _FolderTile extends StatelessWidget {
         badgeCount: folder.songCount,
       ),
       title: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: onOpen,
     );
   }

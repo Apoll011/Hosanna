@@ -14,6 +14,7 @@ import '../data/song_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_reader.dart';
 import 'song_toolbar.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SongDetailPage extends ConsumerStatefulWidget {
   const SongDetailPage({super.key, required this.songId});
@@ -83,7 +84,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         leading: canPop
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const Icon(LucideIcons.arrowLeft),
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 onPressed: () => context.go('/songs'),
               ),
@@ -96,7 +97,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           const SongToolbarButton(),
           if (canEdit)
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(LucideIcons.pencil),
               tooltip: l10n.songsEdit,
               onPressed: song == null
                   ? null
@@ -110,7 +111,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.ios_share),
+                  : const Icon(LucideIcons.share2),
               tooltip: l10n.navExportPdf,
               onPressed: (_isExporting || song == null)
                   ? null

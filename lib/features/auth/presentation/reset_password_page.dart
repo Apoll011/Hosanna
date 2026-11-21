@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
 import 'auth_scaffold.dart';
 import 'auth_ui_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Accepts a Better Auth password-reset `token` (from the emailed deep link)
 /// via the `token` query parameter.
@@ -73,7 +74,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       return AuthScaffold(
         title: l10n.authPasswordChanged,
         heroAsset: AuthHeroes.passwordChanged,
-        heroFallbackIcon: Icons.lock_open_rounded,
+        heroFallbackIcon: LucideIcons.lockOpen,
         showBack: false,
         child: AuthPrimaryButton(
           label: l10n.authSignIn,
@@ -86,7 +87,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       title: l10n.authResetPassword,
       subtitle: l10n.authNewPassword,
       heroAsset: AuthHeroes.resetPassword,
-      heroFallbackIcon: Icons.password_rounded,
+      heroFallbackIcon: LucideIcons.keyRound,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -103,8 +104,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscure
-                      ? Icons.visibility_rounded
-                      : Icons.visibility_off_rounded,
+                      ? LucideIcons.eye
+                      : LucideIcons.eyeOff,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),

@@ -22,6 +22,7 @@ import '../data/service_notes_watch.dart';
 import 'service_element_meta.dart';
 import 'widgets/horizontal_swipe_navigator.dart';
 import 'widgets/service_notes_panel.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Non-musician service view: run-of-show with durations, item detail, and
 /// team notes. No chords tab — songs open with lyrics (chords hidden).
@@ -220,18 +221,18 @@ class _ServiceOrderPageState extends ConsumerState<ServiceOrderPage> {
                     },
                     destinations: [
                       NavigationDestination(
-                        icon: const Icon(Icons.view_list_outlined),
-                        selectedIcon: const Icon(Icons.view_list),
+                        icon: const Icon(LucideIcons.list),
+                        selectedIcon: const Icon(LucideIcons.list),
                         label: l10n.servicesOrderTitle,
                       ),
                       NavigationDestination(
                         icon: NotesUnreadBadge(
                           serviceId: widget.serviceId,
-                          child: const Icon(Icons.sticky_note_2_outlined),
+                          child: const Icon(LucideIcons.stickyNote),
                         ),
                         selectedIcon: NotesUnreadBadge(
                           serviceId: widget.serviceId,
-                          child: const Icon(Icons.sticky_note_2),
+                          child: const Icon(LucideIcons.stickyNote),
                         ),
                         label: l10n.servicesNotes,
                       ),
@@ -411,7 +412,7 @@ class _OrderHeader extends StatelessWidget {
                 IconButton(
                   tooltip: l10n.servicesLeave,
                   onPressed: onLeave,
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(LucideIcons.arrowLeft),
                 ),
                 Expanded(
                   child: Column(
@@ -439,7 +440,7 @@ class _OrderHeader extends StatelessWidget {
                   tooltip: l10n.servicesLeave,
                   onPressed: onLeave,
                   icon: Icon(
-                    Icons.logout,
+                    LucideIcons.logOut,
                     color: theme.colorScheme.error,
                   ),
                 ),
@@ -611,7 +612,7 @@ class _ServiceTimerStripState extends State<_ServiceTimerStrip> {
                 ),
               ),
               Icon(
-                Icons.timer_outlined,
+                LucideIcons.timer,
                 size: 16,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -778,7 +779,7 @@ class _ServiceOrderSideRail extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded),
+                      icon: const Icon(LucideIcons.chevronRight),
                       tooltip: l10n.servicesExpandOrderPanel,
                       onPressed: onToggleCollapsed,
                     ),
@@ -790,7 +791,7 @@ class _ServiceOrderSideRail extends StatelessWidget {
                         ? IconButton.filledTonal(
                             onPressed: onStart,
                             tooltip: l10n.servicesStartService,
-                            icon: const Icon(Icons.play_arrow_rounded),
+                            icon: const Icon(LucideIcons.play),
                           )
                         : _ServiceTimerStrip(
                             startedAt: startedAt,
@@ -827,7 +828,7 @@ class _ServiceOrderSideRail extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_left_rounded),
+                          icon: const Icon(LucideIcons.chevronLeft),
                           tooltip: l10n.servicesCollapseOrderPanel,
                           onPressed: onToggleCollapsed,
                         ),
@@ -986,9 +987,9 @@ class _SideRailItem extends ConsumerWidget {
                 const SizedBox(width: 2),
                 Icon(
                   switch (status) {
-                    _ItemStatus.done => Icons.check_circle,
-                    _ItemStatus.current => Icons.play_circle_filled,
-                    _ItemStatus.upcoming => Icons.circle_outlined,
+                    _ItemStatus.done => LucideIcons.checkCircle2,
+                    _ItemStatus.current => LucideIcons.playCircle,
+                    _ItemStatus.upcoming => LucideIcons.circle,
                   },
                   size: 16,
                   color: switch (status) {
@@ -1135,17 +1136,17 @@ class _StatusGlyph extends StatelessWidget {
     final theme = Theme.of(context);
     return switch (status) {
       _ItemStatus.done => Icon(
-          Icons.check_circle,
+          LucideIcons.checkCircle2,
           size: 22,
           color: const Color(0xFF16A34A),
         ),
       _ItemStatus.current => Icon(
-          Icons.play_circle_filled,
+          LucideIcons.playCircle,
           size: 22,
           color: theme.colorScheme.primary,
         ),
       _ItemStatus.upcoming => Icon(
-          Icons.circle_outlined,
+          LucideIcons.circle,
           size: 22,
           color: theme.colorScheme.outline,
         ),
@@ -1389,7 +1390,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: _close,
         ),
         title: Text(l10n.servicesItemDetail),
@@ -1407,7 +1408,7 @@ class _ElementViewerPageState extends ConsumerState<_ElementViewerPage> {
             ),
           IconButton(
             tooltip: l10n.servicesNotes,
-            icon: const Icon(Icons.sticky_note_2_outlined),
+            icon: const Icon(LucideIcons.stickyNote),
             onPressed: () => _openNotesFor(element),
           ),
         ],
@@ -1450,7 +1451,7 @@ class _ViewerTopBar extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-              icon: Icon(embedded ? Icons.close : Icons.arrow_back),
+              icon: Icon(embedded ? LucideIcons.x : LucideIcons.arrowLeft),
               onPressed: onClose,
             ),
             Expanded(
@@ -1475,7 +1476,7 @@ class _ViewerTopBar extends StatelessWidget {
               ),
             IconButton(
               tooltip: l10n.servicesNotes,
-              icon: const Icon(Icons.sticky_note_2_outlined),
+              icon: const Icon(LucideIcons.stickyNote),
               onPressed: onOpenNotes,
             ),
           ],
@@ -1639,7 +1640,7 @@ class _NonSongDetailBody extends StatelessWidget {
           child: ListTile(
             title: Text(l10n.servicesLeaderNotes),
             subtitle: Text(l10n.servicesLeaderNotesHint),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(LucideIcons.chevronRight),
             onTap: () => showServiceNotesSheet(
               context,
               serviceId: serviceId,

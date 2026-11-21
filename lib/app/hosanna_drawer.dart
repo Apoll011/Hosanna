@@ -14,6 +14,7 @@ import '../shared/widgets/hosanna_surface.dart';
 import '../shared/widgets/sync_status_banner.dart';
 import 'design/tokens.dart';
 import 'nav_branches.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Duration for every collapse/expand transition in the nav content. Kept in
 /// sync with the sidebar's own width animation (see shell.dart) so the drawer
@@ -217,7 +218,7 @@ class HosannaNavContent extends ConsumerWidget {
                     child: HosannaSectionLabel(l10n.navLibrarySection),
                   ),
                   _NavItem(
-                    icon: Icons.music_note_outlined,
+                    icon: LucideIcons.music,
                     label: l10n.navAllSongs,
                     count: songs.length,
                     selected: currentBranch == kSongsBranch &&
@@ -226,7 +227,7 @@ class HosannaNavContent extends ConsumerWidget {
                     onTap: () => selectSection(LibrarySection.all),
                   ),
                   _NavItem(
-                    icon: Icons.favorite_outline,
+                    icon: LucideIcons.heart,
                     label: l10n.navFavorites,
                     count: favoriteCount,
                     selected: currentBranch == kSongsBranch &&
@@ -235,7 +236,7 @@ class HosannaNavContent extends ConsumerWidget {
                     onTap: () => selectSection(LibrarySection.favorites),
                   ),
                   _NavItem(
-                    icon: Icons.history,
+                    icon: LucideIcons.history,
                     label: l10n.navRecents,
                     count: recentCount,
                     selected: currentBranch == kSongsBranch &&
@@ -244,7 +245,7 @@ class HosannaNavContent extends ConsumerWidget {
                     onTap: () => selectSection(LibrarySection.recent),
                   ),
                   _NavItem(
-                    icon: Icons.folder_outlined,
+                    icon: LucideIcons.folder,
                     label: l10n.navFolders,
                     count: folders.length,
                     selected: currentBranch == kFoldersBranch,
@@ -255,7 +256,7 @@ class HosannaNavContent extends ConsumerWidget {
                     },
                   ),
                   _NavItem(
-                    icon: Icons.collections_bookmark_outlined,
+                    icon: LucideIcons.library,
                     label: l10n.navCollections,
                     count: collections.length,
                     selected: currentBranch == kCollectionsBranch,
@@ -274,21 +275,21 @@ class HosannaNavContent extends ConsumerWidget {
                     ),
                   ),
                   _NavItem(
-                    icon: Icons.speed,
+                    icon: LucideIcons.metronome,
                     label: l10n.navMetronome,
                     selected: currentBranch == kMetronomeBranch,
                     collapsed: collapsed,
                     onTap: () => onNavigate(kMetronomeBranch),
                   ),
                   _NavItem(
-                    icon: Icons.donut_large,
+                    icon: LucideIcons.disc,
                     label: l10n.navCircleOfFifths,
                     selected: currentBranch == kCircleOfFifthsBranch,
                     collapsed: collapsed,
                     onTap: () => onNavigate(kCircleOfFifthsBranch),
                   ),
                   _NavItem(
-                    icon: Icons.event_outlined,
+                    icon: LucideIcons.calendar,
                     label: l10n.navAgenda,
                     selected: currentBranch == kAgendaBranch,
                     collapsed: collapsed,
@@ -391,7 +392,7 @@ class HosannaNavContent extends ConsumerWidget {
                               ),
                             ),
                             Icon(
-                              Icons.settings_outlined,
+                              LucideIcons.settings,
                               size: 20,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
