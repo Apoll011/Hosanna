@@ -58,13 +58,30 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           flutter build appbundle --release \
-            --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}\
+            --dart-define=HOSANNA_GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
             --dart-define=HOSANNA_POSTHOG_KEY=${{ secrets.HOSANNA_POSTHOG_KEY }}
 
       - name: Verify artifacts
         run: |
           ls -lh build/app/outputs/flutter-apk/
           ls -lh build/app/outputs/bundle/release/
+
+      - name: Create Google Play credentials
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          umask 077
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" \
+            > "$RUNNER_TEMP/play-service-account.json"
+
+      - name: Upload to Google Play (Internal Testing)
+        uses: lukasa1993/android-upload-google-play@v2.1.8
+        with:
+          service-account: ${{ runner.temp }}/play-service-account.json
+          package-name: live.hosanna.music
+          release-file: build/app/outputs/bundle/release/app-release.aab
+          track: beta
+          status: complete
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

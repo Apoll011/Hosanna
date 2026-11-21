@@ -56,8 +56,8 @@ android {
 
     buildTypes {
         release {
-            // Fall back to debug signing locally (no keystore) so
-            // `flutter run --release` works; CI provides a real keystore.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs
                 .getByName("release")
                 .takeIf { file(System.getenv("KEYSTORE_FILE") ?: "release.keystore").exists() }
