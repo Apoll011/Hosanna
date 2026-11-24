@@ -2354,4 +2354,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTermsOfService => 'Terms of Service';
+
+  @override
+  String get settingsAnalytics => 'Analytics';
+
+  @override
+  String get settingsAnalyticsDescription =>
+      'Allow anonymous app usage analytics.';
 }

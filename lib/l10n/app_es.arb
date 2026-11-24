@@ -848,5 +848,7 @@
   "settingsLanguageSystem": "Sistema",
   "settingsFontPreview": "Ejemplo",
   "settingsPrivacyPolicy": "Política de privacidad",
-  "settingsTermsOfService": "Términos del Servicio"
+  "settingsTermsOfService": "Términos del Servicio",
+  "settingsAnalytics": "Analíticas",
+  "settingsAnalyticsDescription": "Permitir la recopilación de datos anónimos de uso de la aplicación."
 }

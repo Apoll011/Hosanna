@@ -15,6 +15,7 @@ class AppSettings {
     this.keepScreenAwake = false,
     this.musicianMode = true,
     this.syncAnnotations = false,
+    this.analyticsEnabled = false,
     this.serviceOrderSidePanel = false,
     this.pedalEnabled = true,
     this.pedalActionMode = PedalActionMode.navigateSongs,
@@ -38,6 +39,8 @@ class AppSettings {
 
   /// Whether the user will sync live service song annotations.
   final bool syncAnnotations;
+
+  final bool analyticsEnabled;
 
   /// Non-musician tablet layout: keep the service order visible in a side rail.
   final bool serviceOrderSidePanel;
@@ -67,6 +70,7 @@ class AppSettings {
     bool? keepScreenAwake,
     bool? musicianMode,
     bool? syncAnnotations,
+    bool? analyticsEnabled,
     bool? serviceOrderSidePanel,
     bool? pedalEnabled,
     PedalActionMode? pedalActionMode,
@@ -83,6 +87,7 @@ class AppSettings {
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       musicianMode: musicianMode ?? this.musicianMode,
       syncAnnotations: syncAnnotations ?? this.syncAnnotations,
+      analyticsEnabled: analyticsEnabled ?? this.analyticsEnabled,
       serviceOrderSidePanel:
           serviceOrderSidePanel ?? this.serviceOrderSidePanel,
       pedalEnabled: pedalEnabled ?? this.pedalEnabled,
@@ -109,6 +114,7 @@ class SettingsController extends StateNotifier<AppSettings> {
   static const _keepAwakeKey = 'settings.keepScreenAwake';
   static const _musicianModeKey = 'settings.musicianMode';
   static const _syncAnnotation = 'settings.syncAnnotation';
+  static const _analyticsEnabledKey = 'settings.analyticsEnabled';
   static const _serviceOrderSidePanelKey = 'settings.serviceOrderSidePanel';
   static const _pedalEnabledKey = 'settings.pedalEnabled';
   static const _pedalActionModeKey = 'settings.pedalActionMode';
@@ -126,6 +132,7 @@ class SettingsController extends StateNotifier<AppSettings> {
       keepScreenAwake: _prefs.getBool(_keepAwakeKey) ?? false,
       musicianMode: _prefs.getBool(_musicianModeKey) ?? true,
       syncAnnotations: _prefs.getBool(_syncAnnotation) ?? true,
+      analyticsEnabled: _prefs.getBool(_analyticsEnabledKey) ?? false,
       serviceOrderSidePanel: _prefs.getBool(_serviceOrderSidePanelKey) ?? false,
       pedalEnabled: _prefs.getBool(_pedalEnabledKey) ?? true,
       pedalActionMode: pedalActionModeFromName(
@@ -173,6 +180,11 @@ class SettingsController extends StateNotifier<AppSettings> {
       (m) => m.name == name,
       orElse: () => AppThemeMode.system,
     );
+  }
+
+  void setAnalyticsEnabled(bool value) {
+    state = state.copyWith(analyticsEnabled: value);
+    _prefs.setBool(_analyticsEnabledKey, value);
   }
 
   void setSyncAnnotations(bool value) {

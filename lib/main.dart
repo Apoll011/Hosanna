@@ -25,11 +25,13 @@ Future<void> main() async {
 
   // Initialise PostHog when a key is provided via --dart-define.
   final appConfig = AppConfig.instance;
-  if (appConfig.postHogApiKey.isNotEmpty) {
+  if ((prefs.getBool('settings.analyticsEnabled') ?? false) &&
+      appConfig.postHogApiKey.isNotEmpty) {
     await AnalyticsService.instance.init(
       apiKey: appConfig.postHogApiKey,
       host: appConfig.postHogHost,
     );
+    await AnalyticsService.instance.setEnabled(true);
   }
 
   // Firebase uses the native config: `android/app/google-services.json` (read

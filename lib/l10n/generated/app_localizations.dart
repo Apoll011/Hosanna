@@ -4413,6 +4413,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Termos de Serviço'**
   String get settingsTermsOfService;
+
+  /// No description provided for @settingsAnalytics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Análise de utilização'**
+  String get settingsAnalytics;
+
+  /// No description provided for @settingsAnalyticsDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir a recolha de dados anónimos de utilização da aplicação.'**
+  String get settingsAnalyticsDescription;
 }
 
 class _AppLocalizationsDelegate

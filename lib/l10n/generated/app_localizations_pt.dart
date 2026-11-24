@@ -2362,4 +2362,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTermsOfService => 'Termos de Serviço';
+
+  @override
+  String get settingsAnalytics => 'Análise de utilização';
+
+  @override
+  String get settingsAnalyticsDescription =>
+      'Permitir a recolha de dados anónimos de utilização da aplicação.';
 }

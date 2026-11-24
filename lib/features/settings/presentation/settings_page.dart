@@ -10,6 +10,7 @@ import '../../../app/design/illustrations.dart';
 import '../../../app/design/tokens.dart';
 import '../../../app/providers.dart';
 import '../../../app/settings_controller.dart';
+import '../../../core/analytics/analytics.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../app/theme.dart';
 import '../../../core/auth/auth_session.dart';
@@ -506,6 +507,28 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
         ),
         const SizedBox(height: 12),
         const _NotificationsCard(),
+        const SizedBox(height: 12),
+        _Card(
+          child: SwitchListTile(
+            secondary: const Icon(LucideIcons.chartNoAxesColumn),
+            title: Text(l10n.settingsAnalytics),
+            subtitle: Text(l10n.settingsAnalyticsDescription),
+            value: ref.watch(settingsControllerProvider).analyticsEnabled,
+            onChanged: (enabled) async {
+              ref.read(settingsControllerProvider.notifier).setAnalyticsEnabled(enabled);
+              final config = ref.read(appConfigProvider);
+              final analytics = AnalyticsService.instance;
+              if (enabled && config.postHogApiKey.isNotEmpty) {
+                await analytics.init(
+                  apiKey: config.postHogApiKey,
+                  host: config.postHogHost,
+                );
+              }
+              await analytics.setEnabled(enabled);
+              if (enabled) await analytics.track(const AppLaunched());
+            },
+          ),
+        ),
         const SizedBox(height: 12),
         _Card(
           child: Column(

@@ -862,5 +862,7 @@
   "settingsLanguageSystem": "System",
   "settingsFontPreview": "Sample",
   "settingsPrivacyPolicy": "Privacy Policy",
-  "settingsTermsOfService": "Terms of Service"
+  "settingsTermsOfService": "Terms of Service",
+  "settingsAnalytics": "Analytics",
+  "settingsAnalyticsDescription": "Allow anonymous app usage analytics."
 }
