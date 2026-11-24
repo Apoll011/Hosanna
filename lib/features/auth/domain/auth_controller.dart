@@ -264,7 +264,7 @@ class AuthController extends StateNotifier<AuthState> {
     } on ApiException catch (e) {
       unawaited(
         AnalyticsService.instance.track(
-          SignInFailed(method: provider.id, error: e.message ?? e.toString()),
+          SignInFailed(method: provider.id, error: e.message),
         ),
       );
       throw _socialFailure(e);
