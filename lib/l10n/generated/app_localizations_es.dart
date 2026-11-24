@@ -2360,4 +2360,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsFontPreview => 'Ejemplo';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get settingsTermsOfService => 'Términos del Servicio';
 }

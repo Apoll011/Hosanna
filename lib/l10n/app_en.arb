@@ -860,5 +860,7 @@
     }
   },
   "settingsLanguageSystem": "System",
-  "settingsFontPreview": "Sample"
+  "settingsFontPreview": "Sample",
+  "settingsPrivacyPolicy": "Privacy Policy",
+  "settingsTermsOfService": "Terms of Service"
 }

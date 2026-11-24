@@ -2348,4 +2348,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFontPreview => 'Sample';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get settingsTermsOfService => 'Terms of Service';
 }

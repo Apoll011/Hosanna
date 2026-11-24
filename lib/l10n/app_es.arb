@@ -846,5 +846,7 @@
     }
   },
   "settingsLanguageSystem": "Sistema",
-  "settingsFontPreview": "Ejemplo"
+  "settingsFontPreview": "Ejemplo",
+  "settingsPrivacyPolicy": "Política de privacidad",
+  "settingsTermsOfService": "Términos del Servicio"
 }

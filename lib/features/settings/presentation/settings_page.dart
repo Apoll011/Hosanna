@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/design/illustrations.dart';
 import '../../../app/design/tokens.dart';
@@ -505,6 +506,31 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
         ),
         const SizedBox(height: 12),
         const _NotificationsCard(),
+        const SizedBox(height: 12),
+        _Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(LucideIcons.shieldCheck),
+                title: Text(l10n.settingsPrivacyPolicy),
+                trailing: const Icon(LucideIcons.externalLink, size: 18),
+                onTap: () => launchUrl(
+                  Uri.parse('https://hosanna.live/privacy'),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(LucideIcons.fileText),
+                title: Text(l10n.settingsTermsOfService),
+                trailing: const Icon(LucideIcons.externalLink, size: 18),
+                onTap: () => launchUrl(
+                  Uri.parse('https://hosanna.live/terms'),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

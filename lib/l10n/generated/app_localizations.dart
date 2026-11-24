@@ -4401,6 +4401,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Exemplo'**
   String get settingsFontPreview;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Política de Privacidade'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsTermsOfService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termos de Serviço'**
+  String get settingsTermsOfService;
 }
 
 class _AppLocalizationsDelegate

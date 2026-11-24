@@ -2356,4 +2356,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsFontPreview => 'Exemplo';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de Privacidade';
+
+  @override
+  String get settingsTermsOfService => 'Termos de Serviço';
 }
