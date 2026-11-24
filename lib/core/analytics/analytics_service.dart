@@ -195,10 +195,9 @@ class AnalyticsService {
   }) async {
     try {
       final stackStr = stackTrace?.toString();
-      final truncated =
-          stackStr != null && stackStr.length > 2000
-              ? '${stackStr.substring(0, 2000)}…'
-              : stackStr;
+      final truncated = stackStr != null && stackStr.length > 2000
+          ? '${stackStr.substring(0, 2000)}…'
+          : stackStr;
       await track(
         AppErrorCaptured(
           error: error.toString(),

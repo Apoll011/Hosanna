@@ -25,6 +25,7 @@ import '../../songs/presentation/chordpro/instrument_selector.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../../songs/domain/chordpro/chord_notation.dart';
 import '../../songs/domain/chordpro/instruments/instruments.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 enum SettingsTab { account, workspace, service, song, appearance }
@@ -85,18 +86,10 @@ class _TabBar extends StatelessWidget {
 
     final tabs = [
       (SettingsTab.account, l10n.settingsTabAccount, LucideIcons.user),
-      (
-        SettingsTab.workspace,
-        l10n.settingsTabWorkspace,
-        LucideIcons.building,
-      ),
+      (SettingsTab.workspace, l10n.settingsTabWorkspace, LucideIcons.building),
       (SettingsTab.service, l10n.settingsTabService, LucideIcons.calendarDays),
       (SettingsTab.song, l10n.settingsTabSong, LucideIcons.music),
-      (
-        SettingsTab.appearance,
-        l10n.settingsTabAppearance,
-        LucideIcons.palette,
-      ),
+      (SettingsTab.appearance, l10n.settingsTabAppearance, LucideIcons.palette),
     ];
 
     final tokens = HosannaTokens.of(context);
@@ -515,7 +508,9 @@ class _AccountTabState extends ConsumerState<_AccountTab> {
             subtitle: Text(l10n.settingsAnalyticsDescription),
             value: ref.watch(settingsControllerProvider).analyticsEnabled,
             onChanged: (enabled) async {
-              ref.read(settingsControllerProvider.notifier).setAnalyticsEnabled(enabled);
+              ref
+                  .read(settingsControllerProvider.notifier)
+                  .setAnalyticsEnabled(enabled);
               final config = ref.read(appConfigProvider);
               final analytics = AnalyticsService.instance;
               if (enabled && config.postHogApiKey.isNotEmpty) {
@@ -655,10 +650,7 @@ class _WorkspaceTabState extends ConsumerState<_WorkspaceTab> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  LucideIcons.alertTriangle,
-                  color: theme.colorScheme.error,
-                ),
+                Icon(LucideIcons.alertTriangle, color: theme.colorScheme.error),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
