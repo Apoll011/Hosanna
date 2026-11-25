@@ -6,6 +6,7 @@ import '../../../domain/chordpro/chord_notation.dart';
 import '../../../domain/chordpro/instruments/instruments.dart';
 import '../chord_diagrams.dart';
 import '../instrument_selector.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Opens the chord dictionary for [chord] as a modal bottom sheet.
@@ -21,6 +22,7 @@ Future<void> showChordSheet(
   required InstrumentPreferences preferences,
   required ChordFingering? Function(String chord) fingeringFor,
   required ChordNotationSystem chordNotation,
+  required String tonic,
 }) {
   final list = chords.contains(chord) ? chords : [chord, ...chords];
   return showModalBottomSheet<void>(
@@ -39,6 +41,7 @@ Future<void> showChordSheet(
       preferences: preferences,
       fingeringFor: fingeringFor,
       chordNotation: chordNotation,
+      tonic: tonic,
     ),
   );
 }
@@ -53,6 +56,7 @@ class ChordSheet extends StatefulWidget {
     required this.preferences,
     required this.fingeringFor,
     required this.chordNotation,
+    required this.tonic,
   });
 
   final List<String> chords;
@@ -62,6 +66,7 @@ class ChordSheet extends StatefulWidget {
   final InstrumentPreferences preferences;
   final ChordFingering? Function(String chord) fingeringFor;
   final ChordNotationSystem chordNotation;
+  final String tonic;
 
   @override
   State<ChordSheet> createState() => _ChordSheetState();
@@ -88,6 +93,7 @@ class _ChordSheetState extends State<ChordSheet> {
     final displayChord = ChordNotationConverter.formatChord(
       chord,
       widget.chordNotation,
+      key: widget.tonic,
     );
     final fingering = widget.fingeringFor(chord);
     final voicing = fingering?.forInstrument(_instrument);

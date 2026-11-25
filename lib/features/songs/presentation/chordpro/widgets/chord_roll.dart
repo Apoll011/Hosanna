@@ -17,6 +17,7 @@ class ChordRoll extends StatelessWidget {
     required this.fingeringFor,
     required this.onChordTap,
     required this.chordNotation,
+    required this.tonic,
   });
 
   /// Transposed chords in order of appearance.
@@ -27,6 +28,7 @@ class ChordRoll extends StatelessWidget {
   final ChordFingering? Function(String chord) fingeringFor;
   final void Function(String chord) onChordTap;
   final ChordNotationSystem chordNotation;
+  final String tonic;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +65,7 @@ class ChordRoll extends StatelessWidget {
                     preference: pref,
                     onTap: onChordTap,
                     notation: chordNotation,
+                    tonic: tonic,
                   ),
               ],
             ),
@@ -81,6 +84,7 @@ class _ChordRollItem extends StatelessWidget {
     required this.preference,
     required this.onTap,
     required this.notation,
+    required this.tonic,
   });
 
   final String chord;
@@ -89,13 +93,18 @@ class _ChordRollItem extends StatelessWidget {
   final InstrumentPreference preference;
   final void Function(String chord) onTap;
   final ChordNotationSystem notation;
+  final String tonic;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final voicing = this.voicing;
-    final displayChord = ChordNotationConverter.formatChord(chord, notation);
+    final displayChord = ChordNotationConverter.formatChord(
+      chord,
+      notation,
+      key: tonic,
+    );
     return Semantics(
       button: true,
       label: l10n.songChordSemantics(displayChord),

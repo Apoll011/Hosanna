@@ -1318,6 +1318,7 @@ class _SongTab extends ConsumerWidget {
     'latin' => l10n.songChordNotationLatin,
     'german' => l10n.songChordNotationGerman,
     'sargam' => l10n.songChordNotationSargam,
+    'nashville' => l10n.songChordNotationNashville,
     _ => l10n.songChordNotationInternational,
   };
 }

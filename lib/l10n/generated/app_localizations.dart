@@ -2116,6 +2116,12 @@ abstract class AppLocalizations {
   /// **'Indiana / Sargam (Sa em C)'**
   String get songChordNotationSargam;
 
+  /// No description provided for @songChordNotationNashville.
+  ///
+  /// In pt, this message translates to:
+  /// **'Números de Nashville (1, 2m, 3m)'**
+  String get songChordNotationNashville;
+
   /// No description provided for @songShowChords.
   ///
   /// In pt, this message translates to:

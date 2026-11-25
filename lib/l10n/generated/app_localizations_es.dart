@@ -1120,6 +1120,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get songChordNotationSargam => 'India / Sargam (Sa en C)';
 
   @override
+  String get songChordNotationNashville => 'Números de Nashville (1, 2m, 3m)';
+
+  @override
   String get songShowChords => 'Mostrar Acordes';
 
   @override

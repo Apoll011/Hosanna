@@ -144,6 +144,10 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       preferences: widget.instrumentPreferences,
       fingeringFor: _fingeringFor,
       chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
+      tonic: transposeChord(
+        _version.metadata['key'] ?? 'C',
+        _effectiveTranspose,
+      ),
     );
   }
 
@@ -165,6 +169,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       fontSize: fontSize,
       onChordTap: _openChord,
       chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
+      tonic: transposeChord(metadata['key'] ?? 'C', _effectiveTranspose),
     );
 
     final notes = widget.notes?.trim();
@@ -214,6 +219,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         ChordRoll(
           chords: _song.uniqueChords,
           chordNotation: notation,
+          tonic: transposeChord(key, _effectiveTranspose),
           capo: _effectiveCapo,
           instrument: widget.instrument,
           preferences: widget.instrumentPreferences,

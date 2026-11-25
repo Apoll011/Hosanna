@@ -429,6 +429,7 @@
   "songChordNotationLatin": "Latin (Do, Re, Mi)",
   "songChordNotationGerman": "German (H instead of B)",
   "songChordNotationSargam": "Indian / Sargam (Sa on C)",
+  "songChordNotationNashville": "Nashville numbers (1, 2m, 3m)",
   "songShowChords": "Show Chords",
   "songTwoColumn": "2-Column Layout",
   "songShowDiagrams": "Show Diagrams",
