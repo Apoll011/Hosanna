@@ -37,7 +37,16 @@ class TuningProfileResolver {
     if (base == null) return null;
 
     List<OpenString> strings = base.openStrings;
+    final registered = instrumentRegistry.resolve(instrumentId);
+    var tuningId = registered is FrettedInstrument
+        ? registered.defaultTuning.id
+        : 'standard';
+    var tuningLabel = registered is FrettedInstrument
+        ? registered.defaultTuning.label
+        : base.name;
     if (preference.customTuning != null) {
+      tuningId = 'custom';
+      tuningLabel = '${base.name} custom';
       strings = [
         for (final string in preference.customTuning!)
           OpenString(string.name ?? string.note, string.frequency),
@@ -48,6 +57,8 @@ class TuningProfileResolver {
       if (instrument is FrettedInstrument) {
         final tuning = instrument.tuningFor(preference.tuningId);
         strings = _retune(base.openStrings, tuning);
+        tuningId = tuning.id;
+        tuningLabel = tuning.label;
       }
     }
 
@@ -62,7 +73,7 @@ class TuningProfileResolver {
     }
 
     final profile = InstrumentProfile(
-      name: base.name,
+      name: tuningLabel,
       minFreq: math.min(
         base.minFreq,
         strings.map((e) => e.frequency).reduce(math.min) * 0.8,
@@ -74,7 +85,10 @@ class TuningProfileResolver {
       rmsGate: base.rmsGate,
       useFlats: base.useFlats,
     );
-    final resolved = TuningProfile(id: instrumentId, profile: profile);
+    final resolved = TuningProfile(
+      id: '$instrumentId/$tuningId',
+      profile: profile,
+    );
     return resolved.isValid ? resolved : null;
   }
 
@@ -97,7 +111,7 @@ class TuningProfileResolver {
   ) {
     final baseIndex = index - extraLowStrings;
     final reference = baseIndex < 0
-        ? defaults.first.frequency / math.pow(2, -baseIndex)
+        ? defaults.first.frequency / math.pow(2, -baseIndex - 1)
         : defaults[math.min(baseIndex, defaults.length - 1)].frequency;
     final referenceMidi = (69 + 12 * (math.log(reference / 440) / math.ln2))
         .round();
@@ -105,10 +119,16 @@ class TuningProfileResolver {
     final referenceClass = referenceMidi % 12;
     final interval = ((pitchClass - referenceClass + 6) % 12) - 6;
     final frequency = reference * math.pow(2, interval / 12);
-    final name = tuning.stringNames[index];
+    final offset = index < tuning.octaveOffsets.length
+        ? tuning.octaveOffsets[index]
+        : 0;
+    final adjustedFrequency = frequency * math.pow(2, offset);
+    final name = tuning.stringNames[index].toUpperCase();
     final octave =
-        (69 + 12 * (math.log(frequency / 440) / math.ln2)).round() ~/ 12 - 1;
-    return OpenString('$name$octave', frequency);
+        (69 + 12 * (math.log(adjustedFrequency / 440) / math.ln2)).round() ~/
+            12 -
+        1;
+    return OpenString('$name$octave', adjustedFrequency);
   }
 }
 

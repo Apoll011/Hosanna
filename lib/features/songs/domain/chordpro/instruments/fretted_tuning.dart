@@ -10,6 +10,7 @@ class FrettedTuning {
     required this.label,
     required this.openPitches,
     required this.stringNames,
+    this.octaveOffsets = const [],
   });
 
   /// Stable id persisted in [InstrumentPreference.tuningId] (e.g. `standard`).
@@ -23,6 +24,9 @@ class FrettedTuning {
 
   /// Short labels drawn under each string (e.g. `E`, `A`, `D`, `G`, `B`, `e`).
   final List<String> stringNames;
+
+  /// Optional octave adjustments for re-entrant and linear variants.
+  final List<int> octaveOffsets;
 
   int get stringCount => openPitches.length;
 }
@@ -77,6 +81,7 @@ abstract final class FrettedTunings {
     label: 'Low G',
     openPitches: [7, 0, 4, 9],
     stringNames: ['G', 'C', 'E', 'A'],
+    octaveOffsets: [-1, 0, 0, 0],
   );
 
   /// Baritone ukulele in DGBE (guitar's top four strings).

@@ -46,6 +46,38 @@ void main() {
       expect(resolved.strings.map((string) => string.frequency), [73.42, 110]);
     });
 
+    test('each selected tuning resolves to its own pitch_kit profile', () {
+      final dropD = TuningProfileResolver.resolve(
+        instrumentId: 'guitar',
+        preference: const InstrumentPreference(tuningId: 'drop_d'),
+      );
+      final sevenString = TuningProfileResolver.resolve(
+        instrumentId: 'guitar',
+        preference: const InstrumentPreference(tuningId: 'seven_string'),
+      );
+      final lowG = TuningProfileResolver.resolve(
+        instrumentId: 'ukulele',
+        preference: const InstrumentPreference(tuningId: 'low_g'),
+      );
+
+      expect(dropD!.id, 'guitar/drop_d');
+      expect(dropD.profile.name, 'Drop D');
+      expect(dropD.strings.map((string) => string.name), [
+        'D2',
+        'A2',
+        'D3',
+        'G3',
+        'B3',
+        'E4',
+      ]);
+      expect(dropD.strings.first.frequency, closeTo(73.42, 0.02));
+      expect(sevenString!.strings, hasLength(7));
+      expect(sevenString.strings.first.name, 'B1');
+      expect(lowG!.id, 'ukulele/low_g');
+      expect(lowG.strings.first.name, 'G3');
+      expect(lowG.strings.first.frequency, closeTo(196, 0.1));
+    });
+
     test('existing preference JSON remains backwards compatible', () {
       final preference = InstrumentPreference.fromJson({
         'showFingerNumbers': false,
