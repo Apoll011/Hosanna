@@ -1,6 +1,29 @@
 import '../chord_theory.dart';
 import 'instrument.dart';
 
+/// One user-defined open string for a tuner profile.
+class CustomTuningString {
+  const CustomTuningString({required this.note, required this.frequency, this.name});
+
+  final String note;
+  final double frequency;
+  final String? name;
+
+  Map<String, Object?> toJson() => {
+        'note': note,
+        'frequency': frequency,
+        if (name != null) 'name': name,
+      };
+
+  factory CustomTuningString.fromJson(Map<String, dynamic> json) {
+    return CustomTuningString(
+      note: json['note'] as String,
+      frequency: (json['frequency'] as num).toDouble(),
+      name: json['name'] as String?,
+    );
+  }
+}
+
 /// How a keyboard voices chords.
 enum PianoVoicingStyle {
   /// Every chord tone (root included) in one cluster — the classic textbook
@@ -32,6 +55,7 @@ class InstrumentPreference {
     this.showCapoMarker = true,
     this.showStringLabels = true,
     this.tuningId,
+    this.customTuning,
     this.pianoVoicingStyle = PianoVoicingStyle.full,
     this.pianoSlashSplitHands = true,
     this.bassVoicingStyle = BassVoicingStyle.chords,
@@ -48,6 +72,10 @@ class InstrumentPreference {
 
   /// Fretted: selected [FrettedTuning.id] (null → instrument default).
   final String? tuningId;
+
+  /// Optional ordered open-string tuning used by the tuner in place of a
+  /// library preset. Null preserves older preferences and uses the preset.
+  final List<CustomTuningString>? customTuning;
 
   /// Piano: full vs compact (rootless) voicings.
   final PianoVoicingStyle pianoVoicingStyle;
@@ -67,6 +95,8 @@ class InstrumentPreference {
     bool? showStringLabels,
     String? tuningId,
     bool clearTuningId = false,
+    List<CustomTuningString>? customTuning,
+    bool clearCustomTuning = false,
     PianoVoicingStyle? pianoVoicingStyle,
     bool? pianoSlashSplitHands,
     BassVoicingStyle? bassVoicingStyle,
@@ -76,6 +106,7 @@ class InstrumentPreference {
       showCapoMarker: showCapoMarker ?? this.showCapoMarker,
       showStringLabels: showStringLabels ?? this.showStringLabels,
       tuningId: clearTuningId ? null : (tuningId ?? this.tuningId),
+      customTuning: clearCustomTuning ? null : (customTuning ?? this.customTuning),
       pianoVoicingStyle: pianoVoicingStyle ?? this.pianoVoicingStyle,
       pianoSlashSplitHands: pianoSlashSplitHands ?? this.pianoSlashSplitHands,
       bassVoicingStyle: bassVoicingStyle ?? this.bassVoicingStyle,
@@ -87,6 +118,8 @@ class InstrumentPreference {
         'showCapoMarker': showCapoMarker,
         'showStringLabels': showStringLabels,
         if (tuningId != null) 'tuningId': tuningId,
+        if (customTuning != null)
+          'customTuning': [for (final string in customTuning) string.toJson()],
         'pianoVoicingStyle': pianoVoicingStyle.name,
         'pianoSlashSplitHands': pianoSlashSplitHands,
         'bassVoicingStyle': bassVoicingStyle.name,
@@ -105,11 +138,20 @@ class InstrumentPreference {
       orElse: () => BassVoicingStyle.chords,
     );
     final tuning = json['tuningId'];
+    final customTuningJson = json['customTuning'];
+    final customTuning = customTuningJson is List
+        ? [
+            for (final value in customTuningJson)
+              if (value is Map)
+                CustomTuningString.fromJson(Map<String, dynamic>.from(value)),
+          ]
+        : null;
     return InstrumentPreference(
       showFingerNumbers: json['showFingerNumbers'] as bool? ?? true,
       showCapoMarker: json['showCapoMarker'] as bool? ?? true,
       showStringLabels: json['showStringLabels'] as bool? ?? true,
       tuningId: tuning is String && tuning.isNotEmpty ? tuning : null,
+      customTuning: customTuning,
       pianoVoicingStyle: style,
       pianoSlashSplitHands: json['pianoSlashSplitHands'] as bool? ?? true,
       bassVoicingStyle: bassStyle,
