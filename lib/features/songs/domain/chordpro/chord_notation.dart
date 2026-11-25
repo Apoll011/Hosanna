@@ -187,21 +187,19 @@ class ChordNotationConverter {
       final interval = (pitch % 12 + 12) % 12;
       const degrees = <int, String>{
         0: '1',
-        1: '♭2',
+        1: 'b2',
         2: '2',
-        3: '♭3',
+        3: 'b3',
         4: '3',
         5: '4',
-        6: '♯4',
+        6: '#4',
         7: '5',
-        8: '♭6',
+        8: 'b6',
         9: '6',
-        10: '♭7',
+        10: 'b7',
         11: '7',
       };
-      return degrees[interval]!
-          .replaceAll('♭', 'b')
-          .replaceAll('♯', '#'); //TODO: See if the replace should stay or go
+      return degrees[interval]!;
     }
 
     final keyPitch = _pitchClass(keyMatch.group(1)!);
