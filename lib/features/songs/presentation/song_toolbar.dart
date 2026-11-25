@@ -94,6 +94,7 @@ class SongControlsSheet extends ConsumerStatefulWidget {
 class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
   /// Instrument picker starts collapsed so the sheet opens compact.
   bool _instrumentExpanded = false;
+  bool _transposeExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -153,19 +154,41 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
 
             // Transpose / capo only matter when chords are visible.
             if (settings.showChords) ...[
-              _SectionTitle(
+              _CollapsibleInstrumentHeader(
                 label: l10n.songTranspose,
-                value: '$selectedKeyName · $transposeValue',
+                selectedLabel: selectedKeyName,
+                expanded: _transposeExpanded,
+                onToggle: () {
+                  setState(() => _transposeExpanded = !_transposeExpanded);
+                },
               ),
-              _KeyPickerChart(
-                keyNames: keyNames,
-                originalPitch: originalPitch,
-                transpose: settings.transpose,
-                notation: notation,
-                onSelected: controller.setTranspose,
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: _transposeExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Column(
+                          children: [
+                            _SectionTitle(
+                              label: '',
+                              value: transposeValue,
+                            ),
+                            _KeyPickerChart(
+                              keyNames: keyNames,
+                              originalPitch: originalPitch,
+                              transpose: settings.transpose,
+                              notation: notation,
+                              onSelected: controller.setTranspose,
+                            ),
+                            const SizedBox(height: 8),
+                            const _KeyChartLegend(),
+                          ],
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
               ),
-              const SizedBox(height: 8),
-              const _KeyChartLegend(),
               const SizedBox(height: 16),
 
               // Capo (only for instruments where it changes the pitch).
