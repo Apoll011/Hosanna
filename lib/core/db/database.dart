@@ -102,22 +102,27 @@ class AppDatabase extends _$AppDatabase {
 
   /// Marks a local row dirty so the next replication push uploads it.
   Future<void> markSongDirty(String id) =>
-      (update(songs)..where((t) => t.id.equals(id)))
-          .write(const SongsCompanion(dirty: Value(true)));
+      (update(songs)..where((t) => t.id.equals(id))).write(
+        const SongsCompanion(dirty: Value(true)),
+      );
 
   Future<void> markFolderDirty(String id) =>
-      (update(folders)..where((t) => t.id.equals(id)))
-          .write(const FoldersCompanion(dirty: Value(true)));
+      (update(folders)..where((t) => t.id.equals(id))).write(
+        const FoldersCompanion(dirty: Value(true)),
+      );
 
   Future<void> markCollectionDirty(String id) =>
-      (update(collections)..where((t) => t.id.equals(id)))
-          .write(const CollectionsCompanion(dirty: Value(true)));
+      (update(collections)..where((t) => t.id.equals(id))).write(
+        const CollectionsCompanion(dirty: Value(true)),
+      );
 
   Future<void> markServiceDirty(String id) =>
-      (update(services)..where((t) => t.id.equals(id)))
-          .write(const ServicesCompanion(dirty: Value(true)));
+      (update(services)..where((t) => t.id.equals(id))).write(
+        const ServicesCompanion(dirty: Value(true)),
+      );
 
   Future<void> markAgendaEventDirty(String id) =>
-      (update(agendaEvents)..where((t) => t.id.equals(id)))
-          .write(const AgendaEventsCompanion(dirty: Value(true)));
+      (update(agendaEvents)..where((t) => t.id.equals(id))).write(
+        const AgendaEventsCompanion(dirty: Value(true)),
+      );
 }

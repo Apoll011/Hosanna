@@ -23,13 +23,15 @@ class SongRepository {
   }
 
   Stream<SongRow?> watchSong(String id) {
-    return (_db.select(_db.songs)..where((t) => t.id.equals(id)))
-        .watchSingleOrNull();
+    return (_db.select(
+      _db.songs,
+    )..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
   Future<SongRow?> getSong(String id) {
-    return (_db.select(_db.songs)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.songs,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   /// Inserts a new song locally and marks it dirty for the next push.
@@ -86,7 +88,9 @@ class SongRepository {
     final nextTitle = title?.trim().isNotEmpty == true
         ? title!.trim()
         : existing.title;
-    final nextPath = title != null ? sanitizeSongPath(nextTitle) : existing.path;
+    final nextPath = title != null
+        ? sanitizeSongPath(nextTitle)
+        : existing.path;
     final now = DateTime.now().toUtc().toIso8601String();
 
     await (_db.update(_db.songs)..where((t) => t.id.equals(id))).write(
@@ -99,15 +103,15 @@ class SongRepository {
         folderId: clearFolderId
             ? const Value(null)
             : folderId != null
-                ? Value(folderId)
-                : const Value.absent(),
+            ? Value(folderId)
+            : const Value.absent(),
         path: title != null ? Value(nextPath) : const Value.absent(),
         tags: tags != null ? Value(tags) : const Value.absent(),
         songNumber: clearSongNumber
             ? const Value(null)
             : songNumber != null
-                ? Value(songNumber)
-                : const Value.absent(),
+            ? Value(songNumber)
+            : const Value.absent(),
         updatedAt: Value(now),
         dirty: const Value(true),
       ),
@@ -137,7 +141,8 @@ class SongRepository {
     final song = await getSong(id);
     if (song?.conflictDocument == null) return;
     final server = jsonDecode(song!.conflictDocument!) as Map<String, dynamic>;
-    await SongReplicationAdapter(_db).upsertFromWire([server], overwriteDirty: true);
+    await SongReplicationAdapter(_db)
+        .upsertFromWire([server], overwriteDirty: true);
   }
 }
 

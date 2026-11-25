@@ -1,5 +1,6 @@
-import 'package:drift/drift.dart';
 import 'dart:convert';
+
+import 'package:drift/drift.dart';
 
 import '../db/database.dart';
 import '../db/tables.dart';
@@ -59,14 +60,13 @@ class SongReplicationAdapter extends ReplicationAdapter {
       }
     }
 
-    final dirtyIds = overwriteDirty
-        ? const <String>{}
-        : await _dirtySongIds();
+    final dirtyIds = overwriteDirty ? const <String>{} : await _dirtySongIds();
 
     await _db.transaction(() async {
       if (tombstoneIds.isNotEmpty) {
-        await (_db.delete(_db.songs)..where((t) => t.id.isIn(tombstoneIds)))
-            .go();
+        await (_db.delete(
+          _db.songs,
+        )..where((t) => t.id.isIn(tombstoneIds))).go();
       }
       final toWrite = live
           .where((d) => !dirtyIds.contains(_str(d['id'])))
@@ -81,9 +81,9 @@ class SongReplicationAdapter extends ReplicationAdapter {
   }
 
   Future<Set<String>> _dirtySongIds() async {
-    final rows = await (_db.select(_db.songs)
-          ..where((t) => t.dirty.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.songs,
+    )..where((t) => t.dirty.equals(true))).get();
     return rows.map((r) => r.id).toSet();
   }
 
@@ -123,25 +123,27 @@ class SongReplicationAdapter extends ReplicationAdapter {
   }
 
   Map<String, dynamic> _songToWire(SongRow r) => {
-        'id': r.id,
-        'title': r.title,
-        'artist': r.artist,
-        'content': r.content,
-        'folderId': r.folderId,
-        'path': r.path,
-        'tags': r.tags,
-        'song_number': r.songNumber,
-        'createdAt': r.createdAt,
-        'updatedAt': r.updatedAt,
-        'isDeleted': r.isDeleted,
-        'purgeAt': r.purgeAt,
-        // Soft-delete uses isDeleted + purgeAt. _deleted is only for
-        // hard-delete tombstones (not used by this client yet).
-        '_deleted': false,
-      };
+    'id': r.id,
+    'title': r.title,
+    'artist': r.artist,
+    'content': r.content,
+    'folderId': r.folderId,
+    'path': r.path,
+    'tags': r.tags,
+    'song_number': r.songNumber,
+    'createdAt': r.createdAt,
+    'updatedAt': r.updatedAt,
+    'isDeleted': r.isDeleted,
+    'purgeAt': r.purgeAt,
+    // Soft-delete uses isDeleted + purgeAt. _deleted is only for
+    // hard-delete tombstones (not used by this client yet).
+    '_deleted': false,
+  };
 
   @override
-  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) async {
+  Future<void> applyServerConflicts(
+    List<Map<String, dynamic>> serverDocs,
+  ) async {
     for (final doc in serverDocs) {
       final id = _str(doc['id']);
       if (id.isEmpty) continue;
@@ -158,8 +160,9 @@ class SongReplicationAdapter extends ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final rows =
-        await (_db.select(_db.songs)..where((t) => t.id.isIn(list))).get();
+    final rows = await (_db.select(
+      _db.songs,
+    )..where((t) => t.id.isIn(list))).get();
     await _db.batch((b) {
       for (final r in rows) {
         b.update(
@@ -205,8 +208,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
 
     await _db.transaction(() async {
       if (tombstoneIds.isNotEmpty) {
-        await (_db.delete(_db.folders)..where((t) => t.id.isIn(tombstoneIds)))
-            .go();
+        await (_db.delete(
+          _db.folders,
+        )..where((t) => t.id.isIn(tombstoneIds))).go();
       }
       final toWrite = live
           .where((d) => !dirtyIds.contains(_str(d['id'])))
@@ -221,9 +225,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
   }
 
   Future<Set<String>> _dirtyFolderIds() async {
-    final rows = await (_db.select(_db.folders)
-          ..where((t) => t.dirty.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.folders,
+    )..where((t) => t.dirty.equals(true))).get();
     return rows.map((r) => r.id).toSet();
   }
 
@@ -259,17 +263,17 @@ class FolderReplicationAdapter extends ReplicationAdapter {
   }
 
   Map<String, dynamic> _folderToWire(FolderRow r) => {
-        'id': r.id,
-        'name': r.name,
-        'color': r.color,
-        'icon': r.icon,
-        'parentId': r.parentId,
-        'createdAt': r.createdAt,
-        'updatedAt': r.updatedAt,
-        'isDeleted': r.isDeleted,
-        'purgeAt': r.purgeAt,
-        '_deleted': false,
-      };
+    'id': r.id,
+    'name': r.name,
+    'color': r.color,
+    'icon': r.icon,
+    'parentId': r.parentId,
+    'createdAt': r.createdAt,
+    'updatedAt': r.updatedAt,
+    'isDeleted': r.isDeleted,
+    'purgeAt': r.purgeAt,
+    '_deleted': false,
+  };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
@@ -279,8 +283,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final rows =
-        await (_db.select(_db.folders)..where((t) => t.id.isIn(list))).get();
+    final rows = await (_db.select(
+      _db.folders,
+    )..where((t) => t.id.isIn(list))).get();
     await _db.batch((b) {
       for (final r in rows) {
         b.update(
@@ -297,9 +302,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> refreshLocalCounts() async {
-    final songs = await (_db.select(_db.songs)
-          ..where((t) => t.isDeleted.equals(false)))
-        .get();
+    final songs = await (_db.select(
+      _db.songs,
+    )..where((t) => t.isDeleted.equals(false))).get();
     final songsPerFolder = <String, int>{};
     for (final song in songs) {
       final folderId = song.folderId;
@@ -308,9 +313,9 @@ class FolderReplicationAdapter extends ReplicationAdapter {
       }
     }
 
-    final folders = await (_db.select(_db.folders)
-          ..where((t) => t.isDeleted.equals(false)))
-        .get();
+    final folders = await (_db.select(
+      _db.folders,
+    )..where((t) => t.isDeleted.equals(false))).get();
     final childFoldersPerFolder = <String, int>{};
     for (final folder in folders) {
       final parentId = folder.parentId;
@@ -324,7 +329,8 @@ class FolderReplicationAdapter extends ReplicationAdapter {
       for (final folder in folders) {
         final songCount = songsPerFolder[folder.id] ?? 0;
         final folderCount = childFoldersPerFolder[folder.id] ?? 0;
-        if (songCount == folder.songCount && folderCount == folder.folderCount) {
+        if (songCount == folder.songCount &&
+            folderCount == folder.folderCount) {
           continue;
         }
         b.update(
@@ -370,9 +376,9 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
 
     await _db.transaction(() async {
       if (tombstoneIds.isNotEmpty) {
-        await (_db.delete(_db.collections)
-              ..where((t) => t.id.isIn(tombstoneIds)))
-            .go();
+        await (_db.delete(
+          _db.collections,
+        )..where((t) => t.id.isIn(tombstoneIds))).go();
       }
       final toWrite = live
           .where((d) => !dirtyIds.contains(_str(d['id'])))
@@ -387,9 +393,9 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
   }
 
   Future<Set<String>> _dirtyCollectionIds() async {
-    final rows = await (_db.select(_db.collections)
-          ..where((t) => t.dirty.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.collections,
+    )..where((t) => t.dirty.equals(true))).get();
     return rows.map((r) => r.id).toSet();
   }
 
@@ -428,19 +434,19 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
   }
 
   Map<String, dynamic> _collectionToWire(CollectionRow r) => {
-        'id': r.id,
-        'name': r.name,
-        'description': r.description,
-        'color': r.color,
-        'icon': r.icon,
-        'image': r.image,
-        'songIds': r.songIds,
-        'createdAt': r.createdAt,
-        'updatedAt': r.updatedAt,
-        'isDeleted': r.isDeleted,
-        'purgeAt': r.purgeAt,
-        '_deleted': false,
-      };
+    'id': r.id,
+    'name': r.name,
+    'description': r.description,
+    'color': r.color,
+    'icon': r.icon,
+    'image': r.image,
+    'songIds': r.songIds,
+    'createdAt': r.createdAt,
+    'updatedAt': r.updatedAt,
+    'isDeleted': r.isDeleted,
+    'purgeAt': r.purgeAt,
+    '_deleted': false,
+  };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
@@ -450,9 +456,9 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final rows = await (_db.select(_db.collections)
-          ..where((t) => t.id.isIn(list)))
-        .get();
+    final rows = await (_db.select(
+      _db.collections,
+    )..where((t) => t.id.isIn(list))).get();
     await _db.batch((b) {
       for (final r in rows) {
         b.update(
@@ -469,12 +475,12 @@ class CollectionReplicationAdapter extends ReplicationAdapter {
 
   @override
   Future<void> refreshLocalCounts() async {
-    final collections = await (_db.select(_db.collections)
-          ..where((t) => t.isDeleted.equals(false)))
-        .get();
-    final songs = await (_db.select(_db.songs)
-          ..where((t) => t.isDeleted.equals(false)))
-        .get();
+    final collections = await (_db.select(
+      _db.collections,
+    )..where((t) => t.isDeleted.equals(false))).get();
+    final songs = await (_db.select(
+      _db.songs,
+    )..where((t) => t.isDeleted.equals(false))).get();
     final songIds = songs.map((s) => s.id).toSet();
 
     await _db.batch((b) {
@@ -521,8 +527,9 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
 
     await _db.transaction(() async {
       if (tombstoneIds.isNotEmpty) {
-        await (_db.delete(_db.services)..where((t) => t.id.isIn(tombstoneIds)))
-            .go();
+        await (_db.delete(
+          _db.services,
+        )..where((t) => t.id.isIn(tombstoneIds))).go();
       }
       final toWrite = live
           .where((d) => !dirtyIds.contains(_str(d['id'])))
@@ -537,9 +544,9 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
   }
 
   Future<Set<String>> _dirtyServiceIds() async {
-    final rows = await (_db.select(_db.services)
-          ..where((t) => t.dirty.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.services,
+    )..where((t) => t.dirty.equals(true))).get();
     return rows.map((r) => r.id).toSet();
   }
 
@@ -576,18 +583,18 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
   }
 
   Map<String, dynamic> _serviceToWire(ServiceRow r) => {
-        'id': r.id,
-        'name': r.name,
-        'date': r.date,
-        'notes': r.notes,
-        'elements': r.elements.map((e) => e.toJson()).toList(),
-        'archived': r.archived,
-        'createdAt': r.createdAt,
-        'updatedAt': r.updatedAt,
-        'isDeleted': r.isDeleted,
-        'purgeAt': r.purgeAt,
-        '_deleted': false,
-      };
+    'id': r.id,
+    'name': r.name,
+    'date': r.date,
+    'notes': r.notes,
+    'elements': r.elements.map((e) => e.toJson()).toList(),
+    'archived': r.archived,
+    'createdAt': r.createdAt,
+    'updatedAt': r.updatedAt,
+    'isDeleted': r.isDeleted,
+    'purgeAt': r.purgeAt,
+    '_deleted': false,
+  };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
@@ -597,8 +604,9 @@ class ServiceReplicationAdapter extends ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final rows =
-        await (_db.select(_db.services)..where((t) => t.id.isIn(list))).get();
+    final rows = await (_db.select(
+      _db.services,
+    )..where((t) => t.id.isIn(list))).get();
     await _db.batch((b) {
       for (final r in rows) {
         b.update(
@@ -644,9 +652,9 @@ class AgendaEventReplicationAdapter extends ReplicationAdapter {
 
     await _db.transaction(() async {
       if (tombstoneIds.isNotEmpty) {
-        await (_db.delete(_db.agendaEvents)
-              ..where((t) => t.id.isIn(tombstoneIds)))
-            .go();
+        await (_db.delete(
+          _db.agendaEvents,
+        )..where((t) => t.id.isIn(tombstoneIds))).go();
       }
       final toWrite = live
           .where((d) => !dirtyIds.contains(_str(d['id'])))
@@ -661,9 +669,9 @@ class AgendaEventReplicationAdapter extends ReplicationAdapter {
   }
 
   Future<Set<String>> _dirtyAgendaIds() async {
-    final rows = await (_db.select(_db.agendaEvents)
-          ..where((t) => t.dirty.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.agendaEvents,
+    )..where((t) => t.dirty.equals(true))).get();
     return rows.map((r) => r.id).toSet();
   }
 
@@ -706,23 +714,23 @@ class AgendaEventReplicationAdapter extends ReplicationAdapter {
   }
 
   Map<String, dynamic> _agendaToWire(AgendaEventRow r) => {
-        'id': r.id,
-        'date': r.date,
-        'title': r.title,
-        'type': r.type,
-        'time': r.time,
-        'durationMinutes': r.durationMinutes,
-        'location': r.location,
-        'notes': r.notes,
-        'reminder': r.reminder,
-        'linkedServiceId': r.linkedServiceId,
-        'responsibilities': r.responsibilities,
-        'createdAt': r.createdAt,
-        'updatedAt': r.updatedAt,
-        'isDeleted': r.isDeleted,
-        'purgeAt': r.purgeAt,
-        '_deleted': false,
-      };
+    'id': r.id,
+    'date': r.date,
+    'title': r.title,
+    'type': r.type,
+    'time': r.time,
+    'durationMinutes': r.durationMinutes,
+    'location': r.location,
+    'notes': r.notes,
+    'reminder': r.reminder,
+    'linkedServiceId': r.linkedServiceId,
+    'responsibilities': r.responsibilities,
+    'createdAt': r.createdAt,
+    'updatedAt': r.updatedAt,
+    'isDeleted': r.isDeleted,
+    'purgeAt': r.purgeAt,
+    '_deleted': false,
+  };
 
   @override
   Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
@@ -732,9 +740,9 @@ class AgendaEventReplicationAdapter extends ReplicationAdapter {
   Future<void> markPushed(Iterable<String> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return;
-    final rows = await (_db.select(_db.agendaEvents)
-          ..where((t) => t.id.isIn(list)))
-        .get();
+    final rows = await (_db.select(
+      _db.agendaEvents,
+    )..where((t) => t.id.isIn(list))).get();
     await _db.batch((b) {
       for (final r in rows) {
         b.update(

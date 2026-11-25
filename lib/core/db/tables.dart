@@ -44,16 +44,16 @@ class ServiceElement {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type,
-        'title': title,
-        if (content != null) 'content': content,
-        if (position != null) 'position': position,
-        if (songId != null) 'songId': songId,
-        if (notes != null) 'notes': notes,
-        if (passage != null) 'passage': passage,
-        if (duration != null) 'duration': duration,
-      };
+    'id': id,
+    'type': type,
+    'title': title,
+    if (content != null) 'content': content,
+    if (position != null) 'position': position,
+    if (songId != null) 'songId': songId,
+    if (notes != null) 'notes': notes,
+    if (passage != null) 'passage': passage,
+    if (duration != null) 'duration': duration,
+  };
 }
 
 /// Converts `List<String>` (song tags) to/from a JSON-encoded text column.
@@ -120,10 +120,10 @@ class Songs extends Table with SyncMetadata {
   TextColumn get content => text()();
   TextColumn get folderId => text().nullable()();
   TextColumn get path => text()();
-  TextColumn get tags =>
-      text().map(const StringListConverter()).withDefault(const Constant('[]'))();
-  IntColumn get songNumber =>
-      integer().nullable().named('song_number')();
+  TextColumn get tags => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  IntColumn get songNumber => integer().nullable().named('song_number')();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
   TextColumn get conflictDocument => text().nullable()();
@@ -133,8 +133,8 @@ class Songs extends Table with SyncMetadata {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {path},
-      ];
+    {path},
+  ];
 }
 
 @TableIndex(name: 'folders_parent_idx', columns: {#parentId})

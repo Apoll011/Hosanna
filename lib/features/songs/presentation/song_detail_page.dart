@@ -7,14 +7,15 @@ import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../core/permissions/permissions.dart';
+import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../export/presentation/song_pdf_share.dart';
-import '../../../core/sync/sync_controller.dart';
 import '../data/song_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_reader.dart';
 import 'song_toolbar.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SongDetailPage extends ConsumerStatefulWidget {
@@ -59,9 +60,8 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.commonError)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.commonError)));
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
@@ -75,10 +75,8 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final songAsync = ref.watch(songByIdProvider(widget.songId));
     final song = songAsync.value;
     final canPop = context.canPop();
-    final canEdit =
-        ref.watch(canPermissionProvider(AppPermission.songUpdate));
-    final canExport =
-        ref.watch(canPermissionProvider(AppPermission.exportPdf));
+    final canEdit = ref.watch(canPermissionProvider(AppPermission.songUpdate));
+    final canExport = ref.watch(canPermissionProvider(AppPermission.exportPdf));
 
     return Scaffold(
       appBar: AppBar(
@@ -139,7 +137,10 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                     Material(
                       color: Theme.of(context).colorScheme.tertiaryContainer,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -150,13 +151,19 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                               children: [
                                 TextButton(
                                   onPressed: () async {
-                                    await ref.read(songRepositoryProvider).keepLocalSongAfterConflict(song.id);
-                                    await ref.read(syncControllerProvider.notifier).syncAll();
+                                    await ref
+                                        .read(songRepositoryProvider)
+                                        .keepLocalSongAfterConflict(song.id);
+                                    await ref
+                                        .read(syncControllerProvider.notifier)
+                                        .syncAll();
                                   },
                                   child: Text(l10n.annotationKeepMine),
                                 ),
                                 FilledButton(
-                                  onPressed: () => ref.read(songRepositoryProvider).reloadSongAfterConflict(song.id),
+                                  onPressed: () => ref
+                                      .read(songRepositoryProvider)
+                                      .reloadSongAfterConflict(song.id),
                                   child: Text(l10n.annotationReload),
                                 ),
                               ],
