@@ -21,6 +21,7 @@ import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'test_pump.dart';
 
 /// Authenticated controller with an org, so the router lands on /songs.
@@ -132,9 +133,32 @@ void main() {
     }
   }
 
-  testWidgets(
-    'phone: drawer tool item navigates to its shell branch',
-    (tester) async {
+  testWidgets('phone drawer shows tuner for a supported instrument', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.byIcon(LucideIcons.menu));
+    await pumpFrames(tester, const Duration(seconds: 1));
+    expect(find.byIcon(LucideIcons.audioLines), findsOneWidget);
+    await disposeApp(tester);
+  });
+
+  testWidgets('phone drawer hides tuner for an unsupported instrument', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'setup.completed': true});
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('songDisplay.instrument', 'keyboard');
+    await pumpApp(tester);
+    await tester.tap(find.byIcon(LucideIcons.menu));
+    await pumpFrames(tester, const Duration(seconds: 1));
+    expect(find.byIcon(LucideIcons.audioLines), findsNothing);
+    await disposeApp(tester);
+  });
+
+  testWidgets('phone: drawer tool item navigates to its shell branch', (
+    tester,
+  ) async {
     await pumpApp(tester);
     expect(find.byType(SongLibraryPage), findsOneWidget);
 
@@ -153,9 +177,9 @@ void main() {
     await disposeApp(tester);
   });
 
-  testWidgets(
-    'tablet: sidebar tool item navigates to its shell branch',
-    (tester) async {
+  testWidgets('tablet: sidebar tool item navigates to its shell branch', (
+    tester,
+  ) async {
     await pumpApp(tester, logicalSize: const Size(1280, 800));
     expect(find.byType(SongLibraryPage), findsOneWidget);
 

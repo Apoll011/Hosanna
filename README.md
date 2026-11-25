@@ -16,7 +16,7 @@ Hosanna is not “just a lyrics viewer.” It is built for rehearsal and live wo
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | **Songbook**     | ChordPro library with folders, collections, favorites, and search by title, artist, lyrics, key, tags, or song number            |
 | **Live reading** | Per-musician transpose, capo, show/hide chords, font size, instrument chord diagrams (guitar / piano), keep-awake screen         |
-| **Stage tools**  | Built-in **metronome** (tap tempo, 30–240 BPM), **auto-scroll** with speed control, **circle of fifths**                         |
+| **Stage tools**  | Built-in **metronome** (tap tempo, 30–240 BPM), **auto-scroll** with speed control, **circle of fifths**, and an instrument-aware **tuner** |
 | **Services**     | Full service order (songs, notes, announcements, scripture cues), next-service view, personal + team notes                       |
 | **Export**       | Print-ready **song PDF** matching the reader (transpose, capo, chords, diagrams). Full **service / songbook print** is in Studio |
 | **Import**       | ChordPro files, plus **AI import** from photo, gallery, or PDF → reviewable ChordPro draft                                       |
@@ -60,6 +60,7 @@ Open ChordPro storage means you can migrate in or out; the library is not locked
 
 - Full-screen metronome with tempo markings and tap-to-set BPM
 - Circle of fifths for key relationships while preparing
+- Real-time tuner for guitar, bass, and ukulele preset tunings, alternate profiles, and custom string frequencies
 
 ### AI import
 
@@ -87,7 +88,7 @@ Open ChordPro storage means you can migrate in or out; the library is not locked
 ## Toolchain & targets
 
 - **Flutter** 3.47.2 (stable) / **Dart** 3.13.2
-- **Android** `minSdk 24`; **iOS** deployment target `15.0`
+- **Android** `minSdk 28`; **iOS** deployment target `15.0`
 
 ```bash
 flutter pub get

@@ -2167,6 +2167,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEdit => 'Edit';
 
   @override
+  String get settingsCustomTuning => 'Custom tuning';
+
+  @override
+  String get settingsCustomTuningDesc =>
+      'One string per line: note, frequency in Hz, and optional name.';
+
+  @override
+  String get settingsCustomTuningFormat => 'D2, 73.42, Low D';
+
+  @override
+  String get settingsCustomTuningInvalid =>
+      'Enter at least one valid line in the shown format.';
+
+  @override
+  String settingsCustomTuningStrings(int count) {
+    return '$count custom strings';
+  }
+
+  @override
+  String get settingsUseInstrumentTuning => 'Use preset tuning';
+
+  @override
   String get settingsCancel => 'Cancel';
 
   @override

@@ -1323,6 +1323,95 @@ class _SongTab extends ConsumerWidget {
   };
 }
 
+Future<List<CustomTuningString>?> _editCustomTuning(
+  BuildContext context,
+  List<CustomTuningString>? current,
+  AppLocalizations l10n,
+) async {
+  final controller = TextEditingController(
+    text:
+        current
+            ?.map(
+              (string) => [
+                string.note,
+                string.frequency.toString(),
+                if (string.name != null) string.name!,
+              ].join(','),
+            )
+            .join('\n') ??
+        '',
+  );
+  final formKey = GlobalKey<FormState>();
+  List<CustomTuningString> parsed = [];
+  final result = await showDialog<List<CustomTuningString>>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.settingsCustomTuning),
+      content: SizedBox(
+        width: 420,
+        child: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            minLines: 4,
+            maxLines: 10,
+            keyboardType: TextInputType.multiline,
+            decoration: InputDecoration(
+              hintText: l10n.settingsCustomTuningFormat,
+              helperText: l10n.settingsCustomTuningDesc,
+              border: const OutlineInputBorder(),
+            ),
+            validator: (_) {
+              parsed = _parseCustomTuning(controller.text);
+              return parsed.isEmpty ? l10n.settingsCustomTuningInvalid : null;
+            },
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(l10n.settingsCancel),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (formKey.currentState!.validate()) {
+              Navigator.of(dialogContext).pop(parsed);
+            }
+          },
+          child: Text(l10n.settingsSave),
+        ),
+      ],
+    ),
+  );
+  controller.dispose();
+  return result;
+}
+
+List<CustomTuningString> _parseCustomTuning(String input) {
+  final strings = <CustomTuningString>[];
+  for (final rawLine in input.split('\n')) {
+    final line = rawLine.trim();
+    if (line.isEmpty) continue;
+    final fields = line.split(',').map((field) => field.trim()).toList();
+    if (fields.length < 2 || fields.length > 3 || fields.first.isEmpty) {
+      return const [];
+    }
+    final frequency = double.tryParse(fields[1]);
+    if (frequency == null || !frequency.isFinite || frequency <= 0) {
+      return const [];
+    }
+    strings.add(
+      CustomTuningString(
+        note: fields.first,
+        frequency: frequency,
+        name: fields.length == 3 && fields[2].isNotEmpty ? fields[2] : null,
+      ),
+    );
+  }
+  return strings;
+}
+
 /// Settings that apply only to the currently selected instrument.
 class _InstrumentSettingsCard extends StatelessWidget {
   const _InstrumentSettingsCard({
@@ -1397,6 +1486,44 @@ class _InstrumentSettingsCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(LucideIcons.audioLines),
+              title: Text(l10n.settingsCustomTuning),
+              subtitle: Text(
+                preference.customTuning == null
+                    ? l10n.settingsCustomTuningDesc
+                    : l10n.settingsCustomTuningStrings(
+                        preference.customTuning!.length,
+                      ),
+              ),
+              trailing: Wrap(
+                spacing: 4,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      final tuning = await _editCustomTuning(
+                        context,
+                        preference.customTuning,
+                        l10n,
+                      );
+                      if (tuning != null) {
+                        onChanged(preference.copyWith(customTuning: tuning));
+                      }
+                    },
+                    child: Text(l10n.settingsEdit),
+                  ),
+                  if (preference.customTuning != null)
+                    IconButton(
+                      tooltip: l10n.settingsUseInstrumentTuning,
+                      onPressed: () => onChanged(
+                        preference.copyWith(clearCustomTuning: true),
+                      ),
+                      icon: const Icon(LucideIcons.rotateCcw, size: 18),
+                    ),
+                ],
+              ),
+            ),
             if (instrumentId == 'bass') ...[
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

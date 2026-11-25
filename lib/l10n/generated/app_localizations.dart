@@ -4054,6 +4054,42 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get settingsEdit;
 
+  /// No description provided for @settingsCustomTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinação personalizada'**
+  String get settingsCustomTuning;
+
+  /// No description provided for @settingsCustomTuningDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Uma corda por linha: nota, frequência em Hz e nome opcional.'**
+  String get settingsCustomTuningDesc;
+
+  /// No description provided for @settingsCustomTuningFormat.
+  ///
+  /// In pt, this message translates to:
+  /// **'D2, 73.42, Ré grave'**
+  String get settingsCustomTuningFormat;
+
+  /// No description provided for @settingsCustomTuningInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Introduza pelo menos uma linha válida no formato indicado.'**
+  String get settingsCustomTuningInvalid;
+
+  /// No description provided for @settingsCustomTuningStrings.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} cordas personalizadas'**
+  String settingsCustomTuningStrings(int count);
+
+  /// No description provided for @settingsUseInstrumentTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usar afinação predefinida'**
+  String get settingsUseInstrumentTuning;
+
   /// No description provided for @settingsCancel.
   ///
   /// In pt, this message translates to:

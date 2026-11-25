@@ -2173,6 +2173,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsEdit => 'Editar';
 
   @override
+  String get settingsCustomTuning => 'Afinação personalizada';
+
+  @override
+  String get settingsCustomTuningDesc =>
+      'Uma corda por linha: nota, frequência em Hz e nome opcional.';
+
+  @override
+  String get settingsCustomTuningFormat => 'D2, 73.42, Ré grave';
+
+  @override
+  String get settingsCustomTuningInvalid =>
+      'Introduza pelo menos uma linha válida no formato indicado.';
+
+  @override
+  String settingsCustomTuningStrings(int count) {
+    return '$count cordas personalizadas';
+  }
+
+  @override
+  String get settingsUseInstrumentTuning => 'Usar afinação predefinida';
+
+  @override
   String get settingsCancel => 'Cancelar';
 
   @override
