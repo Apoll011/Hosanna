@@ -124,8 +124,8 @@ class InstrumentPreference {
     'showCapoMarker': showCapoMarker,
     'showStringLabels': showStringLabels,
     if (tuningId != null) 'tuningId': tuningId,
-    if (customTuning != null)
-      'customTuning': [for (final string in customTuning) string.toJson()],
+    if (customTuning case final tuning?)
+      'customTuning': [for (final string in tuning) string.toJson()],
     'pianoVoicingStyle': pianoVoicingStyle.name,
     'pianoSlashSplitHands': pianoSlashSplitHands,
     'bassVoicingStyle': bassVoicingStyle.name,

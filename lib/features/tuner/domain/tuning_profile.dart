@@ -51,6 +51,14 @@ class TuningProfileResolver {
       }
     }
 
+    if (strings.isEmpty ||
+        strings.any((string) =>
+            !string.frequency.isFinite ||
+            string.frequency <= 0 ||
+            string.name.isEmpty)) {
+      return null;
+    }
+
     final profile = InstrumentProfile(
       name: base.name,
       minFreq: math.min(
