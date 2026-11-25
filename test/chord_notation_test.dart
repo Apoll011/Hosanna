@@ -6,6 +6,27 @@ import 'package:hosanna/features/songs/domain/chordpro/transpose.dart';
 import 'package:hosanna/features/songs/presentation/chordpro/song_display_settings.dart';
 
 void main() {
+  test('service song settings survive directive defaults loading later', () async {
+    SharedPreferences.setMockInitialValues({
+      'songDisplay.serviceTranspositions':
+          '{"service-1|song-1":{"t":3,"c":2,"v":"instrumental"}}',
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final controller = SongDisplaySettingsController(preferences);
+
+    controller.enterServiceSong(serviceId: 'service-1', songId: 'song-1');
+    expect(controller.state.transpose, 3);
+    expect(controller.state.capo, 2);
+    expect(controller.state.variantId, 'instrumental');
+
+    controller.seedDirectiveDefaults(keyShift: 0, capo: 0);
+
+    expect(controller.state.transpose, 3);
+    expect(controller.state.capo, 2);
+    expect(controller.state.variantId, 'instrumental');
+    controller.dispose();
+  });
+
   test('notation preference defaults to International and persists', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();

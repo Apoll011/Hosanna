@@ -47,6 +47,7 @@ class SongBodyRenderer extends ConsumerStatefulWidget {
 
 class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
   late ChordProDocument _document;
+  int _documentGeneration = 0;
 
   @override
   void initState() {
@@ -65,8 +66,9 @@ class _SongBodyRendererState extends ConsumerState<SongBodyRenderer> {
   void _parseAndPublish() {
     final doc = parseChordProDocument(widget.content);
     _document = doc;
+    final generation = ++_documentGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || generation != _documentGeneration) return;
       ref.read(songCurrentDocumentProvider.notifier).state = doc;
 
       final currentId = ref.read(songDisplaySettingsProvider).variantId;
