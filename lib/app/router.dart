@@ -22,6 +22,7 @@ import '../features/setup/presentation/setup_page.dart';
 import '../features/services/presentation/next_service_page.dart';
 import '../features/services/presentation/service_detail_page.dart';
 import '../features/services/presentation/service_list_page.dart';
+import '../features/tuner/presentation/tuner_page.dart';
 import '../features/settings/presentation/settings_page.dart';
 import '../features/songs/presentation/ai_import/ai_import_models.dart';
 import '../features/songs/presentation/ai_import/ai_import_nav.dart';
@@ -111,7 +112,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
       GoRoute(path: '/setup', builder: (_, _) => const SetupPage()),
-      // Branch order must match the kSongsBranch..kAgendaBranch constants in
+      // Branch order must match the constants in nav_branches.dart in
       // nav_branches.dart (used by the shell + sidebar).
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
@@ -185,10 +186,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/agenda',
-                builder: (_, _) => const AgendaPage(),
-              ),
+              GoRoute(path: '/agenda', builder: (_, _) => const AgendaPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/tuner', builder: (_, _) => const TunerPage()),
             ],
           ),
         ],
@@ -197,9 +200,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // stays available on the agenda list via ShellLeadingButton.
       GoRoute(
         path: '/collections/:id',
-        builder: (_, state) => CollectionDetailPage(
-          collectionId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            CollectionDetailPage(collectionId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/agenda/:id',

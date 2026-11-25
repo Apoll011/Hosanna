@@ -10,6 +10,7 @@ import 'design/tokens.dart';
 import 'hosanna_drawer.dart';
 import 'nav_branches.dart';
 import 'providers.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Breakpoint (logical pixels) at which the app switches to the tablet layout
@@ -20,7 +21,7 @@ const double kTabletBreakpoint = 750;
 ///
 /// The bar only ever links to Songs and Services. Folders and Collections
 /// keep it visible so musicians can jump back to those hubs; tools
-/// (metronome, circle of fifths), Settings, and Agenda hide it so it does not
+/// (metronome, circle of fifths, tuner), Settings, and Agenda hide it so it does not
 /// cover content without a selected destination. Those branches are reached
 /// through the drawer/sidebar instead.
 const Set<int> kBranchesWithoutNavBar = {
@@ -28,6 +29,7 @@ const Set<int> kBranchesWithoutNavBar = {
   kCircleOfFifthsBranch,
   kSettingsBranch,
   kAgendaBranch,
+  kTunerBranch,
 };
 
 /// Responsive shell: phones get a slide-in drawer + floating bottom bar;
@@ -112,51 +114,54 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
     final showNavBar =
         navAllowed && !kBranchesWithoutNavBar.contains(currentBranch);
     final auth = ref.watch(authControllerProvider);
-    final showSubWarning =
-        auth.isAuthenticated && !auth.hasActiveSubscription;
+    final showSubWarning = auth.isAuthenticated && !auth.hasActiveSubscription;
 
     Widget withOpticalInsets(Widget child) {
-      final overlay =
-          showNavBar ? shellBottomContentPadding(context) : 0.0;
+      final overlay = showNavBar ? shellBottomContentPadding(context) : 0.0;
       return ShellOpticalInsets(bottomNavOverlay: overlay, child: child);
     }
 
     Widget withSubscriptionBanner(Widget child) {
       if (!showSubWarning) return withOpticalInsets(child);
       final theme = Theme.of(context);
-      return withOpticalInsets(Column(
-        children: [
-          Material(
-            color: theme.colorScheme.errorContainer,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: Row(
-                  children: [
-                    Icon(
-                      LucideIcons.alertTriangle,
-                      size: 18,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        l10n.settingsSubscriptionInactiveDesc,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                          fontWeight: FontWeight.w600,
+      return withOpticalInsets(
+        Column(
+          children: [
+            Material(
+              color: theme.colorScheme.errorContainer,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.alertTriangle,
+                        size: 18,
+                        color: theme.colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.settingsSubscriptionInactiveDesc,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onErrorContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(child: child),
-        ],
-      ));
+            Expanded(child: child),
+          ],
+        ),
+      );
     }
 
     return LayoutBuilder(
@@ -297,10 +302,8 @@ class _FloatingNavBar extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final count = destinations.length;
-            final slotWidth =
-                count == 0 ? 0.0 : constraints.maxWidth / count;
-            final showIndicator =
-                selectedIndex >= 0 && selectedIndex < count;
+            final slotWidth = count == 0 ? 0.0 : constraints.maxWidth / count;
+            final showIndicator = selectedIndex >= 0 && selectedIndex < count;
 
             return Stack(
               children: [
@@ -315,8 +318,7 @@ class _FloatingNavBar extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: tokens.selectedNav,
-                        borderRadius:
-                            BorderRadius.circular(HosannaRadii.pill),
+                        borderRadius: BorderRadius.circular(HosannaRadii.pill),
                       ),
                     ),
                   ),

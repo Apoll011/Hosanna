@@ -3,17 +3,21 @@ import 'instrument.dart';
 
 /// One user-defined open string for a tuner profile.
 class CustomTuningString {
-  const CustomTuningString({required this.note, required this.frequency, this.name});
+  const CustomTuningString({
+    required this.note,
+    required this.frequency,
+    this.name,
+  });
 
   final String note;
   final double frequency;
   final String? name;
 
   Map<String, Object?> toJson() => {
-        'note': note,
-        'frequency': frequency,
-        if (name != null) 'name': name,
-      };
+    'note': note,
+    'frequency': frequency,
+    if (name != null) 'name': name,
+  };
 
   factory CustomTuningString.fromJson(Map<String, dynamic> json) {
     return CustomTuningString(
@@ -106,7 +110,9 @@ class InstrumentPreference {
       showCapoMarker: showCapoMarker ?? this.showCapoMarker,
       showStringLabels: showStringLabels ?? this.showStringLabels,
       tuningId: clearTuningId ? null : (tuningId ?? this.tuningId),
-      customTuning: clearCustomTuning ? null : (customTuning ?? this.customTuning),
+      customTuning: clearCustomTuning
+          ? null
+          : (customTuning ?? this.customTuning),
       pianoVoicingStyle: pianoVoicingStyle ?? this.pianoVoicingStyle,
       pianoSlashSplitHands: pianoSlashSplitHands ?? this.pianoSlashSplitHands,
       bassVoicingStyle: bassVoicingStyle ?? this.bassVoicingStyle,
@@ -114,16 +120,16 @@ class InstrumentPreference {
   }
 
   Map<String, Object?> toJson() => {
-        'showFingerNumbers': showFingerNumbers,
-        'showCapoMarker': showCapoMarker,
-        'showStringLabels': showStringLabels,
-        if (tuningId != null) 'tuningId': tuningId,
-        if (customTuning != null)
-          'customTuning': [for (final string in customTuning) string.toJson()],
-        'pianoVoicingStyle': pianoVoicingStyle.name,
-        'pianoSlashSplitHands': pianoSlashSplitHands,
-        'bassVoicingStyle': bassVoicingStyle.name,
-      };
+    'showFingerNumbers': showFingerNumbers,
+    'showCapoMarker': showCapoMarker,
+    'showStringLabels': showStringLabels,
+    if (tuningId != null) 'tuningId': tuningId,
+    if (customTuning != null)
+      'customTuning': [for (final string in customTuning) string.toJson()],
+    'pianoVoicingStyle': pianoVoicingStyle.name,
+    'pianoSlashSplitHands': pianoSlashSplitHands,
+    'bassVoicingStyle': bassVoicingStyle.name,
+  };
 
   factory InstrumentPreference.fromJson(Map<String, dynamic>? json) {
     if (json == null) return defaults;
@@ -173,8 +179,8 @@ class InstrumentPreferences {
   }
 
   Map<String, Object?> toJson() => {
-        for (final e in _byId.entries) e.key: e.value.toJson(),
-      };
+    for (final e in _byId.entries) e.key: e.value.toJson(),
+  };
 
   factory InstrumentPreferences.fromJson(Map<String, dynamic>? json) {
     if (json == null || json.isEmpty) return const InstrumentPreferences();
@@ -248,8 +254,7 @@ bool isRootlessFriendlyQuality(ChordQuality quality) {
     'maj7flat5' ||
     'six' ||
     'm6' ||
-    'six9' =>
-      true,
+    'six9' => true,
     _ => false,
   };
 }

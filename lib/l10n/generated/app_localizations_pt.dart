@@ -476,6 +476,74 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navMetronome => 'Metrónomo';
 
   @override
+  String get navTuner => 'Afinador';
+
+  @override
+  String get tunerUnavailable =>
+      'O afinador não está disponível para este instrumento.';
+
+  @override
+  String get tunerSearching => 'A procurar uma nota estável';
+
+  @override
+  String get tunerInTune => 'Afinado';
+
+  @override
+  String get tunerFlat => 'Grave';
+
+  @override
+  String get tunerSharp => 'Agudo';
+
+  @override
+  String get tunerListening => 'A ouvir';
+
+  @override
+  String get tunerStopped => 'Parado';
+
+  @override
+  String get tunerWaitForStablePitch =>
+      'Toque uma corda e mantenha a nota estável.';
+
+  @override
+  String get tunerTarget => 'Corda alvo';
+
+  @override
+  String get tunerDetectedFrequency => 'Frequência detetada';
+
+  @override
+  String get tunerNone => '—';
+
+  @override
+  String get tunerStart => 'Iniciar afinação';
+
+  @override
+  String get tunerStop => 'Parar';
+
+  @override
+  String get tunerMicrophoneTitle => 'Acesso ao microfone';
+
+  @override
+  String get tunerMicrophoneRationale =>
+      'O Hosanna precisa do microfone para detetar a afinação do instrumento.';
+
+  @override
+  String get tunerMicrophoneDenied =>
+      'O acesso ao microfone está bloqueado. Ative-o nas definições para usar o afinador.';
+
+  @override
+  String get tunerAllow => 'Permitir';
+
+  @override
+  String get tunerOpenSettings => 'Abrir definições';
+
+  @override
+  String get tunerNotNow => 'Agora não';
+
+  @override
+  String get tunerMicrophoneError =>
+      'Não foi possível iniciar o microfone. Pare e tente novamente.';
+
+  @override
   String get navAgenda => 'Agenda';
 
   @override

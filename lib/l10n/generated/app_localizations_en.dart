@@ -472,6 +472,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMetronome => 'Metronome';
 
   @override
+  String get navTuner => 'Tuner';
+
+  @override
+  String get tunerUnavailable =>
+      'The tuner is not available for this instrument.';
+
+  @override
+  String get tunerSearching => 'Searching for a stable pitch';
+
+  @override
+  String get tunerInTune => 'In tune';
+
+  @override
+  String get tunerFlat => 'Flat';
+
+  @override
+  String get tunerSharp => 'Sharp';
+
+  @override
+  String get tunerListening => 'Listening';
+
+  @override
+  String get tunerStopped => 'Stopped';
+
+  @override
+  String get tunerWaitForStablePitch => 'Play a string and hold a steady note.';
+
+  @override
+  String get tunerTarget => 'Target string';
+
+  @override
+  String get tunerDetectedFrequency => 'Detected frequency';
+
+  @override
+  String get tunerNone => '—';
+
+  @override
+  String get tunerStart => 'Start tuning';
+
+  @override
+  String get tunerStop => 'Stop';
+
+  @override
+  String get tunerMicrophoneTitle => 'Microphone access';
+
+  @override
+  String get tunerMicrophoneRationale =>
+      'Hosanna needs the microphone to detect your instrument\'s pitch.';
+
+  @override
+  String get tunerMicrophoneDenied =>
+      'Microphone access is blocked. Enable it in Settings to use the tuner.';
+
+  @override
+  String get tunerAllow => 'Allow';
+
+  @override
+  String get tunerOpenSettings => 'Open Settings';
+
+  @override
+  String get tunerNotNow => 'Not now';
+
+  @override
+  String get tunerMicrophoneError =>
+      'Could not start the microphone. Stop and try again.';
+
+  @override
   String get navAgenda => 'Agenda';
 
   @override

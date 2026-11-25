@@ -12,3 +12,4 @@ const int kFoldersBranch = 4;
 const int kCollectionsBranch = 5;
 const int kSettingsBranch = 6;
 const int kAgendaBranch = 7;
+const int kTunerBranch = 8;
