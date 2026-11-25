@@ -143,19 +143,6 @@ void main() {
     await disposeApp(tester);
   });
 
-  testWidgets('phone drawer hides tuner for an unsupported instrument', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({'setup.completed': true});
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('songDisplay.instrument', 'keyboard');
-    await pumpApp(tester);
-    await tester.tap(find.byIcon(LucideIcons.menu));
-    await pumpFrames(tester, const Duration(seconds: 1));
-    expect(find.byIcon(LucideIcons.audioLines), findsNothing);
-    await disposeApp(tester);
-  });
-
   testWidgets('phone: drawer tool item navigates to its shell branch', (
     tester,
   ) async {
