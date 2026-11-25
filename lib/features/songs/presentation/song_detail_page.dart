@@ -10,6 +10,7 @@ import '../../../core/permissions/permissions.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../export/presentation/song_pdf_share.dart';
+import '../../../core/sync/sync_controller.dart';
 import '../data/song_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_reader.dart';
@@ -132,9 +133,45 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                 title: l10n.songsNotFound,
                 description: l10n.songsNotFoundDesc,
               )
-            : SongReader(
-                key: ValueKey(widget.songId),
-                content: song.content,
+            : Column(
+                children: [
+                  if (song.conflictDocument != null)
+                    Material(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(l10n.songConflictMessage),
+                            Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 8,
+                              children: [
+                                TextButton(
+                                  onPressed: () async {
+                                    await ref.read(songRepositoryProvider).keepLocalSongAfterConflict(song.id);
+                                    await ref.read(syncControllerProvider.notifier).syncAll();
+                                  },
+                                  child: Text(l10n.annotationKeepMine),
+                                ),
+                                FilledButton(
+                                  onPressed: () => ref.read(songRepositoryProvider).reloadSongAfterConflict(song.id),
+                                  child: Text(l10n.annotationReload),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: SongReader(
+                      key: ValueKey(widget.songId),
+                      content: song.content,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

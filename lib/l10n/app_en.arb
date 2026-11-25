@@ -849,6 +849,7 @@
   "annotationColorPicker": "Custom Color",
   "annotationClose": "Done",
   "annotationRemoteChanges": "New changes from another device",
+  "songConflictMessage": "This song changed on another device. Choose which version to use.",
   "annotationKeepMine": "Keep mine",
   "annotationReload": "Reload",
   "songVariant": "Version",

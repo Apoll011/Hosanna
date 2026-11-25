@@ -835,6 +835,7 @@
   "annotationColorPicker": "Color Personalizado",
   "annotationClose": "Listo",
   "annotationRemoteChanges": "Nuevos cambios de otro dispositivo",
+  "songConflictMessage": "Esta canción cambió en otro dispositivo. Elige qué versión quieres usar.",
   "annotationKeepMine": "Mantener los míos",
   "annotationReload": "Recargar",
   "songVariant": "Versión",

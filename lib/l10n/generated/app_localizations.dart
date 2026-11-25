@@ -4372,6 +4372,12 @@ abstract class AppLocalizations {
   /// **'Novas alterações de outro dispositivo'**
   String get annotationRemoteChanges;
 
+  /// No description provided for @songConflictMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta música foi alterada noutro dispositivo. Escolha que versão pretende usar.'**
+  String get songConflictMessage;
+
   /// No description provided for @annotationKeepMine.
   ///
   /// In pt, this message translates to:

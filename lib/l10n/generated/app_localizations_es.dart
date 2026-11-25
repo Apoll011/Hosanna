@@ -2345,6 +2345,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get annotationRemoteChanges => 'Nuevos cambios de otro dispositivo';
 
   @override
+  String get songConflictMessage =>
+      'Esta canción cambió en otro dispositivo. Elige qué versión quieres usar.';
+
+  @override
   String get annotationKeepMine => 'Mantener los míos';
 
   @override

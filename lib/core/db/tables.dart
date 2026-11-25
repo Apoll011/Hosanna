@@ -126,6 +126,7 @@ class Songs extends Table with SyncMetadata {
       integer().nullable().named('song_number')();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
+  TextColumn get conflictDocument => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'dart:convert';
 
 import '../db/database.dart';
 import '../db/tables.dart';
@@ -103,6 +104,7 @@ class SongReplicationAdapter extends ReplicationAdapter {
       dirty: const Value(false),
       purgeAt: Value(_nullableStr(d['purgeAt'])),
       serverUpdatedAt: Value(updatedAt),
+      conflictDocument: const Value(null),
     );
   }
 
@@ -139,8 +141,18 @@ class SongReplicationAdapter extends ReplicationAdapter {
       };
 
   @override
-  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) =>
-      upsertFromWire(serverDocs, overwriteDirty: true);
+  Future<void> applyServerConflicts(List<Map<String, dynamic>> serverDocs) async {
+    for (final doc in serverDocs) {
+      final id = _str(doc['id']);
+      if (id.isEmpty) continue;
+      await (_db.update(_db.songs)..where((t) => t.id.equals(id))).write(
+        SongsCompanion(
+          conflictDocument: Value(jsonEncode(doc)),
+          serverUpdatedAt: Value(_str(doc['updatedAt'])),
+        ),
+      );
+    }
+  }
 
   @override
   Future<void> markPushed(Iterable<String> ids) async {

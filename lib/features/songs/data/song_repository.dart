@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/db/database.dart';
+import '../../../core/sync/adapters.dart';
 import '../domain/chordpro_content.dart';
 
 class SongRepository {
@@ -115,6 +118,26 @@ class SongRepository {
       throw StateError('Failed to read song after update: $id');
     }
     return row;
+  }
+
+  Future<void> keepLocalSongAfterConflict(String id) async {
+    final song = await getSong(id);
+    if (song?.conflictDocument == null) return;
+    final server = jsonDecode(song!.conflictDocument!) as Map<String, dynamic>;
+    await (_db.update(_db.songs)..where((t) => t.id.equals(id))).write(
+      SongsCompanion(
+        serverUpdatedAt: Value(server['updatedAt'] as String?),
+        conflictDocument: const Value(null),
+        dirty: const Value(true),
+      ),
+    );
+  }
+
+  Future<void> reloadSongAfterConflict(String id) async {
+    final song = await getSong(id);
+    if (song?.conflictDocument == null) return;
+    final server = jsonDecode(song!.conflictDocument!) as Map<String, dynamic>;
+    await SongReplicationAdapter(_db).upsertFromWire([server], overwriteDirty: true);
   }
 }
 
