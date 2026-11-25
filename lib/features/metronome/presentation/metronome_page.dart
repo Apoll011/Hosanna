@@ -23,9 +23,11 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
   static const int _minBpm = 30;
   static const int _maxBpm = 240;
   static const List<int> _timeSignatures = [2, 3, 4, 5, 6, 7, 9, 12];
+  static const List<int> _timeSignatureDenominators = [4, 8, 16];
 
   int _bpm = 100;
   int _beatsPerBar = 4;
+  int _timeSignatureDenominator = 4;
   int _currentBeat = 0;
   bool _isPlaying = false;
   bool _accentFirstBeat = true;
@@ -37,7 +39,9 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
   final List<DateTime> _tapTimes = [];
   final MetronomeClickPlayer _clickPlayer = MetronomeClickPlayer();
 
-  Duration get _beatDuration => Duration(milliseconds: (60000 / _bpm).round());
+  Duration get _beatDuration => Duration(
+    milliseconds: (60000 * 4 / (_bpm * _timeSignatureDenominator)).round(),
+  );
 
   @override
   void initState() {
@@ -433,7 +437,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
           children: _timeSignatures.map((n) {
             final selected = n == _beatsPerBar;
             return ChoiceChip(
-              label: Text('$n/4'),
+              label: Text('$n/$_timeSignatureDenominator'),
               selected: selected,
               showCheckmark: false,
               selectedColor: colors.primary,
@@ -450,7 +454,16 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
                     : colors.outline.withValues(alpha: 0.22),
               ),
               onSelected: (_) => setState(() {
-                _beatsPerBar = n;
+                if (selected) {
+                  final index = _timeSignatureDenominators.indexOf(
+                    _timeSignatureDenominator,
+                  );
+                  _timeSignatureDenominator = _timeSignatureDenominators[
+                    (index + 1) % _timeSignatureDenominators.length
+                  ];
+                } else {
+                  _beatsPerBar = n;
+                }
                 if (!_isPlaying) _currentBeat = 0;
               }),
             );

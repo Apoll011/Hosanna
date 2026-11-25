@@ -98,6 +98,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   DateTime? _nextMetronomeBeat;
   int _metronomeTempo = 100;
   int _metronomeBeatsPerBar = 4;
+  int _metronomeDenominator = 4;
   String _metronomeTime = '4/4';
   bool _metronomeInitialized = false;
 
@@ -763,6 +764,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       _metronomeInitialized = true;
       _metronomeTempo = tempo;
       _metronomeBeatsPerBar = timeSignature.$1;
+      _metronomeDenominator = timeSignature.$2;
       _metronomeTime = '${timeSignature.$1}/${timeSignature.$2}';
       unawaited(_metronomePlayer.init());
     }
@@ -1110,7 +1112,8 @@ class _SongReaderState extends ConsumerState<SongReader>
       _metronomePulseController.forward(from: 0);
       unawaited(_metronomePlayer.click(accent: nextBeat == 0));
       final interval = Duration(
-        milliseconds: (60000 / _metronomeTempo).round(),
+        milliseconds: (60000 * 4 / (_metronomeTempo * _metronomeDenominator))
+            .round(),
       );
       _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
       while (_nextMetronomeBeat!.isBefore(DateTime.now())) {
