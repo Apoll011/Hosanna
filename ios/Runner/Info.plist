@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Hosanna uses the camera to photograph sheet music for Logos AI import.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Hosanna uses the microphone to tune your instrument.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Hosanna accesses your photo library to import sheet music with Logos AI.</string>
 	<key>UIApplicationSceneManifest</key>

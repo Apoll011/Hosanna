@@ -53,6 +53,7 @@ dependencies:
   flutter_local_notifications: ^23.0.1
   posthog_flutter: ^5.1.0
   lucide_icons_flutter: ^4.0.3
+  pitch_kit: ^0.0.3
 
 dev_dependencies:
   flutter_test:
