@@ -52,10 +52,12 @@ class TuningProfileResolver {
     }
 
     if (strings.isEmpty ||
-        strings.any((string) =>
-            !string.frequency.isFinite ||
-            string.frequency <= 0 ||
-            string.name.isEmpty)) {
+        strings.any(
+          (string) =>
+              !string.frequency.isFinite ||
+              string.frequency <= 0 ||
+              string.name.isEmpty,
+        )) {
       return null;
     }
 

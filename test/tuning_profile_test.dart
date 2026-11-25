@@ -57,6 +57,19 @@ void main() {
       expect(preference.customTuning, isNull);
     });
 
+    test('custom tuning survives preference JSON round trip', () {
+      const original = InstrumentPreference(
+        customTuning: [
+          CustomTuningString(note: 'D2', name: 'Low D', frequency: 73.42),
+        ],
+      );
+      final restored = InstrumentPreference.fromJson(original.toJson());
+
+      expect(restored.customTuning!.single.note, 'D2');
+      expect(restored.customTuning!.single.name, 'Low D');
+      expect(restored.customTuning!.single.frequency, 73.42);
+    });
+
     test('unknown instruments and invalid custom tunings are unavailable', () {
       expect(
         TuningProfileResolver.resolve(

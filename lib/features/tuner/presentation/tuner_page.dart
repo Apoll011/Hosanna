@@ -21,6 +21,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
   bool _listening = false;
   bool _uncertain = true;
   Object? _error;
+  String? _detectedNote;
   double? _frequency;
   MatchedString? _match;
 
@@ -30,6 +31,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
       _listening = true;
       _uncertain = true;
       _frequency = null;
+      _detectedNote = null;
       _match = null;
       _error = null;
     });
@@ -41,6 +43,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
       _listening = false;
       _uncertain = true;
       _frequency = null;
+      _detectedNote = null;
       _match = null;
       _error = null;
     });
@@ -57,10 +60,14 @@ class _TunerPageState extends ConsumerState<TunerPage> {
     setState(() {
       if (stableFrequency == null) {
         _uncertain = true;
+        _frequency = null;
+        _detectedNote = null;
+        _match = null;
         return;
       }
       _uncertain = false;
       _frequency = stableFrequency;
+      _detectedNote = result.name;
       _match = matchString(stableFrequency, profile.strings);
     });
   }
@@ -74,6 +81,9 @@ class _TunerPageState extends ConsumerState<TunerPage> {
       preference: display.currentInstrumentPreference,
     );
     final onTunerBranch = ref.watch(shellBranchIndexProvider) == kTunerBranch;
+    final profileKey = profile?.strings
+        .map((string) => '${string.name}:${string.frequency}')
+        .join('|');
     final theme = Theme.of(context);
     final isActive = _listening && onTunerBranch && profile != null;
     final match = _match;
@@ -107,7 +117,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                         children: [
                           if (isActive)
                             PitchKitListener(
-                              key: ValueKey(profile.profile),
+                              key: ValueKey(profileKey),
                               profile: profile.profile,
                               titleText: l10n.tunerMicrophoneTitle,
                               rationaleText: l10n.tunerMicrophoneRationale,
@@ -116,10 +126,14 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                               openSettingsText: l10n.tunerOpenSettings,
                               dismissText: l10n.tunerNotNow,
                               onResult: (result) => _onResult(result, profile),
-                              onError: (error) => setState(() {
-                                _error = error;
-                                _uncertain = true;
-                              }),
+                              onError: (error) {
+                                if (mounted) {
+                                  setState(() {
+                                    _error = error;
+                                    _uncertain = true;
+                                  });
+                                }
+                              },
                               child: const SizedBox.shrink(),
                             ),
                           Card(
@@ -142,7 +156,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    cents == null ? '—' : match!.string.name,
+                                    cents == null ? '—' : _detectedNote!,
                                     style: theme.textTheme.displayLarge
                                         ?.copyWith(
                                           color: statusColor,
@@ -181,7 +195,9 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                                   leading: const Icon(Icons.music_note),
                                   title: Text(l10n.tunerTarget),
                                   subtitle: Text(
-                                    match?.string.name ?? l10n.tunerNone,
+                                    match == null
+                                        ? l10n.tunerNone
+                                        : '${match.string.name} · ${match.string.frequency.toStringAsFixed(2)} Hz',
                                   ),
                                   trailing: match == null
                                       ? null
