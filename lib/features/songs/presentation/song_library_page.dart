@@ -73,6 +73,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     final foldersAsync = ref.watch(foldersStreamProvider);
     final collectionsAsync = ref.watch(collectionsStreamProvider);
     final library = ref.watch(libraryControllerProvider);
+    final isSyncing = ref.watch(syncControllerProvider).isSyncing;
     final libraryController = ref.read(libraryControllerProvider.notifier);
     // Watch so add / AI affordances appear once role + AI settings resolve.
     final canCreateSong =
@@ -161,6 +162,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
                     library: library,
                     canCreateSong: canCreateSong,
                     canImportWithAi: canImportWithAi,
+                    isSyncing: isSyncing,
                     onToggleFavorite: libraryController.toggleFavorite,
                     onOpenSong: (id) {
                       libraryController.markPlayed(id);
@@ -440,6 +442,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     required LibraryState library,
     required bool canCreateSong,
     required bool canImportWithAi,
+    required bool isSyncing,
     required ValueChanged<String> onToggleFavorite,
     required ValueChanged<String> onOpenSong,
   }) {
@@ -450,6 +453,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
         library,
         canCreateSong: canCreateSong,
         canImportWithAi: canImportWithAi,
+        isSyncing: isSyncing,
       );
     }
     final theme = Theme.of(context);
@@ -530,6 +534,7 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
     LibraryState library, {
     required bool canCreateSong,
     required bool canImportWithAi,
+    required bool isSyncing,
   }) {
     final hasFilters = !_settings.isDefault || _search.text.trim().isNotEmpty;
 
@@ -546,6 +551,18 @@ class _SongLibraryPageState extends ConsumerState<SongLibraryPage> {
           if (_searchOpen) setState(() => _searchOpen = false);
         },
         scrollable: true,
+      );
+    }
+
+    if (library.section == LibrarySection.all && isSyncing) {
+      return LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+        ),
       );
     }
 
