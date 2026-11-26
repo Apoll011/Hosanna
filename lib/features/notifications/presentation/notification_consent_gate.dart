@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../setup/data/setup_controller.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Asks the user — once, after first-run setup is complete — whether the
 /// server may send notifications to this device, then records the answer and
@@ -129,7 +130,7 @@ class _NotificationConsentGateState
                         height: 140,
                         fit: BoxFit.contain,
                         errorBuilder: (_, _, _) => Icon(
-                          Icons.notifications_active_outlined,
+                          LucideIcons.bellRing,
                           color: scheme.primary,
                           size: 48,
                         ),

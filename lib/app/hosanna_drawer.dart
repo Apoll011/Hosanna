@@ -8,12 +8,16 @@ import '../features/folders/data/folder_repository.dart';
 import '../features/folders/domain/folder_explorer_controller.dart';
 import '../features/songs/data/song_repository.dart';
 import '../features/songs/domain/library_controller.dart';
+import '../features/songs/presentation/chordpro/song_display_settings.dart';
+import '../features/tuner/domain/tuning_profile.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../shared/widgets/hosanna_logo.dart';
 import '../shared/widgets/hosanna_surface.dart';
 import '../shared/widgets/sync_status_banner.dart';
 import 'design/tokens.dart';
 import 'nav_branches.dart';
+
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Duration for every collapse/expand transition in the nav content. Kept in
 /// sync with the sidebar's own width animation (see shell.dart) so the drawer
@@ -78,6 +82,11 @@ class HosannaNavContent extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final library = ref.watch(libraryControllerProvider);
     final libraryController = ref.read(libraryControllerProvider.notifier);
+    final displaySettings = ref.watch(songDisplaySettingsProvider);
+    final tunerProfile = TuningProfileResolver.resolve(
+      instrumentId: displaySettings.instrument,
+      preference: displaySettings.currentInstrumentPreference,
+    );
     final songs = ref.watch(songsStreamProvider).valueOrNull ?? const [];
     final folders = ref.watch(foldersStreamProvider).valueOrNull ?? const [];
     final collections =
@@ -86,8 +95,7 @@ class HosannaNavContent extends ConsumerWidget {
     // recents from a previous church (or not-yet-pulled rows) never inflate
     // the badge.
     final songIds = songs.map((s) => s.id).toSet();
-    final favoriteCount =
-        library.favoriteIds.where(songIds.contains).length;
+    final favoriteCount = library.favoriteIds.where(songIds.contains).length;
     final recentCount = library.recentIds.where(songIds.contains).length;
 
     final user = auth.session?.user;
@@ -217,34 +225,37 @@ class HosannaNavContent extends ConsumerWidget {
                     child: HosannaSectionLabel(l10n.navLibrarySection),
                   ),
                   _NavItem(
-                    icon: Icons.music_note_outlined,
+                    icon: LucideIcons.music,
                     label: l10n.navAllSongs,
                     count: songs.length,
-                    selected: currentBranch == kSongsBranch &&
+                    selected:
+                        currentBranch == kSongsBranch &&
                         library.section == LibrarySection.all,
                     collapsed: collapsed,
                     onTap: () => selectSection(LibrarySection.all),
                   ),
                   _NavItem(
-                    icon: Icons.favorite_outline,
+                    icon: LucideIcons.heart,
                     label: l10n.navFavorites,
                     count: favoriteCount,
-                    selected: currentBranch == kSongsBranch &&
+                    selected:
+                        currentBranch == kSongsBranch &&
                         library.section == LibrarySection.favorites,
                     collapsed: collapsed,
                     onTap: () => selectSection(LibrarySection.favorites),
                   ),
                   _NavItem(
-                    icon: Icons.history,
+                    icon: LucideIcons.history,
                     label: l10n.navRecents,
                     count: recentCount,
-                    selected: currentBranch == kSongsBranch &&
+                    selected:
+                        currentBranch == kSongsBranch &&
                         library.section == LibrarySection.recent,
                     collapsed: collapsed,
                     onTap: () => selectSection(LibrarySection.recent),
                   ),
                   _NavItem(
-                    icon: Icons.folder_outlined,
+                    icon: LucideIcons.folder,
                     label: l10n.navFolders,
                     count: folders.length,
                     selected: currentBranch == kFoldersBranch,
@@ -255,7 +266,7 @@ class HosannaNavContent extends ConsumerWidget {
                     },
                   ),
                   _NavItem(
-                    icon: Icons.collections_bookmark_outlined,
+                    icon: LucideIcons.library,
                     label: l10n.navCollections,
                     count: collections.length,
                     selected: currentBranch == kCollectionsBranch,
@@ -274,21 +285,29 @@ class HosannaNavContent extends ConsumerWidget {
                     ),
                   ),
                   _NavItem(
-                    icon: Icons.speed,
+                    icon: LucideIcons.metronome,
                     label: l10n.navMetronome,
                     selected: currentBranch == kMetronomeBranch,
                     collapsed: collapsed,
                     onTap: () => onNavigate(kMetronomeBranch),
                   ),
                   _NavItem(
-                    icon: Icons.donut_large,
+                    icon: LucideIcons.disc,
                     label: l10n.navCircleOfFifths,
                     selected: currentBranch == kCircleOfFifthsBranch,
                     collapsed: collapsed,
                     onTap: () => onNavigate(kCircleOfFifthsBranch),
                   ),
+                  if (tunerProfile != null)
+                    _NavItem(
+                      icon: LucideIcons.audioLines,
+                      label: l10n.navTuner,
+                      selected: currentBranch == kTunerBranch,
+                      collapsed: collapsed,
+                      onTap: () => onNavigate(kTunerBranch),
+                    ),
                   _NavItem(
-                    icon: Icons.event_outlined,
+                    icon: LucideIcons.calendar,
                     label: l10n.navAgenda,
                     selected: currentBranch == kAgendaBranch,
                     collapsed: collapsed,
@@ -337,20 +356,19 @@ class HosannaNavContent extends ConsumerWidget {
                         children: [
                           CircleAvatar(
                             radius: 18,
-                            backgroundColor:
-                                theme.colorScheme.primaryContainer,
+                            backgroundColor: theme.colorScheme.primaryContainer,
                             foregroundImage:
                                 imageUrl != null && imageUrl.isNotEmpty
-                                    ? CachedNetworkImageProvider(imageUrl)
-                                    : null,
+                                ? CachedNetworkImageProvider(imageUrl)
+                                : null,
                             onForegroundImageError:
                                 imageUrl != null && imageUrl.isNotEmpty
-                                    ? (exception, stackTrace) {
-                                        debugPrint(
-                                          'Failed to load avatar: $exception',
-                                        );
-                                      }
-                                    : null,
+                                ? (exception, stackTrace) {
+                                    debugPrint(
+                                      'Failed to load avatar: $exception',
+                                    );
+                                  }
+                                : null,
                             child: Text(
                               _initials(user.name),
                               style: theme.textTheme.labelLarge?.copyWith(
@@ -371,27 +389,28 @@ class HosannaNavContent extends ConsumerWidget {
                                       user.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                     Text(
                                       user.email,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme
-                                            .colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                             Icon(
-                              Icons.settings_outlined,
+                              LucideIcons.settings,
                               size: 20,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -466,8 +485,9 @@ class _NavItem extends StatelessWidget {
     final fg = selected
         ? tokens.selectedNavForeground
         : theme.colorScheme.onSurface;
-    final iconColor =
-        selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant;
+    final iconColor = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -494,8 +514,7 @@ class _NavItem extends StatelessWidget {
                   mainAxisAlignment: collapsed
                       ? MainAxisAlignment.center
                       : MainAxisAlignment.start,
-                  mainAxisSize:
-                      collapsed ? MainAxisSize.min : MainAxisSize.max,
+                  mainAxisSize: collapsed ? MainAxisSize.min : MainAxisSize.max,
                   children: [
                     TweenAnimationBuilder<double>(
                       tween: Tween<double>(end: collapsed ? 22 : 20),
@@ -514,8 +533,9 @@ class _NavItem extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight:
-                                  selected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: fg,
                             ),
                           ),
@@ -535,8 +555,9 @@ class _NavItem extends StatelessWidget {
                             color: selected
                                 ? theme.colorScheme.primary
                                 : tokens.subtleFill,
-                            borderRadius:
-                                BorderRadius.circular(HosannaRadii.xs),
+                            borderRadius: BorderRadius.circular(
+                              HosannaRadii.xs,
+                            ),
                           ),
                           child: Text(
                             '$count',

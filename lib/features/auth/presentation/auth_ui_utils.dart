@@ -7,6 +7,7 @@ import '../../../core/auth/social_auth_exception.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'turnstile_captcha_page.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Maps an auth error to a user-facing string, using server messages when
 /// available and localized fallbacks otherwise.
@@ -70,7 +71,7 @@ class AuthErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.error_outline_rounded,
+            LucideIcons.alertCircle,
             color: theme.colorScheme.onErrorContainer,
           ),
           const SizedBox(width: 10),

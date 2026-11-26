@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import 'line_renderers.dart';
 import 'render_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// One song section (verse, chorus, bridge, tab, grid, comment, new song).
 class SectionView extends StatelessWidget {
@@ -57,7 +58,7 @@ class _NewSongDivider extends StatelessWidget {
           Expanded(child: Divider(color: color)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Icon(Icons.music_note, color: color),
+            child: Icon(LucideIcons.music, color: color),
           ),
           Expanded(child: Divider(color: color)),
         ],
@@ -91,7 +92,7 @@ class _GridSection extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.grid_view,
+                LucideIcons.layoutGrid,
                 size: 16,
                 color: theme.colorScheme.onSurfaceVariant,
               ),

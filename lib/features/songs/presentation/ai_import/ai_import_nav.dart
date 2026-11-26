@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Shared navigation helpers for the Logos AI import flow.
 ///
@@ -39,7 +40,7 @@ Widget aiImportBackButton(
   bool enabled = true,
 }) {
   return IconButton(
-    icon: const Icon(Icons.arrow_back_rounded),
+    icon: const Icon(LucideIcons.arrowLeft),
     tooltip: MaterialLocalizations.of(context).backButtonTooltip,
     onPressed: !enabled
         ? null

@@ -15,6 +15,7 @@ import '../../../shared/widgets/shell_insets.dart';
 import '../../folders/domain/folder_customization.dart';
 import '../data/collection_repository.dart';
 import 'collection_visuals.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Grid hub for org collections — Studio-inspired, mobile-compact.
 class CollectionsPage extends ConsumerStatefulWidget {
@@ -74,7 +75,7 @@ class _CollectionsPageState extends ConsumerState<CollectionsPage> {
             : Text(l10n.navCollections),
         actions: [
           IconButton(
-            icon: Icon(_searchOpen ? Icons.close : Icons.search),
+            icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search),
             tooltip: l10n.commonSearch,
             onPressed: () {
               setState(() {
@@ -94,7 +95,7 @@ class _CollectionsPageState extends ConsumerState<CollectionsPage> {
                       title: l10n.songsNoResults,
                       description: l10n.foldersNoResultsDesc,
                       primaryLabel: l10n.songsClearSearch,
-                      primaryIcon: Icons.search_off_outlined,
+                      primaryIcon: LucideIcons.searchX,
                       onPrimary: _clearSearch,
                       scrollable: true,
                     )

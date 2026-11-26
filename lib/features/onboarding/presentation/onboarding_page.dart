@@ -8,6 +8,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../auth/presentation/auth_scaffold.dart';
 import '../../setup/data/setup_controller.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Shown when a user is signed in but has no organization: lists the pending
 /// invitations and lets them accept/reject. Deliberately has **no** create-org
@@ -108,13 +109,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       title: title,
       subtitle: subtitle,
       heroAsset: _error != null ? null : HosannaIllustrations.onboardingInvite,
-      heroFallbackIcon: Icons.groups_rounded,
+      heroFallbackIcon: LucideIcons.users,
       showLogo: _error != null,
       showBack: false,
       maxWidth: 480,
       footer: TextButton.icon(
         onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
-        icon: const Icon(Icons.logout_rounded),
+        icon: const Icon(LucideIcons.logOut),
         label: Text(l10n.onboardingSignOut),
       ),
       child: Column(
@@ -154,7 +155,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           else if (empty)
             FilledButton.icon(
               onPressed: _load,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(LucideIcons.refreshCw),
               label: Text(l10n.commonRetry),
             )
           else if (hasInvites) ...[
@@ -224,7 +225,7 @@ class _InvitationCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.church_rounded,
+                      LucideIcons.church,
                       color: scheme.primary,
                       size: 22,
                     ),

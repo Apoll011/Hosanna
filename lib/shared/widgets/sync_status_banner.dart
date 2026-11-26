@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/sync/sync_controller.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Compact sync status indicator: idle / syncing / synced / error / offline,
 /// plus the last-synced timestamp and a manual sync affordance.
@@ -20,27 +21,27 @@ class SyncStatusBanner extends ConsumerWidget {
 
     final (IconData icon, Color color, String label) = switch (sync.status) {
       SyncStatus.syncing => (
-          Icons.sync,
+          LucideIcons.refreshCw,
           theme.colorScheme.primary,
           l10n.syncSyncing
         ),
       SyncStatus.synced => (
-          Icons.cloud_done_outlined,
+          LucideIcons.cloudCheck,
           theme.colorScheme.primary,
           l10n.syncSynced
         ),
       SyncStatus.error => (
-          Icons.cloud_off_outlined,
+          LucideIcons.cloudOff,
           theme.colorScheme.error,
           l10n.syncError
         ),
       SyncStatus.offline => (
-          Icons.wifi_off,
+          LucideIcons.wifiOff,
           theme.colorScheme.tertiary,
           l10n.syncOffline
         ),
       SyncStatus.idle => (
-          Icons.cloud_outlined,
+          LucideIcons.cloud,
           theme.colorScheme.onSurfaceVariant,
           l10n.syncSynced
         ),

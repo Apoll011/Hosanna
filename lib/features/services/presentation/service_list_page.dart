@@ -16,6 +16,7 @@ import '../../../shared/widgets/shell_insets.dart';
 import '../data/service_repository.dart';
 import 'service_filter_widgets.dart';
 import 'service_filters.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Common date formats used for search, so queries like `dd/MM/yyyy`,
 /// `MM-dd-yyyy`, `yyyy.MM.dd`, etc. match however the user types the date.
@@ -95,7 +96,7 @@ class _ServiceListPageState extends ConsumerState<ServiceListPage> {
         leading: const ShellLeadingButton(),
         actions: [
           IconButton(
-            icon: Icon(_searchOpen ? Icons.close : Icons.search),
+            icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search),
             tooltip: l10n.commonSearch,
             onPressed: () {
               setState(() {
@@ -201,8 +202,8 @@ class _ServiceList extends StatelessWidget {
               ? l10n.songsClearSearch
               : l10n.songsClearFilters,
           primaryIcon: hasQuery && !hasFilters
-              ? Icons.search_off_outlined
-              : Icons.filter_alt_off_outlined,
+              ? LucideIcons.searchX
+              : LucideIcons.filterX,
           onPrimary: hasQuery && !hasFilters ? onClearSearch : onClearFilters,
           scrollable: true,
         );
@@ -314,7 +315,7 @@ class _ServiceList extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   color: scheme.onSurfaceVariant,
                 ),
               ],

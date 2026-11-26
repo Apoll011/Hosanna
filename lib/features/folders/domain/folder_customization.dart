@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Folder icon + color ids shared with Studio (`folderCustomization.ts`).
 ///
@@ -32,37 +33,37 @@ const Map<String, Color> _folderColors = {
   'slate': Color(0xFF64748B),
 };
 
-/// Lucide ids from Studio → closest Material icons.
+/// Lucide ids from Studio (`folderCustomization.ts`).
 const Map<String, IconData> _folderIcons = {
-  'music': Icons.music_note_rounded,
-  'heart': Icons.favorite_rounded,
-  'star': Icons.star_rounded,
-  'book-open': Icons.menu_book_rounded,
-  'bookmark': Icons.bookmark_rounded,
-  'sun': Icons.wb_sunny_rounded,
-  'moon': Icons.dark_mode_rounded,
-  'sparkles': Icons.auto_awesome_rounded,
-  'flame': Icons.local_fire_department_rounded,
-  'cross': Icons.church_rounded,
-  'church': Icons.church_rounded,
-  'mic': Icons.mic_rounded,
-  'radio': Icons.radio_rounded,
-  'disc': Icons.album_rounded,
-  'headphones': Icons.headphones_rounded,
-  'guitar': Icons.music_note_rounded,
-  'bell': Icons.notifications_rounded,
-  'archive': Icons.archive_rounded,
-  'tag': Icons.label_rounded,
-  'hash': Icons.tag_rounded,
-  'smile': Icons.sentiment_satisfied_alt_rounded,
-  'shield': Icons.shield_rounded,
-  'award': Icons.emoji_events_rounded,
-  'crown': Icons.workspace_premium_rounded,
-  'compass': Icons.explore_rounded,
-  'map-pin': Icons.place_rounded,
-  'calendar': Icons.calendar_month_rounded,
-  'layers': Icons.layers_rounded,
-  'folder-open': Icons.folder_open_rounded,
+  'music': LucideIcons.music,
+  'heart': LucideIcons.heart,
+  'star': LucideIcons.star,
+  'book-open': LucideIcons.bookOpen,
+  'bookmark': LucideIcons.bookmark,
+  'sun': LucideIcons.sun,
+  'moon': LucideIcons.moon,
+  'sparkles': LucideIcons.sparkles,
+  'flame': LucideIcons.flame,
+  'cross': LucideIcons.cross,
+  'church': LucideIcons.church,
+  'mic': LucideIcons.mic,
+  'radio': LucideIcons.radio,
+  'disc': LucideIcons.disc,
+  'headphones': LucideIcons.headphones,
+  'guitar': LucideIcons.guitar,
+  'bell': LucideIcons.bell,
+  'archive': LucideIcons.archive,
+  'tag': LucideIcons.tag,
+  'hash': LucideIcons.hash,
+  'smile': LucideIcons.smile,
+  'shield': LucideIcons.shield,
+  'award': LucideIcons.award,
+  'crown': LucideIcons.crown,
+  'compass': LucideIcons.compass,
+  'map-pin': LucideIcons.mapPin,
+  'calendar': LucideIcons.calendar,
+  'layers': LucideIcons.layers,
+  'folder-open': LucideIcons.folderOpen,
 };
 
 /// Resolves a Studio color id to a [Color]. Falls back to [kFolderDefaultColor].
@@ -73,14 +74,13 @@ Color folderColorOf(String? colorId) {
   return _folderColors[colorId] ?? kFolderDefaultColor;
 }
 
-/// Resolves a Studio icon id to a Material [IconData].
+/// Resolves a Studio icon id to an [IconData].
 ///
-/// When [iconId] is default/null, [hasContents] picks an open vs outlined
-/// folder — matching Studio's FolderOpen / Folder default behaviour.
+/// When [iconId] is default/null, [hasContents] picks an open vs closed folder.
 IconData folderIconOf(String? iconId, {bool hasContents = false}) {
   if (iconId == null || iconId.isEmpty || iconId == _defaultIconId) {
-    return hasContents ? Icons.folder_rounded : Icons.folder_outlined;
+    return hasContents ? LucideIcons.folderOpen : LucideIcons.folder;
   }
   return _folderIcons[iconId] ??
-      (hasContents ? Icons.folder_rounded : Icons.folder_outlined);
+      (hasContents ? LucideIcons.folderOpen : LucideIcons.folder);
 }

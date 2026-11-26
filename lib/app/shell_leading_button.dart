@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'shell.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// AppBar leading action for shell branch pages.
 ///
@@ -20,7 +21,7 @@ class ShellLeadingButton extends ConsumerWidget {
 
     if (!isTablet) {
       return IconButton(
-        icon: const Icon(Icons.menu),
+        icon: const Icon(LucideIcons.menu),
         tooltip: l10n.commonOpenDrawer,
         onPressed: () =>
             ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
@@ -29,7 +30,7 @@ class ShellLeadingButton extends ConsumerWidget {
 
     final collapsed = ref.watch(sidebarCollapsedProvider);
     return IconButton(
-      icon: Icon(collapsed ? Icons.menu : Icons.menu_open),
+      icon: Icon(collapsed ? LucideIcons.menu : LucideIcons.panelLeftClose),
       tooltip: collapsed ? l10n.commonOpenDrawer : l10n.commonCloseDrawer,
       onPressed: () =>
           ref.read(sidebarCollapsedProvider.notifier).state = !collapsed,

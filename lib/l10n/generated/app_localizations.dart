@@ -940,6 +940,132 @@ abstract class AppLocalizations {
   /// **'Metrónomo'**
   String get navMetronome;
 
+  /// No description provided for @navTuner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinador'**
+  String get navTuner;
+
+  /// No description provided for @tunerUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'O afinador não está disponível para este instrumento.'**
+  String get tunerUnavailable;
+
+  /// No description provided for @tunerSearching.
+  ///
+  /// In pt, this message translates to:
+  /// **'A procurar uma nota estável'**
+  String get tunerSearching;
+
+  /// No description provided for @tunerInTune.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinado'**
+  String get tunerInTune;
+
+  /// No description provided for @tunerFlat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grave'**
+  String get tunerFlat;
+
+  /// No description provided for @tunerSharp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agudo'**
+  String get tunerSharp;
+
+  /// No description provided for @tunerListening.
+  ///
+  /// In pt, this message translates to:
+  /// **'A ouvir'**
+  String get tunerListening;
+
+  /// No description provided for @tunerStopped.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parado'**
+  String get tunerStopped;
+
+  /// No description provided for @tunerWaitForStablePitch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque uma corda e mantenha a nota estável.'**
+  String get tunerWaitForStablePitch;
+
+  /// No description provided for @tunerTarget.
+  ///
+  /// In pt, this message translates to:
+  /// **'Corda alvo'**
+  String get tunerTarget;
+
+  /// No description provided for @tunerDetectedFrequency.
+  ///
+  /// In pt, this message translates to:
+  /// **'Frequência detetada'**
+  String get tunerDetectedFrequency;
+
+  /// No description provided for @tunerNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'—'**
+  String get tunerNone;
+
+  /// No description provided for @tunerStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iniciar afinação'**
+  String get tunerStart;
+
+  /// No description provided for @tunerStop.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parar'**
+  String get tunerStop;
+
+  /// No description provided for @tunerMicrophoneTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acesso ao microfone'**
+  String get tunerMicrophoneTitle;
+
+  /// No description provided for @tunerMicrophoneRationale.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Hosanna precisa do microfone para detetar a afinação do instrumento.'**
+  String get tunerMicrophoneRationale;
+
+  /// No description provided for @tunerMicrophoneDenied.
+  ///
+  /// In pt, this message translates to:
+  /// **'O acesso ao microfone está bloqueado. Ative-o nas definições para usar o afinador.'**
+  String get tunerMicrophoneDenied;
+
+  /// No description provided for @tunerAllow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir'**
+  String get tunerAllow;
+
+  /// No description provided for @tunerOpenSettings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir definições'**
+  String get tunerOpenSettings;
+
+  /// No description provided for @tunerNotNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agora não'**
+  String get tunerNotNow;
+
+  /// No description provided for @tunerMicrophoneError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível iniciar o microfone. Pare e tente novamente.'**
+  String get tunerMicrophoneError;
+
   /// No description provided for @navAgenda.
   ///
   /// In pt, this message translates to:
@@ -2056,6 +2182,12 @@ abstract class AppLocalizations {
   /// **'Original'**
   String get songOriginal;
 
+  /// No description provided for @songKeySelected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionado'**
+  String get songKeySelected;
+
   /// No description provided for @songCapoNone.
   ///
   /// In pt, this message translates to:
@@ -2109,6 +2241,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Indiana / Sargam (Sa em C)'**
   String get songChordNotationSargam;
+
+  /// No description provided for @songChordNotationNashville.
+  ///
+  /// In pt, this message translates to:
+  /// **'Números de Nashville (1, 2m, 3m)'**
+  String get songChordNotationNashville;
 
   /// No description provided for @songShowChords.
   ///
@@ -3916,6 +4054,42 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get settingsEdit;
 
+  /// No description provided for @settingsCustomTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Afinação personalizada'**
+  String get settingsCustomTuning;
+
+  /// No description provided for @settingsCustomTuningDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Uma corda por linha: nota, frequência em Hz e nome opcional.'**
+  String get settingsCustomTuningDesc;
+
+  /// No description provided for @settingsCustomTuningFormat.
+  ///
+  /// In pt, this message translates to:
+  /// **'D2, 73.42, Ré grave'**
+  String get settingsCustomTuningFormat;
+
+  /// No description provided for @settingsCustomTuningInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Introduza pelo menos uma linha válida no formato indicado.'**
+  String get settingsCustomTuningInvalid;
+
+  /// No description provided for @settingsCustomTuningStrings.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} cordas personalizadas'**
+  String settingsCustomTuningStrings(int count);
+
+  /// No description provided for @settingsUseInstrumentTuning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usar afinação predefinida'**
+  String get settingsUseInstrumentTuning;
+
   /// No description provided for @settingsCancel.
   ///
   /// In pt, this message translates to:
@@ -4360,6 +4534,12 @@ abstract class AppLocalizations {
   /// **'Novas alterações de outro dispositivo'**
   String get annotationRemoteChanges;
 
+  /// No description provided for @songConflictMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta música foi alterada noutro dispositivo. Escolha que versão pretende usar.'**
+  String get songConflictMessage;
+
   /// No description provided for @annotationKeepMine.
   ///
   /// In pt, this message translates to:
@@ -4395,6 +4575,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Exemplo'**
   String get settingsFontPreview;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Política de Privacidade'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsTermsOfService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termos de Serviço'**
+  String get settingsTermsOfService;
+
+  /// No description provided for @settingsAnalytics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Análise de utilização'**
+  String get settingsAnalytics;
+
+  /// No description provided for @settingsAnalyticsDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permitir a recolha de dados anónimos de utilização da aplicação.'**
+  String get settingsAnalyticsDescription;
 }
 
 class _AppLocalizationsDelegate

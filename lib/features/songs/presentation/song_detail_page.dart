@@ -7,6 +7,7 @@ import '../../../app/design/illustrations.dart';
 import '../../../app/settings_controller.dart';
 import '../../../core/db/database.dart';
 import '../../../core/permissions/permissions.dart';
+import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../export/presentation/song_pdf_share.dart';
@@ -14,6 +15,8 @@ import '../data/song_repository.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_reader.dart';
 import 'song_toolbar.dart';
+
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SongDetailPage extends ConsumerStatefulWidget {
   const SongDetailPage({super.key, required this.songId});
@@ -57,9 +60,8 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.commonError)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.commonError)));
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
@@ -73,17 +75,15 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final songAsync = ref.watch(songByIdProvider(widget.songId));
     final song = songAsync.value;
     final canPop = context.canPop();
-    final canEdit =
-        ref.watch(canPermissionProvider(AppPermission.songUpdate));
-    final canExport =
-        ref.watch(canPermissionProvider(AppPermission.exportPdf));
+    final canEdit = ref.watch(canPermissionProvider(AppPermission.songUpdate));
+    final canExport = ref.watch(canPermissionProvider(AppPermission.exportPdf));
 
     return Scaffold(
       appBar: AppBar(
         leading: canPop
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const Icon(LucideIcons.arrowLeft),
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 onPressed: () => context.go('/songs'),
               ),
@@ -96,7 +96,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           const SongToolbarButton(),
           if (canEdit)
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(LucideIcons.pencil),
               tooltip: l10n.songsEdit,
               onPressed: song == null
                   ? null
@@ -110,7 +110,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.ios_share),
+                  : const Icon(LucideIcons.share2),
               tooltip: l10n.navExportPdf,
               onPressed: (_isExporting || song == null)
                   ? null
@@ -131,9 +131,54 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                 title: l10n.songsNotFound,
                 description: l10n.songsNotFoundDesc,
               )
-            : SongReader(
-                key: ValueKey(widget.songId),
-                content: song.content,
+            : Column(
+                children: [
+                  if (song.conflictDocument != null)
+                    Material(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(l10n.songConflictMessage),
+                            Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 8,
+                              children: [
+                                TextButton(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(songRepositoryProvider)
+                                        .keepLocalSongAfterConflict(song.id);
+                                    await ref
+                                        .read(syncControllerProvider.notifier)
+                                        .syncAll();
+                                  },
+                                  child: Text(l10n.annotationKeepMine),
+                                ),
+                                FilledButton(
+                                  onPressed: () => ref
+                                      .read(songRepositoryProvider)
+                                      .reloadSongAfterConflict(song.id),
+                                  child: Text(l10n.annotationReload),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: SongReader(
+                      key: ValueKey(widget.songId),
+                      content: song.content,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

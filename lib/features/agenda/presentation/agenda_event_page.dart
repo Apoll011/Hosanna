@@ -11,6 +11,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../services/data/service_repository.dart';
 import '../data/agenda_repository.dart';
 import '../domain/agenda_models.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Full event details — mirrors the Studio agenda sidebar fields.
 class AgendaEventPage extends ConsumerWidget {
@@ -93,7 +94,7 @@ class _EventBody extends ConsumerWidget {
           runSpacing: 8,
           children: [
             Chip(
-              avatar: Icon(Icons.category_outlined, size: 16, color: scheme.primary),
+              avatar: Icon(LucideIcons.layoutGrid, size: 16, color: scheme.primary),
               label: Text(event.type),
               visualDensity: VisualDensity.compact,
               side: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
@@ -101,7 +102,7 @@ class _EventBody extends ConsumerWidget {
             if (event.durationMinutes > 0)
               Chip(
                 avatar: Icon(
-                  Icons.timelapse_outlined,
+                  LucideIcons.timer,
                   size: 16,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -115,18 +116,18 @@ class _EventBody extends ConsumerWidget {
         _InfoCard(
           children: [
             _InfoRow(
-              icon: Icons.calendar_today_outlined,
+              icon: LucideIcons.calendar,
               label: l10n.agendaFieldDate,
               value: dateLabel,
             ),
             _InfoRow(
-              icon: Icons.schedule_outlined,
+              icon: LucideIcons.clock,
               label: l10n.agendaFieldTime,
               value: timeLabel,
             ),
             if (event.location != null && event.location!.isNotEmpty)
               _InfoRow(
-                icon: Icons.place_outlined,
+                icon: LucideIcons.mapPin,
                 label: l10n.agendaFieldLocation,
                 value: event.location!,
               ),
@@ -288,7 +289,7 @@ class _LinkedServiceTile extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
               child: Row(
                 children: [
-                  Icon(Icons.music_note_rounded, color: scheme.primary),
+                  Icon(LucideIcons.music, color: scheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -317,7 +318,7 @@ class _LinkedServiceTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.open_in_new_rounded, color: scheme.primary),
+                  Icon(LucideIcons.externalLink, color: scheme.primary),
                 ],
               ),
             ),
@@ -451,14 +452,14 @@ class _ResponsibilityCard extends StatelessWidget {
 
   IconData _iconFor(String? iconKey) {
     return switch (iconKey) {
-      'mic' => Icons.mic_none_rounded,
-      'music' => Icons.music_note_rounded,
-      'volume' => Icons.volume_up_outlined,
-      'light' => Icons.lightbulb_outline_rounded,
-      'monitor' => Icons.monitor_outlined,
-      'book' => Icons.menu_book_outlined,
-      'heart' => Icons.favorite_border_rounded,
-      _ => Icons.badge_outlined,
+      'mic' => LucideIcons.mic,
+      'music' => LucideIcons.music,
+      'volume' => LucideIcons.volume2,
+      'light' => LucideIcons.lightbulb,
+      'monitor' => LucideIcons.monitor,
+      'book' => LucideIcons.bookOpen,
+      'heart' => LucideIcons.heart,
+      _ => LucideIcons.badge,
     };
   }
 }

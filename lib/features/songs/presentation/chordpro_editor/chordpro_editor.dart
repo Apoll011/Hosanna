@@ -9,6 +9,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/chordpro/diagnostics.dart';
 import 'chordpro_syntax_controller.dart';
 import 'chordpro_syntax_theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 typedef ChordProComposeContent = String Function();
 
@@ -470,29 +471,29 @@ class _InsertToolbar extends StatelessWidget {
         child: Row(
           children: [
             _Chip(
-              icon: Icons.music_note_outlined,
+              icon: LucideIcons.music,
               label: l10n.songsEditorInsertVerse,
               onPressed: onVerse,
             ),
             _Chip(
-              icon: Icons.repeat_rounded,
+              icon: LucideIcons.repeat,
               label: l10n.songsEditorInsertChorus,
               onPressed: onChorus,
             ),
             _Chip(
-              icon: Icons.alt_route_rounded,
+              icon: LucideIcons.gitFork,
               label: l10n.songsEditorInsertBridge,
               onPressed: onBridge,
             ),
-            _Chip(icon: Icons.grid_on_outlined, label: 'Tab', onPressed: onTab),
-            _Chip(icon: Icons.tag_outlined, label: '[ ]', onPressed: onChord),
+            _Chip(icon: LucideIcons.grid3x3, label: 'Tab', onPressed: onTab),
+            _Chip(icon: LucideIcons.tag, label: '[ ]', onPressed: onChord),
             _Chip(
-              icon: Icons.comment_outlined,
+              icon: LucideIcons.messageSquare,
               label: l10n.songsEditorInsertComment,
               onPressed: onComment,
             ),
             _Chip(
-              icon: Icons.library_music_outlined,
+              icon: LucideIcons.library,
               label: l10n.songsEditorInsertVersion,
               onPressed: onVersion,
             ),
@@ -565,7 +566,7 @@ class _DiagnosticsBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.check_circle_outline, size: 18, color: scheme.primary),
+            Icon(LucideIcons.checkCircle2, size: 18, color: scheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -599,8 +600,8 @@ class _DiagnosticsBar extends StatelessWidget {
               children: [
                 Icon(
                   errors > 0
-                      ? Icons.error_outline
-                      : Icons.warning_amber_rounded,
+                      ? LucideIcons.alertCircle
+                      : LucideIcons.alertTriangle,
                   size: 16,
                   color: errors > 0 ? scheme.error : scheme.tertiary,
                 ),
@@ -644,9 +645,9 @@ class _DiagnosticsBar extends StatelessWidget {
                         children: [
                           Icon(
                             switch (d.severity) {
-                              ChordProSeverity.error => Icons.error_rounded,
-                              ChordProSeverity.warning => Icons.warning_rounded,
-                              ChordProSeverity.info => Icons.info_outline,
+                              ChordProSeverity.error => LucideIcons.alertCircle,
+                              ChordProSeverity.warning => LucideIcons.alertTriangle,
+                              ChordProSeverity.info => LucideIcons.info,
                             },
                             size: 14,
                             color: color,

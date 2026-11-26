@@ -9,6 +9,7 @@ import '../../../app/providers.dart';
 import '../../../app/shell_leading_button.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/metronome_click_player.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MetronomePage extends ConsumerStatefulWidget {
   const MetronomePage({super.key});
@@ -22,9 +23,11 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
   static const int _minBpm = 30;
   static const int _maxBpm = 240;
   static const List<int> _timeSignatures = [2, 3, 4, 5, 6, 7, 9, 12];
+  static const List<int> _timeSignatureDenominators = [4, 8, 16];
 
   int _bpm = 100;
   int _beatsPerBar = 4;
+  int _timeSignatureDenominator = 4;
   int _currentBeat = 0;
   bool _isPlaying = false;
   bool _accentFirstBeat = true;
@@ -36,7 +39,9 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
   final List<DateTime> _tapTimes = [];
   final MetronomeClickPlayer _clickPlayer = MetronomeClickPlayer();
 
-  Duration get _beatDuration => Duration(milliseconds: (60000 / _bpm).round());
+  Duration get _beatDuration => Duration(
+    milliseconds: (60000 * 4 / (_bpm * _timeSignatureDenominator)).round(),
+  );
 
   @override
   void initState() {
@@ -361,7 +366,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
     return Row(
       children: [
         _StepperButton(
-          icon: Icons.remove_rounded,
+          icon: LucideIcons.minus,
           tooltip: 'Decrease tempo',
           colors: colors,
           onTapDown: () => _startHold(-1),
@@ -391,7 +396,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
           ),
         ),
         _StepperButton(
-          icon: Icons.add_rounded,
+          icon: LucideIcons.plus,
           tooltip: 'Increase tempo',
           colors: colors,
           onTapDown: () => _startHold(1),
@@ -432,7 +437,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
           children: _timeSignatures.map((n) {
             final selected = n == _beatsPerBar;
             return ChoiceChip(
-              label: Text('$n/4'),
+              label: Text('$n/$_timeSignatureDenominator'),
               selected: selected,
               showCheckmark: false,
               selectedColor: colors.primary,
@@ -449,7 +454,16 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
                     : colors.outline.withValues(alpha: 0.22),
               ),
               onSelected: (_) => setState(() {
-                _beatsPerBar = n;
+                if (selected) {
+                  final index = _timeSignatureDenominators.indexOf(
+                    _timeSignatureDenominator,
+                  );
+                  _timeSignatureDenominator = _timeSignatureDenominators[
+                    (index + 1) % _timeSignatureDenominators.length
+                  ];
+                } else {
+                  _beatsPerBar = n;
+                }
                 if (!_isPlaying) _currentBeat = 0;
               }),
             );
@@ -465,7 +479,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
         Expanded(
           child: OutlinedButton.icon(
             onPressed: _handleTapTempo,
-            icon: const Icon(Icons.touch_app_rounded, size: 18),
+            icon: const Icon(LucideIcons.mousePointer, size: 18),
             label: Text(l10n.metronomeTapTempo),
             style: OutlinedButton.styleFrom(
               foregroundColor: colors.onSurface,
@@ -497,7 +511,7 @@ class _MetronomePageState extends ConsumerState<MetronomePage>
                   transitionBuilder: (child, anim) =>
                       ScaleTransition(scale: anim, child: child),
                   child: Icon(
-                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    _isPlaying ? LucideIcons.pause : LucideIcons.play,
                     key: ValueKey(_isPlaying),
                     color: colors.onPrimary,
                     size: 38,

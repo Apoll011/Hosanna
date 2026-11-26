@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -126,13 +128,20 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     _song = prepareSong(_version.body, _effectiveTranspose);
   }
 
-  ChordFingering? _fingeringFor(String chord) => _fingerings.putIfAbsent(
-    chord,
-    () => chordDictionary.getFingering(
-      chord,
-      preferences: widget.instrumentPreferences,
-    ),
-  );
+  ChordFingering? _fingeringFor(String chord) {
+    final cacheKey =
+        '$chord|${jsonEncode(widget.instrumentPreferences.toJson())}';
+    return _fingerings.putIfAbsent(
+      cacheKey,
+      () => chordDictionary.getFingering(
+        chord,
+        preferences: widget.instrumentPreferences,
+      ),
+    );
+  }
+
+  List<InstrumentFingering> _alternativesFor(String chord) =>
+      _fingeringFor(chord)?.alternativesFor(widget.instrument) ?? const [];
 
   void _openChord(String chord) {
     showChordSheet(
@@ -143,7 +152,12 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       capo: _effectiveCapo,
       preferences: widget.instrumentPreferences,
       fingeringFor: _fingeringFor,
+      alternativesFor: _alternativesFor,
       chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
+      tonic: transposeChord(
+        _version.metadata['key'] ?? 'C',
+        _effectiveTranspose,
+      ),
     );
   }
 
@@ -165,6 +179,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       fontSize: fontSize,
       onChordTap: _openChord,
       chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
+      tonic: transposeChord(metadata['key'] ?? 'C', _effectiveTranspose),
     );
 
     final notes = widget.notes?.trim();
@@ -214,6 +229,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
         ChordRoll(
           chords: _song.uniqueChords,
           chordNotation: notation,
+          tonic: transposeChord(key, _effectiveTranspose),
           capo: _effectiveCapo,
           instrument: widget.instrument,
           preferences: widget.instrumentPreferences,

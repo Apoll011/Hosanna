@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/chordpro/chord_notation.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class NotesCard extends StatelessWidget {
   const NotesCard({super.key, required this.notes});
@@ -108,7 +109,7 @@ class MetadataHeader extends StatelessWidget {
       if (_meta('key') != null || transposeVal != 0)
         _Pill(
           text: l10n.songKeyPill(soundingKey),
-          icon: onKeyTap != null ? Icons.tune_rounded : null,
+          icon: onKeyTap != null ? LucideIcons.slidersHorizontal : null,
           tooltip: onKeyTap != null ? l10n.songChangeKey : null,
           onTap: onKeyTap,
           highlighted: transposeVal != 0,
@@ -127,12 +128,12 @@ class MetadataHeader extends StatelessWidget {
         ),
       if (tempo != null) _Pill(text: '$tempo BPM'),
       if (time != null) _Pill(text: time),
-      if (duration != null) _Pill(text: duration, icon: Icons.schedule_rounded),
+      if (duration != null) _Pill(text: duration, icon: LucideIcons.clock),
       if (ccli != null) _Pill(text: 'CCLI: $ccli'),
       if (onYoutubeTap != null)
         _Pill(
           text: 'YouTube',
-          icon: Icons.smart_display_rounded,
+          icon: LucideIcons.eighthNote,
           tooltip: l10n.songYoutubeOpenPlayer,
           onTap: onYoutubeTap,
         ),
@@ -235,7 +236,7 @@ class MetadataHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.music_note,
+                      LucideIcons.music,
                       size: 15,
                       color: theme.colorScheme.primary,
                     ),

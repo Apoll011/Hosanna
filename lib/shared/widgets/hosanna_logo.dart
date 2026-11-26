@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// The Hosanna brand mark (rounded square logo) at a given [size].
 class HosannaLogo extends StatelessWidget {
@@ -31,7 +32,7 @@ class HosannaLogo extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: Icon(Icons.music_note, size: size * 0.5, color: Colors.white),
+        child: Icon(LucideIcons.music, size: size * 0.5, color: Colors.white),
       ),
     );
   }

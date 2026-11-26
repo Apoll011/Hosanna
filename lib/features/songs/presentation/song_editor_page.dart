@@ -14,6 +14,7 @@ import '../domain/chordpro_content.dart';
 import 'chordpro_editor/chordpro_editor.dart';
 import 'chordpro_editor/chordpro_syntax_controller.dart';
 import 'song_reader.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Create or edit a song (metadata + ChordPro body).
 class SongEditorPage extends ConsumerStatefulWidget {
@@ -282,7 +283,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
         builder: (previewContext) => Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const Icon(LucideIcons.arrowLeft),
               tooltip:
                   MaterialLocalizations.of(previewContext).backButtonTooltip,
               onPressed: () => Navigator.of(previewContext).pop(),
@@ -455,7 +456,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.warning_amber_rounded,
+                    LucideIcons.alertTriangle,
                     size: 16,
                     color: scheme.tertiary,
                   ),
@@ -608,7 +609,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       IconButton(
         tooltip: l10n.songsPreview,
         onPressed: _saving ? null : _preview,
-        icon: const Icon(Icons.visibility_outlined),
+        icon: const Icon(LucideIcons.eye),
       ),
       IconButton(
         tooltip: l10n.commonSave,
@@ -622,7 +623,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
                   color: scheme.primary,
                 ),
               )
-            : const Icon(Icons.check_rounded),
+            : const Icon(LucideIcons.check),
       ),
     ];
   }
@@ -638,7 +639,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
       leading: canPop
           ? null
           : IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const Icon(LucideIcons.arrowLeft),
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: () => context.go('/songs'),
             ),

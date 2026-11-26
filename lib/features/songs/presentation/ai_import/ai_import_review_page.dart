@@ -15,6 +15,7 @@ import '../../data/song_repository.dart';
 import '../../domain/chordpro_content.dart';
 import 'ai_import_models.dart';
 import 'ai_import_nav.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AiImportReviewPage extends ConsumerStatefulWidget {
   const AiImportReviewPage({super.key, required this.draft});
@@ -215,7 +216,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                                   backgroundColor: HosannaColors.success,
                                   radius: 16,
                                   child: const Icon(
-                                    Icons.check_rounded,
+                                    LucideIcons.check,
                                     color: Colors.white,
                                     size: 18,
                                   ),
@@ -241,7 +242,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                             height: 56,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Icon(
-                              Icons.auto_awesome_rounded,
+                              LucideIcons.sparkles,
                               color: scheme.primary,
                             ),
                           ),
@@ -278,8 +279,8 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                         children: [
                           Icon(
                             widget.draft.isLowConfidence
-                                ? Icons.warning_amber_rounded
-                                : Icons.verified_outlined,
+                                ? LucideIcons.alertTriangle
+                                : LucideIcons.badgeCheck,
                             color: widget.draft.isLowConfidence
                                 ? scheme.error
                                 : scheme.primary,
@@ -329,7 +330,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                           child: Row(
                             children: [
                               Icon(
-                                Icons.library_music_outlined,
+                                LucideIcons.library,
                                 color: scheme.primary,
                               ),
                               const SizedBox(width: 10),
@@ -362,7 +363,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                               ),
                               const SizedBox(width: 4),
                               Icon(
-                                Icons.chevron_right_rounded,
+                                LucideIcons.chevronRight,
                                 color: scheme.primary,
                               ),
                             ],
@@ -500,7 +501,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                           suffixIcon: IconButton(
                             tooltip: l10n.songsAiOpenYoutube,
                             onPressed: hasUrl ? _openYoutube : null,
-                            icon: const Icon(Icons.open_in_new_rounded),
+                            icon: const Icon(LucideIcons.externalLink),
                           ),
                         ),
                       );
@@ -546,7 +547,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: _saving ? null : _editFull,
-                              icon: const Icon(Icons.edit_outlined),
+                              icon: const Icon(LucideIcons.pencil),
                               label: Text(l10n.songsAiEditContent),
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(48),
@@ -565,7 +566,7 @@ class _AiImportReviewPageState extends ConsumerState<AiImportReviewPage> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Icon(Icons.check_rounded),
+                                  : const Icon(LucideIcons.check),
                               label: Text(l10n.songsAiSave),
                               style: FilledButton.styleFrom(
                                 minimumSize: const Size.fromHeight(48),

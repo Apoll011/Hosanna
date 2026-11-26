@@ -12,6 +12,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/shell_insets.dart';
 import '../data/agenda_repository.dart';
 import '../domain/agenda_models.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Calendar-style agenda: horizontal day strip of dates that have events,
 /// with the selected day's events listed below.
@@ -421,7 +422,7 @@ class _DayEventsList extends StatelessWidget {
                       ),
                     ),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
                     ),
                   ],

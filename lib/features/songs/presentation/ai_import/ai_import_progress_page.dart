@@ -13,6 +13,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/hosanna_surface.dart';
 import 'ai_import_models.dart';
 import 'ai_import_nav.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AiImportProgressPage extends ConsumerStatefulWidget {
   const AiImportProgressPage({super.key, required this.request});
@@ -366,7 +367,7 @@ class _AiImportProgressPageState extends ConsumerState<AiImportProgressPage> {
                           const SizedBox(height: HosannaSpacing.sm),
                           Chip(
                             avatar: Icon(
-                              Icons.info_outline_rounded,
+                              LucideIcons.info,
                               size: 18,
                               color: scheme.primary,
                             ),
@@ -458,7 +459,7 @@ class _StepRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final icon = step.done
-        ? Icon(Icons.check_circle_rounded, color: scheme.primary)
+        ? Icon(LucideIcons.checkCircle2, color: scheme.primary)
         : step.active
             ? SizedBox(
                 width: 22,
@@ -468,7 +469,7 @@ class _StepRow extends StatelessWidget {
                   color: scheme.primary,
                 ),
               )
-            : Icon(Icons.circle_outlined, color: scheme.outline);
+            : Icon(LucideIcons.circle, color: scheme.outline);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(

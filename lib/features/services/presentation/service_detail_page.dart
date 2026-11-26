@@ -19,6 +19,7 @@ import 'service_element_meta.dart';
 import 'service_order_page.dart';
 import 'widgets/horizontal_swipe_navigator.dart';
 import 'widgets/service_notes_panel.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Entry point for a service. Honours [AppSettings.musicianMode]: musician
 /// view opens the first song with a drawer order; otherwise the run-of-show
@@ -371,7 +372,7 @@ class _MusicianTopBar extends StatelessWidget {
           children: [
             if (showOrderButton)
               IconButton(
-                icon: const Icon(Icons.menu),
+                icon: const Icon(LucideIcons.menu),
                 tooltip: l10n.servicesOrderTitle,
                 onPressed: onOpenOrder,
               ),
@@ -399,7 +400,7 @@ class _MusicianTopBar extends StatelessWidget {
             IconButton(
               icon: NotesUnreadBadge(
                 serviceId: serviceId,
-                child: const Icon(Icons.sticky_note_2_outlined),
+                child: const Icon(LucideIcons.stickyNote),
               ),
               tooltip: l10n.servicesNotes,
               onPressed: onOpenNotes,
@@ -415,7 +416,7 @@ class _MusicianTopBar extends StatelessWidget {
                     onPressed: onLeave,
                     tooltip: l10n.servicesLeave,
                     icon: Icon(
-                      Icons.logout,
+                      LucideIcons.logOut,
                       color: theme.colorScheme.error,
                     ),
                   );
@@ -425,7 +426,7 @@ class _MusicianTopBar extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),
-                  icon: const Icon(Icons.logout, size: 18),
+                  icon: const Icon(LucideIcons.logOut, size: 18),
                   label: Text(l10n.servicesLeave),
                 );
               },
@@ -637,7 +638,7 @@ class _NonSongElementView extends StatelessWidget {
                     elementId: element.id,
                     elementType: element.type,
                   ),
-                  icon: const Icon(Icons.sticky_note_2_outlined),
+                  icon: const Icon(LucideIcons.stickyNote),
                   label: Text(l10n.servicesTeamNotes),
                 ),
               ],
@@ -742,13 +743,13 @@ class _OrderListBody extends StatelessWidget {
               ),
               if (onCollapse != null)
                 IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(LucideIcons.chevronLeft),
                   tooltip: l10n.servicesCollapseOrderPanel,
                   onPressed: onCollapse,
                 ),
               if (showClose)
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(LucideIcons.x),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
             ],
@@ -776,7 +777,7 @@ class _OrderListBody extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: theme.colorScheme.error,
             ),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(LucideIcons.logOut),
             label: Text(l10n.servicesLeaveMode),
             onPressed: onLeave,
           ),
@@ -846,7 +847,7 @@ class _OrderSideRail extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded),
+                      icon: const Icon(LucideIcons.chevronRight),
                       tooltip: l10n.servicesExpandOrderPanel,
                       onPressed: onToggleCollapsed,
                     ),
@@ -856,7 +857,7 @@ class _OrderSideRail extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: IconButton(
                       icon: Icon(
-                        Icons.logout,
+                        LucideIcons.logOut,
                         color: theme.colorScheme.error,
                       ),
                       tooltip: l10n.servicesLeaveMode,

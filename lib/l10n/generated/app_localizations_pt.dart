@@ -476,6 +476,74 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navMetronome => 'Metrónomo';
 
   @override
+  String get navTuner => 'Afinador';
+
+  @override
+  String get tunerUnavailable =>
+      'O afinador não está disponível para este instrumento.';
+
+  @override
+  String get tunerSearching => 'A procurar uma nota estável';
+
+  @override
+  String get tunerInTune => 'Afinado';
+
+  @override
+  String get tunerFlat => 'Grave';
+
+  @override
+  String get tunerSharp => 'Agudo';
+
+  @override
+  String get tunerListening => 'A ouvir';
+
+  @override
+  String get tunerStopped => 'Parado';
+
+  @override
+  String get tunerWaitForStablePitch =>
+      'Toque uma corda e mantenha a nota estável.';
+
+  @override
+  String get tunerTarget => 'Corda alvo';
+
+  @override
+  String get tunerDetectedFrequency => 'Frequência detetada';
+
+  @override
+  String get tunerNone => '—';
+
+  @override
+  String get tunerStart => 'Iniciar afinação';
+
+  @override
+  String get tunerStop => 'Parar';
+
+  @override
+  String get tunerMicrophoneTitle => 'Acesso ao microfone';
+
+  @override
+  String get tunerMicrophoneRationale =>
+      'O Hosanna precisa do microfone para detetar a afinação do instrumento.';
+
+  @override
+  String get tunerMicrophoneDenied =>
+      'O acesso ao microfone está bloqueado. Ative-o nas definições para usar o afinador.';
+
+  @override
+  String get tunerAllow => 'Permitir';
+
+  @override
+  String get tunerOpenSettings => 'Abrir definições';
+
+  @override
+  String get tunerNotNow => 'Agora não';
+
+  @override
+  String get tunerMicrophoneError =>
+      'Não foi possível iniciar o microfone. Pare e tente novamente.';
+
+  @override
   String get navAgenda => 'Agenda';
 
   @override
@@ -1086,6 +1154,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get songOriginal => 'Original';
 
   @override
+  String get songKeySelected => 'Selecionado';
+
+  @override
   String get songCapoNone => 'Nenhum';
 
   @override
@@ -1114,6 +1185,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get songChordNotationSargam => 'Indiana / Sargam (Sa em C)';
+
+  @override
+  String get songChordNotationNashville => 'Números de Nashville (1, 2m, 3m)';
 
   @override
   String get songShowChords => 'Mostrar Acordes';
@@ -2099,6 +2173,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsEdit => 'Editar';
 
   @override
+  String get settingsCustomTuning => 'Afinação personalizada';
+
+  @override
+  String get settingsCustomTuningDesc =>
+      'Uma corda por linha: nota, frequência em Hz e nome opcional.';
+
+  @override
+  String get settingsCustomTuningFormat => 'D2, 73.42, Ré grave';
+
+  @override
+  String get settingsCustomTuningInvalid =>
+      'Introduza pelo menos uma linha válida no formato indicado.';
+
+  @override
+  String settingsCustomTuningStrings(int count) {
+    return '$count cordas personalizadas';
+  }
+
+  @override
+  String get settingsUseInstrumentTuning => 'Usar afinação predefinida';
+
+  @override
   String get settingsCancel => 'Cancelar';
 
   @override
@@ -2335,6 +2431,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get annotationRemoteChanges => 'Novas alterações de outro dispositivo';
 
   @override
+  String get songConflictMessage =>
+      'Esta música foi alterada noutro dispositivo. Escolha que versão pretende usar.';
+
+  @override
   String get annotationKeepMine => 'Manter as minhas';
 
   @override
@@ -2353,4 +2453,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsFontPreview => 'Exemplo';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de Privacidade';
+
+  @override
+  String get settingsTermsOfService => 'Termos de Serviço';
+
+  @override
+  String get settingsAnalytics => 'Análise de utilização';
+
+  @override
+  String get settingsAnalyticsDescription =>
+      'Permitir a recolha de dados anónimos de utilização da aplicação.';
 }

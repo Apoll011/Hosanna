@@ -17,6 +17,7 @@ import '../domain/youtube.dart';
 import 'chordpro/song_display_settings.dart';
 import 'song_body_renderer.dart';
 import 'youtube_mini_player.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Tuning for the swipe-to-navigate gesture.
 const double _kMaxOverscroll = 48.0;
@@ -97,6 +98,7 @@ class _SongReaderState extends ConsumerState<SongReader>
   DateTime? _nextMetronomeBeat;
   int _metronomeTempo = 100;
   int _metronomeBeatsPerBar = 4;
+  int _metronomeDenominator = 4;
   String _metronomeTime = '4/4';
   bool _metronomeInitialized = false;
 
@@ -663,7 +665,7 @@ class _SongReaderState extends ConsumerState<SongReader>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  goingNext ? Icons.chevron_left : Icons.chevron_right,
+                  goingNext ? LucideIcons.chevronLeft : LucideIcons.chevronRight,
                   size: 40,
                   color: theme.colorScheme.primary,
                 ),
@@ -762,6 +764,7 @@ class _SongReaderState extends ConsumerState<SongReader>
       _metronomeInitialized = true;
       _metronomeTempo = tempo;
       _metronomeBeatsPerBar = timeSignature.$1;
+      _metronomeDenominator = timeSignature.$2;
       _metronomeTime = '${timeSignature.$1}/${timeSignature.$2}';
       unawaited(_metronomePlayer.init());
     }
@@ -855,7 +858,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                         Row(
                           children: [
                             Icon(
-                              Icons.sync_rounded,
+                              LucideIcons.refreshCw,
                               size: 18,
                               color: Theme.of(context)
                                   .colorScheme
@@ -1018,7 +1021,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
                 tooltip: 'Metronome',
-                child: const Icon(Icons.graphic_eq_rounded),
+                child: const Icon(LucideIcons.metronome),
               ),
             );
           },
@@ -1070,13 +1073,13 @@ class _SongReaderState extends ConsumerState<SongReader>
                   children: [
                     FilledButton.icon(
                       onPressed: state.playing ? null : _startSongMetronome,
-                      icon: const Icon(Icons.play_arrow_rounded),
+                      icon: const Icon(LucideIcons.play),
                       label: const Text('Play'),
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
                       onPressed: state.playing ? _stopSongMetronome : null,
-                      icon: const Icon(Icons.stop_rounded),
+                      icon: const Icon(LucideIcons.square),
                       label: const Text('Stop'),
                     ),
                   ],
@@ -1109,7 +1112,8 @@ class _SongReaderState extends ConsumerState<SongReader>
       _metronomePulseController.forward(from: 0);
       unawaited(_metronomePlayer.click(accent: nextBeat == 0));
       final interval = Duration(
-        milliseconds: (60000 / _metronomeTempo).round(),
+        milliseconds: (60000 * 4 / (_metronomeTempo * _metronomeDenominator))
+            .round(),
       );
       _nextMetronomeBeat = _nextMetronomeBeat!.add(interval);
       while (_nextMetronomeBeat!.isBefore(DateTime.now())) {
@@ -1153,7 +1157,7 @@ class _SongReaderState extends ConsumerState<SongReader>
           ? l10n.songAutoScrollPause
           : l10n.songAutoScrollStart,
       child: Icon(
-        _isScrolling ? Icons.pause : Icons.keyboard_double_arrow_down,
+        _isScrolling ? LucideIcons.pause : LucideIcons.chevronsDown,
       ),
     );
 
@@ -1179,7 +1183,7 @@ class _SongReaderState extends ConsumerState<SongReader>
             tooltip: playerOpen
                 ? l10n.songYoutubeClosePlayer
                 : l10n.songYoutubeOpenPlayer,
-            child: const Icon(Icons.smart_display_rounded),
+            child: const Icon(LucideIcons.eighthNote),
           ),
           const SizedBox(height: 12),
         ],
@@ -1234,7 +1238,7 @@ class _SongReaderState extends ConsumerState<SongReader>
           ? theme.colorScheme.surface
           : theme.colorScheme.onSurfaceVariant,
       tooltip: l10n.annotationModeTitle,
-      child: Icon(widget.isAnnotating ? Icons.draw : Icons.draw_outlined),
+      child: Icon(widget.isAnnotating ? LucideIcons.pencil : LucideIcons.pencil),
     );
   }
 }
@@ -1443,63 +1447,63 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.draw,
-                            icon: Icons.edit_outlined,
+                            icon: LucideIcons.pencil,
                             tooltip: l10n.annotationPen,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.erase,
-                            icon: Icons.auto_fix_normal_outlined,
+                            icon: LucideIcons.highlighter,
                             tooltip: l10n.annotationEraser,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.erasePixel,
-                            icon: Icons.cleaning_services_outlined,
+                            icon: LucideIcons.eraser,
                             tooltip: l10n.annotationPixelEraser,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.line,
-                            icon: Icons.horizontal_rule_rounded,
+                            icon: LucideIcons.minus,
                             tooltip: l10n.annotationLine,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.rectangle,
-                            icon: Icons.crop_square_rounded,
+                            icon: LucideIcons.square,
                             tooltip: l10n.annotationRectangle,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.ellipse,
-                            icon: Icons.circle_outlined,
+                            icon: LucideIcons.circle,
                             tooltip: l10n.annotationEllipse,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.text,
-                            icon: Icons.text_fields_rounded,
+                            icon: LucideIcons.type,
                             tooltip: l10n.annotationText,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.select,
-                            icon: Icons.touch_app_outlined,
+                            icon: LucideIcons.mousePointer,
                             tooltip: l10n.annotationSelect,
                           ),
                           const SizedBox(width: 2),
                           _buildToolButton(
                             context: context,
                             targetTool: CanvasTool.lasso,
-                            icon: Icons.gesture_rounded,
+                            icon: LucideIcons.spline,
                             tooltip: l10n.annotationLasso,
                           ),
                           const SizedBox(width: 4),
@@ -1511,7 +1515,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                           ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.layers_outlined, size: 20),
+                            icon: const Icon(LucideIcons.layers, size: 20),
                             tooltip: l10n.annotationLayers,
                             onPressed: () => _openLayersSheet(context, l10n),
                           ),
@@ -1529,7 +1533,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                         children: [
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.undo_rounded, size: 20),
+                            icon: const Icon(LucideIcons.undo2, size: 20),
                             tooltip: l10n.annotationUndo,
                             onPressed: state.canUndo
                                 ? () {
@@ -1540,7 +1544,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                           ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.redo_rounded, size: 20),
+                            icon: const Icon(LucideIcons.redo2, size: 20),
                             tooltip: l10n.annotationRedo,
                             onPressed: state.canRedo
                                 ? () {
@@ -1552,7 +1556,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                           IconButton(
                             visualDensity: VisualDensity.compact,
                             icon: const Icon(
-                              Icons.delete_sweep_outlined,
+                              LucideIcons.trash2,
                               size: 20,
                             ),
                             tooltip: l10n.annotationClear,
@@ -1567,20 +1571,20 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                       children: [
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.undo_rounded, size: 20),
+                          icon: const Icon(LucideIcons.undo2, size: 20),
                           tooltip: l10n.annotationUndo,
                           onPressed: null,
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.redo_rounded, size: 20),
+                          icon: const Icon(LucideIcons.redo2, size: 20),
                           tooltip: l10n.annotationRedo,
                           onPressed: null,
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(
-                            Icons.delete_sweep_outlined,
+                            LucideIcons.trash2,
                             size: 20,
                           ),
                           tooltip: l10n.annotationClear,
@@ -1682,7 +1686,7 @@ class _HosannaAnnotationToolbar extends StatelessWidget {
                             child: const SizedBox(
                               width: 44,
                               height: 44,
-                              child: Icon(Icons.colorize_rounded, size: 20),
+                              child: Icon(LucideIcons.pipette, size: 20),
                             ),
                           ),
                         ),
@@ -1771,7 +1775,7 @@ class _ReaderNav extends StatelessWidget {
         children: [
           IconButton(
             onPressed: canPrev ? onPrev : null,
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             tooltip: l10n.songPrevious,
           ),
           if (label.isNotEmpty)
@@ -1786,7 +1790,7 @@ class _ReaderNav extends StatelessWidget {
             ),
           IconButton(
             onPressed: canNext ? onNext : null,
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             tooltip: l10n.songNext,
           ),
         ],

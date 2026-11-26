@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
 import 'auth_scaffold.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
   const EmailVerificationPage({super.key});
@@ -43,7 +44,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
       return AuthScaffold(
         title: l10n.authEmailVerified,
         heroAsset: AuthHeroes.emailVerified,
-        heroFallbackIcon: Icons.verified_rounded,
+        heroFallbackIcon: LucideIcons.badgeCheck,
         showBack: false,
         child: const SizedBox.shrink(),
       );
@@ -53,7 +54,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
       title: l10n.authVerifyEmailTitle,
       subtitle: l10n.authVerifyEmailMessage,
       heroAsset: AuthHeroes.verifyEmail,
-      heroFallbackIcon: Icons.mark_email_read_outlined,
+      heroFallbackIcon: LucideIcons.mailCheck,
       showBack: false,
       child: AuthPrimaryButton(
         label: l10n.authResendEmail,

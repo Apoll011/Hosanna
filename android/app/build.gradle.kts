@@ -13,7 +13,7 @@ if (file("google-services.json").exists()) {
 }
 
 android {
-    namespace = "com.embrace.hosanna"
+    namespace = "live.hosanna.music"
     // flutter_local_notifications 23 + androidx.core 1.19 require API 37;
     // Flutter 3.50 still defaults compileSdk to 36.
     compileSdk = 37
@@ -27,10 +27,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.embrace.hosanna"
+        applicationId = "live.hosanna.music"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 28
         targetSdk = flutter.targetSdkVersion
         multiDexEnabled = true
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
@@ -56,8 +56,8 @@ android {
 
     buildTypes {
         release {
-            // Fall back to debug signing locally (no keystore) so
-            // `flutter run --release` works; CI provides a real keystore.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs
                 .getByName("release")
                 .takeIf { file(System.getenv("KEYSTORE_FILE") ?: "release.keystore").exists() }

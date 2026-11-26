@@ -159,6 +159,17 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _conflictDocumentMeta = const VerificationMeta(
+    'conflictDocument',
+  );
+  @override
+  late final GeneratedColumn<String> conflictDocument = GeneratedColumn<String>(
+    'conflict_document',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     isDeleted,
@@ -175,6 +186,7 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     songNumber,
     createdAt,
     updatedAt,
+    conflictDocument,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -280,6 +292,15 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('conflict_document')) {
+      context.handle(
+        _conflictDocumentMeta,
+        conflictDocument.isAcceptableOrUnknown(
+          data['conflict_document']!,
+          _conflictDocumentMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -351,6 +372,10 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
         DriftSqlType.string,
         data['${effectivePrefix}updated_at'],
       )!,
+      conflictDocument: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}conflict_document'],
+      ),
     );
   }
 
@@ -378,6 +403,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
   final int? songNumber;
   final String createdAt;
   final String updatedAt;
+  final String? conflictDocument;
   const SongRow({
     required this.isDeleted,
     required this.dirty,
@@ -393,6 +419,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     this.songNumber,
     required this.createdAt,
     required this.updatedAt,
+    this.conflictDocument,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -421,6 +448,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     }
     map['created_at'] = Variable<String>(createdAt);
     map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || conflictDocument != null) {
+      map['conflict_document'] = Variable<String>(conflictDocument);
+    }
     return map;
   }
 
@@ -448,6 +478,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           : Value(songNumber),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      conflictDocument: conflictDocument == null && nullToAbsent
+          ? const Value.absent()
+          : Value(conflictDocument),
     );
   }
 
@@ -471,6 +504,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       songNumber: serializer.fromJson<int?>(json['songNumber']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      conflictDocument: serializer.fromJson<String?>(json['conflictDocument']),
     );
   }
   @override
@@ -491,6 +525,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       'songNumber': serializer.toJson<int?>(songNumber),
       'createdAt': serializer.toJson<String>(createdAt),
       'updatedAt': serializer.toJson<String>(updatedAt),
+      'conflictDocument': serializer.toJson<String?>(conflictDocument),
     };
   }
 
@@ -509,6 +544,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     Value<int?> songNumber = const Value.absent(),
     String? createdAt,
     String? updatedAt,
+    Value<String?> conflictDocument = const Value.absent(),
   }) => SongRow(
     isDeleted: isDeleted ?? this.isDeleted,
     dirty: dirty ?? this.dirty,
@@ -526,6 +562,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     songNumber: songNumber.present ? songNumber.value : this.songNumber,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    conflictDocument: conflictDocument.present
+        ? conflictDocument.value
+        : this.conflictDocument,
   );
   SongRow copyWithCompanion(SongsCompanion data) {
     return SongRow(
@@ -547,6 +586,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           : this.songNumber,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      conflictDocument: data.conflictDocument.present
+          ? data.conflictDocument.value
+          : this.conflictDocument,
     );
   }
 
@@ -566,7 +608,8 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           ..write('tags: $tags, ')
           ..write('songNumber: $songNumber, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('conflictDocument: $conflictDocument')
           ..write(')'))
         .toString();
   }
@@ -587,6 +630,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     songNumber,
     createdAt,
     updatedAt,
+    conflictDocument,
   );
   @override
   bool operator ==(Object other) =>
@@ -605,7 +649,8 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           other.tags == this.tags &&
           other.songNumber == this.songNumber &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.conflictDocument == this.conflictDocument);
 }
 
 class SongsCompanion extends UpdateCompanion<SongRow> {
@@ -623,6 +668,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
   final Value<int?> songNumber;
   final Value<String> createdAt;
   final Value<String> updatedAt;
+  final Value<String?> conflictDocument;
   final Value<int> rowid;
   const SongsCompanion({
     this.isDeleted = const Value.absent(),
@@ -639,6 +685,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.songNumber = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.conflictDocument = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SongsCompanion.insert({
@@ -656,6 +703,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.songNumber = const Value.absent(),
     required String createdAt,
     required String updatedAt,
+    this.conflictDocument = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -679,6 +727,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Expression<int>? songNumber,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
+    Expression<String>? conflictDocument,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -696,6 +745,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       if (songNumber != null) 'song_number': songNumber,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (conflictDocument != null) 'conflict_document': conflictDocument,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -715,6 +765,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Value<int?>? songNumber,
     Value<String>? createdAt,
     Value<String>? updatedAt,
+    Value<String?>? conflictDocument,
     Value<int>? rowid,
   }) {
     return SongsCompanion(
@@ -732,6 +783,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       songNumber: songNumber ?? this.songNumber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      conflictDocument: conflictDocument ?? this.conflictDocument,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -783,6 +835,9 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<String>(updatedAt.value);
     }
+    if (conflictDocument.present) {
+      map['conflict_document'] = Variable<String>(conflictDocument.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -806,6 +861,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
           ..write('songNumber: $songNumber, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('conflictDocument: $conflictDocument, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4111,6 +4167,7 @@ typedef $$SongsTableCreateCompanionBuilder = SongsCompanion Function({
   Value<int?> songNumber,
   required String createdAt,
   required String updatedAt,
+  Value<String?> conflictDocument,
   Value<int> rowid,
 });
 typedef $$SongsTableUpdateCompanionBuilder = SongsCompanion Function({
@@ -4128,6 +4185,7 @@ typedef $$SongsTableUpdateCompanionBuilder = SongsCompanion Function({
   Value<int?> songNumber,
   Value<String> createdAt,
   Value<String> updatedAt,
+  Value<String?> conflictDocument,
   Value<int> rowid,
 });
 
@@ -4207,6 +4265,11 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
 
   ColumnFilters<String> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get conflictDocument => $composableBuilder(
+    column: $table.conflictDocument,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4289,6 +4352,11 @@ class $$SongsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get conflictDocument => $composableBuilder(
+    column: $table.conflictDocument,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SongsTableAnnotationComposer
@@ -4345,6 +4413,11 @@ class $$SongsTableAnnotationComposer
 
   GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get conflictDocument => $composableBuilder(
+    column: $table.conflictDocument,
+    builder: (column) => column,
+  );
 }
 
 class $$SongsTableTableManager
@@ -4389,6 +4462,7 @@ class $$SongsTableTableManager
                 Value<int?> songNumber = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
+                Value<String?> conflictDocument = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SongsCompanion(
                 isDeleted: isDeleted,
@@ -4405,6 +4479,7 @@ class $$SongsTableTableManager
                 songNumber: songNumber,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                conflictDocument: conflictDocument,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4423,6 +4498,7 @@ class $$SongsTableTableManager
                 Value<int?> songNumber = const Value.absent(),
                 required String createdAt,
                 required String updatedAt,
+                Value<String?> conflictDocument = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SongsCompanion.insert(
                 isDeleted: isDeleted,
@@ -4439,6 +4515,7 @@ class $$SongsTableTableManager
                 songNumber: songNumber,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                conflictDocument: conflictDocument,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -1,3 +1,4 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/app/providers.dart';
 import 'package:hosanna/core/db/database.dart';
+import 'package:hosanna/features/songs/domain/library_controller.dart';
 import 'package:hosanna/features/songs/presentation/song_library_page.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'test_pump.dart';
 
@@ -60,6 +63,14 @@ void main() {
         );
   }
 
+  Future<void> disposeApp(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.idle();
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(Duration.zero);
+    }
+  }
+
   Future<void> pumpLibrary(WidgetTester tester) async {
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
@@ -67,6 +78,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
           sharedPreferencesProvider.overrideWithValue(prefs),
+          cookieJarProvider.overrideWithValue(CookieJar()),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -80,7 +92,7 @@ void main() {
   }
 
   Future<void> openFilters(WidgetTester tester) async {
-    await tester.tap(find.byIcon(Icons.filter_list));
+    await tester.tap(find.byIcon(LucideIcons.filter));
     await pumpFrames(tester);
   }
 
@@ -120,6 +132,7 @@ void main() {
 
       await tester.tap(find.text('Done'));
       await pumpFrames(tester);
+      await disposeApp(tester);
     });
 
     testWidgets('sort choice chip shows pressed state', (tester) async {
@@ -148,6 +161,7 @@ void main() {
         tester.getTopLeft(find.text('Beta')).dy,
         lessThan(tester.getTopLeft(find.text('Alpha')).dy),
       );
+      await disposeApp(tester);
     });
   });
 
@@ -181,6 +195,7 @@ void main() {
       expect(find.text('Song B'), findsOneWidget);
       expect(find.text('Song C'), findsOneWidget);
       expect(find.text('Song D'), findsNothing);
+      await disposeApp(tester);
     });
   });
 
@@ -204,6 +219,7 @@ void main() {
       expect(chip(tester, 'G').selected, isTrue);
       expect(find.text('Song B'), findsOneWidget);
       expect(find.text('Song C'), findsNothing);
+      await disposeApp(tester);
     });
 
     testWidgets('"only with chords" hides chord-less songs', (tester) async {
@@ -212,17 +228,16 @@ void main() {
       await pumpLibrary(tester);
 
       await openFilters(tester);
-      await tester.ensureVisible(find.text('Only with chords'));
+      await tester.ensureVisible(find.byType(SwitchListTile).last);
       await pumpFrames(tester);
-      await tester.tap(find.text('Only with chords'));
+      await tester.tap(find.byType(SwitchListTile).last);
       await pumpFrames(tester);
 
-      final tile = tester.widget<SwitchListTile>(
-        find.widgetWithText(SwitchListTile, 'Only with chords'),
-      );
+      final tile = tester.widget<SwitchListTile>(find.byType(SwitchListTile).last);
       expect(tile.value, isTrue);
       expect(find.text('Song A'), findsOneWidget);
       expect(find.text('Song B'), findsNothing);
+      await disposeApp(tester);
     });
   });
 
@@ -235,6 +250,12 @@ void main() {
       await seedSong(id: 'c', title: 'Song C');
       await pumpLibrary(tester);
 
+      final element = tester.element(find.byType(SongLibraryPage));
+      ProviderScope.containerOf(element)
+          .read(libraryControllerProvider.notifier)
+          .selectSection(LibrarySection.collections);
+      await pumpFrames(tester);
+
       await openFilters(tester);
       await tapChip(tester, 'Worship');
       expect(chip(tester, 'Worship').selected, isTrue);
@@ -246,6 +267,7 @@ void main() {
       expect(chip(tester, 'Hymns').selected, isTrue);
       expect(find.text('Song B'), findsOneWidget);
       expect(find.text('Song C'), findsNothing);
+      await disposeApp(tester);
     });
   });
 
@@ -256,7 +278,7 @@ void main() {
       await seedSong(id: 'b', title: 'Song B');
       await pumpLibrary(tester);
 
-      expect(find.byIcon(Icons.filter_alt_off), findsNothing);
+      expect(find.byIcon(LucideIcons.filterX), findsNothing);
 
       await openFilters(tester);
       await tapChip(tester, 'worship');
@@ -280,6 +302,7 @@ void main() {
       expect(find.text('Song B'), findsOneWidget);
       expect(find.widgetWithText(InputChip, 'worship'), findsNothing);
       expect(find.text('1'), findsNothing);
+      await disposeApp(tester);
     });
   });
 }

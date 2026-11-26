@@ -8,6 +8,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../songs/presentation/chordpro/song_display_settings.dart';
 import '../data/setup_controller.dart';
 import '../domain/setup_draft.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Post-login preference wizard (role, instrument, stage defaults, language).
 ///
@@ -139,7 +140,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                       IconButton(
                         tooltip: l10n.commonBack,
                         onPressed: _finishing ? null : _back,
-                        icon: const Icon(Icons.arrow_back_rounded),
+                        icon: const Icon(LucideIcons.arrowLeft),
                       )
                     else
                       const SizedBox(width: 48),
@@ -285,7 +286,7 @@ class _WelcomeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepBody(
       imageAsset: HosannaIllustrations.setupWelcome,
-      fallbackIcon: Icons.auto_awesome_rounded,
+      fallbackIcon: LucideIcons.sparkles,
       title: l10n.setupWelcomeTitle,
       subtitle: l10n.setupWelcomeSubtitle,
       child: const SizedBox.shrink(),
@@ -316,7 +317,7 @@ class _RoleStep extends StatelessWidget {
             Expanded(
               child: _ChoiceTile(
                 asset: HosannaIllustrations.setupRoleMusician,
-                fallbackIcon: Icons.music_note_rounded,
+                fallbackIcon: LucideIcons.music,
                 title: l10n.setupRoleMusician,
                 selected: selected == SetupRole.musician,
                 onTap: () => onSelect(SetupRole.musician),
@@ -326,7 +327,7 @@ class _RoleStep extends StatelessWidget {
             Expanded(
               child: _ChoiceTile(
                 asset: HosannaIllustrations.setupRoleLeader,
-                fallbackIcon: Icons.groups_rounded,
+                fallbackIcon: LucideIcons.users,
                 title: l10n.setupRoleLeader,
                 selected: selected == SetupRole.leader,
                 onTap: () => onSelect(SetupRole.leader),
@@ -432,31 +433,31 @@ class _FocusStep extends StatelessWidget {
         SetupPrimaryFocus.guitar,
         l10n.setupFocusGuitar,
         HosannaIllustrations.setupInstrumentGuitar,
-        Icons.graphic_eq_rounded,
+        LucideIcons.metronome,
       ),
       (
         SetupPrimaryFocus.ukulele,
         l10n.setupFocusUkulele,
         HosannaIllustrations.setupInstrumentUkulele,
-        Icons.music_note_rounded,
+        LucideIcons.music,
       ),
       (
         SetupPrimaryFocus.bass,
         l10n.setupFocusBass,
         HosannaIllustrations.setupInstrumentBass,
-        Icons.queue_music_rounded,
+        LucideIcons.listMusic,
       ),
       (
         SetupPrimaryFocus.piano,
         l10n.setupFocusPiano,
         HosannaIllustrations.setupInstrumentPiano,
-        Icons.piano_rounded,
+        LucideIcons.piano,
       ),
       (
         SetupPrimaryFocus.vocals,
         l10n.setupFocusVocals,
         HosannaIllustrations.setupInstrumentVocals,
-        Icons.mic_rounded,
+        LucideIcons.mic,
       ),
     ];
 
@@ -528,14 +529,14 @@ class _PrefsStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepBody(
       imageAsset: HosannaIllustrations.setupPrefs,
-      fallbackIcon: Icons.tune_rounded,
+      fallbackIcon: LucideIcons.slidersHorizontal,
       title: l10n.setupPrefsTitle,
       subtitle: l10n.setupPrefsSubtitle,
       child: Column(
         children: [
           if (showDiagramsToggle) ...[
             _ToggleCard(
-              icon: Icons.grid_view_rounded,
+              icon: LucideIcons.layoutGrid,
               title: l10n.setupPrefDiagrams,
               subtitle: l10n.setupPrefDiagramsDesc,
               value: draft.showDiagrams,
@@ -544,7 +545,7 @@ class _PrefsStep extends StatelessWidget {
             const SizedBox(height: 10),
           ],
           _ToggleCard(
-            icon: Icons.phonelink_lock_rounded,
+            icon: LucideIcons.smartphone,
             title: l10n.setupPrefAwake,
             subtitle: l10n.setupPrefAwakeDesc,
             value: draft.keepScreenAwake,
@@ -578,7 +579,7 @@ class _LanguageStep extends StatelessWidget {
 
     return _StepBody(
       imageAsset: HosannaIllustrations.setupLanguage,
-      fallbackIcon: Icons.language_rounded,
+      fallbackIcon: LucideIcons.globe,
       title: l10n.setupLanguageTitle,
       subtitle: l10n.setupLanguageSubtitle,
       child: Column(
@@ -620,7 +621,7 @@ class _DoneStep extends StatelessWidget {
 
     return _StepBody(
       imageAsset: HosannaIllustrations.setupDone,
-      fallbackIcon: Icons.check_circle_rounded,
+      fallbackIcon: LucideIcons.checkCircle2,
       title: l10n.setupDoneTitle,
       subtitle: l10n.setupDoneSubtitle,
       child: Container(
@@ -707,7 +708,7 @@ class _StepBody extends StatelessWidget {
             if (imageAsset != null) ...[
               _HeroImage(
                 asset: imageAsset!,
-                fallbackIcon: fallbackIcon ?? Icons.music_note_rounded,
+                fallbackIcon: fallbackIcon ?? LucideIcons.music,
               ),
               const SizedBox(height: 20),
             ],
@@ -831,8 +832,8 @@ class _SimpleChoiceCard extends StatelessWidget {
               ),
               Icon(
                 selected
-                    ? Icons.check_circle_rounded
-                    : Icons.circle_outlined,
+                    ? LucideIcons.checkCircle2
+                    : LucideIcons.circle,
                 color: selected ? scheme.primary : scheme.outline,
               ),
             ],

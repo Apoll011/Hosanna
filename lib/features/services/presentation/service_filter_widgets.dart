@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/shell_modal.dart';
 import 'service_filters.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 String serviceSortLabel(AppLocalizations l10n, ServiceSort sort) {
   return switch (sort) {
@@ -63,7 +64,7 @@ class ServiceFilterButton extends StatelessWidget {
       isLabelVisible: activeCount > 0,
       label: Text('$activeCount'),
       child: IconButton(
-        icon: const Icon(Icons.filter_list),
+        icon: const Icon(LucideIcons.filter),
         tooltip: l10n.servicesFilter,
         onPressed: onPressed,
       ),
@@ -161,12 +162,12 @@ class _ServiceFilterSheetState extends State<ServiceFilterSheet> {
                 ButtonSegment(
                   value: true,
                   label: Text(l10n.songsSortAscending),
-                  icon: const Icon(Icons.arrow_upward_rounded, size: 16),
+                  icon: const Icon(LucideIcons.arrowUp, size: 16),
                 ),
                 ButtonSegment(
                   value: false,
                   label: Text(l10n.songsSortDescending),
-                  icon: const Icon(Icons.arrow_downward_rounded, size: 16),
+                  icon: const Icon(LucideIcons.arrowDown, size: 16),
                 ),
               ],
               selected: {_draft.sortAscending},
@@ -282,7 +283,7 @@ class ServiceActiveFilterChips extends StatelessWidget {
               ),
             ),
           ActionChip(
-            avatar: const Icon(Icons.filter_alt_off_outlined, size: 16),
+            avatar: const Icon(LucideIcons.filterX, size: 16),
             label: Text(l10n.songsClearFilters),
             onPressed: onReset,
           ),

@@ -133,7 +133,13 @@ class ChordNotationRegistry {
     },
   );
 
-  static const systems = [international, latin, german, sargam];
+  static const nashville = _MappedChordNotation(
+    id: 'nashville',
+    name: 'Nashville',
+    noteNames: {},
+  );
+
+  static const systems = [international, latin, german, sargam, nashville];
 
   static ChordNotationSystem resolve(String? id) => systems.firstWhere(
     (system) => system.id == id,
@@ -148,7 +154,15 @@ class ChordNotationConverter {
   static String formatNote(String note, ChordNotationSystem notation) =>
       notation.noteNames[note] ?? note;
 
-  static String formatChord(String chord, ChordNotationSystem notation) {
+  static String formatChord(
+    String chord,
+    ChordNotationSystem notation, {
+    String? key,
+  }) {
+    if (notation.id == ChordNotationRegistry.nashville.id) {
+      if (key == null) return chord;
+      return _formatNashvilleChord(chord, key);
+    }
     if (notation.id == ChordNotationRegistry.international.id) return chord;
     final rootMatch = _chordPattern.firstMatch(chord);
     if (rootMatch == null) return chord;
@@ -160,5 +174,49 @@ class ChordNotationConverter {
       return '${formatNote(root, notation)}$suffix';
     }
     return '${formatNote(root, notation)}${bassMatch.group(1)!}/${formatNote(bassMatch.group(2)!, notation)}';
+  }
+
+  static String _formatNashvilleChord(String chord, String key) {
+    final rootMatch = _chordPattern.firstMatch(chord);
+    final keyMatch = _chordPattern.firstMatch(key);
+    if (rootMatch == null || keyMatch == null) return chord;
+    final suffix = rootMatch.group(2)!;
+    final bassMatch = _bassPattern.firstMatch(suffix);
+
+    String accidental(int pitch) {
+      final interval = (pitch % 12 + 12) % 12;
+      const degrees = <int, String>{
+        0: '1',
+        1: 'b2',
+        2: '2',
+        3: 'b3',
+        4: '3',
+        5: '4',
+        6: '#4',
+        7: '5',
+        8: 'b6',
+        9: '6',
+        10: 'b7',
+        11: '7',
+      };
+      return degrees[interval]!;
+    }
+
+    final keyPitch = _pitchClass(keyMatch.group(1)!);
+    String degree(String note) => accidental(_pitchClass(note) - keyPitch);
+    if (bassMatch == null) return '${degree(rootMatch.group(1)!)}$suffix';
+    return '${degree(rootMatch.group(1)!)}${bassMatch.group(1)!}/${degree(bassMatch.group(2)!)}';
+  }
+
+  static int _pitchClass(String note) {
+    const naturals = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11};
+    final value = naturals[note[0]];
+    if (value == null) return 0;
+    return value +
+        (note.endsWith('#')
+            ? 1
+            : note.endsWith('b')
+            ? -1
+            : 0);
   }
 }

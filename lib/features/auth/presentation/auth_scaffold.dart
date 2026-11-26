@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/design/illustrations.dart';
 import '../../../shared/widgets/hosanna_logo.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Shared chrome for auth screens — matches the post-login setup wizard:
 /// soft primary wash, optional hero art, bold title, and rounded controls.
@@ -12,7 +13,7 @@ class AuthScaffold extends StatelessWidget {
     required this.child,
     this.subtitle,
     this.heroAsset,
-    this.heroFallbackIcon = Icons.music_note_rounded,
+    this.heroFallbackIcon = LucideIcons.music,
     this.showLogo = true,
     this.showBack = true,
     this.footer,
@@ -65,7 +66,7 @@ class AuthScaffold extends StatelessWidget {
                   child: IconButton(
                     tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
+                    icon: const Icon(LucideIcons.arrowLeft),
                   ),
                 )
               else

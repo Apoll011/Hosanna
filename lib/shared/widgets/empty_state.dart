@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/design/tokens.dart';
 import 'shell_insets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Scales empty-state art for phone / tablet / large layouts.
 double emptyStateIllustrationSize(BuildContext context, {double base = 200}) {
@@ -23,7 +24,7 @@ class EmptyState extends StatelessWidget {
     this.illustrationAsset,
     this.illustrationSize,
     this.description,
-    this.primaryIcon = Icons.filter_alt_off_outlined,
+    this.primaryIcon = LucideIcons.filterX,
     this.primaryLabel,
     this.onPrimary,
     this.secondaryLabel,
@@ -93,12 +94,12 @@ class ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = _EmptyStateBody(
-      icon: Icons.cloud_off_outlined,
+      icon: LucideIcons.cloudOff,
       illustrationAsset: illustrationAsset,
       illustrationSize: null,
       title: title,
       description: description,
-      primaryIcon: Icons.refresh,
+      primaryIcon: LucideIcons.refreshCw,
       primaryLabel: retryLabel,
       onPrimary: onRetry,
       tone: _EmptyTone.error,

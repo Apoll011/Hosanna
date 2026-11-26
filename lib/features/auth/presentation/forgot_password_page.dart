@@ -5,6 +5,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
 import 'auth_scaffold.dart';
 import 'auth_ui_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -61,7 +62,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       title: _sent ? l10n.authResetLinkSent : l10n.authResetPasswordTitle,
       subtitle: _sent ? null : l10n.authResetPasswordMessage,
       heroAsset: _sent ? AuthHeroes.resetSent : AuthHeroes.forgotPassword,
-      heroFallbackIcon: Icons.lock_reset_rounded,
+      heroFallbackIcon: LucideIcons.keyRound,
       child: _sent
           ? const SizedBox.shrink()
           : Column(

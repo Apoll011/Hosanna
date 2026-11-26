@@ -94,6 +94,16 @@ abstract class Instrument {
     ParsedChord chord, {
     InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
   });
+
+  /// Alternative playable diagrams. Instruments without a generator retain
+  /// their existing single curated fingering.
+  List<InstrumentFingering> fingerings(
+    ParsedChord chord, {
+    InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
+  }) {
+    final value = fingering(chord, options: options);
+    return value == null ? const [] : [value];
+  }
 }
 
 /// Ordered collection of available instruments, with id lookup.

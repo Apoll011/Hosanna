@@ -14,6 +14,7 @@ import '../../../../shared/widgets/hosanna_surface.dart';
 import '../../../../shared/widgets/shell_modal.dart';
 import 'ai_import_models.dart';
 import 'ai_import_nav.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Max PDF pages sent to the server (1 primary + up to 4 extras).
 const _maxPdfPages = 5;
@@ -317,7 +318,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.tips_and_updates_outlined,
+                        LucideIcons.lightbulb,
                         color: scheme.primary,
                       ),
                       const SizedBox(width: HosannaSpacing.sm),
@@ -343,21 +344,21 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                 ],
                 const SizedBox(height: HosannaSpacing.xl),
                 _SourceCard(
-                  icon: Icons.photo_camera_outlined,
+                  icon: LucideIcons.camera,
                   title: l10n.songsTakePhoto,
                   subtitle: l10n.songsImportWithAiDesc,
                   onTap: _busy ? null : _pickCamera,
                 ),
                 const SizedBox(height: HosannaSpacing.sm),
                 _SourceCard(
-                  icon: Icons.photo_library_outlined,
+                  icon: LucideIcons.images,
                   title: l10n.songsChooseGallery,
                   subtitle: l10n.songsImportWithAiDesc,
                   onTap: _busy ? null : _pickGallery,
                 ),
                 const SizedBox(height: HosannaSpacing.sm),
                 _SourceCard(
-                  icon: Icons.picture_as_pdf_outlined,
+                  icon: LucideIcons.fileText,
                   title: l10n.songsImportPdf,
                   subtitle: l10n.songsAiPdfMultiPageHint,
                   onTap: _busy ? null : _pickPdf,
@@ -366,7 +367,7 @@ class _AiImportSourcePageState extends State<AiImportSourcePage> {
                 Center(
                   child: TextButton.icon(
                     onPressed: _busy ? null : _showHowItWorks,
-                    icon: const Icon(Icons.help_outline_rounded, size: 18),
+                    icon: const Icon(LucideIcons.helpCircle, size: 18),
                     label: Text(l10n.songsHowItWorks),
                   ),
                 ),
@@ -445,7 +446,7 @@ class _SourceCard extends StatelessWidget {
             ),
           ),
           Icon(
-            Icons.chevron_right_rounded,
+            LucideIcons.chevronRight,
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ],

@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/chordpro/instruments/instruments.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Presentation-only metadata for the registered instruments: an icon and a
 /// localized label. Kept out of the domain so instruments stay Flutter-free.
 extension InstrumentVisuals on Instrument {
   IconData get icon => switch (id) {
-        'guitar' => Icons.music_note_rounded,
-        'bass' => Icons.queue_music_rounded,
-        'ukulele' => Icons.nightlife_rounded,
-        'piano' => Icons.piano,
-        _ => Icons.music_note_outlined,
+        'guitar' => LucideIcons.music,
+        'bass' => LucideIcons.listMusic,
+        'ukulele' => LucideIcons.partyPopper,
+        'piano' => LucideIcons.piano,
+        _ => LucideIcons.music,
       };
 
   String localizedLabel(AppLocalizations l10n) => switch (id) {

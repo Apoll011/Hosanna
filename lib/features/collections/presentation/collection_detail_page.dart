@@ -18,6 +18,7 @@ import '../../songs/presentation/song_filter_widgets.dart';
 import '../../songs/presentation/song_filters.dart';
 import '../data/collection_repository.dart';
 import 'collection_visuals.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Songs inside one collection — same list patterns as the library, with a
 /// small identity header (cover / accent / description).
@@ -171,7 +172,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
               ),
         actions: [
           IconButton(
-            icon: Icon(_searchOpen ? Icons.close : Icons.search),
+            icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search),
             tooltip: l10n.commonSearch,
             onPressed: () {
               setState(() {
@@ -238,8 +239,8 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                                 ? l10n.songsClearSearch
                                 : l10n.songsClearFilters,
                             primaryIcon: hasQuery
-                                ? Icons.search_off_outlined
-                                : Icons.filter_alt_off_outlined,
+                                ? LucideIcons.searchX
+                                : LucideIcons.filterX,
                             onPrimary: hasQuery
                                 ? _clearSearch
                                 : _resetFilters,
@@ -334,8 +335,8 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                               IconButton(
                                 icon: Icon(
                                   isFav
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
+                                      ? LucideIcons.heart
+                                      : LucideIcons.heart,
                                   color: isFav ? Colors.red : null,
                                 ),
                                 tooltip: l10n.navFavorites,

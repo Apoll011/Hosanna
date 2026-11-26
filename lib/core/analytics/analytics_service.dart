@@ -24,6 +24,9 @@ class AnalyticsService {
   static final AnalyticsService instance = AnalyticsService._();
 
   bool _initialized = false;
+  bool _enabled = false;
+  String? _apiKey;
+  String? _host;
 
   /// Converts a [Map<String, dynamic>] to [Map<String, Object>] as required
   /// by the PostHog Flutter API (removes null values).
@@ -41,11 +44,13 @@ class AnalyticsService {
   ///
   /// Safe to call multiple times; subsequent calls are no-ops.
   Future<void> init({required String apiKey, required String host}) async {
+    _apiKey = apiKey;
+    _host = host;
     if (_initialized) return;
     try {
       final config = PostHogConfig(apiKey)
         ..host = host
-        ..captureApplicationLifecycleEvents = true
+        ..captureApplicationLifecycleEvents = false
         ..debug = kDebugMode;
       await Posthog().setup(config);
       _initialized = true;
@@ -63,6 +68,7 @@ class AnalyticsService {
     String? orgName,
     String? role,
   }) async {
+    if (!_enabled) return;
     try {
       await Posthog().identify(
         userId: userId,
@@ -81,6 +87,7 @@ class AnalyticsService {
 
   /// Resets the PostHog person — call on sign-out.
   Future<void> reset() async {
+    if (!_enabled) return;
     try {
       await Posthog().reset();
     } catch (e) {
@@ -90,6 +97,7 @@ class AnalyticsService {
 
   /// Captures an [AnalyticsEvent] in PostHog.
   Future<void> track(AnalyticsEvent event) async {
+    if (!_enabled) return;
     try {
       await Posthog().capture(
         eventName: event.name,
@@ -105,6 +113,7 @@ class AnalyticsService {
     String screenName, {
     Map<String, dynamic>? properties,
   }) async {
+    if (!_enabled) return;
     try {
       await Posthog().screen(
         screenName: screenName,
@@ -117,6 +126,7 @@ class AnalyticsService {
 
   /// Returns whether the given feature flag is enabled for the current user.
   Future<bool> isFeatureEnabled(String flagKey) async {
+    if (!_enabled) return false;
     try {
       return await Posthog().isFeatureEnabled(flagKey);
     } catch (e) {
@@ -127,6 +137,7 @@ class AnalyticsService {
 
   /// Returns the value of the given feature flag (may be bool, String, etc.).
   Future<dynamic> getFeatureFlag(String flagKey) async {
+    if (!_enabled) return null;
     try {
       return await Posthog().getFeatureFlag(flagKey);
     } catch (e) {
@@ -137,6 +148,7 @@ class AnalyticsService {
 
   /// Reloads feature flags from PostHog.
   Future<void> reloadFeatureFlags() async {
+    if (!_enabled) return;
     try {
       await Posthog().reloadFeatureFlags();
     } catch (e) {
@@ -146,6 +158,7 @@ class AnalyticsService {
 
   /// Flushes queued events to PostHog immediately.
   Future<void> flush() async {
+    if (!_enabled) return;
     try {
       await Posthog().flush();
     } catch (e) {
@@ -154,12 +167,17 @@ class AnalyticsService {
   }
 
   /// Opts the user out of (or back into) analytics data collection.
-  void setEnabled(bool enabled) {
+  Future<void> setEnabled(bool enabled) async {
+    _enabled = enabled;
     try {
       if (enabled) {
-        Posthog().optIn();
-      } else {
-        Posthog().optOut();
+        if (!_initialized && _apiKey != null && _host != null) {
+          await init(apiKey: _apiKey!, host: _host!);
+        }
+        if (_initialized) await Posthog().optIn();
+      } else if (_initialized) {
+        await Posthog().optOut();
+        await Posthog().reset();
       }
     } catch (e) {
       debugPrint('[Analytics] setEnabled error: $e');
@@ -177,10 +195,9 @@ class AnalyticsService {
   }) async {
     try {
       final stackStr = stackTrace?.toString();
-      final truncated =
-          stackStr != null && stackStr.length > 2000
-              ? '${stackStr.substring(0, 2000)}…'
-              : stackStr;
+      final truncated = stackStr != null && stackStr.length > 2000
+          ? '${stackStr.substring(0, 2000)}…'
+          : stackStr;
       await track(
         AppErrorCaptured(
           error: error.toString(),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/features/songs/domain/chordpro/parser.dart';
 import 'package:hosanna/features/songs/presentation/chordpro/chord_pro_renderer.dart';
 import 'package:hosanna/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 Widget _host(String content, {String chordNotationId = 'international'}) =>
     MaterialApp(
@@ -232,7 +233,7 @@ $directive
         find.text('Verso 4 e final modulam para D (meio tom acima)'),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.music_note), findsOneWidget);
+      expect(find.byIcon(LucideIcons.music), findsOneWidget);
       expect(find.text('Tom: C'), findsOneWidget);
     });
 
@@ -252,7 +253,7 @@ $directive
       await tester.pumpAndSettle();
 
       expect(find.text('Subir meio tom para Eb'), findsWidgets);
-      expect(find.byIcon(Icons.music_note), findsWidgets);
+      expect(find.byIcon(LucideIcons.music), findsWidgets);
     });
   });
 }

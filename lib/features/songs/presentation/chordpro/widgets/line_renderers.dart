@@ -4,6 +4,8 @@ import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/chordpro/chord_notation.dart';
 import 'render_model.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Display options shared by every line in a song.
 class LineRenderOptions {
   const LineRenderOptions({
@@ -11,6 +13,7 @@ class LineRenderOptions {
     required this.fontSize,
     required this.onChordTap,
     required this.chordNotation,
+    required this.tonic,
   });
 
   final bool showChords;
@@ -20,6 +23,7 @@ class LineRenderOptions {
 
   final void Function(String chord) onChordTap;
   final ChordNotationSystem chordNotation;
+  final String tonic;
 
   double get chordFontSize => fontSize * 0.85;
 }
@@ -62,7 +66,7 @@ class CommentLine extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 1),
             child: Icon(
-              Icons.notes,
+              LucideIcons.alignLeft,
               size: 13,
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -153,7 +157,7 @@ class CommentBoxLine extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 16, color: palette.$2),
+          Icon(LucideIcons.info, size: 16, color: palette.$2),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -195,7 +199,7 @@ class KeyNoteLine extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.music_note, size: 14, color: theme.colorScheme.primary),
+            Icon(LucideIcons.music, size: 14, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
@@ -221,6 +225,7 @@ class ChordLabel extends StatelessWidget {
     required this.style,
     required this.onTap,
     required this.notation,
+    required this.tonic,
     this.trailingGap = 0,
   });
 
@@ -228,6 +233,7 @@ class ChordLabel extends StatelessWidget {
   final TextStyle style;
   final void Function(String chord) onTap;
   final ChordNotationSystem notation;
+  final String tonic;
 
   /// Extra space after the symbol so adjacent chords like `[Em][C]` never
   /// render as `EmC`.
@@ -236,7 +242,11 @@ class ChordLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final displayChord = ChordNotationConverter.formatChord(chord, notation);
+    final displayChord = ChordNotationConverter.formatChord(
+      chord,
+      notation,
+      key: tonic,
+    );
     return Semantics(
       button: true,
       label: l10n.songChordSemantics(displayChord),
@@ -292,6 +302,7 @@ class LyricsLine extends StatelessWidget {
                       style: chordStyle,
                       onTap: options.onChordTap,
                       notation: options.chordNotation,
+                      tonic: options.tonic,
                       trailingGap:
                           i + 1 < tokens.length &&
                               tokens[i + 1].chord.isNotEmpty
@@ -357,6 +368,7 @@ class ChordSectionLine extends StatelessWidget {
                   style: chordStyle,
                   onTap: options.onChordTap,
                   notation: options.chordNotation,
+                  tonic: options.tonic,
                 ),
               ),
             if (measure.endBarline.isNotEmpty)
