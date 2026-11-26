@@ -88,6 +88,16 @@ class AuthScaffold extends StatelessWidget {
                   28,
                 ),
                 children: [
+                  if (showBack && canPop)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: MaterialLocalizations.of(context)
+                            .backButtonTooltip,
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(LucideIcons.arrowLeft),
+                      ),
+                    ),
                   if (heroAsset != null) ...[
                     _AuthHero(
                       asset: heroAsset!,
@@ -165,16 +175,6 @@ class AuthScaffold extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  if (showBack && canPop)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        tooltip: MaterialLocalizations.of(context)
-                            .backButtonTooltip,
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(LucideIcons.arrowLeft),
-                      ),
-                    ),
                   Expanded(
                     child: wide
                         ? Center(child: panel)
