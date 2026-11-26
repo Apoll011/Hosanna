@@ -116,7 +116,7 @@ class _CollectionsPageState extends ConsumerState<CollectionsPage> {
                 ),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 280,
-                  mainAxisExtent: 272,
+                  mainAxisExtent: 204,
                   crossAxisSpacing: HosannaSpacing.sm,
                   mainAxisSpacing: HosannaSpacing.sm,
                 ),
@@ -145,7 +145,6 @@ class _CollectionCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final image = collectionImageProvider(collection.image);
-    final description = collection.description?.trim();
     final accent = folderColorOf(collection.color);
     final radius = HosannaRadii.card;
 
@@ -162,7 +161,7 @@ class _CollectionCard extends StatelessWidget {
               top: Radius.circular(radius.topLeft.x),
             ),
             child: SizedBox(
-              height: 136,
+              height: 120,
               child: image != null
                   ? Image(
                       image: image,
@@ -191,48 +190,34 @@ class _CollectionCard extends StatelessWidget {
                     ),
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                HosannaSpacing.md,
-                HosannaSpacing.sm,
-                HosannaSpacing.md,
-                HosannaSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    collection.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              HosannaSpacing.md,
+              HosannaSpacing.sm,
+              HosannaSpacing.md,
+              HosannaSpacing.xs,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  collection.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: HosannaSpacing.xxs),
-                  Text(
-                    l10n.foldersSongsCount(collection.songCount),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                ),
+                const SizedBox(height: HosannaSpacing.xxs),
+                Text(
+                  l10n.foldersSongsCount(collection.songCount),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  if (description != null && description.isNotEmpty) ...[
-                    const SizedBox(height: HosannaSpacing.xs),
-                    Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
