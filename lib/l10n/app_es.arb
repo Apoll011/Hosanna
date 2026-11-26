@@ -378,7 +378,7 @@
   "songsLintInvalidTempo": "El tempo debe ser un BPM entre 20 y 400.",
   "songsLintInvalidCapo": "La cejilla debe ser un traste de 0 a 12.",
   "songsLintInvalidKeyShift": "El cambio de tonalidad debe ser un número positivo.",
-  "songsLintInvalidTime": "El compás debe verse como 4/4 o 6/8.",
+  "songsLintInvalidTime": "El compás necesita un numerador de 1 a 16 y un denominador de 2, 4, 8 o 16.",
   "songsLintInvalidDuration": "La duración debe ser segundos o m:ss (p. ej. 3:45).",
   "songsNewSong": "Nueva canción",
   "songsCreateManually": "Crear manualmente",

@@ -174,7 +174,9 @@ final RegExp _keyPattern = RegExp(
   r'(?:[A-G](?:#|b)?|Do|Re|Ré|Mi|Fa|Fá|Sol|La|Lá|Si))?$',
   caseSensitive: false,
 );
-final RegExp _timeSignaturePattern = RegExp(r'^\d{1,2}\s*/\s*\d{1,2}$');
+final RegExp _timeSignaturePattern = RegExp(
+  r'^(?:[1-9]|1[0-6])\s*/\s*(?:2|4|8|16)$',
+);
 final RegExp _durationPattern = RegExp(r'^(\d{1,3}:\d{2}|\d+)$');
 
 class _OpenSection {

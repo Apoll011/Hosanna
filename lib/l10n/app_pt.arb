@@ -386,7 +386,7 @@
   "songsLintInvalidTempo": "O tempo deve ser um BPM entre 20 e 400.",
   "songsLintInvalidCapo": "O capo deve ser um traste de 0 a 12.",
   "songsLintInvalidKeyShift": "A mudança de tonalidade deve ser um número positivo.",
-  "songsLintInvalidTime": "O compasso deve parecer 4/4 ou 6/8.",
+  "songsLintInvalidTime": "O compasso precisa de um numerador entre 1 e 16 e um denominador de 2, 4, 8 ou 16.",
   "songsLintInvalidDuration": "A duração deve ser segundos ou m:ss (ex. 3:45).",
   "songsNewSong": "Nova canção",
   "songsCreateManually": "Criar manualmente",

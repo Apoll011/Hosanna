@@ -1855,7 +1855,7 @@ abstract class AppLocalizations {
   /// No description provided for @songsLintInvalidTime.
   ///
   /// In pt, this message translates to:
-  /// **'O compasso deve parecer 4/4 ou 6/8.'**
+  /// **'O compasso precisa de um numerador entre 1 e 16 e um denominador de 2, 4, 8 ou 16.'**
   String get songsLintInvalidTime;
 
   /// No description provided for @songsLintInvalidDuration.

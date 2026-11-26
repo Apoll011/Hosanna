@@ -373,6 +373,7 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
     String? hintText,
   }) {
     return TextField(
+      key: ObjectKey(controller),
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,

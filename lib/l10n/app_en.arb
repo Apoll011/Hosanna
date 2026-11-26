@@ -379,7 +379,7 @@
   "songsLintInvalidTempo": "Tempo should be a BPM number between 20 and 400.",
   "songsLintInvalidCapo": "Capo should be a fret number from 0 to 11.",
   "songsLintInvalidKeyShift": "Key Shift should be a positive number.",
-  "songsLintInvalidTime": "Time signature should look like 4/4 or 6/8.",
+  "songsLintInvalidTime": "Time signature needs a numerator from 1 to 16 and a denominator of 2, 4, 8, or 16.",
   "songsLintInvalidDuration": "Duration should be seconds or m:ss (e.g. 3:45).",
   "songsNewSong": "New song",
   "songsCreateManually": "Create manually",

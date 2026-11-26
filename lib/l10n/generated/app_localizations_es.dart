@@ -973,7 +973,8 @@ class AppLocalizationsEs extends AppLocalizations {
       'El cambio de tonalidad debe ser un número positivo.';
 
   @override
-  String get songsLintInvalidTime => 'El compás debe verse como 4/4 o 6/8.';
+  String get songsLintInvalidTime =>
+      'El compás necesita un numerador de 1 a 16 y un denominador de 2, 4, 8 o 16.';
 
   @override
   String get songsLintInvalidDuration =>

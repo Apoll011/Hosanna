@@ -969,7 +969,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get songsLintInvalidTime =>
-      'Time signature should look like 4/4 or 6/8.';
+      'Time signature needs a numerator from 1 to 16 and a denominator of 2, 4, 8, or 16.';
 
   @override
   String get songsLintInvalidDuration =>
