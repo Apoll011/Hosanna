@@ -148,6 +148,11 @@ class _TwoFactorPageState extends ConsumerState<TwoFactorPage> {
             SegmentedButton<TwoFactorMethod>(
               segments: segments,
               selected: {_method},
+              style: SegmentedButton.styleFrom(
+                minimumSize: const Size(0, 44),
+                visualDensity: VisualDensity.standard,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
               onSelectionChanged: _loading
                   ? null
                   : (selection) => setState(() {
@@ -171,6 +176,12 @@ class _TwoFactorPageState extends ConsumerState<TwoFactorPage> {
               labelText: _method == TwoFactorMethod.backup
                   ? l10n.authTwoFactorBackupCode
                   : l10n.authTwoFactorCode,
+              counterText: '',
+            ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleLarge?.copyWith(
+              letterSpacing: _method == TwoFactorMethod.backup ? 0 : 4,
+              fontWeight: FontWeight.w600,
             ),
             onSubmitted: (_) => _verify(),
           ),

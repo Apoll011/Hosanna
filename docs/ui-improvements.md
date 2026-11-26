@@ -18,6 +18,15 @@ Scope: Flutter musician app (`lib/features`, `lib/app`, shared widgets)
 - Theme tokens instead of raw `Colors.*` (drawer, favorites, active-org, element types).
 - AppBar search fields use title/hint styles; song detail shows title; breadcrumbs larger hit targets.
 - i18n: archived typo, variant labels, language “System”, font preview sample, annotation remote strings.
+- Auth: unified sign-in, sign-up, password reset, and 2FA form chrome with a centered neutral panel and tablet-friendly width; larger, consistent form actions.
+- Tuner: combined pitch readout and target details in one surface, with a side-by-side layout on wide screens and comfortable controls.
+- 2FA sign-in: clearer code entry typography and method selection targets.
+
+## Screens included in the current polish pass
+
+- Sign in, sign up, forgot password, reset password, and 2FA verification use the shared auth scaffold.
+- Tuner uses a single responsive tuning surface.
+- The app currently has no separate 2FA setup or backup-code management screens; backup codes are available as a verification method during sign-in.
 
 ---
 
