@@ -18,6 +18,7 @@ import '../../songs/presentation/song_filter_widgets.dart';
 import '../../songs/presentation/song_filters.dart';
 import '../data/collection_repository.dart';
 import 'collection_visuals.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Songs inside one collection — same list patterns as the library, with a
@@ -231,8 +232,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
               child: visible.isEmpty
                   ? (hasFilters
                         ? EmptyState(
-                            illustrationAsset:
-                                HosannaIllustrations.emptySearch,
+                            illustrationAsset: HosannaIllustrations.emptySearch,
                             title: l10n.songsNoResults,
                             description: l10n.songsNoResultsDesc,
                             primaryLabel: hasQuery
@@ -241,9 +241,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                             primaryIcon: hasQuery
                                 ? LucideIcons.searchX
                                 : LucideIcons.filterX,
-                            onPrimary: hasQuery
-                                ? _clearSearch
-                                : _resetFilters,
+                            onPrimary: hasQuery ? _clearSearch : _resetFilters,
                             scrollable: true,
                           )
                         : EmptyState(
@@ -305,8 +303,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                               const SizedBox(width: HosannaSpacing.sm),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       song.title,
@@ -334,9 +331,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                               ),
                               IconButton(
                                 icon: Icon(
-                                  isFav
-                                      ? LucideIcons.heart
-                                      : LucideIcons.heart,
+                                  isFav ? LucideIcons.heart : LucideIcons.heart,
                                   color: isFav ? Colors.red : null,
                                 ),
                                 tooltip: l10n.navFavorites,
@@ -372,55 +367,88 @@ class _CollectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = folderColorOf(collection.color);
+    final radius = HosannaRadii.card;
 
     return HosannaSurface(
       elevated: false,
-      padding: const EdgeInsets.all(HosannaSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.zero,
+      borderRadius: radius,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (image != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(HosannaRadii.sm),
-              child: Image(
-                image: image!,
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => CollectionAccentBadge(
-                  colorId: collection.color,
-                  iconId: collection.icon,
-                  size: 64,
-                ),
-              ),
-            )
-          else
-            CollectionAccentBadge(
-              colorId: collection.color,
-              iconId: collection.icon,
-              size: 64,
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(radius.topLeft.x),
             ),
-          const SizedBox(width: HosannaSpacing.sm),
-          Expanded(
+            child: SizedBox(
+              height: 176,
+              child: image != null
+                  ? Image(
+                      image: image!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => ColoredBox(
+                        color: accent.withValues(alpha: 0.10),
+                        child: Center(
+                          child: CollectionAccentBadge(
+                            colorId: collection.color,
+                            iconId: collection.icon,
+                            size: 64,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ColoredBox(
+                      color: accent.withValues(alpha: 0.10),
+                      child: Center(
+                        child: CollectionAccentBadge(
+                          colorId: collection.color,
+                          iconId: collection.icon,
+                          size: 64,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(HosannaSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  songCountLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w700,
+                  collection.name,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: HosannaSpacing.xs),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(HosannaRadii.xs),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: HosannaSpacing.xs,
+                      vertical: HosannaSpacing.xxs,
+                    ),
+                    child: Text(
+                      songCountLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 if (description != null && description!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: HosannaSpacing.sm),
                   Text(
                     description!,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.35,
+                      height: 1.4,
                     ),
                   ),
                 ],

@@ -15,6 +15,7 @@ import '../../../shared/widgets/shell_insets.dart';
 import '../../folders/domain/folder_customization.dart';
 import '../data/collection_repository.dart';
 import 'collection_visuals.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Grid hub for org collections — Studio-inspired, mobile-compact.
@@ -114,8 +115,8 @@ class _CollectionsPageState extends ConsumerState<CollectionsPage> {
                   shellBottomContentPadding(context),
                 ),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 220,
-                  mainAxisExtent: 196,
+                  maxCrossAxisExtent: 280,
+                  mainAxisExtent: 272,
                   crossAxisSpacing: HosannaSpacing.sm,
                   mainAxisSpacing: HosannaSpacing.sm,
                 ),
@@ -124,8 +125,7 @@ class _CollectionsPageState extends ConsumerState<CollectionsPage> {
                   final collection = visible[index];
                   return _CollectionCard(
                     collection: collection,
-                    onOpen: () =>
-                        context.push('/collections/${collection.id}'),
+                    onOpen: () => context.push('/collections/${collection.id}'),
                   );
                 },
               ),
@@ -147,52 +147,58 @@ class _CollectionCard extends StatelessWidget {
     final image = collectionImageProvider(collection.image);
     final description = collection.description?.trim();
     final accent = folderColorOf(collection.color);
+    final radius = HosannaRadii.card;
 
     return HosannaSurface(
       elevated: false,
       padding: EdgeInsets.zero,
       onTap: onOpen,
+      borderRadius: radius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 88,
-            child: image != null
-                ? ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(HosannaRadii.md - 1),
-                    ),
-                    child: Image(
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(radius.topLeft.x),
+            ),
+            child: SizedBox(
+              height: 136,
+              child: image != null
+                  ? Image(
                       image: image,
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      height: 88,
                       errorBuilder: (_, _, _) => ColoredBox(
                         color: accent.withValues(alpha: 0.10),
                         child: Center(
                           child: CollectionAccentBadge(
                             colorId: collection.color,
                             iconId: collection.icon,
-                            size: 44,
+                            size: 52,
                           ),
                         ),
                       ),
-                    ),
-                  )
-                : ColoredBox(
-                    color: accent.withValues(alpha: 0.10),
-                    child: Center(
-                      child: CollectionAccentBadge(
-                        colorId: collection.color,
-                        iconId: collection.icon,
-                        size: 44,
+                    )
+                  : ColoredBox(
+                      color: accent.withValues(alpha: 0.10),
+                      child: Center(
+                        child: CollectionAccentBadge(
+                          colorId: collection.color,
+                          iconId: collection.icon,
+                          size: 52,
+                        ),
                       ),
                     ),
-                  ),
+            ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              padding: const EdgeInsets.fromLTRB(
+                HosannaSpacing.md,
+                HosannaSpacing.sm,
+                HosannaSpacing.md,
+                HosannaSpacing.sm,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -201,20 +207,20 @@ class _CollectionCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: HosannaSpacing.xxs),
                   Text(
                     l10n.foldersSongsCount(collection.songCount),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   if (description != null && description.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: HosannaSpacing.xs),
                     Text(
                       description,
                       maxLines: 2,
