@@ -1183,7 +1183,7 @@ class _SongReaderState extends ConsumerState<SongReader>
             tooltip: playerOpen
                 ? l10n.songYoutubeClosePlayer
                 : l10n.songYoutubeOpenPlayer,
-            child: const Icon(LucideIcons.eighthNote),
+            child: const Icon(LucideIcons.play),
           ),
           const SizedBox(height: 12),
         ],
