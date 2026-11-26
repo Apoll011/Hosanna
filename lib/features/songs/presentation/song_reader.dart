@@ -757,15 +757,15 @@ class _SongReaderState extends ConsumerState<SongReader>
         : youtubeVideoIdFromMetadata(metadata);
     final tempo = int.tryParse(metadata?['tempo']?.trim() ?? '');
     final timeSignature = _parseTimeSignature(metadata?['time'] ?? '');
-    final showSongMetronome =
-        tempo != null && tempo > 0 && timeSignature != null;
-    if (showSongMetronome &&
-        (!_metronomeInitialized || !_metronomeState.value.playing)) {
+    const defaultTimeSignature = (4, 4);
+    const showSongMetronome = true;
+    if (!_metronomeInitialized || !_metronomeState.value.playing) {
       _metronomeInitialized = true;
-      _metronomeTempo = tempo;
-      _metronomeBeatsPerBar = timeSignature.$1;
-      _metronomeDenominator = timeSignature.$2;
-      _metronomeTime = '${timeSignature.$1}/${timeSignature.$2}';
+      _metronomeTempo = tempo != null && tempo > 0 ? tempo : 100;
+      final signature = timeSignature ?? defaultTimeSignature;
+      _metronomeBeatsPerBar = signature.$1;
+      _metronomeDenominator = signature.$2;
+      _metronomeTime = '${signature.$1}/${signature.$2}';
       unawaited(_metronomePlayer.init());
     }
     final playerVideoId = _playerVideoId == videoId ? videoId : null;
