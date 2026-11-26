@@ -129,18 +129,14 @@ void main() {
       expect(match.cents, closeTo(15.6, 0.2));
     });
 
-    test('waits for consecutive stable readings and resets on noise', () {
-      final filter = PitchStabilityFilter(
-        requiredReadings: 3,
-        maxSpreadCents: 5,
-      );
+    test('filters outliers and resets on invalid frequencies', () {
+      final filter = PitchStabilityFilter();
 
       expect(filter.add(110), isNull);
       expect(filter.add(110.1), isNull);
-      expect(filter.add(120), isNull);
-      expect(filter.add(110.02), isNull);
-      expect(filter.add(110.03), isNull);
-      expect(filter.add(110.01), closeTo(110.02, 0.02));
+      expect(filter.add(110.2), closeTo(110.1, 0.1));
+      expect(filter.add(120), closeTo(110.1, 0.1));
+      expect(filter.add(110.05), closeTo(110.1, 0.1));
       expect(filter.add(double.nan), isNull);
       expect(filter.add(110), isNull);
     });

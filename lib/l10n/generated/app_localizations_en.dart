@@ -517,7 +517,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The tuner is not available for this instrument.';
 
   @override
-  String get tunerSearching => 'Searching for a stable pitch';
+  String get tunerSearching => 'Searching for a pitch';
 
   @override
   String get tunerInTune => 'In tune';
@@ -529,13 +529,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tunerSharp => 'Sharp';
 
   @override
-  String get tunerListening => 'Listening';
+  String get tunerListening => 'Tuner on';
 
   @override
   String get tunerStopped => 'Stopped';
 
   @override
-  String get tunerWaitForStablePitch => 'Play a string and hold a steady note.';
+  String get tunerPlayString => 'Play one string at a time.';
 
   @override
   String get tunerTarget => 'Target string';

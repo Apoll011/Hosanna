@@ -51,7 +51,6 @@ class _TunerPageState extends ConsumerState<TunerPage> {
 
   void _onResult(TuningResult result, TuningProfile profile) {
     if (result is! NoteTuningResult) {
-      _stability.reset();
       if (mounted) setState(() => _uncertain = true);
       return;
     }
@@ -179,7 +178,7 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                                   const SizedBox(height: 12),
                                   Text(
                                     cents == null
-                                        ? l10n.tunerWaitForStablePitch
+                                        ? l10n.tunerPlayString
                                         : '${cents > 0 ? '+' : ''}${cents.toStringAsFixed(1)} cents',
                                     style: theme.textTheme.bodyMedium,
                                   ),

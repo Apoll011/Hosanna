@@ -154,10 +154,15 @@ MatchedString matchString(double frequency, List<OpenString> strings) {
 }
 
 class PitchStabilityFilter {
-  PitchStabilityFilter({this.requiredReadings = 4, this.maxSpreadCents = 8});
+  PitchStabilityFilter({
+    this.requiredReadings = 3,
+    this.windowSize = 4,
+    this.maxDeviationCents = 25,
+  });
 
   final int requiredReadings;
-  final double maxSpreadCents;
+  final int windowSize;
+  final double maxDeviationCents;
   final List<double> _readings = [];
 
   double? add(double frequency) {
@@ -166,15 +171,28 @@ class PitchStabilityFilter {
       return null;
     }
     _readings.add(frequency);
-    if (_readings.length > requiredReadings) _readings.removeAt(0);
+    if (_readings.length > windowSize) _readings.removeAt(0);
     if (_readings.length < requiredReadings) return null;
-    final reference = _readings[_readings.length ~/ 2];
-    final deviations = _readings
-        .map((value) => (1200 * (math.log(value / reference) / math.ln2)).abs())
+
+    final center = _median(_readings);
+    final inliers = _readings
+        .where(
+          (value) =>
+              (1200 * (math.log(value / center) / math.ln2)).abs() <=
+              maxDeviationCents,
+        )
         .toList();
-    if (deviations.any((value) => value > maxSpreadCents)) return null;
-    return _readings.reduce((a, b) => a + b) / _readings.length;
+    if (inliers.length < requiredReadings) return null;
+    return _median(inliers);
   }
 
   void reset() => _readings.clear();
+
+  double _median(List<double> values) {
+    final sorted = [...values]..sort();
+    final middle = sorted.length ~/ 2;
+    return sorted.length.isOdd
+        ? sorted[middle]
+        : (sorted[middle - 1] + sorted[middle]) / 2;
+  }
 }

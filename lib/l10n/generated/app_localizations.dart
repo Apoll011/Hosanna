@@ -1027,7 +1027,7 @@ abstract class AppLocalizations {
   /// No description provided for @tunerSearching.
   ///
   /// In pt, this message translates to:
-  /// **'A procurar uma nota estável'**
+  /// **'A procurar uma nota'**
   String get tunerSearching;
 
   /// No description provided for @tunerInTune.
@@ -1051,7 +1051,7 @@ abstract class AppLocalizations {
   /// No description provided for @tunerListening.
   ///
   /// In pt, this message translates to:
-  /// **'A ouvir'**
+  /// **'Afinador ativo'**
   String get tunerListening;
 
   /// No description provided for @tunerStopped.
@@ -1060,11 +1060,11 @@ abstract class AppLocalizations {
   /// **'Parado'**
   String get tunerStopped;
 
-  /// No description provided for @tunerWaitForStablePitch.
+  /// No description provided for @tunerPlayString.
   ///
   /// In pt, this message translates to:
-  /// **'Toque uma corda e mantenha a nota estável.'**
-  String get tunerWaitForStablePitch;
+  /// **'Toque uma corda de cada vez.'**
+  String get tunerPlayString;
 
   /// No description provided for @tunerTarget.
   ///

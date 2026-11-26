@@ -522,7 +522,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'El afinador no está disponible para este instrumento.';
 
   @override
-  String get tunerSearching => 'Buscando una nota estable';
+  String get tunerSearching => 'Buscando una nota';
 
   @override
   String get tunerInTune => 'Afinado';
@@ -534,14 +534,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tunerSharp => 'Agudo';
 
   @override
-  String get tunerListening => 'Escuchando';
+  String get tunerListening => 'Afinador activo';
 
   @override
   String get tunerStopped => 'Detenido';
 
   @override
-  String get tunerWaitForStablePitch =>
-      'Toca una cuerda y mantén una nota estable.';
+  String get tunerPlayString => 'Toca una cuerda a la vez.';
 
   @override
   String get tunerTarget => 'Cuerda objetivo';
