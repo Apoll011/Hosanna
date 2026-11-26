@@ -81,7 +81,7 @@ jobs:
           package-name: live.hosanna.music
           release-file: build/app/outputs/bundle/release/app-release.aab
           track: beta
-          status: complete
+          status: completed
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
