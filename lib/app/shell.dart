@@ -164,75 +164,82 @@ class _HosannaShellState extends ConsumerState<HosannaShell> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isTablet = constraints.maxWidth >= kTabletBreakpoint;
+    return PopScope(
+      canPop: currentBranch == kSongsBranch,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || currentBranch == kSongsBranch) return;
+        _goSongsHub();
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= kTabletBreakpoint;
 
-        if (isTablet) {
+          if (isTablet) {
+            return Scaffold(
+              key: ref.watch(shellScaffoldKeyProvider),
+              body: withSubscriptionBanner(
+                Row(
+                  children: [
+                    _TabletSidebar(
+                      collapsed: sidebarCollapsed,
+                      currentBranch: widget.navigationShell.currentIndex,
+                      onNavigate: _goBranch,
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: widget.navigationShell),
+                          if (showNavBar)
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: _FloatingNavBar(
+                                selectedIndex: selectedDestination,
+                                onSelected: (index) {
+                                  final branch = destinations[index].branch;
+                                  if (branch == kSongsBranch) {
+                                    _goSongsHub();
+                                  } else {
+                                    _goBranch(branch);
+                                  }
+                                },
+                                destinations: destinations,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           return Scaffold(
             key: ref.watch(shellScaffoldKeyProvider),
-            body: withSubscriptionBanner(
-              Row(
-                children: [
-                  _TabletSidebar(
-                    collapsed: sidebarCollapsed,
-                    currentBranch: widget.navigationShell.currentIndex,
-                    onNavigate: _goBranch,
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Positioned.fill(child: widget.navigationShell),
-                        if (showNavBar)
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: _FloatingNavBar(
-                              selectedIndex: selectedDestination,
-                              onSelected: (index) {
-                                final branch = destinations[index].branch;
-                                if (branch == kSongsBranch) {
-                                  _goSongsHub();
-                                } else {
-                                  _goBranch(branch);
-                                }
-                              },
-                              destinations: destinations,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            body: withSubscriptionBanner(widget.navigationShell),
+            drawer: HosannaDrawer(
+              currentBranch: widget.navigationShell.currentIndex,
+              onNavigate: _goBranch,
             ),
+            extendBody: true,
+            bottomNavigationBar: showNavBar
+                ? _FloatingNavBar(
+                    selectedIndex: selectedDestination,
+                    onSelected: (index) {
+                      final branch = destinations[index].branch;
+                      if (branch == kSongsBranch) {
+                        _goSongsHub();
+                      } else {
+                        _goBranch(branch);
+                      }
+                    },
+                    destinations: destinations,
+                  )
+                : null,
           );
-        }
-
-        return Scaffold(
-          key: ref.watch(shellScaffoldKeyProvider),
-          body: withSubscriptionBanner(widget.navigationShell),
-          drawer: HosannaDrawer(
-            currentBranch: widget.navigationShell.currentIndex,
-            onNavigate: _goBranch,
-          ),
-          extendBody: true,
-          bottomNavigationBar: showNavBar
-              ? _FloatingNavBar(
-                  selectedIndex: selectedDestination,
-                  onSelected: (index) {
-                    final branch = destinations[index].branch;
-                    if (branch == kSongsBranch) {
-                      _goSongsHub();
-                    } else {
-                      _goBranch(branch);
-                    }
-                  },
-                  destinations: destinations,
-                )
-              : null,
-        );
-      },
+        },
+      ),
     );
   }
 }
