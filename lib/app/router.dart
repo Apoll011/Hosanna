@@ -174,6 +174,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/collections',
                 builder: (_, _) => const CollectionsPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => CollectionDetailPage(
+                      collectionId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -206,13 +214,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
-      ),
-      // Outside the shell (same pattern as /songs/:id) so the shell drawer
-      // stays available on the agenda list via ShellLeadingButton.
-      GoRoute(
-        path: '/collections/:id',
-        builder: (_, state) =>
-            CollectionDetailPage(collectionId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/agenda/:id',

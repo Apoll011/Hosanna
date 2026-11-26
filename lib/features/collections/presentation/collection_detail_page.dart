@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/design/illustrations.dart';
 import '../../../app/design/tokens.dart';
+import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../../core/sync/sync_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -149,16 +150,23 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const BackButtonIcon(),
-          tooltip: l10n.commonBack,
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/collections');
-            }
-          },
+        leadingWidth: 104,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ShellLeadingButton(),
+            IconButton(
+              icon: const BackButtonIcon(),
+              tooltip: l10n.commonBack,
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/collections');
+                }
+              },
+            ),
+          ],
         ),
         title: _searchOpen
             ? AppBarSearchField(
