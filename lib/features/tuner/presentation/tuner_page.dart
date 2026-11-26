@@ -146,11 +146,12 @@ class _TunerPageState extends ConsumerState<TunerPage> {
                               dismissText: l10n.tunerNotNow,
                               onResult: (result) => _onResult(result, profile),
                               onError: (error) {
-                                if (mounted)
+                                if (mounted) {
                                   setState(() {
                                     _error = error;
                                     _uncertain = true;
                                   });
+                                }
                               },
                               child: const SizedBox.shrink(),
                             ),
