@@ -448,34 +448,38 @@ class _SongEditorPageState extends ConsumerState<SongEditorPage>
           ),
           const SizedBox(height: 12),
         ],
-        if (metaDiags.isNotEmpty) ...[
-          ...metaDiags.map((d) {
-            final scheme = Theme.of(context).colorScheme;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    LucideIcons.alertTriangle,
-                    size: 16,
-                    color: scheme.tertiary,
+        if (metaDiags.isEmpty)
+          const SizedBox.shrink()
+        else
+          Column(
+            children: [
+              ...metaDiags.map((d) {
+                final scheme = Theme.of(context).colorScheme;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        LucideIcons.alertTriangle,
+                        size: 16,
+                        color: scheme.tertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          d.message,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      d.message,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 4),
-        ],
+                );
+              }),
+              const SizedBox(height: 4),
+            ],
+          ),
         _field(_title, l10n.songsFieldTitle),
         const SizedBox(height: 10),
         _field(_subtitle, l10n.songsFieldSubtitle),
