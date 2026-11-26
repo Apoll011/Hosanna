@@ -134,6 +134,9 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     ),
   );
 
+  List<InstrumentFingering> _alternativesFor(String chord) =>
+      _fingeringFor(chord)?.alternativesFor(widget.instrument) ?? const [];
+
   void _openChord(String chord) {
     showChordSheet(
       context,
@@ -143,6 +146,7 @@ class _ChordProRendererState extends State<ChordProRenderer> {
       capo: _effectiveCapo,
       preferences: widget.instrumentPreferences,
       fingeringFor: _fingeringFor,
+      alternativesFor: _alternativesFor,
       chordNotation: ChordNotationRegistry.resolve(widget.chordNotationId),
       tonic: transposeChord(
         _version.metadata['key'] ?? 'C',

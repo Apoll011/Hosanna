@@ -1,4 +1,7 @@
+import '../chord_theory.dart';
 import 'fretted_instrument.dart';
+import 'guitar_voicing_generator.dart';
+import 'instrument.dart';
 
 /// Guitar chord library with standard / Drop D / 7-string tunings.
 ///
@@ -35,6 +38,15 @@ class GuitarInstrument extends FrettedInstrument {
 
   @override
   Map<String, List<MovableShape>> get movableShapes => _movableShapes;
+
+  @override
+  List<InstrumentFingering> fingerings(
+    ParsedChord chord, {
+    InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
+  }) => const GuitarVoicingGenerator().generate(
+    chord,
+    tuning: tuningFor(options.tuningId),
+  );
 }
 
 const Map<String, FrettedShape> _openShapes = {

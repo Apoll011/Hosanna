@@ -21,6 +21,7 @@ Future<void> showChordSheet(
   required int capo,
   required InstrumentPreferences preferences,
   required ChordFingering? Function(String chord) fingeringFor,
+  required List<InstrumentFingering> Function(String chord) alternativesFor,
   required ChordNotationSystem chordNotation,
   required String tonic,
 }) {
@@ -40,6 +41,7 @@ Future<void> showChordSheet(
       capo: capo,
       preferences: preferences,
       fingeringFor: fingeringFor,
+      alternativesFor: alternativesFor,
       chordNotation: chordNotation,
       tonic: tonic,
     ),
@@ -55,6 +57,7 @@ class ChordSheet extends StatefulWidget {
     required this.capo,
     required this.preferences,
     required this.fingeringFor,
+    required this.alternativesFor,
     required this.chordNotation,
     required this.tonic,
   });
@@ -65,6 +68,7 @@ class ChordSheet extends StatefulWidget {
   final int capo;
   final InstrumentPreferences preferences;
   final ChordFingering? Function(String chord) fingeringFor;
+  final List<InstrumentFingering> Function(String chord) alternativesFor;
   final ChordNotationSystem chordNotation;
   final String tonic;
 
@@ -83,6 +87,23 @@ class _ChordSheetState extends State<ChordSheet> {
     final next = _index + delta;
     if (next < 0 || next >= widget.chords.length) return;
     setState(() => _index = next);
+  }
+
+  Future<void> _showVoicings(String chord) async {
+    final alternatives = widget.alternativesFor(chord);
+    if (alternatives.isEmpty) return;
+    final preference = widget.preferences.forId(_instrument);
+    final supportsCapo = instrumentRegistry.resolve(_instrument).supportsCapo;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _VoicingPager(
+        chord: chord,
+        alternatives: alternatives,
+        capo: supportsCapo ? widget.capo : 0,
+        preference: preference,
+        onClose: () => Navigator.pop(dialogContext),
+      ),
+    );
   }
 
   @override
@@ -177,12 +198,19 @@ class _ChordSheetState extends State<ChordSheet> {
                 child: KeyedSubtree(
                   key: ValueKey('$chord/$_instrument'),
                   child: fingering != null
-                      ? InstrumentDiagram(
-                          fingering: voicing,
-                          capo: diagramCapo,
-                          showFingerNumbers: pref.showFingerNumbers,
-                          showCapoMarker: pref.showCapoMarker,
-                          showStringLabels: pref.showStringLabels,
+                      ? InkWell(
+                          onTap: () => _showVoicings(chord),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: InstrumentDiagram(
+                              fingering: voicing,
+                              capo: diagramCapo,
+                              showFingerNumbers: pref.showFingerNumbers,
+                              showCapoMarker: pref.showCapoMarker,
+                              showStringLabels: pref.showStringLabels,
+                            ),
+                          ),
                         )
                       : Padding(
                           padding: const EdgeInsets.all(16),
@@ -216,6 +244,89 @@ class _ChordSheetState extends State<ChordSheet> {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VoicingPager extends StatefulWidget {
+  const _VoicingPager({
+    required this.chord,
+    required this.alternatives,
+    required this.capo,
+    required this.preference,
+    required this.onClose,
+  });
+
+  final String chord;
+  final List<InstrumentFingering> alternatives;
+  final int capo;
+  final InstrumentPreference preference;
+  final VoidCallback onClose;
+
+  @override
+  State<_VoicingPager> createState() => _VoicingPagerState();
+}
+
+class _VoicingPagerState extends State<_VoicingPager> {
+  late final PageController _controller = PageController();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.chord,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  onPressed: widget.onClose,
+                  icon: const Icon(LucideIcons.x),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 300,
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: widget.alternatives.length,
+                onPageChanged: (index) => setState(() => _index = index),
+                itemBuilder: (context, index) => Center(
+                  child: InstrumentDiagram(
+                    fingering: widget.alternatives[index],
+                    capo: widget.capo,
+                    showFingerNumbers: widget.preference.showFingerNumbers,
+                    showCapoMarker: widget.preference.showCapoMarker,
+                    showStringLabels: widget.preference.showStringLabels,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              '${_index + 1} / ${widget.alternatives.length}',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );

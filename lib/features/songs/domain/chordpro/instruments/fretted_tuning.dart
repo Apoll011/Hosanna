@@ -10,6 +10,7 @@ class FrettedTuning {
     required this.label,
     required this.openPitches,
     required this.stringNames,
+    this.openMidiPitches = const [],
     this.octaveOffsets = const [],
   });
 
@@ -24,6 +25,10 @@ class FrettedTuning {
 
   /// Short labels drawn under each string (e.g. `E`, `A`, `D`, `G`, `B`, `e`).
   final List<String> stringNames;
+
+  /// Optional absolute open-string pitches for register-aware voicing checks.
+  /// MIDI note numbers are used (C4 = 60).
+  final List<int> openMidiPitches;
 
   /// Optional octave adjustments for re-entrant and linear variants.
   final List<int> octaveOffsets;
@@ -41,6 +46,7 @@ abstract final class FrettedTunings {
     label: 'Standard',
     openPitches: [4, 9, 2, 7, 11, 4],
     stringNames: ['E', 'A', 'D', 'G', 'B', 'e'],
+    openMidiPitches: [40, 45, 50, 55, 59, 64],
   );
 
   /// Drop D — low string down a whole step.
@@ -49,6 +55,7 @@ abstract final class FrettedTunings {
     label: 'Drop D',
     openPitches: [2, 9, 2, 7, 11, 4],
     stringNames: ['D', 'A', 'D', 'G', 'B', 'e'],
+    openMidiPitches: [38, 45, 50, 55, 59, 64],
   );
 
   /// Standard 7-string (B₁ + EADGBE). Shapes are 6-string with a muted low B.
@@ -57,6 +64,7 @@ abstract final class FrettedTunings {
     label: '7-string',
     openPitches: [11, 4, 9, 2, 7, 11, 4],
     stringNames: ['B', 'E', 'A', 'D', 'G', 'B', 'e'],
+    openMidiPitches: [35, 40, 45, 50, 55, 59, 64],
   );
 
   static const List<FrettedTuning> guitar = [
