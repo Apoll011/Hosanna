@@ -92,6 +92,15 @@ class _TwoFactorPageState extends ConsumerState<TwoFactorPage> {
     }
   }
 
+  void _selectMethod(TwoFactorMethod method) {
+    setState(() {
+      _method = method;
+      _code.clear();
+      _error = null;
+      _message = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -145,24 +154,23 @@ class _TwoFactorPageState extends ConsumerState<TwoFactorPage> {
             const SizedBox(height: 16),
           ],
           if (segments.length > 1) ...[
-            SegmentedButton<TwoFactorMethod>(
-              segments: segments,
-              selected: {_method},
-              style: SegmentedButton.styleFrom(
-                minimumSize: const Size(0, 44),
-                visualDensity: VisualDensity.standard,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-              ),
-              onSelectionChanged: _loading
-                  ? null
-                  : (selection) => setState(() {
-                      _method = selection.first;
-                      _code.clear();
-                      _error = null;
-                      _message = null;
-                    }),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final segment in segments)
+                  ChoiceChip(
+                    avatar: segment.icon,
+                    label: segment.label!,
+                    selected: _method == segment.value,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    onSelected: _loading
+                        ? null
+                        : (_) => _selectMethod(segment.value),
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
           TextField(
             controller: _code,
@@ -185,14 +193,14 @@ class _TwoFactorPageState extends ConsumerState<TwoFactorPage> {
             ),
             onSubmitted: (_) => _verify(),
           ),
+          const SizedBox(height: 20),
           if (_method == TwoFactorMethod.otp) ...[
-            const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: _loading ? null : _sendOtp,
               icon: const Icon(LucideIcons.mail),
               label: Text(l10n.authTwoFactorSendCode),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
           ],
           FilledButton(
             onPressed: _loading ? null : _verify,
