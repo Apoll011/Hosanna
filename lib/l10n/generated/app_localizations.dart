@@ -574,6 +574,78 @@ abstract class AppLocalizations {
   /// **'Não foi possível iniciar sessão.'**
   String get authSocialError;
 
+  /// No description provided for @authTwoFactorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirme a sua identidade'**
+  String get authTwoFactorTitle;
+
+  /// No description provided for @authTwoFactorSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Introduza um código de verificação para concluir a sessão.'**
+  String get authTwoFactorSubtitle;
+
+  /// No description provided for @authTwoFactorAuthenticator.
+  ///
+  /// In pt, this message translates to:
+  /// **'Autenticador'**
+  String get authTwoFactorAuthenticator;
+
+  /// No description provided for @authTwoFactorEmail.
+  ///
+  /// In pt, this message translates to:
+  /// **'E-mail'**
+  String get authTwoFactorEmail;
+
+  /// No description provided for @authTwoFactorBackup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Código de recuperação'**
+  String get authTwoFactorBackup;
+
+  /// No description provided for @authTwoFactorCode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Código de verificação'**
+  String get authTwoFactorCode;
+
+  /// No description provided for @authTwoFactorBackupCode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Código de recuperação'**
+  String get authTwoFactorBackupCode;
+
+  /// No description provided for @authTwoFactorCodeRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Introduza um código de verificação válido.'**
+  String get authTwoFactorCodeRequired;
+
+  /// No description provided for @authTwoFactorSendCode.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviar código por e-mail'**
+  String get authTwoFactorSendCode;
+
+  /// No description provided for @authTwoFactorCodeSent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviámos um código de verificação para o seu e-mail.'**
+  String get authTwoFactorCodeSent;
+
+  /// No description provided for @authTwoFactorVerify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar e iniciar sessão'**
+  String get authTwoFactorVerify;
+
+  /// No description provided for @authTwoFactorBackToLogin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar ao início de sessão'**
+  String get authTwoFactorBackToLogin;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In pt, this message translates to:

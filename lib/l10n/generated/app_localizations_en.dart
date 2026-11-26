@@ -261,6 +261,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSocialError => 'Couldn\'t sign in.';
 
   @override
+  String get authTwoFactorTitle => 'Verify your identity';
+
+  @override
+  String get authTwoFactorSubtitle =>
+      'Enter a verification code to finish signing in.';
+
+  @override
+  String get authTwoFactorAuthenticator => 'Authenticator';
+
+  @override
+  String get authTwoFactorEmail => 'Email';
+
+  @override
+  String get authTwoFactorBackup => 'Backup code';
+
+  @override
+  String get authTwoFactorCode => 'Verification code';
+
+  @override
+  String get authTwoFactorBackupCode => 'Backup code';
+
+  @override
+  String get authTwoFactorCodeRequired => 'Enter a valid verification code.';
+
+  @override
+  String get authTwoFactorSendCode => 'Send email code';
+
+  @override
+  String get authTwoFactorCodeSent =>
+      'A verification code was sent to your email.';
+
+  @override
+  String get authTwoFactorVerify => 'Verify and sign in';
+
+  @override
+  String get authTwoFactorBackToLogin => 'Back to sign in';
+
+  @override
   String get onboardingTitle => 'Welcome to Hosanna';
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/two_factor_required_exception.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/auth_controller.dart';
 import 'auth_scaffold.dart';
@@ -55,11 +56,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         // No token but captcha configured means the user cancelled; keep going
         // only when captcha is simply not configured (controller surfaces it).
       }
-      await ref.read(authControllerProvider.notifier).signIn(
-            email: email,
-            password: password,
-            captchaToken: captchaToken,
-          );
+      await ref
+          .read(authControllerProvider.notifier)
+          .signIn(email: email, password: password, captchaToken: captchaToken);
+    } on TwoFactorRequiredException catch (e) {
+      if (!mounted) return;
+      context.go('/two-factor', extra: e.methods);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = authErrorMessage(e, l10n));

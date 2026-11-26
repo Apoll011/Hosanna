@@ -266,6 +266,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authSocialError => 'No se pudo iniciar sesión.';
 
   @override
+  String get authTwoFactorTitle => 'Verifica tu identidad';
+
+  @override
+  String get authTwoFactorSubtitle =>
+      'Introduce un código de verificación para terminar de iniciar sesión.';
+
+  @override
+  String get authTwoFactorAuthenticator => 'Autenticador';
+
+  @override
+  String get authTwoFactorEmail => 'Correo';
+
+  @override
+  String get authTwoFactorBackup => 'Código de respaldo';
+
+  @override
+  String get authTwoFactorCode => 'Código de verificación';
+
+  @override
+  String get authTwoFactorBackupCode => 'Código de respaldo';
+
+  @override
+  String get authTwoFactorCodeRequired =>
+      'Introduce un código de verificación válido.';
+
+  @override
+  String get authTwoFactorSendCode => 'Enviar código por correo';
+
+  @override
+  String get authTwoFactorCodeSent =>
+      'Enviamos un código de verificación a tu correo.';
+
+  @override
+  String get authTwoFactorVerify => 'Verificar e iniciar sesión';
+
+  @override
+  String get authTwoFactorBackToLogin => 'Volver al inicio de sesión';
+
+  @override
   String get onboardingTitle => 'Bienvenido a Hosanna';
 
   @override

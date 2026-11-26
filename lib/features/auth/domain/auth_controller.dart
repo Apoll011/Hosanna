@@ -8,6 +8,7 @@ import '../../../core/auth/auth_session.dart';
 import '../../../core/auth/captcha_required_exception.dart';
 import '../../../core/auth/session_store.dart';
 import '../../../core/auth/social_auth_exception.dart';
+import '../../../core/auth/two_factor_required_exception.dart';
 import '../../../core/auth/social_auth_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
@@ -185,6 +186,34 @@ class AuthController extends StateNotifier<AuthState> {
       ),
     );
   }
+
+  Future<void> verifyTwoFactor({
+    required TwoFactorMethod method,
+    required String code,
+  }) async {
+    final session = await _repository.verifyTwoFactor(
+      method: method,
+      code: code,
+    );
+    await _applySession(session, token: session.sessionToken);
+    await _resolveOrganization(session);
+    await _applyNotificationConsent();
+    await syncFcmToken();
+    unawaited(
+      AnalyticsService.instance.track(
+        SignInSucceeded(method: 'email', userId: session.user.id),
+      ),
+    );
+    unawaited(
+      AnalyticsService.instance.identify(
+        session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      ),
+    );
+  }
+
+  Future<void> sendTwoFactorOtp() => _repository.sendTwoFactorOtp();
 
   Future<void> signUp({
     required String name,

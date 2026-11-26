@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/analytics/analytics.dart';
+import '../core/auth/two_factor_required_exception.dart';
 import '../features/agenda/presentation/agenda_event_page.dart';
 import '../features/agenda/presentation/agenda_page.dart';
 import '../features/auth/domain/auth_controller.dart';
@@ -11,6 +12,7 @@ import '../features/auth/presentation/forgot_password_page.dart';
 import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
+import '../features/auth/presentation/two_factor_page.dart';
 import '../features/circle_of_fifths/presentation/circle_of_fifths_page.dart';
 import '../features/collections/presentation/collection_detail_page.dart';
 import '../features/collections/presentation/collections_page.dart';
@@ -40,7 +42,8 @@ bool _isAuthRoute(String path) {
       path == '/sign-up' ||
       path == '/forgot-password' ||
       path == '/reset-password' ||
-      path == '/verify-email';
+      path == '/verify-email' ||
+      path == '/two-factor';
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -109,6 +112,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/verify-email',
         builder: (_, _) => const EmailVerificationPage(),
+      ),
+      GoRoute(
+        path: '/two-factor',
+        builder: (_, state) => TwoFactorPage(
+          methods: state.extra is List<TwoFactorMethod>
+              ? state.extra! as List<TwoFactorMethod>
+              : TwoFactorMethod.values,
+        ),
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
       GoRoute(path: '/setup', builder: (_, _) => const SetupPage()),

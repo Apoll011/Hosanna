@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/auth/auth_session.dart';
 import '../../../core/auth/social_auth_provider.dart';
+import '../../../core/auth/two_factor_required_exception.dart';
 import '../../../core/network/api_client.dart';
 
 /// Thin client over Better Auth's `/api/auth/*` REST surface.
@@ -52,6 +53,24 @@ class AuthRepository {
       ),
     );
   }
+
+  Future<AuthSession> verifyTwoFactor({
+    required TwoFactorMethod method,
+    required String code,
+  }) {
+    final path = switch (method) {
+      TwoFactorMethod.totp => '/api/auth/two-factor/verify-totp',
+      TwoFactorMethod.otp => '/api/auth/two-factor/verify-otp',
+      TwoFactorMethod.backup => '/api/auth/two-factor/verify-backup-code',
+    };
+    return _authRequest(
+      () => _dio.post<dynamic>(path, data: {'code': code.trim()}),
+    );
+  }
+
+  Future<void> sendTwoFactorOtp() => _guard(
+    () => _dio.post<dynamic>('/api/auth/two-factor/send-otp', data: {}),
+  );
 
   Future<AuthSession> signUp({
     required String name,
@@ -374,7 +393,20 @@ class AuthRepository {
       final token = _extractBearerToken(res);
       final data = res.data;
       if (data is Map) {
-        final session = AuthSession.fromJson(Map<String, dynamic>.from(data));
+        final body = Map<String, dynamic>.from(data);
+        if (body['twoFactorRedirect'] == true) {
+          final rawMethods = body['twoFactorMethods'];
+          final methods = rawMethods is List
+              ? rawMethods
+                    .map(_twoFactorMethod)
+                    .whereType<TwoFactorMethod>()
+                    .toList()
+              : const <TwoFactorMethod>[];
+          throw TwoFactorRequiredException(
+            methods.isEmpty ? TwoFactorMethod.values : methods,
+          );
+        }
+        final session = AuthSession.fromJson(body);
         if (token.isNotEmpty && session.sessionToken.isEmpty) {
           // Prefer the bearer header token when the body omitted it.
           return AuthSession(
@@ -402,6 +434,13 @@ class AuthRepository {
     final header = res.headers.value('set-auth-token');
     return header ?? '';
   }
+
+  TwoFactorMethod? _twoFactorMethod(Object? value) => switch (value) {
+    'totp' => TwoFactorMethod.totp,
+    'otp' => TwoFactorMethod.otp,
+    'backup' || 'backupCode' => TwoFactorMethod.backup,
+    _ => null,
+  };
 
   Future<void> _guard(Future<Response<dynamic>> Function() request) async {
     try {
