@@ -9,6 +9,7 @@ import '../domain/chordpro/resolve_chords.dart';
 import '../domain/chordpro/transpose.dart';
 import 'chordpro/instrument_selector.dart';
 import 'chordpro/song_display_settings.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Sliders icon button that opens the reading-settings popup, mirroring the
@@ -92,9 +93,10 @@ class SongControlsSheet extends ConsumerStatefulWidget {
 }
 
 class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
-  /// Instrument picker starts collapsed so the sheet opens compact.
+  /// Collapsible controls start compact when the sheet opens.
   bool _instrumentExpanded = false;
   bool _transposeExpanded = false;
+  bool _capoExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -154,9 +156,9 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
 
             // Transpose / capo only matter when chords are visible.
             if (settings.showChords) ...[
-              _CollapsibleInstrumentHeader(
+              _CollapsibleSectionHeader(
                 label: l10n.songTranspose,
-                selectedLabel: selectedKeyName,
+                selectedLabel: '$selectedKeyName · $transposeValue',
                 expanded: _transposeExpanded,
                 onToggle: () {
                   setState(() => _transposeExpanded = !_transposeExpanded);
@@ -171,10 +173,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
                         padding: const EdgeInsets.only(top: 8),
                         child: Column(
                           children: [
-                            _SectionTitle(
-                              label: '',
-                              value: transposeValue,
-                            ),
+                            _SectionTitle(label: '', value: transposeValue),
                             _KeyPickerChart(
                               keyNames: keyNames,
                               originalPitch: originalPitch,
@@ -193,15 +192,29 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
 
               // Capo (only for instruments where it changes the pitch).
               if (settings.instrumentSupportsCapo) ...[
-                _SectionTitle(
+                _CollapsibleSectionHeader(
                   label: l10n.songCapo,
-                  value: settings.capo == 0
+                  selectedLabel: settings.capo == 0
                       ? l10n.songCapoNone
                       : l10n.songCapoFret(settings.capo),
+                  expanded: _capoExpanded,
+                  onToggle: () {
+                    setState(() => _capoExpanded = !_capoExpanded);
+                  },
                 ),
-                _CapoSelector(
-                  value: settings.capo,
-                  onChanged: controller.setCapo,
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: _capoExpanded
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _CapoSelector(
+                            value: settings.capo,
+                            onChanged: controller.setCapo,
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -292,7 +305,7 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
 
             if (settings.showChords) ...[
               const SizedBox(height: 8),
-              _CollapsibleInstrumentHeader(
+              _CollapsibleSectionHeader(
                 label: l10n.songInstrument,
                 selectedLabel: settings.instrumentInfo.localizedLabel(l10n),
                 expanded: _instrumentExpanded,
@@ -322,9 +335,9 @@ class _SongControlsSheetState extends ConsumerState<SongControlsSheet> {
   }
 }
 
-/// Tappable instrument row: shows the current choice and a rotating chevron.
-class _CollapsibleInstrumentHeader extends StatelessWidget {
-  const _CollapsibleInstrumentHeader({
+/// Tappable section row: shows the current choice and a rotating chevron.
+class _CollapsibleSectionHeader extends StatelessWidget {
+  const _CollapsibleSectionHeader({
     required this.label,
     required this.selectedLabel,
     required this.expanded,
@@ -809,7 +822,11 @@ class _ToolbarVariantButton extends StatelessWidget {
             child: Row(
               children: [
                 if (version.id == selectedId)
-                  Icon(LucideIcons.check, size: 18, color: theme.colorScheme.primary)
+                  Icon(
+                    LucideIcons.check,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  )
                 else
                   const SizedBox(width: 18),
                 const SizedBox(width: 8),
