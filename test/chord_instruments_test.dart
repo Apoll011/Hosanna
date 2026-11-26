@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hosanna/features/songs/domain/chordpro/chord_dictionary.dart';
 import 'package:hosanna/features/songs/domain/chordpro/chord_theory.dart';
 import 'package:hosanna/features/songs/domain/chordpro/instruments/instruments.dart';
+import 'package:hosanna/features/songs/domain/chordpro/instruments/guitar_voicing_generator.dart';
 
 /// Chords every fretted instrument must be able to voice.
 const List<String> _chords = [
@@ -439,6 +440,117 @@ void main() {
         options: const InstrumentFingeringOptions(tuningId: 'standard'),
       );
       expect(voicings.length, greaterThanOrEqualTo(3));
+    });
+  });
+
+  group('generated guitar voicings', () {
+    final guitar = instrumentRegistry.resolve('guitar') as GuitarInstrument;
+
+    for (final tuning in FrettedTunings.guitar) {
+      for (final symbol in ['C', 'Am', 'G7']) {
+        test('${tuning.id} $symbol has distinct chord-safe options', () {
+          final chord = parseChordSymbol(symbol)!;
+          final alternatives = guitar
+              .fingerings(
+                chord,
+                options: InstrumentFingeringOptions(tuningId: tuning.id),
+              )
+              .whereType<FrettedFingering>()
+              .toList();
+          expect(alternatives.length, greaterThanOrEqualTo(3));
+          expect(
+            alternatives.map((f) => f.frets.join(',')).toSet().length,
+            alternatives.length,
+          );
+          for (final fingering in alternatives) {
+            final tones = _soundedPitchClasses(fingering, tuning.openPitches);
+            final expected = _expectedPitchClasses(chord);
+            expect(tones.difference(expected), isEmpty);
+            expect(tones, contains(pitchClass(chord.rootSemitone)));
+            expect(fingering.frets.length, tuning.stringCount);
+            expect(fingering.frets.every((fret) => fret <= 12), isTrue);
+            expect(fingering.fingers, hasLength(tuning.stringCount));
+            expect(
+              fingering.fingers!.where((f) => f > 0).toSet().length,
+              lessThanOrEqualTo(4),
+            );
+          }
+        });
+      }
+    }
+
+    test('Drop D uses its open low D for D major', () {
+      final voicings = guitar
+          .fingerings(
+            parseChordSymbol('D')!,
+            options: const InstrumentFingeringOptions(tuningId: 'drop_d'),
+          )
+          .whereType<FrettedFingering>();
+      expect(voicings.any((voicing) => voicing.frets.first == 0), isTrue);
+    });
+
+    test('seven string diagrams include and use the low B string', () {
+      final voicings = guitar
+          .fingerings(
+            parseChordSymbol('B')!,
+            options: const InstrumentFingeringOptions(
+              tuningId: 'seven_string',
+            ),
+          )
+          .whereType<FrettedFingering>()
+          .toList();
+      expect(voicings, isNotEmpty);
+      expect(voicings.every((voicing) => voicing.frets.length == 7), isTrue);
+      expect(voicings.any((voicing) => voicing.frets.first >= 0), isTrue);
+    });
+
+    test('slash chord bass note matches sounding register', () {
+      for (final tuning in FrettedTunings.guitar) {
+        final chord = parseChordSymbol('C/E')!;
+        final voicings = guitar
+            .fingerings(
+              chord,
+              options: InstrumentFingeringOptions(tuningId: tuning.id),
+            )
+            .whereType<FrettedFingering>();
+        for (final fingering in voicings) {
+          final sounding = [
+            for (var i = 0; i < fingering.frets.length; i++)
+              if (fingering.frets[i] >= 0)
+                tuning.openMidiPitches[i] + fingering.frets[i],
+          ]..sort();
+          expect(pitchClass(sounding.first), pitchClass(chord.bassSemitone!));
+        }
+      }
+    });
+
+    test('tuning changes produce tuning-specific generated results', () {
+      final chord = parseChordSymbol('Em')!;
+      final standard = guitar.fingerings(
+        chord,
+        options: const InstrumentFingeringOptions(tuningId: 'standard'),
+      );
+      final sevenString = guitar.fingerings(
+        chord,
+        options: const InstrumentFingeringOptions(tuningId: 'seven_string'),
+      );
+      expect((standard.first as FrettedFingering).tuningId, 'standard');
+      expect((sevenString.first as FrettedFingering).tuningId, 'seven_string');
+      expect((standard.first as FrettedFingering).frets.length, 6);
+      expect((sevenString.first as FrettedFingering).frets.length, 7);
+    });
+
+    test('returns fewer than three when the string count cannot voice a triad', () {
+      final voicings = const GuitarVoicingGenerator().generate(
+        parseChordSymbol('C')!,
+        tuning: const FrettedTuning(
+          id: 'one_string',
+          label: 'One string',
+          openPitches: [4],
+          stringNames: ['E'],
+        ),
+      );
+      expect(voicings, isEmpty);
     });
   });
 

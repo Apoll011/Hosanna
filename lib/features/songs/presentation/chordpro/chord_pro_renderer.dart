@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -126,13 +128,17 @@ class _ChordProRendererState extends State<ChordProRenderer> {
     _song = prepareSong(_version.body, _effectiveTranspose);
   }
 
-  ChordFingering? _fingeringFor(String chord) => _fingerings.putIfAbsent(
-    chord,
-    () => chordDictionary.getFingering(
-      chord,
-      preferences: widget.instrumentPreferences,
-    ),
-  );
+  ChordFingering? _fingeringFor(String chord) {
+    final cacheKey =
+        '$chord|${jsonEncode(widget.instrumentPreferences.toJson())}';
+    return _fingerings.putIfAbsent(
+      cacheKey,
+      () => chordDictionary.getFingering(
+        chord,
+        preferences: widget.instrumentPreferences,
+      ),
+    );
+  }
 
   List<InstrumentFingering> _alternativesFor(String chord) =>
       _fingeringFor(chord)?.alternativesFor(widget.instrument) ?? const [];
