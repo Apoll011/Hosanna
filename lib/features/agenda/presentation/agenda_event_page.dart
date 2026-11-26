@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/design/illustrations.dart';
+import '../../../app/shell_leading_button.dart';
 import '../../../core/db/database.dart';
 import '../../auth/domain/auth_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -26,6 +27,24 @@ class AgendaEventPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 104,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ShellLeadingButton(),
+            IconButton(
+              icon: const BackButtonIcon(),
+              tooltip: l10n.commonBack,
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/agenda');
+                }
+              },
+            ),
+          ],
+        ),
         title: Text(l10n.agendaEventDetails),
       ),
       body: eventAsync.when(

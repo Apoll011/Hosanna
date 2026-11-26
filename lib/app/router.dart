@@ -205,7 +205,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/agenda', builder: (_, _) => const AgendaPage()),
+              GoRoute(
+                path: '/agenda',
+                builder: (_, _) => const AgendaPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) =>
+                        AgendaEventPage(eventId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -214,11 +224,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        path: '/agenda/:id',
-        builder: (_, state) =>
-            AgendaEventPage(eventId: state.pathParameters['id']!),
       ),
       // Static song paths before `/songs/:id` so "new" / "import" are not
       // swallowed as ids.
