@@ -43,10 +43,22 @@ class GuitarInstrument extends FrettedInstrument {
   List<InstrumentFingering> fingerings(
     ParsedChord chord, {
     InstrumentFingeringOptions options = InstrumentFingeringOptions.defaults,
-  }) => const GuitarVoicingGenerator().generate(
-    chord,
-    tuning: tuningFor(options.tuningId),
-  );
+  }) {
+    final tuning = tuningFor(options.tuningId);
+    final generated = const GuitarVoicingGenerator().generate(
+      chord,
+      tuning: tuning,
+    );
+    if (tuning.id != FrettedTunings.guitarStandard.id) return generated;
+
+    final familiar = fingering(chord, options: options);
+    if (familiar is! FrettedFingering) return generated;
+    return [
+      familiar,
+      for (final option in generated)
+        if (option.frets.join(',') != familiar.frets.join(',')) option,
+    ];
+  }
 }
 
 const Map<String, FrettedShape> _openShapes = {

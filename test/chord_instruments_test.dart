@@ -386,6 +386,16 @@ void main() {
       }
     }
 
+    test('standard tuning keeps the familiar guitar shape first', () {
+      for (final symbol in ['C', 'Am', 'G7']) {
+        final chord = parseChordSymbol(symbol)!;
+        final familiar = guitar.fingering(chord) as FrettedFingering;
+        final first = guitar.fingerings(chord).first as FrettedFingering;
+        expect(first.frets, familiar.frets, reason: symbol);
+        expect(first.fingers, familiar.fingers, reason: symbol);
+      }
+    });
+
     test('Drop D uses its open low D for D major', () {
       final voicings = guitar
           .fingerings(
