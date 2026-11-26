@@ -92,7 +92,7 @@ class AuthScaffold extends StatelessWidget {
                     _AuthHero(
                       asset: heroAsset!,
                       fallbackIcon: heroFallbackIcon,
-                      height: wide ? 176 : 156,
+                      height: wide ? 220 : 156,
                     ),
                     const SizedBox(height: 16),
                   ] else if (showLogo) ...[
@@ -126,7 +126,9 @@ class AuthScaffold extends StatelessWidget {
             );
 
             final panel = ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
+              constraints: BoxConstraints(
+                maxWidth: wide ? maxWidth + 56 : maxWidth,
+              ),
               child: wide
                   ? Container(
                       margin: const EdgeInsets.symmetric(
@@ -145,24 +147,41 @@ class AuthScaffold extends StatelessWidget {
                   : form,
             );
 
-            return Column(
-              children: [
-                if (showBack && canPop)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      tooltip: MaterialLocalizations.of(context)
-                          .backButtonTooltip,
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(LucideIcons.arrowLeft),
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: wide
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          scheme.primary.withValues(alpha: 0.14),
+                          scheme.tertiary.withValues(alpha: 0.08),
+                          scheme.surface,
+                        ],
+                        stops: const [0, 0.48, 1],
+                      )
+                    : null,
+                color: wide ? null : scheme.surface,
+              ),
+              child: Column(
+                children: [
+                  if (showBack && canPop)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: MaterialLocalizations.of(context)
+                            .backButtonTooltip,
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(LucideIcons.arrowLeft),
+                      ),
                     ),
+                  Expanded(
+                    child: wide
+                        ? Center(child: panel)
+                        : Align(alignment: Alignment.topCenter, child: panel),
                   ),
-                Expanded(
-                  child: wide
-                      ? Center(child: panel)
-                      : Align(alignment: Alignment.topCenter, child: panel),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
