@@ -11,6 +11,7 @@ import '../../../shared/widgets/app_bar_search_field.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/hosanna_surface.dart';
 import '../../../shared/widgets/shell_insets.dart';
+import '../../folders/domain/folder_customization.dart';
 import '../../folders/data/folder_repository.dart';
 import '../../songs/data/song_repository.dart';
 import '../../songs/domain/library_controller.dart';
