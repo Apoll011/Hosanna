@@ -218,84 +218,79 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     final maxValue = math.max(_duration, 1.0);
     final sliderValue = (_dragValue ?? _position).clamp(0.0, maxValue);
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 10, 6, 6),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.97),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  _buildCover(scheme),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: _hasError
-                                ? scheme.error
-                                : scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _ready ? () => _skip(-10) : null,
-                    icon: const Icon(LucideIcons.rotateCcw),
-                    tooltip: l10n.songYoutubeRewind,
-                  ),
-                  _buildPlayButton(scheme, l10n),
-                  IconButton(
-                    onPressed: _ready ? () => _skip(30) : null,
-                    icon: const Icon(LucideIcons.rotateCw),
-                    tooltip: l10n.songYoutubeForward,
-                  ),
-                  if (widget.onClose != null)
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      onPressed: widget.onClose,
-                      icon: const Icon(LucideIcons.x, size: 20),
-                      tooltip: l10n.songYoutubeClosePlayer,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              _buildProgress(theme, sliderValue, maxValue),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 6, 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.97),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.6),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              _buildCover(scheme),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: _hasError
+                            ? scheme.error
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: _ready ? () => _skip(-10) : null,
+                icon: const Icon(LucideIcons.rotateCcw),
+                tooltip: l10n.songYoutubeRewind,
+              ),
+              _buildPlayButton(scheme, l10n),
+              IconButton(
+                onPressed: _ready ? () => _skip(30) : null,
+                icon: const Icon(LucideIcons.rotateCw),
+                tooltip: l10n.songYoutubeForward,
+              ),
+              if (widget.onClose != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: widget.onClose,
+                  icon: const Icon(LucideIcons.x, size: 20),
+                  tooltip: l10n.songYoutubeClosePlayer,
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          _buildProgress(theme, sliderValue, maxValue),
+        ],
       ),
     );
   }

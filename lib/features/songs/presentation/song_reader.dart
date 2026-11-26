@@ -953,7 +953,7 @@ class _SongReaderState extends ConsumerState<SongReader>
                   if (playerVideoId != null) ...[
                     const SizedBox(height: 12),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: YoutubeMiniPlayer(
                         key: ValueKey(playerVideoId),
                         videoId: playerVideoId,
